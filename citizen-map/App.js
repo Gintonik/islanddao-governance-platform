@@ -71,10 +71,34 @@ function App() {
   
   // Handle form submission
   const handleFormSubmit = async (formData) => {
+    // Fetch NFT metadata for the selected NFTs
+    let nftMetadata = {};
+    
+    try {
+      // Fetch collection data for the selected NFTs
+      const response = await fetch('/perks-collection.json');
+      const collectionData = await response.json();
+      
+      // Create metadata object for each selected NFT
+      formData.selectedNfts.forEach(nftId => {
+        const nft = collectionData.find(item => item.id === nftId);
+        if (nft) {
+          nftMetadata[nftId] = {
+            name: nft.name,
+            image: nft.imageUrl,
+            id: nft.id
+          };
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching NFT metadata:', error);
+    }
+    
     const newCitizen = {
       location: selectedLocation,
       wallet: formData.wallet,
       nfts: formData.selectedNfts,
+      nftMetadata: nftMetadata, // Add NFT metadata to citizen data
       socials: {
         x: formData.xHandle,
         telegram: formData.telegram,
@@ -174,19 +198,24 @@ function App() {
                   )}
                 </SocialLinks>
                 
-                {/* Show NFT images */}
+                {/* Show NFT images with names */}
                 <NFTGrid>
-                  {citizen.nfts.map((nftId, nftIndex) => (
-                    <NFTImage 
-                      key={nftIndex} 
-                      src={`https://gateway.irys.xyz/${nftId}`} 
-                      alt="NFT"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/150?text=NFT+Image';
-                      }}
-                    />
-                  ))}
+                  {citizen.nfts.map((nftId, nftIndex) => {
+                    const metadata = citizen.nftMetadata && citizen.nftMetadata[nftId];
+                    return (
+                      <NFTItem key={nftIndex}>
+                        <NFTImage 
+                          src={metadata ? metadata.image : ''}
+                          alt={metadata ? metadata.name : 'PERK NFT'}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/150?text=NFT+Image';
+                          }}
+                        />
+                        <NFTLabel>{metadata ? metadata.name : `PERK NFT #${nftIndex+1}`}</NFTLabel>
+                      </NFTItem>
+                    );
+                  })}
                 </NFTGrid>
                 
                 <small>Added: {new Date(citizen.timestamp).toLocaleString()}</small>
@@ -347,11 +376,28 @@ const NFTGrid = styled.div`
   margin-top: 8px;
 `;
 
+const NFTItem = styled.div`
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #222;
+`;
+
 const NFTImage = styled.img`
   width: 100%;
   height: auto;
-  border-radius: 4px;
+  border-radius: 4px 4px 0 0;
   object-fit: cover;
+  display: block;
+`;
+
+const NFTLabel = styled.div`
+  font-size: 12px;
+  padding: 4px 6px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: #333;
 `;
 
 export default App;

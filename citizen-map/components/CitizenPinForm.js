@@ -20,7 +20,7 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
       setIsLoading(true);
       
       try {
-        // Fetch data from our collection
+        // Fetch all NFT data from our collection
         const response = await fetch('/perks-collection.json');
         const collectionData = await response.json();
         
@@ -38,10 +38,7 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
               owner: nft.owner
             };
           } else {
-            // Fallback if NFT data isn't found
-            console.warn(`NFT with ID ${nftId} not found in collection data`);
-            
-            // Fetch individual NFT data from our API
+            // If not found, try fetching from API endpoint
             try {
               const nftResponse = await fetch(`/api/nft-metadata?id=${nftId}`);
               
@@ -57,12 +54,8 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
                 throw new Error('NFT data not found');
               }
             } catch (fetchError) {
-              // If fetch fails, create minimal record
-              metadataObj[nftId] = {
-                name: `PERK NFT`,
-                image: `https://via.placeholder.com/150?text=PERK+NFT`,
-                id: nftId
-              };
+              console.error(`Error fetching individual NFT data: ${fetchError}`);
+              // We'll show an error state in the UI rather than using mock data
             }
           }
         }
@@ -188,6 +181,18 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
                           e.target.src = 'https://via.placeholder.com/150?text=NFT+Image';
                         }}
                       />
+                      <div className="selected-indicator" style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: selectedNfts.includes(nftId) ? '#9945FF' : 'transparent',
+                        border: '2px solid #fff',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                        display: selectedNfts.includes(nftId) ? 'block' : 'none'
+                      }}></div>
                       <NFTName>
                         {nftMetadata[nftId]?.name || 'PERK NFT'}
                       </NFTName>
@@ -404,6 +409,7 @@ const NFTCard = styled.div`
   background-color: #222;
   cursor: pointer;
   transition: transform 0.2s;
+  position: relative;
   
   &:hover {
     transform: translateY(-3px);
