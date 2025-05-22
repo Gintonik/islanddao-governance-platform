@@ -288,7 +288,8 @@
                 alt="${nft.name}" onerror="this.src='https://via.placeholder.com/220x220?text=NFT+Image'">
               <div class="nft-info">
                 <div class="nft-name">${nft.name}</div>
-                <div class="nft-address">${nft.id.substring(0, 10)}...${nft.id.substring(nft.id.length - 5)}</div>
+                <div class="nft-address"><strong>Token Address:</strong> ${nft.id.substring(0, 10)}...${nft.id.substring(nft.id.length - 5)}</div>
+                <div class="nft-address"><strong>Owner Address:</strong> ${nft.owner ? `${nft.owner.substring(0, 8)}...${nft.owner.substring(nft.owner.length - 5)}` : 'Unknown'}</div>
               </div>
             `;
             
@@ -324,7 +325,8 @@
                     alt="${nft.name}" onerror="this.src='https://via.placeholder.com/220x220?text=NFT+Image'">
                   <div class="nft-info">
                     <div class="nft-name">${nft.name}</div>
-                    <div class="nft-address">${nft.id.substring(0, 10)}...${nft.id.substring(nft.id.length - 5)}</div>
+                    <div class="nft-address"><strong>Token Address:</strong> ${nft.id.substring(0, 10)}...${nft.id.substring(nft.id.length - 5)}</div>
+                    <div class="nft-address"><strong>Owner Address:</strong> ${nft.owner ? `${nft.owner.substring(0, 8)}...${nft.owner.substring(nft.owner.length - 5)}` : 'Unknown'}</div>
                   </div>
                 `;
                 
