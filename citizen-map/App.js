@@ -99,34 +99,14 @@ function App() {
   
   // Handle form submission
   const handleFormSubmit = async (formData) => {
-    // Fetch NFT metadata for the selected NFTs
-    let nftMetadata = {};
-    
-    try {
-      // Fetch collection data for the selected NFTs
-      const response = await fetch('/perks-collection.json');
-      const collectionData = await response.json();
-      
-      // Create metadata object for each selected NFT
-      formData.selectedNfts.forEach(nftId => {
-        const nft = collectionData.find(item => item.id === nftId);
-        if (nft) {
-          nftMetadata[nftId] = {
-            name: nft.name,
-            image: nft.imageUrl,
-            id: nft.id
-          };
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching NFT metadata:', error);
-    }
-    
+    // Use the NFT metadata provided by the form (already fetched from collection data)
+    // This ensures we're using real NFT data from our collection
     const newCitizen = {
       location: selectedLocation,
       wallet: formData.wallet,
       nfts: formData.selectedNfts,
-      nftMetadata: nftMetadata, // Add NFT metadata to citizen data
+      primaryNft: formData.primaryNft,
+      nftMetadata: formData.nftMetadata,
       socials: {
         x: formData.xHandle,
         telegram: formData.telegram,
