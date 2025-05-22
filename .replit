@@ -1,0 +1,39 @@
+modules = ["nodejs-20"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "NFT Fetcher"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "run_nft_fetcher"
+
+[[workflows.workflow]]
+name = "NFT Fetcher"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm install node-fetch && node index.js"
+
+[[workflows.workflow]]
+name = "run_nft_fetcher"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm install node-fetch && node index.js"
+
+[deployment]
+run = ["sh", "-c", "npm install node-fetch && node index.js"]
