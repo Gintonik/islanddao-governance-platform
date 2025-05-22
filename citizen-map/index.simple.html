@@ -12,6 +12,35 @@
       margin: 0;
       padding: 0;
     }
+    
+    /* Main Navigation Bar */
+    .nav-bar {
+      background-color: #222;
+      padding: 15px;
+      display: flex;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .nav-button {
+      background-color: #9945FF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .nav-button.active {
+      background-color: #8134E0;
+    }
+    
+    .nav-button:hover {
+      background-color: #8134E0;
+    }
 
     .tabs {
       display: flex;
@@ -150,6 +179,13 @@
   </style>
 </head>
 <body>
+  <!-- Main Navigation Bar -->
+  <div class="nav-bar">
+    <button class="nav-button" id="collection-btn">NFT Collection</button>
+    <button class="nav-button active" id="citizen-map-btn">Citizen Map</button>
+  </div>
+  
+  <!-- Tab Navigation (within Citizen Map page) -->
   <div class="tabs">
     <div class="tab active" data-tab="explore">Explore Collection</div>
     <div class="tab" data-tab="map">Citizen Map</div>
@@ -187,7 +223,19 @@
   </div>
 
   <script>
-    // Tab switching logic
+    // Main navigation
+    document.getElementById('collection-btn').addEventListener('click', function() {
+      // Navigate to the NFT Collection page
+      window.location.href = '/';
+    });
+    
+    document.getElementById('citizen-map-btn').addEventListener('click', function() {
+      // Already on the citizen map page, do nothing except update active state
+      document.getElementById('citizen-map-btn').classList.add('active');
+      document.getElementById('collection-btn').classList.remove('active');
+    });
+    
+    // Tab switching logic (within Citizen Map page)
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         // Remove active class from all tabs
