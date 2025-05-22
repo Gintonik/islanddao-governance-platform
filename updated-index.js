@@ -13,6 +13,22 @@ async function initializeApp() {
     await db.initializeDatabase();
     console.log('Database initialized successfully');
     
+    // Check if we need to sync NFT data
+    const nfts = await db.getAllNfts();
+    if (nfts.length === 0) {
+      console.log('No NFTs found in database. Running initial sync...');
+      try {
+        // Import and run the sync function
+        const { syncNFTCollection } = require('./sync-nft-collection');
+        await syncNFTCollection();
+        console.log('Initial NFT collection sync completed');
+      } catch (syncError) {
+        console.error('Error during initial sync:', syncError);
+      }
+    } else {
+      console.log(`Database contains ${nfts.length} NFTs`);
+    }
+    
     // Start the HTTP server
     startServer();
   } catch (error) {
@@ -167,6 +183,25 @@ function startServer() {
           message: 'All citizen pins cleared successfully' 
         }));
       }
+      // API endpoint to manually trigger NFT collection sync
+      else if (req.method === 'POST' && req.url === '/api/sync-nfts') {
+        // Start the sync process in the background
+        res.writeHead(202, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          message: 'NFT collection sync started' 
+        }));
+        
+        // Import and run the sync in the background without blocking the response
+        const { syncNFTCollection } = require('./sync-nft-collection');
+        syncNFTCollection()
+          .then(result => {
+            console.log('Manual NFT collection sync completed:', result);
+          })
+          .catch(error => {
+            console.error('Error during manual NFT collection sync:', error);
+          });
+      }
       // Handle requests for the citizen-map
       else if (req.url === '/citizen-map') {
         // Redirect to citizen map HTML page
@@ -205,6 +240,18 @@ function startServer() {
     console.log(`Server running at http://localhost:${PORT}/`);
     console.log(`Open your browser to view the PERKS NFT collection grid!`);
     console.log(`Visit http://localhost:${PORT}/citizen-map to view the Citizen Map`);
+    
+    // Set up daily NFT collection updates
+    setTimeout(() => {
+      try {
+        // Start the daily update scheduler
+        const { scheduleNextUpdate } = require('./daily-update');
+        scheduleNextUpdate(0); // Schedule to run at midnight UTC
+        console.log('Daily NFT collection update scheduler initialized');
+      } catch (error) {
+        console.error('Error setting up daily update scheduler:', error);
+      }
+    }, 5000); // Wait 5 seconds after server starts to initialize the scheduler
   });
 }
 
