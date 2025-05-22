@@ -19,6 +19,10 @@ args = "NFT Fetcher"
 task = "workflow.run"
 args = "run_nft_fetcher"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "NFT Grid Server"
+
 [[workflows.workflow]]
 name = "NFT Fetcher"
 author = "agent"
@@ -35,5 +39,18 @@ author = "agent"
 task = "shell.exec"
 args = "npm install node-fetch && node index.js"
 
+[[workflows.workflow]]
+name = "NFT Grid Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node index.js"
+waitForPort = 5000
+
 [deployment]
 run = ["sh", "-c", "npm install node-fetch && node index.js"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
