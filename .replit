@@ -58,7 +58,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node citizen-map/app.js"
+args = "node citizen-map/server.js"
 waitForPort = 5001
 
 [deployment]

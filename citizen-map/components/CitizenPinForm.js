@@ -21,17 +21,28 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
       setIsLoading(true);
       
       try {
-        // Fetch all NFT data from our collection
+        // Fetch all NFT data from our collection grid
         const response = await fetch('/perks-collection.json');
         const collectionData = await response.json();
+        
+        if (!collectionData || collectionData.length === 0) {
+          console.error('Error: Collection data is empty or undefined');
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log(`Found ${collectionData.length} NFTs in collection`);
         
         const metadataObj = {};
         
         // Filter the collection data to get only the NFTs owned by this wallet
         for (const nftId of ownedNfts) {
+          // Find the NFT in the collection data
           const nft = collectionData.find(item => item.id === nftId);
           
           if (nft) {
+            console.log(`Found NFT in collection: ${nft.name}`);
+            // Use the exact data structure from the collection grid
             metadataObj[nftId] = {
               name: nft.name,
               image: nft.imageUrl,
@@ -39,28 +50,11 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
               owner: nft.owner
             };
           } else {
-            // If not found, try fetching from API endpoint
-            try {
-              const nftResponse = await fetch(`/api/nft-metadata?id=${nftId}`);
-              
-              if (nftResponse.ok) {
-                const nftData = await nftResponse.json();
-                metadataObj[nftId] = {
-                  name: nftData.name,
-                  image: nftData.imageUrl,
-                  id: nftData.id,
-                  owner: nftData.owner
-                };
-              } else {
-                throw new Error('NFT data not found');
-              }
-            } catch (fetchError) {
-              console.error(`Error fetching individual NFT data: ${fetchError}`);
-              // We'll show an error state in the UI rather than using mock data
-            }
+            console.warn(`NFT not found in collection: ${nftId}`);
           }
         }
         
+        console.log(`Processed ${Object.keys(metadataObj).length} NFTs for metadata`);
         setNftMetadata(metadataObj);
       } catch (error) {
         console.error('Error fetching NFT metadata:', error);

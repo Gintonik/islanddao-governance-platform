@@ -81,20 +81,34 @@ export async function loadNftOwners() {
 }
 
 /**
- * Gets NFT metadata from the Helius API
+ * Gets NFT metadata from the collection data
  * @param {string} nftId - The NFT mint ID
  * @returns {Promise<Object>} - NFT metadata
  */
 export async function getNftMetadata(nftId) {
   try {
-    // In a real app, we would make a request to Helius API
-    // For the demo, we'll return mock data
-    // This would be replaced with actual API calls
+    // Fetch the NFT data from our perks-collection.json
+    const response = await fetch('/perks-collection.json');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch collection data: ${response.status}`);
+    }
     
-    // This function would be implemented with a real API call in production
+    const collectionData = await response.json();
+    
+    // Find the specific NFT in the collection
+    const nft = collectionData.find(item => item.id === nftId);
+    
+    if (!nft) {
+      console.warn(`NFT not found in collection: ${nftId}`);
+      return null;
+    }
+    
+    // Return the actual NFT data from the collection
     return {
-      name: `PERK #${Math.floor(Math.random() * 3333) + 1}`,
-      image: `https://gateway.irys.xyz/${nftId}`
+      name: nft.name,
+      image: nft.imageUrl,
+      id: nft.id,
+      owner: nft.owner
     };
   } catch (error) {
     console.error('Error fetching NFT metadata:', error);

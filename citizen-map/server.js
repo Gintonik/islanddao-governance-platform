@@ -3,9 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 // File paths
-const HTML_FILE = path.join(__dirname, 'index.html');
+const HTML_FILE = path.join(__dirname, 'index.simple.html');
 const CITIZENS_FILE = path.join(__dirname, '..', 'citizens.json');
 const NFT_OWNERS_FILE = path.join(__dirname, '..', 'nft-owners.json');
+const PERKS_COLLECTION_FILE = path.join(__dirname, '..', 'perks-collection.json');
 
 // MIME types
 const MIME_TYPES = {
@@ -115,6 +116,22 @@ const server = http.createServer((req, res) => {
       res.end(data);
     } catch (error) {
       console.error('Error serving nft-owners.json:', error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+    }
+    return;
+  }
+  
+  // Serve perks-collection.json
+  if (req.url === '/perks-collection.json') {
+    try {
+      const data = fs.readFileSync(PERKS_COLLECTION_FILE, 'utf8');
+      
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(data);
+    } catch (error) {
+      console.error('Error serving perks-collection.json:', error);
       res.statusCode = 500;
       res.end(JSON.stringify({ error: 'Server error', details: error.message }));
     }
