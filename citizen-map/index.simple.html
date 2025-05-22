@@ -11,68 +11,125 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
     crossorigin=""></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: white;
+    :root {
+      --primary: #9945FF;
+      --primary-dark: #8134E0;
+      --secondary: #14F195;
+      --background: #121212;
+      --card-bg: #222;
+      --text: #FFFFFF;
+      --text-secondary: #AAA;
+      --border: #333;
+    }
+    
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
     
-    /* Main Navigation Bar */
-    .nav-bar {
-      background-color: #222;
-      padding: 15px;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    
+    /* Header styles */
+    header {
+      background-color: rgba(25, 25, 25, 0.9);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
       display: flex;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
     }
     
-    .nav-button {
-      background-color: #9945FF;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin: 0 10px;
-      border-radius: 4px;
-      cursor: pointer;
+    .logo {
+      font-size: 24px;
       font-weight: bold;
-      transition: background-color 0.2s;
+      color: var(--primary);
     }
     
-    .nav-button.active {
-      background-color: #8134E0;
+    .nav-links {
+      display: flex;
+      gap: 20px;
     }
     
-    .nav-button:hover {
-      background-color: #8134E0;
+    .nav-link {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: bold;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: all 0.2s;
     }
-
-    .header {
+    
+    .nav-link:hover {
+      background-color: rgba(153, 69, 255, 0.1);
+    }
+    
+    .nav-link.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    /* Main content */
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 72px); /* Subtract header height */
+    }
+    
+    .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 15px 20px;
-      background-color: #222;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border);
     }
-
-    h1, h2 {
-      margin: 0;
+    
+    .button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
-
-    /* Map styles */
+    
+    .button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    /* Map container */
     #map-container {
-      height: calc(100vh - 120px); /* Full height minus nav and header */
+      flex: 1;
       width: 100%;
       position: relative;
     }
-
+    
     #map {
       height: 100%;
       width: 100%;
-      background-color: #1a1a1a;
+      background-color: var(--background);
+      z-index: 1;
     }
-
+    
     .loading {
       position: absolute;
       top: 50%;
@@ -101,11 +158,133 @@
     }
     
     .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-      background-color: #222;
+      background-color: var(--card-bg);
       color: white;
       box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
     }
     
+    /* Pin Creation Form */
+    #pin-form {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: var(--card-bg);
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 2000;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .close-button:hover {
+      color: var(--text);
+    }
+    
+    .form-step {
+      margin-bottom: 20px;
+    }
+    
+    .form-step p {
+      margin-bottom: 15px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+    
+    #nft-selection {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 15px 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    
+    .nft-select-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .nft-select-item:last-child {
+      border-bottom: none;
+    }
+    
+    .nft-select-checkbox {
+      margin-right: 15px;
+    }
+    
+    .nft-select-image {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      background-color: #333;
+      margin-right: 15px;
+      border-radius: 4px;
+    }
+    
+    .nft-select-info {
+      flex: 1;
+    }
+    
+    .nft-select-name {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    
+    .nft-select-id {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    /* Popup styles */
     .pin-popup {
       min-width: 200px;
     }
@@ -113,20 +292,21 @@
     .pin-popup-image {
       width: 100%;
       height: auto;
-      max-height: 200px;
+      max-height: 180px;
       object-fit: contain;
       background-color: #333;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
     }
     
     .pin-popup-title {
       font-weight: bold;
       margin-bottom: 8px;
-      color: #9945FF;
+      color: var(--primary);
     }
     
     .pin-popup-address {
-      color: #aaa;
+      color: var(--text-secondary);
       font-size: 12px;
       word-break: break-all;
       margin-bottom: 10px;
@@ -135,118 +315,107 @@
     .pin-popup-socials {
       display: flex;
       gap: 10px;
-      margin-top: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
     }
     
     .social-link {
       display: inline-block;
       padding: 5px 10px;
-      background-color: #333;
-      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text);
       border-radius: 4px;
       text-decoration: none;
       font-size: 12px;
+      transition: background-color 0.2s;
     }
     
     .social-link:hover {
-      background-color: #444;
+      background-color: rgba(255, 255, 255, 0.2);
     }
 
-    .button {
-      display: inline-block;
-      background-color: #9945FF;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-
-    .button:hover {
-      background-color: #8134E0;
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .pin-popup {
+        max-width: 250px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Main Navigation Bar -->
-  <div class="nav-bar">
-    <button class="nav-button" id="collection-btn">NFT Collection</button>
-    <button class="nav-button active" id="citizen-map-btn">Citizen Map</button>
-  </div>
-
-  <!-- Citizen Map Content -->
-  <div id="citizen-map-content">
-    <div class="header">
+  <header>
+    <div class="header-content">
+      <div class="logo">PERKS</div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Collection</a>
+        <a href="/citizen-map" class="nav-link active">Citizen Map</a>
+      </nav>
+    </div>
+  </header>
+  
+  <div class="main-container">
+    <div class="page-header">
       <h1>PERKS Citizen Map</h1>
       <button id="drop-pin" class="button">Drop a Citizen Pin</button>
     </div>
     
     <div id="map-container">
-      <div class="loading">Map is loading... Please wait.</div>
+      <div class="loading">Loading map... Please wait.</div>
       <div id="map"></div>
     </div>
     
-    <!-- Pin Creation Form (initially hidden) -->
-    <div id="pin-form" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #222; padding: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 1000; max-width: 500px; width: 90%;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 style="margin: 0;">Add Citizen Pin</h2>
-        <button id="close-form" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+    <!-- Pin Creation Form -->
+    <div id="pin-form">
+      <div class="form-header">
+        <h2>Add Citizen Pin</h2>
+        <button id="close-form" class="close-button">&times;</button>
       </div>
       
       <div id="step-1" class="form-step">
         <p>Click on the map to select your location.</p>
-        <div id="selected-location" style="margin-top: 10px; font-size: 14px; color: #aaa;"></div>
+        <div id="selected-location" style="margin-top: 10px; font-size: 14px; color: var(--text-secondary);"></div>
       </div>
       
       <div id="step-2" class="form-step" style="display: none;">
         <p>Enter your Solana wallet address:</p>
-        <input type="text" id="wallet-address" placeholder="Solana wallet address" style="width: 100%; padding: 10px; margin: 10px 0; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
-        <button id="check-wallet" class="button" style="margin-top: 10px;">Check NFTs</button>
+        <input type="text" id="wallet-address" class="form-input" placeholder="Solana wallet address">
+        <button id="check-wallet" class="button">Check NFTs</button>
       </div>
       
       <div id="step-3" class="form-step" style="display: none;">
         <p>Select your PERKS NFTs to add to this location:</p>
-        <div id="nft-selection" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+        <div id="nft-selection"></div>
       </div>
       
       <div id="step-4" class="form-step" style="display: none;">
         <p>Add your social links (optional):</p>
-        <div style="margin: 10px 0;">
-          <label for="x-handle" style="display: block; margin-bottom: 5px;">X/Twitter:</label>
-          <input type="text" id="x-handle" placeholder="@username" style="width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        <div>
+          <label for="x-handle" class="form-label">X/Twitter:</label>
+          <input type="text" id="x-handle" class="form-input" placeholder="@username">
         </div>
-        <div style="margin: 10px 0;">
-          <label for="telegram" style="display: block; margin-bottom: 5px;">Telegram:</label>
-          <input type="text" id="telegram" placeholder="@username or t.me/username" style="width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        <div>
+          <label for="telegram" class="form-label">Telegram:</label>
+          <input type="text" id="telegram" class="form-input" placeholder="@username or t.me/username">
         </div>
-        <div style="margin: 10px 0;">
-          <label for="discord" style="display: block; margin-bottom: 5px;">Discord:</label>
-          <input type="text" id="discord" placeholder="username#1234" style="width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        <div>
+          <label for="discord" class="form-label">Discord:</label>
+          <input type="text" id="discord" class="form-input" placeholder="username#1234">
         </div>
       </div>
       
-      <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-        <button id="prev-step" class="button" style="background-color: #333;">Back</button>
+      <div class="form-actions">
+        <button id="prev-step" class="button" style="background-color: var(--border); display: none;">Back</button>
         <button id="next-step" class="button">Next</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Main navigation - NFT Collection button takes user to main collection page
-    document.getElementById('collection-btn').addEventListener('click', function() {
-      // Navigate to the NFT Collection page
-      window.location.href = '/';
-    });
-    
-    document.getElementById('citizen-map-btn').addEventListener('click', function() {
-      // Already on the citizen map page, do nothing except update active state
-      document.getElementById('citizen-map-btn').classList.add('active');
-      document.getElementById('collection-btn').classList.remove('active');
-    });
-
     // Global variables for map functionality
     let map;
     let currentMarker = null;
@@ -461,7 +630,7 @@
     async function loadWalletNFTs(walletAddress) {
       try {
         const selectionContainer = document.getElementById('nft-selection');
-        selectionContainer.innerHTML = '<p>Loading NFTs...</p>';
+        selectionContainer.innerHTML = '<p style="padding: 15px;">Loading NFTs...</p>';
         
         // Fetch NFT owners data
         const response = await fetch('/nft-owners.json');
@@ -469,7 +638,7 @@
         
         // Check if wallet has any NFTs
         if (!ownersData[walletAddress] || ownersData[walletAddress].length === 0) {
-          selectionContainer.innerHTML = '<p>No PERKS NFTs found for this wallet address.</p>';
+          selectionContainer.innerHTML = '<p style="padding: 15px;">No PERKS NFTs found for this wallet address.</p>';
           return;
         }
         
@@ -479,21 +648,17 @@
         
         nfts.forEach((nftId, index) => {
           const nftCard = document.createElement('div');
-          nftCard.style.display = 'flex';
-          nftCard.style.alignItems = 'center';
-          nftCard.style.padding = '10px';
-          nftCard.style.borderBottom = '1px solid #333';
+          nftCard.className = 'nft-select-item';
           
           const nftNumber = index + 1; // Simple numbering for demo
           
           nftCard.innerHTML = `
-            <input type="checkbox" id="nft-${index}" data-nftid="${nftId}" style="margin-right: 15px;">
+            <input type="checkbox" id="nft-${index}" class="nft-select-checkbox" data-nftid="${nftId}">
             <img src="https://gateway.irys.xyz/${nftId}" alt="PERK #${nftNumber}" 
-              style="width: 50px; height: 50px; object-fit: cover; background-color: #333; margin-right: 10px;"
-              onerror="this.src='https://via.placeholder.com/50x50?text=NFT'">
-            <div>
-              <div style="font-weight: bold;">PERK #${nftNumber}</div>
-              <div style="font-size: 12px; color: #aaa;">${nftId.substring(0, 8)}...${nftId.substring(nftId.length - 4)}</div>
+              class="nft-select-image" onerror="this.src='https://via.placeholder.com/50x50?text=NFT'">
+            <div class="nft-select-info">
+              <div class="nft-select-name">PERK #${nftNumber}</div>
+              <div class="nft-select-id">${nftId.substring(0, 8)}...${nftId.substring(nftId.length - 4)}</div>
             </div>
           `;
           
@@ -512,7 +677,7 @@
         
       } catch (error) {
         console.error('Error loading wallet NFTs:', error);
-        document.getElementById('nft-selection').innerHTML = `<p>Error loading NFTs: ${error.message}</p>`;
+        document.getElementById('nft-selection').innerHTML = `<p style="padding: 15px;">Error loading NFTs: ${error.message}</p>`;
       }
     }
     
@@ -593,6 +758,15 @@
       document.getElementById('close-form').addEventListener('click', closePinForm);
       document.getElementById('next-step').addEventListener('click', nextStep);
       document.getElementById('prev-step').addEventListener('click', prevStep);
+      document.getElementById('check-wallet').addEventListener('click', async () => {
+        const walletAddress = document.getElementById('wallet-address').value.trim();
+        if (walletAddress) {
+          await loadWalletNFTs(walletAddress);
+          nextStep();
+        } else {
+          alert('Please enter your Solana wallet address.');
+        }
+      });
     });
   </script>
 </body>
