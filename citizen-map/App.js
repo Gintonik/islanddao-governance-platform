@@ -14,8 +14,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Custom marker icon
-const citizenIcon = new L.Icon({
+// Default citizen marker icon
+const defaultCitizenIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41],
@@ -23,6 +23,34 @@ const citizenIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+// Function to create a custom NFT icon
+function createNftIcon(nftImageUrl) {
+  return L.divIcon({
+    html: `<div style="
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid #9945FF;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    ">
+      <img src="${nftImageUrl}" alt="NFT Icon" style="
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      " onerror="this.src='https://via.placeholder.com/40?text=NFT'"/>
+    </div>`,
+    className: 'nft-custom-icon',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+  });
+}
 
 // Location picker component
 function LocationPicker({ onLocationSelect, setIsPickingLocation }) {
@@ -170,12 +198,23 @@ function App() {
         />
         
         {/* Display existing citizen pins */}
-        {citizens.map((citizen, index) => (
-          <Marker 
-            key={index} 
-            position={citizen.location}
-            icon={citizenIcon}
-          >
+        {citizens.map((citizen, index) => {
+          // Determine which icon to use - custom NFT icon or default
+          const hasNftIcon = citizen.primaryNft && 
+                            citizen.nftMetadata && 
+                            citizen.nftMetadata[citizen.primaryNft] && 
+                            citizen.nftMetadata[citizen.primaryNft].image;
+          
+          const markerIcon = hasNftIcon 
+            ? createNftIcon(citizen.nftMetadata[citizen.primaryNft].image)
+            : defaultCitizenIcon;
+            
+          return (
+            <Marker 
+              key={index} 
+              position={citizen.location}
+              icon={markerIcon}
+            >
             <Popup>
               <PopupContent>
                 <h3>{citizen.nfts.length > 0 ? `PERK NFTs (${citizen.nfts.length})` : 'Citizen'}</h3>
