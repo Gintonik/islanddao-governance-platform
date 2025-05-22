@@ -248,48 +248,47 @@
         stats.style.display = 'none';
         
         try {
-          // Get NFT owners data
-          const response = await fetch('/nft-owners.json');
-          const ownersData = await response.json();
+          // Get preloaded collection data
+          const response = await fetch('/perks-collection.json');
+          const nftsData = await response.json();
+          
+          // Get ownership data for wallet stats
+          const ownersResponse = await fetch('/nft-owners.json');
+          const ownersData = await ownersResponse.json();
           
           // Count stats
           const uniqueWallets = Object.keys(ownersData).length;
-          let totalNfts = 0;
-          const allNfts = [];
-          
-          for (const wallet in ownersData) {
-            totalNfts += ownersData[wallet].length;
-            allNfts.push(...ownersData[wallet]);
-          }
+          const totalNfts = nftsData.length;
           
           // Update stats
           nftCount.textContent = totalNfts;
           walletCount.textContent = uniqueWallets;
           stats.style.display = 'block';
           
-          // Display NFTs (first 50 for performance)
-          const samplesToShow = allNfts.slice(0, 50);
-          
-          if (samplesToShow.length === 0) {
+          if (nftsData.length === 0) {
             loading.textContent = 'No NFTs found in the collection.';
             return;
           }
           
           loading.style.display = 'none';
           
-          samplesToShow.forEach((nftId, index) => {
+          // Display NFTs (first 50 for performance)
+          const samplesToShow = nftsData.slice(0, 50);
+          
+          samplesToShow.forEach((nft, index) => {
             const card = document.createElement('div');
             card.className = 'nft-card';
             
-            // For demo, we're using a simple naming pattern and the NFT ID for the image URL
-            const nftNumber = index + 1; // Simple numbering for demo
+            // Extract the NFT number from the name
+            const nameMatch = nft.name.match(/PERK #(\d+)/);
+            const nftNumber = nameMatch ? nameMatch[1] : index + 1;
             
             card.innerHTML = `
-              <img class="nft-image" src="https://gateway.irys.xyz/${nftId}" 
-                alt="PERK #${nftNumber}" onerror="this.src='https://via.placeholder.com/220x220?text=NFT+Image'">
+              <img class="nft-image" src="${nft.imageUrl}" 
+                alt="${nft.name}" onerror="this.src='https://via.placeholder.com/220x220?text=NFT+Image'">
               <div class="nft-info">
-                <div class="nft-name">PERK #${nftNumber}</div>
-                <div class="nft-address">${nftId.substring(0, 10)}...${nftId.substring(nftId.length - 5)}</div>
+                <div class="nft-name">${nft.name}</div>
+                <div class="nft-address">${nft.id.substring(0, 10)}...${nft.id.substring(nft.id.length - 5)}</div>
               </div>
             `;
             
@@ -297,7 +296,7 @@
           });
           
           // Add a "Load more" button if there are more NFTs
-          if (allNfts.length > samplesToShow.length) {
+          if (nftsData.length > samplesToShow.length) {
             const loadMoreContainer = document.createElement('div');
             loadMoreContainer.style.gridColumn = '1 / -1';
             loadMoreContainer.style.textAlign = 'center';
@@ -305,10 +304,42 @@
             
             const loadMoreButton = document.createElement('button');
             loadMoreButton.className = 'button';
-            loadMoreButton.textContent = `Load more (${samplesToShow.length} of ${allNfts.length})`;
+            loadMoreButton.textContent = `Load more (${samplesToShow.length} of ${nftsData.length})`;
+            
+            // Handle loading more NFTs
+            let currentlyLoaded = samplesToShow.length;
             loadMoreButton.addEventListener('click', () => {
-              // In a real implementation, you would load the next batch of NFTs
-              alert('This would load more NFTs in a real implementation.');
+              const nextBatch = nftsData.slice(currentlyLoaded, currentlyLoaded + 50);
+              
+              nextBatch.forEach((nft, index) => {
+                const card = document.createElement('div');
+                card.className = 'nft-card';
+                
+                // Extract the NFT number from the name
+                const nameMatch = nft.name.match(/PERK #(\d+)/);
+                const nftNumber = nameMatch ? nameMatch[1] : currentlyLoaded + index + 1;
+                
+                card.innerHTML = `
+                  <img class="nft-image" src="${nft.imageUrl}" 
+                    alt="${nft.name}" onerror="this.src='https://via.placeholder.com/220x220?text=NFT+Image'">
+                  <div class="nft-info">
+                    <div class="nft-name">${nft.name}</div>
+                    <div class="nft-address">${nft.id.substring(0, 10)}...${nft.id.substring(nft.id.length - 5)}</div>
+                  </div>
+                `;
+                
+                grid.appendChild(card);
+              });
+              
+              currentlyLoaded += nextBatch.length;
+              
+              // Update button text
+              loadMoreButton.textContent = `Load more (${currentlyLoaded} of ${nftsData.length})`;
+              
+              // Remove button if all NFTs are loaded
+              if (currentlyLoaded >= nftsData.length) {
+                loadMoreContainer.remove();
+              }
             });
             
             loadMoreContainer.appendChild(loadMoreButton);
