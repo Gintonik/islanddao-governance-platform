@@ -395,23 +395,24 @@
       
       // Load all NFTs at once
       loadAllButton.addEventListener('click', async () => {
-        if (!collectionInitialized) {
-          loading.style.display = 'block';
-          await initializeCollection();
-        }
-        
-        if (allNftsData.length === 0) {
-          loading.textContent = 'No NFTs found in the collection.';
-          return;
-        }
-        
-        // Hide loading message and clear grid
-        loading.style.display = 'none';
-        grid.innerHTML = '';
-        
-        // Display all NFTs
-        displayNFTs(allNftsData, 0, allNftsData.length);
+        try {
+          if (!collectionInitialized) {
+            loading.style.display = 'block';
+            await initializeCollection();
+          }
           
+          if (allNftsData.length === 0) {
+            loading.textContent = 'No NFTs found in the collection.';
+            return;
+          }
+          
+          // Hide loading message and clear grid
+          loading.style.display = 'none';
+          grid.innerHTML = '';
+          
+          // Display all NFTs
+          displayNFTs(allNftsData, 0, allNftsData.length);
+          currentlyLoaded = allNftsData.length;
         } catch (error) {
           console.error('Error loading NFT data:', error);
           loading.textContent = `Error loading NFT data: ${error.message}`;
@@ -526,6 +527,9 @@
           displayNFTs(filteredNFTs);
         }
       }
+      
+      // Start loading the initial NFTs when the page loads
+      loadInitialNFTs();
     });
   </script>
 </body>
