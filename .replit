@@ -1,4 +1,4 @@
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
@@ -13,48 +13,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "NFT Fetcher"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "run_nft_fetcher"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "NFT Grid Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Citizen Map Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Integrated Server"
-
-[[workflows.workflow]]
-name = "NFT Fetcher"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm install node-fetch && node index.js"
-
-[[workflows.workflow]]
-name = "run_nft_fetcher"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm install node-fetch && node index.js"
-
-[[workflows.workflow]]
-name = "NFT Grid Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node index.js"
-waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Citizen Map Server"

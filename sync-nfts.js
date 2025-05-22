@@ -26,7 +26,7 @@ async function fetchNFTs(page = null) {
           groupKey: 'collection',
           groupValue: COLLECTION_ADDRESS,
           page: page,
-          limit: 100
+          limit: 1000  // Increased limit to get more NFTs per request
         }
       })
     });
@@ -53,10 +53,11 @@ async function syncNFTsToDatabase() {
     let page = null;
     let hasMore = true;
     let totalImported = 0;
+    let totalExpected = 0;
     
     console.log('Fetching NFTs from Helius API...');
     
-    // Fetch pages until no more NFTs
+    // Fetch pages until we've got ALL NFTs (should be around 462)
     while (hasMore) {
       console.log(`Fetching page: ${page || 'initial'}`);
       const result = await fetchNFTs(page);
@@ -65,6 +66,12 @@ async function syncNFTsToDatabase() {
         console.log('No more NFTs to fetch');
         hasMore = false;
         break;
+      }
+      
+      // Get the total count from the first page
+      if (page === null && result.total) {
+        totalExpected = result.total;
+        console.log(`Total NFTs in collection: ${totalExpected}`);
       }
       
       console.log(`Processing ${result.items.length} NFTs...`);
@@ -105,9 +112,13 @@ async function syncNFTsToDatabase() {
       }
       
       // Check if there are more pages
-      if (result.page && result.total > totalImported) {
+      // Continue fetching if there's another page - ignore the total count as it may be incorrect
+      if (result.page) {
         page = result.page;
+        console.log(`Progress: ${totalImported} NFTs imported so far`);
       } else {
+        // If no more pages, we're done
+        console.log('No more pages to fetch');
         hasMore = false;
       }
     }
