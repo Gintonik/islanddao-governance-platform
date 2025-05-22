@@ -52,6 +52,24 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // API endpoint to clear all citizen pins
+  if (req.method === 'POST' && req.url === '/api/clear-citizens') {
+    try {
+      // Create an empty citizens file
+      fs.writeFileSync(CITIZENS_FILE, '[]');
+      
+      // Return success response
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: true, message: 'All citizen pins cleared successfully' }));
+    } catch (error) {
+      console.error('Error clearing citizen data:', error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: 'Server error' }));
+    }
+    return;
+  }
+  
   // Serve citizens.json
   if (req.url === '/citizens.json') {
     try {

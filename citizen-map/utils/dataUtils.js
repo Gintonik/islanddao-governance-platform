@@ -101,3 +101,27 @@ export async function getNftMetadata(nftId) {
     return null;
   }
 }
+
+/**
+ * Clears all citizen pins from the map
+ * @returns {Promise<boolean>} - Success status
+ */
+export async function clearAllCitizens() {
+  try {
+    const response = await fetch('/api/clear-citizens', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to clear citizen data: ${response.status}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error clearing citizen data:', error);
+    throw error;
+  }
+}

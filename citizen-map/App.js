@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import CitizenPinForm from './components/CitizenPinForm.js';
-import { loadCitizens, saveCitizen } from './utils/dataUtils.js';
+import { loadCitizens, saveCitizen, clearAllCitizens } from './utils/dataUtils.js';
 
 // Fix Leaflet icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -111,9 +111,27 @@ function App() {
     <AppContainer>
       <Header>
         <Title>PERKS Citizen Map</Title>
-        <AddPinButton onClick={startAddingPin} disabled={isAddingPin}>
-          Drop a Citizen Pin
-        </AddPinButton>
+        <ButtonGroup>
+          <ClearPinsButton 
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to clear all citizen pins?')) {
+                try {
+                  await clearAllCitizens();
+                  setCitizens([]);
+                } catch (error) {
+                  console.error('Error clearing pins:', error);
+                  alert('Failed to clear pins. Please try again.');
+                }
+              }
+            }} 
+            disabled={citizens.length === 0 || isAddingPin}
+          >
+            Clear All Pins
+          </ClearPinsButton>
+          <AddPinButton onClick={startAddingPin} disabled={isAddingPin}>
+            Drop a Citizen Pin
+          </AddPinButton>
+        </ButtonGroup>
       </Header>
       
       <MapContainer
@@ -229,6 +247,11 @@ const Title = styled.h1`
   margin: 0;
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
 const AddPinButton = styled.button`
   background-color: #9945FF;
   color: white;
@@ -241,6 +264,26 @@ const AddPinButton = styled.button`
   
   &:hover {
     background-color: #8134E0;
+  }
+  
+  &:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+  }
+`;
+
+const ClearPinsButton = styled.button`
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #d32f2f;
   }
   
   &:disabled {
