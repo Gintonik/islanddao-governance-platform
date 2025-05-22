@@ -61,6 +61,7 @@ async function getNftMetadata(mintId) {
       return {
         name: nft.name,
         image: nft.image_url,
+        imageUrl: nft.image_url, // Adding imageUrl to match expected format
         id: nft.mint_id,
         owner: nft.owner
       };
@@ -119,6 +120,7 @@ async function getCitizens() {
           formattedCitizen.nftMetadata[nft.mint_id] = {
             name: nft.name,
             image: nft.image_url,
+            imageUrl: nft.image_url, // Adding imageUrl to match expected format in the app
             id: nft.mint_id,
             owner: nft.owner
           };
