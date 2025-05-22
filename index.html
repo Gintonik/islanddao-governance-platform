@@ -7,12 +7,13 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #121212;
+            color: white;
             margin: 0;
             padding: 0;
         }
         .nav-bar {
-            background-color: #333;
+            background-color: #1a1a1a;
             padding: 15px;
             display: flex;
             justify-content: center;
@@ -40,12 +41,13 @@
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: white;
         }
         .loading {
             text-align: center;
             font-size: 18px;
             margin: 50px 0;
+            color: #9945FF;
         }
         .nft-grid {
             display: grid;
@@ -55,14 +57,16 @@
             margin: 0 auto;
         }
         .nft-card {
-            background-color: white;
+            background-color: #222;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             transition: transform 0.2s;
+            border: 1px solid #333;
         }
         .nft-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(153, 69, 255, 0.3);
         }
         .nft-image {
             width: 100%;
@@ -70,7 +74,7 @@
             max-height: 300px;
             object-fit: contain;
             display: block;
-            background-color: #f0f0f0;
+            background-color: #2a2a2a;
             padding: 10px 0;
         }
         .nft-info {
@@ -79,9 +83,10 @@
         .nft-name {
             font-weight: bold;
             margin-bottom: 8px;
+            color: #9945FF;
         }
         .nft-address {
-            color: #666;
+            color: #aaa;
             font-size: 12px;
             word-break: break-all;
             margin-bottom: 5px;
@@ -91,9 +96,10 @@
             margin-top: 30px;
             font-size: 18px;
             font-weight: bold;
+            color: #9945FF;
         }
         .error-message {
-            color: red;
+            color: #ff4545;
             text-align: center;
             margin: 50px 0;
         }
