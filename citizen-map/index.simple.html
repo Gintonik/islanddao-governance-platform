@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PERKS NFT App</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+    crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+    crossorigin=""></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -118,9 +124,15 @@
 
     /* Map tab styles */
     #map-container {
-      height: calc(100vh - 55px); /* Full height minus tabs */
+      height: calc(100vh - 120px); /* Full height minus tabs and header */
       width: 100%;
       position: relative;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+      background-color: #1a1a1a;
     }
 
     .loading {
@@ -133,6 +145,73 @@
       padding: 15px 30px;
       border-radius: 5px;
       z-index: 1000;
+    }
+    
+    /* Leaflet Dark Theme Customization */
+    .leaflet-container {
+      background-color: #1a1a1a;
+      outline: 0;
+    }
+    
+    .leaflet-tile-pane {
+      filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+    }
+    
+    .leaflet-control-attribution {
+      background-color: rgba(0, 0, 0, 0.7) !important;
+      color: #aaa !important;
+    }
+    
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background-color: #222;
+      color: white;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+    }
+    
+    .pin-popup {
+      min-width: 200px;
+    }
+    
+    .pin-popup-image {
+      width: 100%;
+      height: auto;
+      max-height: 200px;
+      object-fit: contain;
+      background-color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .pin-popup-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #9945FF;
+    }
+    
+    .pin-popup-address {
+      color: #aaa;
+      font-size: 12px;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+    
+    .pin-popup-socials {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .social-link {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #333;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    
+    .social-link:hover {
+      background-color: #444;
     }
 
     .header {
@@ -211,13 +290,51 @@
     
     <div id="map-container">
       <div class="loading">Map is loading... Please wait.</div>
-      <div id="map-placeholder">
-        <div class="info-box">
-          <h2>Citizen Map</h2>
-          <p>This is where PERKS NFT holders can pin their NFTs to locations around the world.</p>
-          <p>In the full implementation, you will see a world map here with pins showing where all PERKS citizens are located.</p>
-          <p>This feature is currently under development. Check back soon!</p>
+      <div id="map"></div>
+    </div>
+    
+    <!-- Pin Creation Form (initially hidden) -->
+    <div id="pin-form" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #222; padding: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 1000; max-width: 500px; width: 90%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0;">Add Citizen Pin</h2>
+        <button id="close-form" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+      </div>
+      
+      <div id="step-1" class="form-step">
+        <p>Click on the map to select your location.</p>
+        <div id="selected-location" style="margin-top: 10px; font-size: 14px; color: #aaa;"></div>
+      </div>
+      
+      <div id="step-2" class="form-step" style="display: none;">
+        <p>Enter your Solana wallet address:</p>
+        <input type="text" id="wallet-address" placeholder="Solana wallet address" style="width: 100%; padding: 10px; margin: 10px 0; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        <button id="check-wallet" class="button" style="margin-top: 10px;">Check NFTs</button>
+      </div>
+      
+      <div id="step-3" class="form-step" style="display: none;">
+        <p>Select your PERKS NFTs to add to this location:</p>
+        <div id="nft-selection" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+      </div>
+      
+      <div id="step-4" class="form-step" style="display: none;">
+        <p>Add your social links (optional):</p>
+        <div style="margin: 10px 0;">
+          <label for="x-handle" style="display: block; margin-bottom: 5px;">X/Twitter:</label>
+          <input type="text" id="x-handle" placeholder="@username" style="width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
         </div>
+        <div style="margin: 10px 0;">
+          <label for="telegram" style="display: block; margin-bottom: 5px;">Telegram:</label>
+          <input type="text" id="telegram" placeholder="@username or t.me/username" style="width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        </div>
+        <div style="margin: 10px 0;">
+          <label for="discord" style="display: block; margin-bottom: 5px;">Discord:</label>
+          <input type="text" id="discord" placeholder="username#1234" style="width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        </div>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+        <button id="prev-step" class="button" style="background-color: #333;">Back</button>
+        <button id="next-step" class="button">Next</button>
       </div>
     </div>
   </div>
@@ -307,15 +424,363 @@
       }
     });
 
-    // Handle Map Tab functionality
-    document.getElementById('drop-pin').addEventListener('click', () => {
-      alert('Map functionality is under development. In the full implementation, you will be able to drop pins on the map to show where your PERKS NFTs are located!');
-    });
-
-    // Hide loading message after a short delay (simulating map load)
-    setTimeout(() => {
+    // Global variables for map functionality
+    let map;
+    let currentMarker = null;
+    let currentStep = 1;
+    let selectedLocation = null;
+    let selectedNFTs = [];
+    let citizenPins = [];
+    let isFormOpen = false;
+    
+    // Initialize Leaflet map with dark theme
+    function initMap() {
+      // Create map centered on world view
+      map = L.map('map').setView([20, 0], 2);
+      
+      // Add dark-themed tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+      
+      // Load existing pins
+      loadCitizenPins();
+      
+      // Hide loading message
       document.querySelector('.loading').style.display = 'none';
-    }, 1500);
+      
+      // Setup map click event for pin placement
+      map.on('click', function(e) {
+        if (isFormOpen && currentStep === 1) {
+          placeMarker(e.latlng);
+        }
+      });
+    }
+    
+    // Load citizen pins from JSON file
+    async function loadCitizenPins() {
+      try {
+        const response = await fetch('/citizens.json');
+        const data = await response.json();
+        citizenPins = data;
+        
+        // Display pins on the map
+        displayCitizenPins();
+      } catch (error) {
+        console.error('Error loading citizen pins:', error);
+      }
+    }
+    
+    // Display all citizen pins on the map
+    function displayCitizenPins() {
+      if (!citizenPins || citizenPins.length === 0) return;
+      
+      citizenPins.forEach(pin => {
+        const position = L.latLng(pin.location[0], pin.location[1]);
+        const marker = L.marker(position).addTo(map);
+        
+        // Create popup content
+        let popupContent = '<div class="pin-popup">';
+        
+        // Display the first NFT image if available
+        if (pin.nfts && pin.nfts.length > 0) {
+          const nftId = pin.nfts[0];
+          popupContent += `
+            <img class="pin-popup-image" src="https://gateway.irys.xyz/${nftId}" 
+              alt="PERK NFT" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
+            <div class="pin-popup-title">PERKS Citizen</div>
+          `;
+        }
+        
+        // Add wallet info
+        popupContent += `<div class="pin-popup-address">Wallet: ${pin.wallet.substring(0, 8)}...${pin.wallet.substring(pin.wallet.length - 6)}</div>`;
+        
+        // Add social links if available
+        if (pin.socials) {
+          popupContent += '<div class="pin-popup-socials">';
+          if (pin.socials.x) {
+            popupContent += `<a href="${pin.socials.x}" target="_blank" class="social-link">X/Twitter</a>`;
+          }
+          if (pin.socials.telegram) {
+            popupContent += `<a href="${pin.socials.telegram}" target="_blank" class="social-link">Telegram</a>`;
+          }
+          if (pin.socials.discord) {
+            popupContent += `<a href="#" class="social-link">Discord: ${pin.socials.discord}</a>`;
+          }
+          popupContent += '</div>';
+        }
+        
+        popupContent += '</div>';
+        
+        // Bind the popup to the marker
+        marker.bindPopup(popupContent);
+      });
+    }
+    
+    // Place a temporary marker on the map
+    function placeMarker(latlng) {
+      // Remove existing temporary marker if any
+      if (currentMarker) {
+        map.removeLayer(currentMarker);
+      }
+      
+      // Create new marker
+      currentMarker = L.marker(latlng).addTo(map);
+      
+      // Update selected location
+      selectedLocation = [latlng.lat, latlng.lng];
+      document.getElementById('selected-location').textContent = `Latitude: ${latlng.lat.toFixed(4)}, Longitude: ${latlng.lng.toFixed(4)}`;
+    }
+    
+    // Open the pin creation form
+    function openPinForm() {
+      isFormOpen = true;
+      document.getElementById('pin-form').style.display = 'block';
+      resetForm();
+    }
+    
+    // Close the pin creation form
+    function closePinForm() {
+      isFormOpen = false;
+      document.getElementById('pin-form').style.display = 'none';
+      
+      // Remove temporary marker
+      if (currentMarker) {
+        map.removeLayer(currentMarker);
+        currentMarker = null;
+      }
+      
+      // Reset form state
+      resetForm();
+    }
+    
+    // Reset form to initial state
+    function resetForm() {
+      currentStep = 1;
+      selectedLocation = null;
+      selectedNFTs = [];
+      
+      // Reset form fields
+      document.getElementById('wallet-address').value = '';
+      document.getElementById('x-handle').value = '';
+      document.getElementById('telegram').value = '';
+      document.getElementById('discord').value = '';
+      document.getElementById('nft-selection').innerHTML = '';
+      document.getElementById('selected-location').textContent = '';
+      
+      // Show step 1, hide others
+      document.querySelectorAll('.form-step').forEach(step => step.style.display = 'none');
+      document.getElementById('step-1').style.display = 'block';
+      
+      // Reset buttons
+      document.getElementById('prev-step').style.display = 'none';
+      document.getElementById('next-step').textContent = 'Next';
+    }
+    
+    // Go to the next step in the form
+    async function nextStep() {
+      // Validate current step
+      if (currentStep === 1 && !selectedLocation) {
+        alert('Please select a location on the map first.');
+        return;
+      } else if (currentStep === 2 && !document.getElementById('wallet-address').value.trim()) {
+        alert('Please enter your Solana wallet address.');
+        return;
+      } else if (currentStep === 3 && selectedNFTs.length === 0) {
+        alert('Please select at least one NFT.');
+        return;
+      }
+      
+      if (currentStep < 4) {
+        // Move to next step
+        document.getElementById(`step-${currentStep}`).style.display = 'none';
+        currentStep++;
+        document.getElementById(`step-${currentStep}`).style.display = 'block';
+        
+        // Show back button after step 1
+        document.getElementById('prev-step').style.display = 'block';
+        
+        // Load NFTs for step 3
+        if (currentStep === 3) {
+          const walletAddress = document.getElementById('wallet-address').value.trim();
+          await loadWalletNFTs(walletAddress);
+        }
+        
+        // Change button text on final step
+        if (currentStep === 4) {
+          document.getElementById('next-step').textContent = 'Submit';
+        }
+      } else {
+        // Submit the form
+        submitPinData();
+      }
+    }
+    
+    // Go to the previous step in the form
+    function prevStep() {
+      if (currentStep > 1) {
+        document.getElementById(`step-${currentStep}`).style.display = 'none';
+        currentStep--;
+        document.getElementById(`step-${currentStep}`).style.display = 'block';
+        
+        // Hide back button on step 1
+        if (currentStep === 1) {
+          document.getElementById('prev-step').style.display = 'none';
+        }
+        
+        // Reset next button text
+        document.getElementById('next-step').textContent = 'Next';
+      }
+    }
+    
+    // Load NFTs for a wallet
+    async function loadWalletNFTs(walletAddress) {
+      try {
+        const selectionContainer = document.getElementById('nft-selection');
+        selectionContainer.innerHTML = '<p>Loading NFTs...</p>';
+        
+        // Fetch NFT owners data
+        const response = await fetch('/nft-owners.json');
+        const ownersData = await response.json();
+        
+        // Check if wallet has any NFTs
+        if (!ownersData[walletAddress] || ownersData[walletAddress].length === 0) {
+          selectionContainer.innerHTML = '<p>No PERKS NFTs found for this wallet address.</p>';
+          return;
+        }
+        
+        // Display NFTs for selection
+        selectionContainer.innerHTML = '';
+        const nfts = ownersData[walletAddress];
+        
+        nfts.forEach((nftId, index) => {
+          const nftCard = document.createElement('div');
+          nftCard.style.display = 'flex';
+          nftCard.style.alignItems = 'center';
+          nftCard.style.padding = '10px';
+          nftCard.style.borderBottom = '1px solid #333';
+          
+          const nftNumber = index + 1; // Simple numbering for demo
+          
+          nftCard.innerHTML = `
+            <input type="checkbox" id="nft-${index}" data-nftid="${nftId}" style="margin-right: 15px;">
+            <img src="https://gateway.irys.xyz/${nftId}" alt="PERK #${nftNumber}" 
+              style="width: 50px; height: 50px; object-fit: cover; background-color: #333; margin-right: 10px;"
+              onerror="this.src='https://via.placeholder.com/50x50?text=NFT'">
+            <div>
+              <div style="font-weight: bold;">PERK #${nftNumber}</div>
+              <div style="font-size: 12px; color: #aaa;">${nftId.substring(0, 8)}...${nftId.substring(nftId.length - 4)}</div>
+            </div>
+          `;
+          
+          // Add click handler for checkbox
+          const checkbox = nftCard.querySelector(`#nft-${index}`);
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+              selectedNFTs.push(nftId);
+            } else {
+              selectedNFTs = selectedNFTs.filter(id => id !== nftId);
+            }
+          });
+          
+          selectionContainer.appendChild(nftCard);
+        });
+        
+      } catch (error) {
+        console.error('Error loading wallet NFTs:', error);
+        document.getElementById('nft-selection').innerHTML = `<p>Error loading NFTs: ${error.message}</p>`;
+      }
+    }
+    
+    // Submit the pin data
+    async function submitPinData() {
+      try {
+        const walletAddress = document.getElementById('wallet-address').value.trim();
+        const xHandle = document.getElementById('x-handle').value.trim();
+        const telegram = document.getElementById('telegram').value.trim();
+        const discord = document.getElementById('discord').value.trim();
+        
+        // Create pin data object
+        const pinData = {
+          location: selectedLocation,
+          wallet: walletAddress,
+          nfts: selectedNFTs,
+          socials: {
+            x: xHandle ? (xHandle.startsWith('https://') ? xHandle : `https://x.com/${xHandle.startsWith('@') ? xHandle.substring(1) : xHandle}`) : '',
+            telegram: telegram ? (telegram.startsWith('https://') ? telegram : `https://t.me/${telegram.startsWith('@') ? telegram.substring(1) : telegram}`) : '',
+            discord: discord || ''
+          },
+          timestamp: new Date().toISOString()
+        };
+        
+        // Send data to server
+        const response = await fetch('/api/save-citizen', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(pinData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Add new pin to the map
+          citizenPins.push(pinData);
+          
+          // Keep the marker on the map but update its popup
+          if (currentMarker) {
+            const popupContent = `
+              <div class="pin-popup">
+                <img class="pin-popup-image" src="https://gateway.irys.xyz/${selectedNFTs[0]}" 
+                  alt="PERK NFT" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
+                <div class="pin-popup-title">PERKS Citizen</div>
+                <div class="pin-popup-address">Wallet: ${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
+              </div>
+            `;
+            currentMarker.bindPopup(popupContent).openPopup();
+            currentMarker = null; // Don't remove it, it's a permanent pin now
+          }
+          
+          // Close the form
+          closePinForm();
+          
+          // Show success message
+          alert('Your citizen pin has been added successfully!');
+        } else {
+          alert(`Error: ${result.error || 'Failed to save citizen data'}`);
+        }
+        
+      } catch (error) {
+        console.error('Error submitting pin data:', error);
+        alert(`Error submitting data: ${error.message}`);
+      }
+    }
+    
+    // Handle Map Tab functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize map when switching to map tab
+      document.querySelector('.tab[data-tab="map"]').addEventListener('click', () => {
+        if (!map) {
+          setTimeout(initMap, 100); // Short delay to ensure container is visible
+        }
+      });
+      
+      // "Drop a Pin" button click
+      document.getElementById('drop-pin').addEventListener('click', () => {
+        // Initialize map if not already initialized
+        if (!map) {
+          initMap();
+        }
+        openPinForm();
+      });
+      
+      // Form controls
+      document.getElementById('close-form').addEventListener('click', closePinForm);
+      document.getElementById('next-step').addEventListener('click', nextStep);
+      document.getElementById('prev-step').addEventListener('click', prevStep);
+    });
   </script>
 </body>
 </html>
