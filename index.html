@@ -9,6 +9,33 @@
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
             margin: 0;
+            padding: 0;
+        }
+        .nav-bar {
+            background-color: #333;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .nav-button {
+            background-color: #9945FF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .nav-button.active {
+            background-color: #8134E0;
+        }
+        .nav-button:hover {
+            background-color: #8134E0;
+        }
+        .content {
             padding: 20px;
         }
         h1 {
@@ -73,13 +100,32 @@
     </style>
 </head>
 <body>
-    <h1>PERKS NFT Collection</h1>
-    <div id="loading" class="loading">Loading NFT collection...</div>
-    <div id="nft-grid" class="nft-grid"></div>
-    <div id="total-count" class="total-count"></div>
+    <div class="nav-bar">
+        <button class="nav-button active" id="collection-btn">NFT Collection</button>
+        <button class="nav-button" id="citizen-map-btn">Citizen Map</button>
+    </div>
+    
+    <div class="content">
+        <h1>PERKS NFT Collection</h1>
+        <div id="loading" class="loading">Loading NFT collection...</div>
+        <div id="nft-grid" class="nft-grid"></div>
+        <div id="total-count" class="total-count"></div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // Navigation buttons
+            document.getElementById('collection-btn').addEventListener('click', function() {
+                // Already on the collection page, do nothing except update active state
+                document.getElementById('collection-btn').classList.add('active');
+                document.getElementById('citizen-map-btn').classList.remove('active');
+            });
+            
+            document.getElementById('citizen-map-btn').addEventListener('click', function() {
+                // Navigate to the citizen map page
+                window.location.href = '/citizen-map/';
+            });
+            
             const nftGrid = document.getElementById('nft-grid');
             const totalCount = document.getElementById('total-count');
             const loading = document.getElementById('loading');
