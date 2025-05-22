@@ -39,9 +39,12 @@
         }
         .nft-image {
             width: 100%;
-            height: 200px;
-            object-fit: cover;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
             display: block;
+            background-color: #f0f0f0;
+            padding: 10px 0;
         }
         .nft-info {
             padding: 15px;
@@ -54,6 +57,7 @@
             color: #666;
             font-size: 12px;
             word-break: break-all;
+            margin-bottom: 5px;
         }
         .total-count {
             text-align: center;
@@ -95,7 +99,8 @@
                     const imageUrl = nft.content?.files?.[0]?.uri || 
                                     nft.content?.links?.image || 
                                     'https://via.placeholder.com/250x200?text=No+Image';
-                    const address = nft.id || 'Unknown Address';
+                    const tokenAddress = nft.id || 'Unknown Address';
+                    const ownerAddress = nft.ownership?.owner || 'Unknown Owner';
 
                     const nftCard = document.createElement('div');
                     nftCard.className = 'nft-card';
@@ -104,7 +109,8 @@
                         <img class="nft-image" src="${imageUrl}" alt="${name}" onerror="this.src='https://via.placeholder.com/250x200?text=Image+Error'">
                         <div class="nft-info">
                             <div class="nft-name">${name}</div>
-                            <div class="nft-address">${address}</div>
+                            <div class="nft-address"><strong>Token Address:</strong> ${tokenAddress}</div>
+                            <div class="nft-address"><strong>Owner:</strong> ${ownerAddress}</div>
                         </div>
                     `;
                     
