@@ -20,18 +20,51 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
       setIsLoading(true);
       
       try {
-        // In a real implementation, we'd fetch this from an API
-        // For now, we'll use a fetch request to the NFT Grid Server
+        // Fetch data from our collection
+        const response = await fetch('/perks-collection.json');
+        const collectionData = await response.json();
+        
         const metadataObj = {};
         
-        // Make a fetch request for each NFT
-        // In production, this would be a batch request to an API
+        // Filter the collection data to get only the NFTs owned by this wallet
         for (const nftId of ownedNfts) {
-          // This is a mock implementation - in a real app you'd fetch from Helius or another API
-          metadataObj[nftId] = {
-            name: `PERK #${Math.floor(Math.random() * 3333) + 1}`,
-            image: `https://gateway.irys.xyz/${nftId}`
-          };
+          const nft = collectionData.find(item => item.id === nftId);
+          
+          if (nft) {
+            metadataObj[nftId] = {
+              name: nft.name,
+              image: nft.imageUrl,
+              id: nft.id,
+              owner: nft.owner
+            };
+          } else {
+            // Fallback if NFT data isn't found
+            console.warn(`NFT with ID ${nftId} not found in collection data`);
+            
+            // Fetch individual NFT data from our API
+            try {
+              const nftResponse = await fetch(`/api/nft-metadata?id=${nftId}`);
+              
+              if (nftResponse.ok) {
+                const nftData = await nftResponse.json();
+                metadataObj[nftId] = {
+                  name: nftData.name,
+                  image: nftData.imageUrl,
+                  id: nftData.id,
+                  owner: nftData.owner
+                };
+              } else {
+                throw new Error('NFT data not found');
+              }
+            } catch (fetchError) {
+              // If fetch fails, create minimal record
+              metadataObj[nftId] = {
+                name: `PERK NFT`,
+                image: `https://via.placeholder.com/150?text=PERK+NFT`,
+                id: nftId
+              };
+            }
+          }
         }
         
         setNftMetadata(metadataObj);
@@ -148,7 +181,7 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
                       onClick={() => toggleNftSelection(nftId)}
                     >
                       <NFTImage 
-                        src={nftMetadata[nftId]?.image || `https://gateway.irys.xyz/${nftId}`}
+                        src={nftMetadata[nftId]?.image || ''}
                         alt={nftMetadata[nftId]?.name || 'PERK NFT'}
                         onError={(e) => {
                           e.target.onerror = null;
@@ -159,6 +192,9 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
                         {nftMetadata[nftId]?.name || 'PERK NFT'}
                       </NFTName>
                       <NFTId>{nftId.substring(0, 6)}...{nftId.substring(nftId.length - 4)}</NFTId>
+                      {nftMetadata[nftId]?.owner && (
+                        <NFTOwner>Owner: {nftMetadata[nftId].owner.substring(0, 6)}...{nftMetadata[nftId].owner.substring(nftMetadata[nftId].owner.length - 4)}</NFTOwner>
+                      )}
                     </NFTCard>
                   ))}
                 </NFTSelectionGrid>
@@ -388,9 +424,15 @@ const NFTName = styled.div`
 `;
 
 const NFTId = styled.div`
-  padding: 0 8px 8px 8px;
+  padding: 0 8px 4px 8px;
   font-size: 12px;
   color: #aaa;
+`;
+
+const NFTOwner = styled.div`
+  padding: 0 8px 8px 8px;
+  font-size: 11px;
+  color: #998;
 `;
 
 const LoadingMessage = styled.div`

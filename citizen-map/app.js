@@ -7,6 +7,7 @@ const path = require('path');
 const HTML_FILE = path.join(__dirname, 'index.simple.html');
 const CITIZENS_FILE = path.join(__dirname, '..', 'citizens.json');
 const NFT_OWNERS_FILE = path.join(__dirname, '..', 'nft-owners.json');
+const PERKS_COLLECTION_FILE = path.join(__dirname, '..', 'perks-collection.json');
 
 // Create a simple HTTP server
 const server = http.createServer((req, res) => {
@@ -83,6 +84,61 @@ const server = http.createServer((req, res) => {
       res.end(data);
     } catch (error) {
       console.error('Error serving nft-owners.json:', error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: 'Server error' }));
+    }
+    return;
+  }
+  
+  // Serve perks-collection.json
+  if (req.url === '/perks-collection.json') {
+    try {
+      const data = fs.readFileSync(PERKS_COLLECTION_FILE, 'utf8');
+      
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(data);
+    } catch (error) {
+      console.error('Error serving perks-collection.json:', error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: 'Server error' }));
+    }
+    return;
+  }
+  
+  // API endpoint to get NFT metadata by mint ID
+  if (req.url.startsWith('/api/nft-metadata')) {
+    try {
+      // Parse the URL to get NFT ID from query parameters
+      const urlObj = new URL(req.url, 'http://localhost');
+      const nftId = urlObj.searchParams.get('id');
+      
+      if (!nftId) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'NFT ID is required' }));
+        return;
+      }
+      
+      // Read the collection data
+      const collectionData = JSON.parse(fs.readFileSync(PERKS_COLLECTION_FILE, 'utf8'));
+      
+      // Find the NFT in the collection
+      const nft = collectionData.find(item => item.id === nftId);
+      
+      if (!nft) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'NFT not found' }));
+        return;
+      }
+      
+      // Return NFT metadata
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(nft));
+    } catch (error) {
+      console.error('Error fetching NFT metadata:', error);
       res.statusCode = 500;
       res.end(JSON.stringify({ error: 'Server error' }));
     }
