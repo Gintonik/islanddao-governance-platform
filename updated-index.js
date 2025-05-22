@@ -1,0 +1,262 @@
+// PERKS NFT Collection Grid & Citizen Map Server
+// Integrated with PostgreSQL database for NFT data
+
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const db = require('./db');
+
+// Initialize the database on startup
+async function initializeApp() {
+  try {
+    // Create tables if they don't exist
+    await db.initializeDatabase();
+    console.log('Database initialized successfully');
+    
+    // Start the HTTP server
+    startServer();
+  } catch (error) {
+    console.error('Error initializing the application:', error);
+    process.exit(1);
+  }
+}
+
+// Create a simple HTTP server
+function startServer() {
+  const server = http.createServer(async (req, res) => {
+    console.log(`Request: ${req.method} ${req.url}`);
+    
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Handle OPTIONS requests (for CORS preflight)
+    if (req.method === 'OPTIONS') {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+    
+    // Route handling
+    try {
+      // Serve the HTML file for the root route (NFT Grid)
+      if (req.url === '/' || req.url === '/index.html') {
+        serveFile(res, path.join(__dirname, 'unified-index.html'), 'text/html');
+      } 
+      // API endpoint for NFT collection data
+      else if (req.url === '/api/nfts') {
+        const nfts = await db.getAllNfts();
+        const formattedNfts = nfts.map(nft => ({
+          id: nft.mint_id,
+          name: nft.name,
+          imageUrl: nft.image_url,
+          owner: nft.owner
+        }));
+        
+        sendJsonResponse(res, formattedNfts);
+      }
+      // API endpoint for NFT ownership data
+      else if (req.url === '/api/nft-owners') {
+        const ownershipMap = await db.getNftOwnershipMap();
+        sendJsonResponse(res, ownershipMap);
+      }
+      // For backwards compatibility - serve the static NFT collection file
+      else if (req.url === '/perks-collection.json') {
+        serveFile(res, path.join(__dirname, 'perks-collection.json'), 'application/json');
+      }
+      // For backwards compatibility - serve the static NFT ownership file
+      else if (req.url === '/nft-owners.json') {
+        serveFile(res, path.join(__dirname, 'nft-owners.json'), 'application/json');
+      }
+      // API endpoint for NFT data by mint ID
+      else if (req.url.startsWith('/api/nft/')) {
+        const mintId = req.url.split('/').pop();
+        
+        // Get NFT data from database
+        const nftResult = await db.pool.query('SELECT * FROM nfts WHERE mint_id = $1', [mintId]);
+        
+        if (nftResult.rows.length === 0) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'NFT not found' }));
+          return;
+        }
+        
+        const nft = nftResult.rows[0];
+        sendJsonResponse(res, {
+          id: nft.mint_id,
+          name: nft.name,
+          imageUrl: nft.image_url,
+          owner: nft.owner
+        });
+      }
+      // API endpoint for NFTs by owner wallet
+      else if (req.url.startsWith('/api/wallet-nfts')) {
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const wallet = url.searchParams.get('wallet');
+        
+        if (!wallet) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Wallet address is required' }));
+          return;
+        }
+        
+        const nfts = await db.getNftsByOwner(wallet);
+        const formattedNfts = nfts.map(nft => ({
+          id: nft.mint_id,
+          name: nft.name,
+          imageUrl: nft.image_url,
+          owner: nft.owner
+        }));
+        
+        sendJsonResponse(res, formattedNfts);
+      }
+      // API endpoint to save citizen pin
+      else if (req.method === 'POST' && req.url === '/api/save-citizen') {
+        let body = '';
+        
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        
+        req.on('end', async () => {
+          try {
+            const citizenData = JSON.parse(body);
+            
+            // Validate required fields
+            if (!citizenData.location || !citizenData.wallet || !citizenData.nfts) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Missing required fields' }));
+              return;
+            }
+            
+            // Save to database
+            const citizenId = await db.saveCitizen(citizenData);
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              success: true, 
+              message: 'Citizen pin added successfully',
+              citizenId 
+            }));
+          } catch (error) {
+            console.error('Error saving citizen data:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+          }
+        });
+      }
+      // API endpoint to get all citizens
+      else if (req.url === '/api/citizens') {
+        const citizens = await db.getAllCitizens();
+        sendJsonResponse(res, citizens);
+      }
+      // For backwards compatibility - serve citizens from JSON file
+      else if (req.url === '/citizens.json') {
+        const citizens = await db.getAllCitizens();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(citizens));
+      }
+      // API endpoint to clear all citizens
+      else if (req.method === 'POST' && req.url === '/api/clear-citizens') {
+        await db.clearAllCitizens();
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          message: 'All citizen pins cleared successfully' 
+        }));
+      }
+      // Handle requests for the citizen-map
+      else if (req.url === '/citizen-map') {
+        // Redirect to citizen map HTML page
+        serveFile(res, path.join(__dirname, 'citizen-map/index.simple.html'), 'text/html');
+      }
+      // Serve static files from the citizen-map directory
+      else if (req.url.startsWith('/citizen-map/')) {
+        const filePath = path.join(__dirname, req.url);
+        
+        // Auto-detect content type based on file extension
+        const extname = path.extname(filePath);
+        const contentType = getContentType(extname);
+        
+        serveFile(res, filePath, contentType);
+      }
+      // Serve static files from the root directory
+      else {
+        const filePath = path.join(__dirname, req.url);
+        
+        // Auto-detect content type based on file extension
+        const extname = path.extname(filePath);
+        const contentType = getContentType(extname);
+        
+        serveFile(res, filePath, contentType);
+      }
+    } catch (error) {
+      console.error('Error handling request:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+    }
+  });
+
+  // Set the port and start the server
+  const PORT = 5000;
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running at http://localhost:${PORT}/`);
+    console.log(`Open your browser to view the PERKS NFT collection grid!`);
+    console.log(`Visit http://localhost:${PORT}/citizen-map to view the Citizen Map`);
+  });
+}
+
+// Helper function to serve files
+function serveFile(res, filePath, contentType) {
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        res.writeHead(404);
+        res.end('File not found');
+      } else {
+        res.writeHead(500);
+        res.end(`Server error: ${err.code}`);
+      }
+      return;
+    }
+    
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(content);
+  });
+}
+
+// Helper function to send JSON responses
+function sendJsonResponse(res, data) {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+}
+
+// Helper function to determine content type based on file extension
+function getContentType(extname) {
+  switch (extname) {
+    case '.html':
+      return 'text/html';
+    case '.js':
+      return 'text/javascript';
+    case '.css':
+      return 'text/css';
+    case '.json':
+      return 'application/json';
+    case '.png':
+      return 'image/png';
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.gif':
+      return 'image/gif';
+    case '.svg':
+      return 'image/svg+xml';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
+// Start the application
+initializeApp();
