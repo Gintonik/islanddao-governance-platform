@@ -61,6 +61,15 @@ task = "shell.exec"
 args = "node citizen-map/server.js"
 waitForPort = 5001
 
+[[workflows.workflow]]
+name = "Database Sync"
+author = 39093361
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node db-sync.js"
+
 [deployment]
 run = ["sh", "-c", "npm install node-fetch && node index.js"]
 
