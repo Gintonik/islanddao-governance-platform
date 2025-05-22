@@ -58,9 +58,21 @@ function LocationPicker({ onLocationSelect, setIsPickingLocation }) {
     click: (e) => {
       onLocationSelect([e.latlng.lat, e.latlng.lng]);
       setIsPickingLocation(false);
+      // Remove custom cursor class when done
+      document.body.classList.remove('picking-location');
       map.off('click');
     }
   });
+  
+  // Add a custom cursor class when component mounts
+  useEffect(() => {
+    document.body.classList.add('picking-location');
+    
+    return () => {
+      // Clean up by removing the class when component unmounts
+      document.body.classList.remove('picking-location');
+    };
+  }, []);
   
   return null;
 }
@@ -140,7 +152,7 @@ function App() {
   };
   
   return (
-    <AppContainer>
+    <AppContainer className={isPickingLocation ? 'picking-location' : ''}>
       <Header>
         <Title>PERKS Citizen Map</Title>
         <ButtonGroup>
@@ -160,11 +172,17 @@ function App() {
           >
             Clear All Pins
           </ClearPinsButton>
-          <AddPinButton onClick={startAddingPin} disabled={isAddingPin}>
+          <AddPinButton 
+            onClick={startAddingPin} 
+            disabled={isAddingPin}
+            title={isAddingPin ? "Currently placing a pin" : "Click to place a pin on the map"}
+          >
             Drop a Citizen Pin
           </AddPinButton>
         </ButtonGroup>
       </Header>
+      
+      {/* Global styles are added through styled-components */}
       
       <MapContainer
         center={[20, 0]}
@@ -261,11 +279,7 @@ function App() {
         />
       )}
       
-      {isPickingLocation && (
-        <PickLocationMessage>
-          Click on the map to select a location for your citizen pin
-        </PickLocationMessage>
-      )}
+      {/* Remove pop-up message and use cursor styling instead */}
     </AppContainer>
   );
 }
@@ -276,6 +290,10 @@ const AppContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  
+  &.picking-location {
+    cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDIgNzkuMTYwOTI0LCAyMDE3LzA3LzEzLTAxOjA2OjM5ICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpIiB4bXA6Q3JlYXRlRGF0ZT0iMjAyNC0wNS0yMlQxMjowMDowMFoiIHhtcDpNb2RpZnlEYXRlPSIyMDI0LTA1LTIyVDEyOjAwOjAwWiIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAyNC0wNS0yMlQxMjowMDowMFoiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIiBwaG90b3Nob3A6SUNDUHJvZmlsZT0ic1JHQiBJRUM2MTk2Ni0yLjEiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MWI4YjI0M2YtZGFhMy00ZDQxLWJlZGEtYjEyMDVhOTgz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'), auto !important;
+  }
 `;
 
 const Header = styled.header`
@@ -340,18 +358,7 @@ const ClearPinsButton = styled.button`
   }
 `;
 
-const PickLocationMessage = styled.div`
-  position: absolute;
-  top: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
-  z-index: 1000;
-  pointer-events: none;
-`;
+// Removed the pick location message popup as requested
 
 const PopupContent = styled.div`
   max-width: 250px;
