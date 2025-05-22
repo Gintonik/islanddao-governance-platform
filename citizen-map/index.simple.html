@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS Citizen Map</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #9945FF;
+      margin-bottom: 20px;
+    }
+    p {
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .status {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #222;
+      border-radius: 8px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #9945FF;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>PERKS Citizen Map</h1>
+  <p>Welcome to the PERKS Citizen Map application! This app allows PERKS NFT holders to pin their NFTs to locations around the world.</p>
+  
+  <div class="status">
+    <h3>Server Status: Online</h3>
+    <p>The Citizen Map server is running at port 5001.</p>
+    <p>We have loaded <span id="nft-count">0</span> NFTs from <span id="wallet-count">0</span> wallet addresses.</p>
+  </div>
+  
+  <a href="#" class="button" id="load-data">Check NFT Data</a>
+  
+  <script>
+    document.getElementById('load-data').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const response = await fetch('/nft-owners.json');
+        const data = await response.json();
+        
+        // Count wallets and NFTs
+        const walletCount = Object.keys(data).length;
+        let nftCount = 0;
+        
+        for (const wallet in data) {
+          nftCount += data[wallet].length;
+        }
+        
+        document.getElementById('wallet-count').textContent = walletCount;
+        document.getElementById('nft-count').textContent = nftCount;
+        
+        alert(`Successfully loaded NFT data: ${nftCount} NFTs from ${walletCount} wallets`);
+      } catch (error) {
+        alert(`Error loading NFT data: ${error.message}`);
+      }
+    });
+  </script>
+</body>
+</html>

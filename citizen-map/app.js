@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // File paths
-const HTML_FILE = path.join(__dirname, 'index.html');
+const HTML_FILE = path.join(__dirname, 'index.simple.html');
 const CITIZENS_FILE = path.join(__dirname, '..', 'citizens.json');
 const NFT_OWNERS_FILE = path.join(__dirname, '..', 'nft-owners.json');
 
