@@ -7,6 +7,37 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
+    /* Custom tooltip style */
+    .map-tooltip {
+      position: fixed;
+      bottom: 70px;
+      right: 10px;
+      background-color: rgba(30, 30, 30, 0.85);
+      color: #e0e0e0;
+      border-radius: 4px;
+      padding: 8px;
+      max-width: 150px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      border: 1px solid #444;
+      z-index: 1000;
+      font-size: 10px;
+      display: none;
+    }
+    
+    .tooltip-close {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      color: #999;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .tooltip-close:hover {
+      color: white;
+    }
+    
     /* Mini popup styles */
     .mini-popup .leaflet-popup-content-wrapper {
       padding: 5px !important;
@@ -796,17 +827,12 @@
         ${citizen.message ? `<p>${citizen.message}</p>` : ''}
       `;
       
-      // Traditional popup approach - but smaller and positioned to the side
-      const popupOptions = {
-        className: 'mini-popup',
-        offset: [50, 0], // Push it far to the right of the marker
+      // Use standard popup but with absolute position offset
+      marker.bindPopup(infoContent, {
+        offset: [80, 0], // Push it far to the right
         closeButton: true,
-        maxWidth: 100,
-        minWidth: 80,
         autoPan: false
-      };
-      
-      marker.bindPopup(infoContent, popupOptions);
+      });
     }
     
     // Get NFTs for a wallet address
