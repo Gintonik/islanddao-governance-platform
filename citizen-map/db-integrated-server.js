@@ -44,8 +44,14 @@ function startServer() {
     
     // Route handling
     try {
+      // Redirect to collection grid on main server when requested
+      if (req.url === '/collection-grid') {
+        res.writeHead(302, { 'Location': 'http://localhost:5000/' });
+        res.end();
+        return;
+      }
       // Serve the HTML file for the root route
-      if (req.url === '/' || req.url === '/index.html') {
+      else if (req.url === '/' || req.url === '/index.html') {
         serveFile(res, HTML_FILE, 'text/html');
       }
       // Serve the globe view HTML
