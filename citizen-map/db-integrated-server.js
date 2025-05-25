@@ -52,6 +52,40 @@ function startServer() {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
+      // Add endpoint for nft-owners.json to support the existing code
+      else if (req.url === '/nft-owners.json') {
+        try {
+          // Get all NFT ownership data from database
+          const client = await db.pool.connect();
+          
+          try {
+            // Get all NFTs with owners
+            const result = await client.query(`
+              SELECT mint_id, owner FROM nfts 
+              WHERE owner IS NOT NULL AND owner != ''
+            `);
+            
+            // Create wallet -> NFTs mapping
+            const ownershipMap = {};
+            
+            for (const row of result.rows) {
+              if (!ownershipMap[row.owner]) {
+                ownershipMap[row.owner] = [];
+              }
+              ownershipMap[row.owner].push(row.mint_id);
+            }
+            
+            // Send the ownership map
+            sendJsonResponse(res, ownershipMap);
+          } finally {
+            client.release();
+          }
+        } catch (error) {
+          console.error('Error generating NFT ownership map:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server error generating ownership map' }));
+        }
+      }
       // API endpoint for wallet NFTs - direct database access
       else if (req.url.startsWith('/api/wallet-nfts')) {
         const url = new URL(req.url, `http://${req.headers.host}`);
