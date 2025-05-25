@@ -129,10 +129,37 @@
       padding: 15px 20px;
       border-bottom: 1px solid #333;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      margin: 0 20px;
+    }
+    
+    .nav-item {
+      color: #a0a0a0;
+      text-decoration: none;
+      padding: 8px 16px;
+      margin: 0 5px;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-item:hover {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item.active {
+      color: white;
+      background-color: #4c6ef5;
     }
     
     .header-title {
@@ -623,11 +650,16 @@
 <body>
   <div class="header">
     <div class="header-title">
-      <h1>PERKS Citizen Map</h1>
-      <p>Explore NFT owners around the world</p>
+      <h1>PERKS DAO</h1>
+      <p>NFT Collection Explorer</p>
     </div>
+    
+    <div class="nav-bar">
+      <a href="/" class="nav-item">Collection Grid</a>
+      <a href="/citizen-map" class="nav-item active">Citizen Map</a>
+    </div>
+    
     <div class="header-actions">
-      <a href="/" class="grid-btn" id="viewGridBtn">View NFT Grid</a>
       <button class="toggle-theme-btn" id="toggleThemeBtn">
         <span id="lightModeIcon">☀️</span>
         <span id="darkModeIcon" style="display:none">🌙</span>

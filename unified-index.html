@@ -26,17 +26,44 @@
     
     header {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 30px;
       border-bottom: 1px solid #333;
-      padding-bottom: 20px;
+      padding: 15px 0 20px;
     }
     
     .logo {
       font-size: 1.8rem;
       font-weight: 700;
       color: #9945FF;
+    }
+    
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      margin: 0 20px;
+    }
+    
+    .nav-item {
+      color: #a0a0a0;
+      text-decoration: none;
+      padding: 8px 16px;
+      margin: 0 5px;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-item:hover {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item.active {
+      color: white;
+      background-color: #4c6ef5;
     }
     
     .header-right {
