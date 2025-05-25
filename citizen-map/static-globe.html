@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS Citizen 3D Globe</title>
+  
+  <!-- Globe.gl library -->
+  <script src="https://unpkg.com/globe.gl"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #globeViz {
+      width: 100vw;
+      height: 100vh;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 5px;
+      color: white;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #9945FF;
+    }
+    .btn {
+      display: block;
+      margin: 5px 0;
+      padding: 8px 12px;
+      background: #9945FF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: #8134E0;
+    }
+    .btn.secondary {
+      background: #444;
+    }
+    .btn.secondary:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <div class="title">PERKS Citizen Globe</div>
+    <a href="/index.simple.html" class="btn secondary">Switch to 2D Map</a>
+    <button id="toggleRotation" class="btn">Pause Rotation</button>
+  </div>
+  
+  <div id="globeViz"></div>
+
+  <script>
+    // Initialize globe
+    const globe = Globe()
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+      .width(window.innerWidth)
+      .height(window.innerHeight)
+      .pointColor(() => '#9945FF')
+      .pointAltitude(0.05)
+      .pointRadius(0.5)
+      .pointsMerge(false)
+      .onPointClick(point => {
+        if (point.citizen) {
+          console.log('Clicked citizen:', point.citizen);
+        }
+      })(document.getElementById('globeViz'));
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      globe.width(window.innerWidth).height(window.innerHeight);
+    });
+
+    // Sample data (will be replaced with fetched data)
+    let citizenData = [];
+
+    // Set initial view
+    globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+
+    // Enable auto-rotation
+    const controls = globe.controls();
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+    
+    // Toggle rotation button
+    let isRotating = true;
+    document.getElementById('toggleRotation').addEventListener('click', () => {
+      isRotating = !isRotating;
+      controls.autoRotate = isRotating;
+      document.getElementById('toggleRotation').textContent = 
+        isRotating ? 'Pause Rotation' : 'Resume Rotation';
+    });
+
+    // Function to format point tooltip
+    globe.pointLabel(point => {
+      const citizen = point.citizen;
+      if (!citizen) return '';
+      
+      return `
+        <div style="
+          background: rgba(20, 20, 20, 0.9);
+          color: white;
+          border-radius: 6px;
+          padding: 10px;
+          width: 200px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+          border: 1px solid #9945FF;
+          font-family: Arial, sans-serif;
+        ">
+          <div style="font-weight: bold; margin-bottom: 5px;">
+            ${citizen.nfts && citizen.nfts.length > 0 ? `PERK NFTs (${citizen.nfts.length})` : 'Citizen'}
+          </div>
+          <div style="font-size: 12px; margin-bottom: 5px;">
+            Wallet: ${citizen.wallet.substring(0, 6)}...${citizen.wallet.substring(citizen.wallet.length - 4)}
+          </div>
+          ${citizen.message ? `<div style="font-size: 12px; margin-bottom: 5px;">${citizen.message}</div>` : ''}
+          <div style="font-size: 10px; color: #aaa; margin-top: 5px;">
+            Added: ${new Date(citizen.timestamp).toLocaleString()}
+          </div>
+        </div>
+      `;
+    });
+
+    // Fetch citizen data
+    fetch('/citizens.json')
+      .then(response => response.json())
+      .then(citizens => {
+        citizenData = citizens;
+        
+        // Format for the globe
+        const pointsData = citizenData.map(citizen => ({
+          lat: citizen.location[0],
+          lng: citizen.location[1],
+          citizen
+        }));
+        
+        // Update the globe
+        globe.pointsData(pointsData);
+      })
+      .catch(error => {
+        console.error('Error fetching citizen data:', error);
+      });
+  </script>
+</body>
+</html>
