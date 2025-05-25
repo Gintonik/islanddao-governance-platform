@@ -346,12 +346,15 @@
       color: #fff;
       padding: 3px 6px;
       border-radius: 3px;
-      font-size: 12px;
+      font-size: 11px;
       pointer-events: none;
       border: 1px solid rgba(255, 255, 255, 0.3);
       white-space: nowrap;
       z-index: 5;
       transform: translate(-50%, -50%);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
     }
   </style>
 </head>
@@ -656,10 +659,29 @@
         
         // Add new city labels
         cities.forEach(city => {
-          const position = latLongToVector3(city.lat, city.lng, 100);
+          // Create marker at city position
+          const position = latLongToVector3(city.lat, city.lng, 101);
           const cityMarker = createCityMarker(position);
           cityMarkers.push(cityMarker);
           scene.add(cityMarker);
+          
+          // Create connecting line to anchor label visually
+          const lineGeometry = new THREE.BufferGeometry();
+          const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: 0xffffff, 
+            transparent: true, 
+            opacity: 0.3,
+            linewidth: 1 
+          });
+          
+          const lineVertices = [
+            position.x, position.y, position.z,
+            position.x * 1.03, position.y * 1.03, position.z * 1.03
+          ];
+          
+          lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(lineVertices, 3));
+          const line = new THREE.Line(lineGeometry, lineMaterial);
+          scene.add(line);
           
           // Create HTML label
           const label = document.createElement('div');
@@ -667,8 +689,9 @@
           label.textContent = city.name;
           document.getElementById('globe-container').appendChild(label);
           
-          // Store label element in city object
+          // Store label element and line in city object
           city.label = label;
+          city.line = line;
         });
       }
       
@@ -695,15 +718,28 @@
           const position = latLongToVector3(city.lat, city.lng, 100);
           const screenPosition = worldToScreen(position);
           
-          // Check if city is visible
+          // Check if city is visible (in front of the globe)
           const isBehindGlobe = screenPosition.z > 1;
           
           if (isBehindGlobe) {
+            // Hide city label if it's on the far side of the globe
             city.label.style.display = 'none';
           } else {
+            // Show and position city label
             city.label.style.display = 'block';
             city.label.style.left = screenPosition.x + 'px';
             city.label.style.top = screenPosition.y + 'px';
+            
+            // Add depth effect - fade out labels that are at the edges
+            const distFromCenter = Math.sqrt(
+              Math.pow(screenPosition.x - window.innerWidth/2, 2) + 
+              Math.pow(screenPosition.y - window.innerHeight/2, 2)
+            );
+            
+            const maxDist = Math.min(window.innerWidth, window.innerHeight) * 0.5;
+            const opacity = Math.max(0, 1 - (distFromCenter / maxDist));
+            
+            city.label.style.opacity = opacity.toFixed(2);
           }
         });
       }
