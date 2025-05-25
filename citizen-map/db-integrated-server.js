@@ -2,7 +2,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const citizenMapDb = require('./citizen-map-db');
+const apiRoutes = require('./api-routes');
 const db = require('../db');
 
 // Constants
@@ -49,13 +49,22 @@ function startServer() {
       } 
       // Serve citizens data from database
       else if (req.url === '/citizens.json') {
-        const citizens = await citizenMapDb.getCitizens();
+        const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
-      // Serve NFT ownership data from database
-      else if (req.url === '/nft-owners.json') {
-        const nftOwners = await citizenMapDb.getNftOwners();
-        sendJsonResponse(res, nftOwners);
+      // API endpoint for wallet NFTs - direct database access
+      else if (req.url.startsWith('/api/wallet-nfts')) {
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const wallet = url.searchParams.get('wallet');
+        
+        if (!wallet) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Wallet address is required' }));
+          return;
+        }
+        
+        const result = await apiRoutes.getWalletNfts(wallet);
+        sendJsonResponse(res, result);
       }
       // API endpoint to save citizen pin
       else if (req.method === 'POST' && req.url === '/api/save-citizen') {
@@ -76,8 +85,15 @@ function startServer() {
               return;
             }
             
-            // Save to database
-            const result = await citizenMapDb.saveCitizen(citizenData);
+            console.log('Saving citizen pin with data:', JSON.stringify({
+              wallet: citizenData.wallet,
+              location: citizenData.location,
+              nftCount: citizenData.nfts.length,
+              primaryNft: citizenData.primaryNft
+            }));
+            
+            // Save to database using direct API
+            const result = await apiRoutes.saveCitizenPin(citizenData);
             
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
