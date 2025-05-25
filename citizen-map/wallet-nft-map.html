@@ -7,6 +7,33 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
+    /* Mini popup styles */
+    .mini-popup .leaflet-popup-content-wrapper {
+      padding: 5px !important;
+      max-width: 100px !important;
+      font-size: 9px !important;
+      background-color: rgba(30, 30, 30, 0.85) !important;
+    }
+    
+    .mini-popup .leaflet-popup-content {
+      margin: 5px !important;
+      width: auto !important;
+      max-width: 90px !important;
+    }
+    
+    .mini-popup .leaflet-popup-tip {
+      background-color: rgba(30, 30, 30, 0.85) !important;
+      width: 10px !important;
+      height: 10px !important;
+    }
+    
+    .mini-popup .leaflet-popup-close-button {
+      font-size: 12px !important;
+      padding: 2px 2px 0 0 !important;
+      top: 2px !important;
+      right: 2px !important;
+    }
+    
     /* Force smaller popups */
     .leaflet-popup-content-wrapper {
       padding: 5px !important;
@@ -769,12 +796,17 @@
         ${citizen.message ? `<p>${citizen.message}</p>` : ''}
       `;
       
-      // Show info in side panel instead of popup
-      marker.on('click', function() {
-        const infoPanel = document.getElementById('citizenInfoPanel');
-        infoPanel.innerHTML = infoContent;
-        infoPanel.style.display = 'block';
-      });
+      // Traditional popup approach - but smaller and positioned to the side
+      const popupOptions = {
+        className: 'mini-popup',
+        offset: [50, 0], // Push it far to the right of the marker
+        closeButton: true,
+        maxWidth: 100,
+        minWidth: 80,
+        autoPan: false
+      };
+      
+      marker.bindPopup(infoContent, popupOptions);
     }
     
     // Get NFTs for a wallet address
