@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS Citizen Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      background-color: #121212;
+      padding: 15px 20px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #4c6ef5;
+    }
+    
+    .header p {
+      margin: 5px 0 0;
+      color: #999;
+      font-size: 14px;
+    }
+    
+    #map {
+      flex: 1;
+      z-index: 0;
+    }
+    
+    .map-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+    }
+    
+    .add-pin-btn {
+      background-color: #4c6ef5;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .add-pin-btn:hover {
+      background-color: #3b5bdb;
+    }
+    
+    .instruction-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 15px 20px;
+      border-radius: 6px;
+      text-align: center;
+      max-width: 300px;
+      z-index: 999;
+      display: none;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .instruction-box h3 {
+      margin-top: 0;
+      color: #4c6ef5;
+    }
+    
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .pin-form {
+      background-color: #1a1a1a;
+      border-radius: 8px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .pin-form h2 {
+      margin-top: 0;
+      color: #4c6ef5;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      background-color: #333;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: white;
+      font-family: monospace;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: #4c6ef5;
+    }
+    
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      padding-right: 5px;
+    }
+    
+    .nft-item {
+      position: relative;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    
+    .nft-item:hover {
+      transform: scale(1.05);
+    }
+    
+    .nft-item.selected {
+      border-color: #4c6ef5;
+      box-shadow: 0 0 0 2px rgba(76, 110, 245, 0.5);
+    }
+    
+    .nft-item img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+    
+    .nft-name {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px;
+      font-size: 10px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .btn-cancel {
+      background-color: transparent;
+      border: 1px solid #555;
+      color: #ccc;
+    }
+    
+    .btn-cancel:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-submit {
+      background-color: #4c6ef5;
+      border: none;
+      color: white;
+    }
+    
+    .btn-submit:hover {
+      background-color: #3b5bdb;
+    }
+    
+    .citizen-marker {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    .citizen-marker img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .leaflet-popup-content-wrapper {
+      background-color: rgba(26, 26, 26, 0.95);
+      color: white;
+      border-radius: 6px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .leaflet-popup-tip {
+      background-color: rgba(26, 26, 26, 0.95);
+    }
+    
+    .popup-content h3 {
+      margin-top: 0;
+      color: #4c6ef5;
+      margin-bottom: 10px;
+    }
+    
+    .popup-content p {
+      margin: 5px 0;
+      font-size: 13px;
+    }
+    
+    .wallet-address {
+      font-family: monospace;
+      background-color: rgba(76, 110, 245, 0.1);
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-bottom: 5px;
+      word-break: break-all;
+    }
+    
+    .nft-badge {
+      display: inline-block;
+      background-color: #4c6ef5;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PERKS Citizen Map</h1>
+    <p>Explore NFT owners around the world</p>
+  </div>
+  
+  <div id="map"></div>
+  
+  <div class="map-controls">
+    <button class="add-pin-btn" id="addPinBtn">Add Your Location</button>
+  </div>
+  
+  <div class="instruction-box" id="instructionBox">
+    <h3>Click on the Map</h3>
+    <p>Select where you want to place your pin</p>
+  </div>
+  
+  <div class="overlay" id="pinFormOverlay">
+    <div class="pin-form">
+      <h2>Add Your Location</h2>
+      
+      <div class="form-group">
+        <label for="walletAddress">Your Wallet Address</label>
+        <input type="text" id="walletAddress" class="form-control" placeholder="Enter your Solana wallet address">
+      </div>
+      
+      <div class="form-group">
+        <label>Choose your profile NFT</label>
+        <div class="nft-grid" id="nftGrid">
+          <!-- NFTs will be inserted here -->
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
+        <button class="btn btn-submit" id="submitBtn">Add Pin</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample NFT data
+    const sampleNfts = [
+      {
+        id: "nft1",
+        name: "PERKS #123",
+        image: "https://arweave.net/kf9FcZbZ1MqQbQ1We4o2E4AbD-sw9AiSAA2E_daaSP4?ext=png"
+      },
+      {
+        id: "nft2",
+        name: "PERKS #234",
+        image: "https://arweave.net/FHDdyJt-kiecHPKkJ70VL2GwkL8lkpsyL1-z1-Osi8U?ext=png"
+      },
+      {
+        id: "nft3",
+        name: "PERKS #345",
+        image: "https://arweave.net/8bnTJDZl9m9XUUJMhpZo5W9beGfqPj-tSE1-_Lz0wDs?ext=png"
+      },
+      {
+        id: "nft4",
+        name: "PERKS #456",
+        image: "https://arweave.net/dqRDxrPNlR8LCjSPR8-LZQp7yjQgTTQGW2EuA-O2ivI?ext=png"
+      },
+      {
+        id: "nft5",
+        name: "PERKS #567",
+        image: "https://arweave.net/i_dS0NJKBJpgQs8XTW2H5TCl3JaGXGH4zp7CDQIZRD4?ext=png"
+      }
+    ];
+    
+    // Existing citizens data
+    const citizens = [
+      { 
+        wallet: "8XtAhcCJRFkk52sFaXeRBM5Ajm7NgJAVQWwZL5Ba5WJK", 
+        location: [40.7128, -74.0060], 
+        city: "New York", 
+        nfts: 2,
+        pfp: "https://arweave.net/kf9FcZbZ1MqQbQ1We4o2E4AbD-sw9AiSAA2E_daaSP4?ext=png"
+      },
+      { 
+        wallet: "6J8T9JRNrpNQJKfvLnrDYCrBjK7ZpEaAGRoE4NhbDCpG", 
+        location: [51.5074, -0.1278], 
+        city: "London", 
+        nfts: 1,
+        pfp: "https://arweave.net/FHDdyJt-kiecHPKkJ70VL2GwkL8lkpsyL1-z1-Osi8U?ext=png"
+      },
+      { 
+        wallet: "DziwJZQpCmcXFsEXnF1vZ5tbjwxJBwL16sXS1jKDzVkC", 
+        location: [35.6762, 139.6503], 
+        city: "Tokyo", 
+        nfts: 3,
+        pfp: "https://arweave.net/8bnTJDZl9m9XUUJMhpZo5W9beGfqPj-tSE1-_Lz0wDs?ext=png"
+      }
+    ];
+    
+    // State variables
+    let selectedNft = null;
+    let selectedLocation = null;
+    let tempMarker = null;
+    let isAddingPin = false;
+    
+    // Initialize map
+    const map = L.map('map', {
+      center: [20, 0],
+      zoom: 2,
+      minZoom: 2,
+      maxZoom: 18,
+      zoomControl: false
+    });
+    
+    // Add dark theme tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+    
+    // Add zoom control to bottom right
+    L.control.zoom({
+      position: 'bottomright'
+    }).addTo(map);
+    
+    // Format wallet address for display
+    function formatWallet(wallet) {
+      return wallet.substring(0, 6) + '...' + wallet.substring(wallet.length - 4);
+    }
+    
+    // Create and add citizen markers to the map
+    function addCitizenMarkers() {
+      citizens.forEach(citizen => {
+        createCitizenMarker(citizen);
+      });
+    }
+    
+    // Create a single citizen marker with NFT profile picture
+    function createCitizenMarker(citizen) {
+      // Create HTML element for the marker
+      const markerElement = document.createElement('div');
+      markerElement.className = 'citizen-marker';
+      
+      // Add the NFT image
+      const img = document.createElement('img');
+      img.src = citizen.pfp;
+      img.alt = citizen.wallet;
+      markerElement.appendChild(img);
+      
+      // Create custom icon
+      const customIcon = L.divIcon({
+        className: '',
+        html: markerElement,
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
+      });
+      
+      // Create marker and add to map
+      const marker = L.marker(citizen.location, { icon: customIcon }).addTo(map);
+      
+      // Add popup
+      marker.bindPopup(createPopupContent(citizen));
+    }
+    
+    // Create popup content for a citizen marker
+    function createPopupContent(citizen) {
+      const popupContent = document.createElement('div');
+      popupContent.className = 'popup-content';
+      
+      // Add city name as title
+      const title = document.createElement('h3');
+      title.textContent = citizen.city;
+      popupContent.appendChild(title);
+      
+      // Add wallet address
+      const walletContainer = document.createElement('div');
+      walletContainer.className = 'wallet-address';
+      walletContainer.textContent = formatWallet(citizen.wallet);
+      popupContent.appendChild(walletContainer);
+      
+      // Add NFT count
+      const nftInfo = document.createElement('p');
+      nftInfo.innerHTML = `<span class="nft-badge">${citizen.nfts} NFT${citizen.nfts !== 1 ? 's' : ''}</span>`;
+      popupContent.appendChild(nftInfo);
+      
+      return popupContent;
+    }
+    
+    // Initialize pin form
+    function initPinForm() {
+      // Add NFTs to the grid
+      const nftGrid = document.getElementById('nftGrid');
+      
+      sampleNfts.forEach(nft => {
+        const nftItem = document.createElement('div');
+        nftItem.className = 'nft-item';
+        nftItem.dataset.id = nft.id;
+        
+        const img = document.createElement('img');
+        img.src = nft.image;
+        img.alt = nft.name;
+        nftItem.appendChild(img);
+        
+        const nameEl = document.createElement('div');
+        nameEl.className = 'nft-name';
+        nameEl.textContent = nft.name;
+        nftItem.appendChild(nameEl);
+        
+        // Handle selection
+        nftItem.addEventListener('click', () => {
+          // Deselect all NFTs
+          document.querySelectorAll('.nft-item').forEach(item => {
+            item.classList.remove('selected');
+          });
+          
+          // Select this NFT
+          nftItem.classList.add('selected');
+          selectedNft = nft;
+        });
+        
+        nftGrid.appendChild(nftItem);
+      });
+    }
+    
+    // Start the add pin process
+    function startAddPin() {
+      isAddingPin = true;
+      document.getElementById('instructionBox').style.display = 'block';
+      document.getElementById('addPinBtn').style.display = 'none';
+      
+      // Change cursor
+      document.getElementById('map').style.cursor = 'crosshair';
+      
+      // Add map click listener
+      map.on('click', onMapClick);
+    }
+    
+    // Handle map click when adding a pin
+    function onMapClick(e) {
+      selectedLocation = e.latlng;
+      
+      // Remove any existing temporary marker
+      if (tempMarker) {
+        map.removeLayer(tempMarker);
+      }
+      
+      // Add temporary marker
+      tempMarker = L.marker(selectedLocation).addTo(map);
+      
+      // Hide instruction box
+      document.getElementById('instructionBox').style.display = 'none';
+      
+      // Show the pin form
+      document.getElementById('pinFormOverlay').style.display = 'flex';
+    }
+    
+    // Cancel adding a pin
+    function cancelAddPin() {
+      isAddingPin = false;
+      
+      // Remove temporary marker
+      if (tempMarker) {
+        map.removeLayer(tempMarker);
+        tempMarker = null;
+      }
+      
+      // Reset selection
+      selectedLocation = null;
+      selectedNft = null;
+      
+      // Deselect all NFTs
+      document.querySelectorAll('.nft-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      // Clear wallet address
+      document.getElementById('walletAddress').value = '';
+      
+      // Hide form and instruction box
+      document.getElementById('pinFormOverlay').style.display = 'none';
+      document.getElementById('instructionBox').style.display = 'none';
+      
+      // Show add pin button
+      document.getElementById('addPinBtn').style.display = 'block';
+      
+      // Reset cursor
+      document.getElementById('map').style.cursor = '';
+      
+      // Remove map click listener
+      map.off('click', onMapClick);
+    }
+    
+    // Submit and add the pin
+    function submitPin() {
+      const walletAddress = document.getElementById('walletAddress').value.trim();
+      
+      // Validate form
+      if (!walletAddress) {
+        alert('Please enter a wallet address');
+        return;
+      }
+      
+      if (!selectedNft) {
+        alert('Please select an NFT to use as your profile picture');
+        return;
+      }
+      
+      if (!selectedLocation) {
+        alert('Please select a location on the map');
+        return;
+      }
+      
+      // Create new citizen object
+      const newCitizen = {
+        wallet: walletAddress,
+        location: [selectedLocation.lat, selectedLocation.lng],
+        city: "New Location", // In a real app, use reverse geocoding to get city name
+        nfts: 1,
+        pfp: selectedNft.image
+      };
+      
+      // Remove temporary marker
+      if (tempMarker) {
+        map.removeLayer(tempMarker);
+        tempMarker = null;
+      }
+      
+      // Add new citizen marker
+      createCitizenMarker(newCitizen);
+      
+      // Reset form and exit adding mode
+      cancelAddPin();
+      
+      // Show success message
+      alert('Your location has been added to the map!');
+    }
+    
+    // Event listeners
+    document.getElementById('addPinBtn').addEventListener('click', startAddPin);
+    document.getElementById('cancelBtn').addEventListener('click', cancelAddPin);
+    document.getElementById('submitBtn').addEventListener('click', submitPin);
+    
+    // Initialize the map with existing markers
+    addCitizenMarkers();
+    
+    // Initialize the pin form
+    initPinForm();
+  </script>
+</body>
+</html>
