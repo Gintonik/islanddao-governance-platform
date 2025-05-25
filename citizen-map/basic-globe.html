@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple 3D Globe</title>
+  <title>Basic 3D Globe</title>
   <style>
     body, html {
       margin: 0;
@@ -53,6 +53,9 @@
     </div>
   </div>
   
+  <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/controls/OrbitControls.js"></script>
+  
   <script>
     // Variables
     let scene, camera, renderer, controls;
@@ -99,11 +102,11 @@
       
       // Set up button controls
       document.getElementById('zoomIn').addEventListener('click', () => {
-        zoomCamera(camera.position.z - 50);
+        gsap(camera.position, { z: Math.max(controls.minDistance, camera.position.z - 50), duration: 1 });
       });
       
       document.getElementById('zoomOut').addEventListener('click', () => {
-        zoomCamera(camera.position.z + 50);
+        gsap(camera.position, { z: Math.min(controls.maxDistance, camera.position.z + 50), duration: 1 });
       });
       
       document.getElementById('toggleRotation').addEventListener('click', () => {
@@ -145,30 +148,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
     
-    // Smooth zoom camera
-    function zoomCamera(targetZ) {
-      const startZ = camera.position.z;
-      const changeZ = Math.max(controls.minDistance, Math.min(controls.maxDistance, targetZ)) - startZ;
-      const duration = 1000; // ms
-      const startTime = Date.now();
-      
-      function update() {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2; // Ease in-out cubic
-          
-        camera.position.z = startZ + changeZ * easeProgress;
-        
-        if (progress < 1) {
-          requestAnimationFrame(update);
-        }
-      }
-      
-      update();
-    }
-    
     // Animation loop
     function animate() {
       requestAnimationFrame(animate);
@@ -180,38 +159,33 @@
       renderer.render(scene, camera);
     }
     
-    // Wait for Three.js to be available
-    function checkThreeJs() {
-      if (typeof THREE !== 'undefined') {
-        init();
-        animate();
-      } else {
-        setTimeout(checkThreeJs, 100);
+    // Simple GSAP-like animation function
+    function gsap(object, params) {
+      const startZ = object.z;
+      const changeZ = params.z - startZ;
+      const duration = params.duration * 1000; // Convert to milliseconds
+      const startTime = Date.now();
+      
+      function update() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2; // Ease in-out cubic
+          
+        object.z = startZ + changeZ * easeProgress;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
       }
+      
+      update();
     }
     
-    // Load Three.js scripts
-    function loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-    
-    // Load scripts sequentially
-    Promise.all([
-      loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'),
-      loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js')
-    ]).then(() => {
-      init();
-      animate();
-    }).catch(error => {
-      console.error('Failed to load Three.js:', error);
-      document.getElementById('container').innerHTML = '<div style="color: white; padding: 20px;">Error loading 3D libraries. Please check your internet connection.</div>';
-    });
+    // Start the application
+    init();
+    animate();
   </script>
 </body>
 </html>
