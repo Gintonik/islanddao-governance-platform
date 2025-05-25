@@ -475,13 +475,23 @@
         // Create popup content
         let popupContent = '<div class="pin-popup">';
         
-        // Display the primary NFT image if available
+        // Display an NFT image if available
+        // First try primary NFT, then fall back to first NFT in the list
+        let nftToShow = null;
+        
         if (pin.primaryNft && pin.nftMetadata && pin.nftMetadata[pin.primaryNft]) {
-          const nftMetadata = pin.nftMetadata[pin.primaryNft];
+          // Use the primary NFT if available
+          nftToShow = pin.nftMetadata[pin.primaryNft];
+        } else if (pin.nfts && pin.nfts.length > 0 && pin.nftMetadata && pin.nftMetadata[pin.nfts[0]]) {
+          // Fall back to the first NFT in the list
+          nftToShow = pin.nftMetadata[pin.nfts[0]];
+        }
+        
+        if (nftToShow) {
           popupContent += `
-            <img class="pin-popup-image" src="${nftMetadata.image}" 
-              alt="${nftMetadata.name}" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
-            <div class="pin-popup-title">${nftMetadata.name}</div>
+            <img class="pin-popup-image" src="${nftToShow.image}" 
+              alt="${nftToShow.name}" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
+            <div class="pin-popup-title">${nftToShow.name}</div>
           `;
         }
         
