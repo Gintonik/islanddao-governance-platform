@@ -726,7 +726,8 @@
           const offsetScreenPosition = worldToScreen(offsetPosition);
           
           // Check if city is visible (in front of the globe)
-          const isBehindGlobe = screenPosition.z > 1;
+          // More strict visibility check to prevent seeing cities from the back
+          const isBehindGlobe = screenPosition.z > 0.1;
           
           if (isBehindGlobe) {
             // Hide city label and line if it's on the far side of the globe
@@ -1260,62 +1261,36 @@
       function zoomIn() {
         if (!controls) return;
         
-        const currentDistance = controls.getDistance();
-        const newDistance = Math.max(currentDistance * 0.8, controls.minDistance);
+        // Simple direct zoom in
+        const currentDist = camera.position.length();
+        const newDist = Math.max(currentDist * 0.8, controls.minDistance);
+        const ratio = newDist / currentDist;
         
-        // Animate camera position manually
-        const startPosition = camera.position.clone();
-        const endPosition = startPosition.clone().multiplyScalar(0.8);
+        // Update camera position directly
+        camera.position.x *= ratio;
+        camera.position.y *= ratio;
+        camera.position.z *= ratio;
         
-        const startTime = Date.now();
-        const duration = 500;
-        
-        function animateZoom() {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          
-          // Simple easing function
-          const eased = 1 - Math.pow(1 - progress, 2);
-          
-          camera.position.lerpVectors(startPosition, endPosition, eased);
-          
-          if (progress < 1) {
-            requestAnimationFrame(animateZoom);
-          }
-        }
-        
-        animateZoom();
+        // Update controls target to match camera
+        controls.update();
       }
       
       // Zoom out function
       function zoomOut() {
         if (!controls) return;
         
-        const currentDistance = controls.getDistance();
-        const newDistance = Math.min(currentDistance * 1.2, controls.maxDistance);
+        // Simple direct zoom out
+        const currentDist = camera.position.length();
+        const newDist = Math.min(currentDist * 1.2, controls.maxDistance);
+        const ratio = newDist / currentDist;
         
-        // Animate camera position manually
-        const startPosition = camera.position.clone();
-        const endPosition = startPosition.clone().multiplyScalar(1.2);
+        // Update camera position directly
+        camera.position.x *= ratio;
+        camera.position.y *= ratio;
+        camera.position.z *= ratio;
         
-        const startTime = Date.now();
-        const duration = 500;
-        
-        function animateZoom() {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          
-          // Simple easing function
-          const eased = 1 - Math.pow(1 - progress, 2);
-          
-          camera.position.lerpVectors(startPosition, endPosition, eased);
-          
-          if (progress < 1) {
-            requestAnimationFrame(animateZoom);
-          }
-        }
-        
-        animateZoom();
+        // Update controls target to match camera
+        controls.update();
       }
       
       // Toggle rotation function
