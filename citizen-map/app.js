@@ -1,54 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import CitizenPinForm from './components/CitizenPinForm.js';
+import GlobeView from './components/GlobeView.js';
 import { loadCitizens, saveCitizen, clearAllCitizens } from './utils/dataUtils.js';
 
-// Fix Leaflet icon issue
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-// Default citizen marker icon
-const defaultCitizenIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-// Function to create a custom NFT icon
-function createNftIcon(nftImageUrl) {
-  return L.divIcon({
-    html: `
-      <div style="
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 3px solid #9945FF;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-        background-color: #333;
-      ">
-        <img src="${nftImageUrl}" 
-          alt="NFT Icon" 
-          style="width: 100%; height: 100%; object-fit: cover;"
-          onerror="this.src='https://via.placeholder.com/40?text=NFT'"/>
-      </div>
-    `,
-    className: 'nft-custom-icon',
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
-    popupAnchor: [0, -40]
-  });
-}
+// Globe view handles the marker icons internally
 
 // Location picker component
 function LocationPicker({ onLocationSelect, setIsPickingLocation }) {
