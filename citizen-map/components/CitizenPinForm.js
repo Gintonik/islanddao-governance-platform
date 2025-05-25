@@ -6,6 +6,7 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
   const [ownedNfts, setOwnedNfts] = useState([]);
   const [selectedNfts, setSelectedNfts] = useState([]);
   const [primaryNft, setPrimaryNft] = useState(null);
+  const [profileNft, setProfileNft] = useState(null);
   const [xHandle, setXHandle] = useState('');
   const [telegram, setTelegram] = useState('');
   const [discord, setDiscord] = useState('');
@@ -120,14 +121,29 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
     setStep(3);
   };
   
-  // Move to social info step
-  const proceedToSocials = () => {
+  // Move to profile NFT selection step
+  const proceedToProfileSelection = () => {
     if (!primaryNft) {
       alert('Please select a primary NFT');
       return;
     }
     
+    // Initialize profile NFT to primary NFT if not set
+    if (!profileNft) {
+      setProfileNft(primaryNft);
+    }
+    
     setStep(4);
+  };
+  
+  // Move to social info step
+  const proceedToSocials = () => {
+    if (!profileNft) {
+      alert('Please select a profile image NFT');
+      return;
+    }
+    
+    setStep(5);
   };
 
   // Handle form submission
@@ -138,6 +154,7 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
       wallet,
       selectedNfts,
       primaryNft,
+      pfp: profileNft, // Include the profile image NFT
       nftMetadata,
       xHandle: xHandle.startsWith('https://') ? xHandle : xHandle ? `https://x.com/${xHandle.replace('@', '')}` : '',
       telegram: telegram.startsWith('https://') ? telegram : telegram ? `https://t.me/${telegram.replace('@', '')}` : '',
@@ -279,12 +296,69 @@ function CitizenPinForm({ onSubmit, onCancel, nftOwners }) {
               
               <ButtonGroup>
                 <BackButton onClick={() => setStep(2)}>Back</BackButton>
-                <SubmitButton onClick={proceedToSocials}>Continue</SubmitButton>
+                <SubmitButton onClick={proceedToProfileSelection}>Continue</SubmitButton>
               </ButtonGroup>
             </div>
           )}
           
           {step === 4 && (
+            <div>
+              <h3>Select Your Profile Image</h3>
+              <p>This NFT will appear as your icon on the map</p>
+              
+              {isLoading ? (
+                <LoadingMessage>Loading your NFTs...</LoadingMessage>
+              ) : (
+                <NFTSelectionGrid>
+                  {selectedNfts.map((nftId) => (
+                    <NFTCard
+                      key={nftId}
+                      selected={profileNft === nftId}
+                      primary={profileNft === nftId}
+                      onClick={() => setProfileNft(nftId)}
+                    >
+                      <NFTImage 
+                        src={nftMetadata[nftId]?.image || ''}
+                        alt={nftMetadata[nftId]?.name || 'PERK NFT'}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/150?text=NFT+Image';
+                        }}
+                      />
+                      <div className="profile-indicator" style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        backgroundColor: profileNft === nftId ? '#45C0FF' : 'transparent',
+                        border: '2px solid #fff',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                        display: profileNft === nftId ? 'flex' : 'none',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: 'white'
+                      }}>👤</div>
+                      <NFTName>
+                        {nftMetadata[nftId]?.name || 'PERK NFT'}
+                      </NFTName>
+                      <NFTId>{nftId.substring(0, 6)}...{nftId.substring(nftId.length - 4)}</NFTId>
+                    </NFTCard>
+                  ))}
+                </NFTSelectionGrid>
+              )}
+              
+              <ButtonGroup>
+                <BackButton onClick={() => setStep(3)}>Back</BackButton>
+                <SubmitButton onClick={proceedToSocials}>Continue</SubmitButton>
+              </ButtonGroup>
+            </div>
+          )}
+          
+          {step === 5 && (
             <form onSubmit={handleSubmit}>
               <h3>Add Social Links (Optional)</h3>
               
