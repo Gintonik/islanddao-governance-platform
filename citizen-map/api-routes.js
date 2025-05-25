@@ -85,15 +85,16 @@ async function saveCitizenPin(data) {
         isUpdate = true;
         citizenId = existingCitizenResult.rows[0].id;
         
-        // Update citizen location and primary NFT
+        // Update citizen location, primary NFT and profile image
         await client.query(
           `UPDATE citizens 
-           SET lat = $1, lng = $2, primary_nft = $3, message = $4
-           WHERE id = $5`,
+           SET lat = $1, lng = $2, primary_nft = $3, pfp_nft = $4, message = $5
+           WHERE id = $6`,
           [
             data.location[0],
             data.location[1],
             data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
+            data.pfp || data.primaryNft || data.nfts[0], // Use selected PFP or fall back to primary NFT
             data.message || null,
             citizenId
           ]
@@ -109,14 +110,15 @@ async function saveCitizenPin(data) {
       } else {
         // Insert new citizen
         const citizenResult = await client.query(
-          `INSERT INTO citizens (wallet, lat, lng, primary_nft, message)
-           VALUES ($1, $2, $3, $4, $5)
+          `INSERT INTO citizens (wallet, lat, lng, primary_nft, pfp_nft, message)
+           VALUES ($1, $2, $3, $4, $5, $6)
            RETURNING id`,
           [
             data.wallet,
             data.location[0],
             data.location[1],
             data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
+            data.pfp || data.primaryNft || data.nfts[0], // Use selected PFP or fall back to primary NFT
             data.message || null
           ]
         );
@@ -208,7 +210,7 @@ async function getAllCitizens() {
     try {
       // Get all citizens
       const citizens = await client.query(`
-        SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.message, c.created_at
+        SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.pfp_nft, c.message, c.created_at
         FROM citizens c
         ORDER BY c.created_at DESC
       `);
@@ -231,6 +233,7 @@ async function getAllCitizens() {
           wallet: citizen.wallet,
           location: [citizen.lat, citizen.lng],
           primaryNft: citizen.primary_nft,
+          pfp: citizen.pfp_nft, // Include the profile image NFT
           message: citizen.message,
           nfts: nftsResult.rows.map(n => n.mint_id),
           timestamp: citizen.created_at,

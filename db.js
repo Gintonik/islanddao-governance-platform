@@ -32,6 +32,7 @@ async function initializeDatabase() {
         lat NUMERIC NOT NULL,
         lng NUMERIC NOT NULL,
         primary_nft TEXT REFERENCES nfts(mint_id),
+        pfp_nft TEXT REFERENCES nfts(mint_id),
         message TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
