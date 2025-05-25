@@ -116,6 +116,7 @@ function App() {
       wallet: formData.wallet,
       nfts: formData.selectedNfts,
       primaryNft: formData.primaryNft,
+      pfp: formData.pfp, // Include the profile image NFT
       nftMetadata: formData.nftMetadata,
       socials: {
         x: formData.xHandle,
@@ -196,14 +197,16 @@ function App() {
         {/* Display existing citizen pins */}
         {citizens.map((citizen, index) => {
           // Determine which icon to use - custom NFT icon or default
-          const hasNftIcon = citizen.primaryNft && 
+          // First check profile image NFT, then fallback to primary NFT
+          const profileNftId = citizen.pfp || citizen.primaryNft;
+          const hasNftIcon = profileNftId && 
                             citizen.nftMetadata && 
-                            citizen.nftMetadata[citizen.primaryNft] && 
-                            citizen.nftMetadata[citizen.primaryNft].image;
+                            citizen.nftMetadata[profileNftId] && 
+                            citizen.nftMetadata[profileNftId].image;
           
           // Use real NFT data from the collection
           const markerIcon = hasNftIcon 
-            ? createNftIcon(citizen.nftMetadata[citizen.primaryNft].image)
+            ? createNftIcon(citizen.nftMetadata[profileNftId].image)
             : defaultCitizenIcon;
             
           return (
