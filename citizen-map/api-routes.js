@@ -88,7 +88,7 @@ async function saveCitizenPin(data) {
         // Update citizen location and primary NFT
         await client.query(
           `UPDATE citizens 
-           SET lat = $1, lng = $2, primary_nft = $3, message = $4, updated_at = NOW() 
+           SET lat = $1, lng = $2, primary_nft = $3, message = $4
            WHERE id = $5`,
           [
             data.location[0],

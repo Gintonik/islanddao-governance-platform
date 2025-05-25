@@ -471,13 +471,33 @@
       }
     }
     
+    // Track all markers for easy removal
+    let allMarkers = [];
+    
+    // Clear all markers from the map
+    function clearAllMarkers() {
+      // Remove each marker from the map
+      allMarkers.forEach(marker => {
+        map.removeLayer(marker);
+      });
+      
+      // Reset the markers array
+      allMarkers = [];
+    }
+    
     // Display all citizen pins on the map
     function displayCitizenPins() {
+      // Clear all existing markers first
+      clearAllMarkers();
+      
       if (!citizenPins || citizenPins.length === 0) return;
       
       citizenPins.forEach(pin => {
         const position = L.latLng(pin.location[0], pin.location[1]);
         const marker = L.marker(position).addTo(map);
+        
+        // Add to our marker tracking array
+        allMarkers.push(marker);
         
         // Create popup content
         let popupContent = '<div class="pin-popup">';
