@@ -3,51 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PERKS Citizen Globe</title>
+  <title>PERKS Citizen Map - Navigation</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body, html {
-      height: 100%;
+    body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #121212;
       color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      padding: 40px;
+      text-align: center;
+      background-color: #1a1a1a;
+      border-radius: 10px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+      color: #9945FF;
+      margin-bottom: 30px;
+      font-size: 36px;
+    }
+    
+    .view-options {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 40px;
+    }
+    
+    .view-card {
+      background-color: #222;
+      border-radius: 8px;
       overflow: hidden;
+      width: 250px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
     }
     
-    #root {
-      height: 100%;
-      width: 100%;
+    .view-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(153, 69, 255, 0.2);
     }
     
-    /* Globe custom styles */
-    .scene-tooltip {
-      background-color: rgba(0, 0, 0, 0.85);
-      border-radius: 6px;
-      padding: 10px;
+    .view-image {
+      height: 150px;
+      background-size: cover;
+      background-position: center;
+    }
+    
+    .view-2d {
+      background-image: url('https://i.imgur.com/tRUXULQ.jpg');
+    }
+    
+    .view-3d {
+      background-image: url('https://i.imgur.com/j93TyIh.jpg');
+    }
+    
+    .view-details {
+      padding: 20px;
+    }
+    
+    h2 {
+      margin-top: 0;
+      color: #f5f5f5;
+      font-size: 20px;
+    }
+    
+    p {
+      color: #aaa;
+      margin-bottom: 20px;
       font-size: 14px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      border: 1px solid #9945FF;
-      pointer-events: none;
+      line-height: 1.5;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: #9945FF;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background-color: #8134E0;
+    }
+    
+    .description {
+      max-width: 600px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
     }
   </style>
-  <!-- Required for globe animations and 3D rendering -->
-  <script async src="https://unpkg.com/es-module-shims@1.7.3/dist/es-module-shims.js"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/examples/jsm/controls/": "https://unpkg.com/three@0.160.0/examples/jsm/controls/"
-      }
-    }
-  </script>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="./index.js" type="module"></script>
+  <div class="container">
+    <h1>PERKS Citizen Map</h1>
+    
+    <p class="description">
+      Explore the worldwide community of PERKS NFT holders with our interactive visualization tools.
+      Choose between our traditional 2D map or experience the immersive 3D globe view.
+    </p>
+    
+    <div class="view-options">
+      <div class="view-card">
+        <div class="view-image view-2d"></div>
+        <div class="view-details">
+          <h2>2D Map View</h2>
+          <p>Traditional flat map interface with all citizen pins and detailed NFT information</p>
+          <a href="/index.simple.html" class="btn">Launch 2D Map</a>
+        </div>
+      </div>
+      
+      <div class="view-card">
+        <div class="view-image view-3d"></div>
+        <div class="view-details">
+          <h2>3D Globe View</h2>
+          <p>Interactive 3D Earth visualization that gives a global perspective of the community</p>
+          <a href="/globe" class="btn">Launch 3D Globe</a>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
