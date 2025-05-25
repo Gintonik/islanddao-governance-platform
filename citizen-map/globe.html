@@ -86,6 +86,7 @@
   <div class="header">
     <h1 class="title">PERKS Citizen Globe</h1>
     <div class="button-group">
+      <a href="/" class="btn map-btn" style="background-color: #333; color: white; text-decoration: none; margin-right: 10px;">2D Map View</a>
       <button class="btn clear-pins-btn" id="clearPinsBtn">Clear All Pins</button>
       <button class="btn add-pin-btn" id="addPinBtn">Drop a Citizen Pin</button>
     </div>
@@ -147,13 +148,15 @@
     document.getElementById('clearPinsBtn').addEventListener('click', async () => {
       if (confirm('Are you sure you want to clear all citizen pins?')) {
         try {
-          const response = await fetch('/api/clear-citizens', {
+          // Use the established API endpoint for clearing citizens
+          const response = await fetch('/api/clear-all-citizens', {
             method: 'POST'
           });
           
           if (response.ok) {
             citizens = [];
             updateGlobeData();
+            alert('All pins have been cleared successfully.');
           } else {
             alert('Failed to clear pins. Please try again.');
           }
@@ -172,7 +175,7 @@
         document.body.style.cursor = 'default';
         document.getElementById('addPinBtn').disabled = false;
         
-        // Redirect to the pin form
+        // Redirect to the regular pin form page with coordinates as query parameters
         window.location.href = `/?lat=${lat}&lng=${lng}`;
       }
     });
