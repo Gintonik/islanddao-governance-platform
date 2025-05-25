@@ -7,8 +7,8 @@ const db = require('../db');
 
 // Constants
 const PORT = 5001;
-const HTML_FILE = path.join(__dirname, 'reliable-globe.html');
-const GLOBE_HTML_FILE = path.join(__dirname, 'reliable-globe.html');
+const HTML_FILE = path.join(__dirname, 'globe-gl.html');
+const GLOBE_HTML_FILE = path.join(__dirname, 'globe-gl.html');
 
 // Initialize the database on startup
 async function initializeApp() {
