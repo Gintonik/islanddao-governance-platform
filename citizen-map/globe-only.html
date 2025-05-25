@@ -6,6 +6,7 @@
   <title>PERKS Citizen Globe</title>
   <script src="https://unpkg.com/globe.gl"></script>
   <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
   <style>
     body, html {
       margin: 0;
@@ -515,13 +516,13 @@
       function initGlobe() {
         const globeElement = document.getElementById('globe');
         
-        // Format the cities for labels with enhanced visibility for night mode
+        // Different approach to city labels - use built-in geoJson for cleaner look
         const formattedCities = majorCities.map(city => ({
           lat: city.lat,
           lng: city.lng,
           name: city.name,
-          size: (city.pop / 20) * citiesSize, // Larger scale by population for better visibility
-          color: '#ff9900', // Bright orange for better contrast against night map
+          size: Math.min(1.5, Math.max(0.6, city.pop / 30)) * citiesSize,
+          color: '#ffffff',
           altitude: 0.01
         }));
         
@@ -539,15 +540,27 @@
           .pointResolution(12)
           .atmosphereColor('#2d39c7')
           .atmosphereAltitude(0.15)
-          // Add city labels with enhanced styling for night mode
+          // Add city labels using clean minimal styling
           .labelsData(citiesVisible ? formattedCities : [])
-          .labelColor(() => '#ff9900')
+          .labelColor(() => '#ffffff')
           .labelSize(d => d.size)
           .labelText(d => d.name)
-          .labelDotRadius(d => d.size * 0.6)
-          .labelDotOrientation(() => 'bottom')
+          .labelDotRadius(d => d.size * 0.3)
           .labelAltitude(0.01)
-          .labelResolution(3)(globeElement);
+          .labelResolution(2)
+          // Use country borders for better orientation
+          .polygonsData(
+            fetch('https://unpkg.com/world-atlas/countries-110m.json')
+              .then(res => res.json())
+              .then(data => {
+                const countries = topojson.feature(data, data.objects.countries);
+                return countries.features;
+              })
+          )
+          .polygonCapColor(() => 'rgba(200, 200, 200, 0.0)')
+          .polygonSideColor(() => 'rgba(150, 150, 150, 0.2)')
+          .polygonStrokeColor(() => 'rgba(255, 255, 255, 0.3)')
+          .polygonAltitude(0.005)(globeElement);
         
         // Set initial view
         globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
@@ -815,6 +828,13 @@
       // Open the pin form
       function openPinForm() {
         document.getElementById('pin-form-overlay').style.display = 'flex';
+        
+        // Make sure wallet field is ready for input
+        const walletField = document.getElementById('wallet-address');
+        walletField.value = '';
+        walletField.focus();
+        
+        // Reset rest of form
         resetForm();
       }
       
@@ -822,6 +842,17 @@
       function closePinForm() {
         document.getElementById('pin-form-overlay').style.display = 'none';
         resetForm();
+        
+        // Reset the placement mode
+        isPickingLocation = false;
+        document.body.style.cursor = 'default';
+        document.getElementById('instructions').style.display = 'none';
+        
+        // Resume rotation if it was previously enabled
+        if (isRotating && globe) {
+          const controls = globe.controls();
+          controls.autoRotate = true;
+        }
       }
       
       // Reset the form state
@@ -1044,6 +1075,12 @@
         isPickingLocation = true;
         document.body.style.cursor = 'crosshair';
         document.getElementById('instructions').style.display = 'block';
+        
+        // Stop globe rotation while picking location
+        if (globe) {
+          const controls = globe.controls();
+          controls.autoRotate = false;
+        }
       });
       
       // Clear pins button
@@ -1100,8 +1137,19 @@
         // Clear error message
         document.getElementById('wallet-error').textContent = '';
         
-        // Enable/disable continue button based on input
-        document.getElementById('next-step-1').disabled = this.value.trim() === '';
+        const walletValue = this.value.trim();
+        
+        // Enable continue button as soon as there's any input
+        document.getElementById('next-step-1').disabled = walletValue === '';
+        
+        // Give immediate visual feedback about the wallet format
+        if (walletValue && walletValue.length < 32) {
+          this.style.borderColor = '#FFA500'; // Orange - potentially valid but incomplete
+        } else if (walletValue && walletValue.length >= 32) {
+          this.style.borderColor = '#00FF00'; // Green - likely valid
+        } else {
+          this.style.borderColor = '#FF0000'; // Red - empty or invalid
+        }
       });
       
       // Next button - Step 1
@@ -1110,6 +1158,16 @@
         
         if (!walletAddress) {
           document.getElementById('wallet-error').textContent = 'Please enter a wallet address.';
+          document.getElementById('wallet-address').style.borderColor = '#FF0000';
+          document.getElementById('wallet-address').focus();
+          return;
+        }
+        
+        // Basic Solana address validation (should be at least 32 chars)
+        if (walletAddress.length < 32) {
+          document.getElementById('wallet-error').textContent = 'Please enter a valid Solana wallet address.';
+          document.getElementById('wallet-address').style.borderColor = '#FF0000';
+          document.getElementById('wallet-address').focus();
           return;
         }
         
