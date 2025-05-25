@@ -16,6 +16,7 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
     
     .header {
@@ -26,6 +27,7 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
     
     .header-title {
@@ -36,12 +38,14 @@
       margin: 0;
       font-size: 24px;
       color: #ffffff;
+      transition: color 0.3s ease;
     }
     
     .header p {
       margin: 5px 0 0;
       color: #c9d6de;
       font-size: 14px;
+      transition: color 0.3s ease;
     }
     
     .header-actions {
@@ -158,6 +162,7 @@
       max-width: 500px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
       border: 1px solid #333;
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
     
     .pin-form h2 {
@@ -186,6 +191,7 @@
       border-radius: 4px;
       color: #e0e0e0;
       font-family: monospace;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
     
     .form-control:focus {
