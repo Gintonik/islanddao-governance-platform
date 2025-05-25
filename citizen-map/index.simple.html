@@ -706,11 +706,32 @@
         const telegram = document.getElementById('telegram').value.trim();
         const discord = document.getElementById('discord').value.trim();
         
-        // Create pin data object
+        // First, fetch real NFT metadata for the selected NFTs
+        let nftMetadata = {};
+        
+        // Fetch metadata for the first NFT to use for the pin
+        if (selectedNFTs.length > 0) {
+          try {
+            // Get the primary NFT metadata directly from the database
+            const metadataResponse = await fetch(`/api/nft-metadata?id=${selectedNFTs[0]}`);
+            if (metadataResponse.ok) {
+              const metadata = await metadataResponse.json();
+              nftMetadata = metadata;
+              console.log('Got NFT metadata:', metadata);
+            } else {
+              console.error('Failed to fetch NFT metadata');
+            }
+          } catch (error) {
+            console.error('Error fetching NFT metadata:', error);
+          }
+        }
+        
+        // Create pin data object with primary NFT
         const pinData = {
           location: selectedLocation,
           wallet: walletAddress,
           nfts: selectedNFTs,
+          primaryNft: selectedNFTs.length > 0 ? selectedNFTs[0] : null,
           socials: {
             x: xHandle ? (xHandle.startsWith('https://') ? xHandle : `https://x.com/${xHandle.startsWith('@') ? xHandle.substring(1) : xHandle}`) : '',
             telegram: telegram ? (telegram.startsWith('https://') ? telegram : `https://t.me/${telegram.startsWith('@') ? telegram.substring(1) : telegram}`) : '',
@@ -734,16 +755,29 @@
           // Add new pin to the map
           citizenPins.push(pinData);
           
-          // Keep the marker on the map but update its popup
+          // Keep the marker on the map but update its popup with real NFT data
           if (currentMarker) {
-            const popupContent = `
-              <div class="pin-popup">
-                <img class="pin-popup-image" src="https://gateway.irys.xyz/${selectedNFTs[0]}" 
-                  alt="PERK NFT" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
+            let popupContent = `<div class="pin-popup">`;
+            
+            // Add NFT image and name from real metadata if available
+            if (nftMetadata && nftMetadata.image) {
+              popupContent += `
+                <img class="pin-popup-image" src="${nftMetadata.image}" 
+                  alt="${nftMetadata.name}" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
+                <div class="pin-popup-title">${nftMetadata.name || 'PERKS Citizen'}</div>
+              `;
+            } else {
+              // Fallback to generic info if no metadata
+              popupContent += `
+                <img class="pin-popup-image" src="https://via.placeholder.com/200x200?text=NFT+Image" alt="PERKS NFT">
                 <div class="pin-popup-title">PERKS Citizen</div>
-                <div class="pin-popup-address">Wallet: ${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
-              </div>
-            `;
+              `;
+            }
+            
+            // Add wallet info
+            popupContent += `<div class="pin-popup-address">Wallet: ${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>`;
+            popupContent += `</div>`;
+            
             currentMarker.bindPopup(popupContent).openPopup();
             currentMarker = null; // Don't remove it, it's a permanent pin now
           }

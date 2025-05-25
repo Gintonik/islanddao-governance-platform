@@ -161,15 +161,43 @@ function startServer() {
           return;
         }
         
-        const metadata = await citizenMapDb.getNftMetadata(nftId);
-        
-        if (!metadata) {
-          res.writeHead(404, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'NFT not found' }));
-          return;
+        try {
+          // Query database directly for NFT metadata
+          const client = await db.pool.connect();
+          
+          try {
+            const result = await client.query(
+              'SELECT * FROM nfts WHERE mint_id = $1',
+              [nftId]
+            );
+            
+            if (result.rows.length === 0) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'NFT not found' }));
+              return;
+            }
+            
+            const nft = result.rows[0];
+            
+            // Format metadata for frontend consumption
+            const metadata = {
+              id: nft.mint_id,
+              name: nft.name,
+              image: nft.image_url,
+              imageUrl: nft.image_url,
+              owner: nft.owner,
+              jsonUri: nft.json_uri
+            };
+            
+            sendJsonResponse(res, metadata);
+          } finally {
+            client.release();
+          }
+        } catch (error) {
+          console.error('Error fetching NFT metadata:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server error fetching NFT metadata' }));
         }
-        
-        sendJsonResponse(res, metadata);
       }
       // Serve perks-collection.json 
       else if (req.url === '/perks-collection.json') {
