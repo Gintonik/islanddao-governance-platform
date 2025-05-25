@@ -309,6 +309,39 @@
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
     }
     
+    /* Alternative popup display */
+    .citizen-info-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: rgba(35, 35, 35, 0.95);
+      color: #e0e0e0;
+      border-radius: 6px;
+      padding: 10px;
+      max-width: 200px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      border: 1px solid #444;
+      z-index: 1000;
+      display: none;
+      font-size: 12px;
+    }
+    
+    .btn-close {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 5px;
+    }
+    
+    .btn-close:hover {
+      color: white;
+    }
+    
     .citizen-marker img {
       width: 100%;
       height: 100%;
@@ -478,6 +511,8 @@
   <div class="map-controls">
     <button class="add-pin-btn" id="addPinBtn">Add Your Location</button>
   </div>
+  
+  <div class="citizen-info-panel" id="citizenInfoPanel"></div>
   
   <div class="instruction-box" id="instructionBox">
     <h3>Click on the Map</h3>
@@ -702,22 +737,20 @@
       const nftCount = citizen.nfts ? citizen.nfts.length : 0;
       const nftCountText = `${nftCount} NFT${nftCount !== 1 ? 's' : ''}`;
       
-      // Add popup with citizen information
-      const popupContent = document.createElement('div');
-      popupContent.className = 'popup-content';
-      popupContent.innerHTML = `
+      // Create panel content
+      const infoContent = `
         <h3>${citizen.city || 'Citizen Location'}</h3>
         <div class="wallet-address">${formatWallet(citizen.wallet)}</div>
         <p><span class="nft-badge">${nftCountText}</span></p>
         ${citizen.message ? `<p>${citizen.message}</p>` : ''}
+        <button class="btn-close" onclick="document.getElementById('citizenInfoPanel').style.display='none'">×</button>
       `;
       
-      marker.bindPopup(popupContent, {
-        offset: [0, -15],
-        closeButton: false,
-        autoPan: false,
-        maxWidth: 150,
-        minWidth: 120
+      // Show info in side panel instead of popup
+      marker.on('click', function() {
+        const infoPanel = document.getElementById('citizenInfoPanel');
+        infoPanel.innerHTML = infoContent;
+        infoPanel.style.display = 'block';
       });
     }
     
