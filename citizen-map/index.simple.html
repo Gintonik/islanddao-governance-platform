@@ -590,18 +590,28 @@
         let imageUrl = 'https://via.placeholder.com/40x40?text=NFT';
         
         // Determine which NFT to use for the pin image
-        if (pin.primaryNft) {
-          // Fetch the NFT metadata if not already available
-          try {
-            const response = await fetch(`/api/nft-metadata?id=${pin.primaryNft}`);
-            if (response.ok) {
-              const nftData = await response.json();
-              if (nftData && nftData.image) {
-                imageUrl = nftData.image;
+        // First try the pfp field, then fall back to primaryNft
+        const displayNftId = pin.pfp || pin.primaryNft;
+        
+        if (displayNftId) {
+          // Check if we already have this metadata cached
+          if (nftMetadataCache[displayNftId] && nftMetadataCache[displayNftId].image) {
+            imageUrl = nftMetadataCache[displayNftId].image;
+          } else {
+            // Fetch the NFT metadata if not already available
+            try {
+              const response = await fetch(`/api/nft-metadata?id=${displayNftId}`);
+              if (response.ok) {
+                const nftData = await response.json();
+                if (nftData && nftData.image) {
+                  imageUrl = nftData.image;
+                  // Cache the metadata for future use
+                  nftMetadataCache[displayNftId] = nftData;
+                }
               }
+            } catch (error) {
+              console.error('Error fetching NFT image for pin:', error);
             }
-          } catch (error) {
-            console.error('Error fetching NFT image for pin:', error);
           }
         }
         
@@ -829,7 +839,15 @@
     
     // Go to the previous step in the form
     function prevStep() {
-      if (currentStep > 1) {
+      if (currentStep === 'pfp') {
+        // From PFP selection back to NFT selection
+        document.getElementById('step-pfp').style.display = 'none';
+        document.getElementById('step-3').style.display = 'block';
+        currentStep = 3;
+        
+        // Reset selected PFP if going back
+        selectedPFP = null;
+      } else if (currentStep > 1) {
         document.getElementById(`step-${currentStep}`).style.display = 'none';
         currentStep--;
         document.getElementById(`step-${currentStep}`).style.display = 'block';
@@ -841,6 +859,78 @@
         
         // Reset next button text
         document.getElementById('next-step').textContent = 'Next';
+      }
+    }
+    
+    // Function to show PFP selection UI
+    async function showPFPSelection() {
+      const pfpContainer = document.getElementById('pfp-selection');
+      pfpContainer.innerHTML = '<p style="padding: 15px;">Loading NFT profile options...</p>';
+      
+      try {
+        // Load metadata for all selected NFTs
+        const metadataPromises = selectedNFTs.map(nftId => 
+          fetch(`/api/nft-metadata?id=${nftId}`)
+            .then(res => res.ok ? res.json() : null)
+            .catch(err => {
+              console.error(`Error fetching metadata for ${nftId}:`, err);
+              return null;
+            })
+        );
+        
+        const nftMetadataList = await Promise.all(metadataPromises);
+        
+        // Create PFP selection grid
+        pfpContainer.innerHTML = '';
+        
+        // Auto-select if only one NFT
+        if (nftMetadataList.length === 1 && nftMetadataList[0]) {
+          selectedPFP = nftMetadataList[0].id;
+        }
+        
+        nftMetadataList.forEach((metadata, index) => {
+          if (!metadata) return;
+          
+          const nftId = metadata.id;
+          const pfpItem = document.createElement('div');
+          pfpItem.className = 'pfp-item';
+          pfpItem.dataset.nftid = nftId;
+          
+          if (nftId === selectedPFP) {
+            pfpItem.classList.add('selected');
+          }
+          
+          pfpItem.innerHTML = `
+            <img src="${metadata.image}" alt="${metadata.name}" 
+              class="pfp-image" onerror="this.src='https://via.placeholder.com/150x150?text=NFT'">
+            <div class="pfp-name">${metadata.name}</div>
+          `;
+          
+          // Add click handler to select PFP
+          pfpItem.addEventListener('click', () => {
+            // Remove selected class from all items
+            document.querySelectorAll('.pfp-item').forEach(item => {
+              item.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked item
+            pfpItem.classList.add('selected');
+            
+            // Set selected PFP
+            selectedPFP = nftId;
+            console.log('Selected PFP:', selectedPFP);
+          });
+          
+          pfpContainer.appendChild(pfpItem);
+        });
+        
+        // If nothing was displayed
+        if (pfpContainer.children.length === 0) {
+          pfpContainer.innerHTML = '<p style="padding: 15px;">Could not load NFT profile options. Please go back and try again.</p>';
+        }
+      } catch (error) {
+        console.error('Error showing PFP selection:', error);
+        pfpContainer.innerHTML = `<p style="padding: 15px;">Error loading NFT profile options: ${error.message}</p>`;
       }
     }
     
@@ -950,12 +1040,13 @@
           }
         }
         
-        // Create pin data object with primary NFT
+        // Create pin data object with primary NFT and profile image
         const pinData = {
           location: selectedLocation,
           wallet: walletAddress,
           nfts: selectedNFTs,
           primaryNft: selectedNFTs.length > 0 ? selectedNFTs[0] : null,
+          pfp: selectedPFP || (selectedNFTs.length > 0 ? selectedNFTs[0] : null), // Use selected PFP or first NFT as fallback
           socials: {
             x: xHandle ? (xHandle.startsWith('https://') ? xHandle : `https://x.com/${xHandle.startsWith('@') ? xHandle.substring(1) : xHandle}`) : '',
             telegram: telegram ? (telegram.startsWith('https://') ? telegram : `https://t.me/${telegram.startsWith('@') ? telegram.substring(1) : telegram}`) : '',
