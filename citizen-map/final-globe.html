@@ -1394,36 +1394,86 @@
       function zoomIn() {
         if (!controls) return;
         
-        // Simple direct zoom in
+        // Update target zoom level for smooth animation
+        targetZoomLevel = Math.min(1, targetZoomLevel + 0.2);
+        
+        // Get current camera position and direction
         const currentDist = camera.position.length();
         const newDist = Math.max(currentDist * 0.8, controls.minDistance);
-        const ratio = newDist / currentDist;
+        const cameraDir = camera.position.clone().normalize();
         
-        // Update camera position directly
-        camera.position.x *= ratio;
-        camera.position.y *= ratio;
-        camera.position.z *= ratio;
+        // Start positions for animation
+        const startPos = camera.position.clone();
+        const endPos = cameraDir.multiplyScalar(newDist);
         
-        // Update controls target to match camera
-        controls.update();
+        // Animate zoom with easing
+        const startTime = Date.now();
+        const duration = 800; // 800ms for smooth transition
+        
+        function animateZoom() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Cubic ease-out for smooth deceleration
+          const eased = 1 - Math.pow(1 - progress, 3);
+          
+          // Interpolate position
+          camera.position.lerpVectors(startPos, endPos, eased);
+          
+          // Update controls
+          controls.update();
+          
+          // Continue animation if not complete
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        }
+        
+        // Start animation
+        animateZoom();
       }
       
       // Zoom out function
       function zoomOut() {
         if (!controls) return;
         
-        // Simple direct zoom out
+        // Update target zoom level for smooth animation
+        targetZoomLevel = Math.max(0, targetZoomLevel - 0.2);
+        
+        // Get current camera position and direction
         const currentDist = camera.position.length();
         const newDist = Math.min(currentDist * 1.2, controls.maxDistance);
-        const ratio = newDist / currentDist;
+        const cameraDir = camera.position.clone().normalize();
         
-        // Update camera position directly
-        camera.position.x *= ratio;
-        camera.position.y *= ratio;
-        camera.position.z *= ratio;
+        // Start positions for animation
+        const startPos = camera.position.clone();
+        const endPos = cameraDir.multiplyScalar(newDist);
         
-        // Update controls target to match camera
-        controls.update();
+        // Animate zoom with easing
+        const startTime = Date.now();
+        const duration = 800; // 800ms for smooth transition
+        
+        function animateZoom() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Cubic ease-out for smooth deceleration
+          const eased = 1 - Math.pow(1 - progress, 3);
+          
+          // Interpolate position
+          camera.position.lerpVectors(startPos, endPos, eased);
+          
+          // Update controls
+          controls.update();
+          
+          // Continue animation if not complete
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        }
+        
+        // Start animation
+        animateZoom();
       }
       
       // Toggle rotation function
