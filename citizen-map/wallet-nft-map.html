@@ -717,10 +717,15 @@
     // Populate NFT grid with a wallet's NFTs
     async function populateNftGrid(walletAddress) {
       const nftGrid = document.getElementById('nftGrid');
-      const noNftsMessage = document.getElementById('noNftsMessage');
       
       // Clear existing NFTs
       nftGrid.innerHTML = '';
+      
+      // Add the no NFTs message element
+      const noNftsMessage = document.createElement('p');
+      noNftsMessage.id = 'noNftsMessage';
+      noNftsMessage.style.cssText = 'display: none; grid-column: 1 / -1; text-align: center; color: #999;';
+      noNftsMessage.textContent = 'No NFTs found for this wallet. Please check your wallet address.';
       nftGrid.appendChild(noNftsMessage);
       
       try {
@@ -778,9 +783,14 @@
             nftItem.classList.add('selected');
             selectedNft = nft;
             
-            // Show selection message
-            document.getElementById('nftSelectionStatus').textContent = `Selected: ${nft.name}`;
-            document.getElementById('nftSelectionStatus').style.display = 'block';
+            // Show selection status if available
+            const statusEl = document.getElementById('nftSelectionStatus');
+            if (statusEl) {
+              statusEl.textContent = `Selected: ${nft.name}`;
+              statusEl.style.display = 'block';
+            }
+            
+            // No need to update button status here since we're in the NFT selection stage
           });
           
           nftGrid.appendChild(nftItem);
