@@ -715,31 +715,61 @@
         cities.forEach(city => {
           if (!city.label) return;
           
+          // Get 3D position of city on globe
           const position = latLongToVector3(city.lat, city.lng, 100);
+          
+          // Calculate a slightly offset position for the label (outward from center)
+          const offsetPosition = position.clone().normalize().multiplyScalar(105);
+          
+          // Convert to screen coordinates
           const screenPosition = worldToScreen(position);
+          const offsetScreenPosition = worldToScreen(offsetPosition);
           
           // Check if city is visible (in front of the globe)
           const isBehindGlobe = screenPosition.z > 1;
           
           if (isBehindGlobe) {
-            // Hide city label if it's on the far side of the globe
+            // Hide city label and line if it's on the far side of the globe
             city.label.style.display = 'none';
+            if (city.line) city.line.visible = false;
           } else {
-            // Show and position city label
+            // Show city label and position it
             city.label.style.display = 'block';
-            city.label.style.left = screenPosition.x + 'px';
-            city.label.style.top = screenPosition.y + 'px';
+            city.label.style.left = offsetScreenPosition.x + 'px';
+            city.label.style.top = offsetScreenPosition.y + 'px';
             
-            // Add depth effect - fade out labels that are at the edges
-            const distFromCenter = Math.sqrt(
-              Math.pow(screenPosition.x - window.innerWidth/2, 2) + 
-              Math.pow(screenPosition.y - window.innerHeight/2, 2)
-            );
+            // Update line connecting city to label
+            if (city.line) {
+              city.line.visible = true;
+              
+              // Update line vertices to connect city point to label position
+              const lineGeometry = city.line.geometry;
+              const positions = lineGeometry.attributes.position.array;
+              
+              // First vertex is the city position
+              positions[0] = position.x;
+              positions[1] = position.y;
+              positions[2] = position.z;
+              
+              // Second vertex is the label position
+              positions[3] = offsetPosition.x;
+              positions[4] = offsetPosition.y;
+              positions[5] = offsetPosition.z;
+              
+              // Mark geometry for update
+              lineGeometry.attributes.position.needsUpdate = true;
+            }
             
-            const maxDist = Math.min(window.innerWidth, window.innerHeight) * 0.5;
-            const opacity = Math.max(0, 1 - (distFromCenter / maxDist));
+            // Calculate visibility based on angle from center
+            const dotProduct = camera.position.normalize().dot(position.normalize());
+            // This gives 1 when facing camera directly, -1 when opposite
+            const visibility = Math.max(0, (dotProduct + 0.2) * 1.5);
             
-            city.label.style.opacity = opacity.toFixed(2);
+            // Set opacity based on visibility
+            city.label.style.opacity = visibility.toFixed(2);
+            if (city.line) {
+              city.line.material.opacity = visibility * 0.5;
+            }
           }
         });
       }
@@ -1233,11 +1263,28 @@
         const currentDistance = controls.getDistance();
         const newDistance = Math.max(currentDistance * 0.8, controls.minDistance);
         
-        // Smoothly animate to new distance
-        new TWEEN.Tween(camera.position)
-          .to({ x: camera.position.x * 0.8, y: camera.position.y * 0.8, z: camera.position.z * 0.8 }, 500)
-          .easing(TWEEN.Easing.Quadratic.Out)
-          .start();
+        // Animate camera position manually
+        const startPosition = camera.position.clone();
+        const endPosition = startPosition.clone().multiplyScalar(0.8);
+        
+        const startTime = Date.now();
+        const duration = 500;
+        
+        function animateZoom() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Simple easing function
+          const eased = 1 - Math.pow(1 - progress, 2);
+          
+          camera.position.lerpVectors(startPosition, endPosition, eased);
+          
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        }
+        
+        animateZoom();
       }
       
       // Zoom out function
@@ -1247,11 +1294,28 @@
         const currentDistance = controls.getDistance();
         const newDistance = Math.min(currentDistance * 1.2, controls.maxDistance);
         
-        // Smoothly animate to new distance
-        new TWEEN.Tween(camera.position)
-          .to({ x: camera.position.x * 1.2, y: camera.position.y * 1.2, z: camera.position.z * 1.2 }, 500)
-          .easing(TWEEN.Easing.Quadratic.Out)
-          .start();
+        // Animate camera position manually
+        const startPosition = camera.position.clone();
+        const endPosition = startPosition.clone().multiplyScalar(1.2);
+        
+        const startTime = Date.now();
+        const duration = 500;
+        
+        function animateZoom() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Simple easing function
+          const eased = 1 - Math.pow(1 - progress, 2);
+          
+          camera.position.lerpVectors(startPosition, endPosition, eased);
+          
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        }
+        
+        animateZoom();
       }
       
       // Toggle rotation function
