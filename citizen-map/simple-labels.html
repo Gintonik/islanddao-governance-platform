@@ -24,35 +24,42 @@
     
     .city-label {
       position: absolute;
-      background-color: rgba(0, 0, 0, 0.6);
+      background-color: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 3px 6px;
+      padding: 4px 8px;
       border-radius: 4px;
       font-size: 12px;
       pointer-events: none;
       transform: translate(-50%, -50%);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.5);
       white-space: nowrap;
-      z-index: 5;
+      z-index: 100;
       transition: opacity 0.3s ease, font-size 0.3s ease;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
     
     .city-label.tier-1 {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: bold;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.8);
+      border-color: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     }
     
     .city-label.tier-2 {
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.75);
     }
     
     .city-label.tier-3 {
-      font-size: 11px;
+      font-size: 12px;
+      background-color: rgba(0, 0, 0, 0.7);
     }
     
     .city-label.tier-4 {
-      font-size: 10px;
+      font-size: 11px;
+      background-color: rgba(0, 0, 0, 0.65);
     }
     
     .controls {
@@ -201,7 +208,7 @@
       controls.minDistance = 150;
       controls.maxDistance = 400;
       controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.5;
+      controls.autoRotateSpeed = 0.15; // Slowed down rotation
       
       // Create Earth
       createEarth();
@@ -522,9 +529,9 @@
       
       // Rotate Earth if enabled
       if (isRotating) {
-        earth.rotation.y += 0.001;
-        if (atmosphere) atmosphere.rotation.y += 0.001;
-        if (bordersMesh) bordersMesh.rotation.y += 0.001;
+        earth.rotation.y += 0.0005; // Even slower rotation
+        if (atmosphere) atmosphere.rotation.y += 0.0005;
+        if (bordersMesh) bordersMesh.rotation.y += 0.0005;
       }
       
       // Smooth zoom interpolation
@@ -537,7 +544,7 @@
         camera.position.copy(direction.multiplyScalar(distance));
       }
       
-      // Update city labels
+      // Update city labels - force update on every frame
       updateCityLabels();
       
       // Render scene
