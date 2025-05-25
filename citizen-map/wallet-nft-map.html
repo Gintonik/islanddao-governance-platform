@@ -312,34 +312,57 @@
     /* Alternative popup display */
     .citizen-info-panel {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background-color: rgba(35, 35, 35, 0.95);
+      bottom: 10px;
+      right: 60px;
+      background-color: rgba(35, 35, 35, 0.85);
       color: #e0e0e0;
-      border-radius: 6px;
-      padding: 10px;
-      max-width: 200px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      padding: 6px;
+      max-width: 130px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
       border: 1px solid #444;
       z-index: 1000;
       display: none;
-      font-size: 12px;
+      font-size: 9px;
     }
     
     .btn-close {
       position: absolute;
-      top: 5px;
-      right: 5px;
+      top: 3px;
+      right: 3px;
       background: none;
       border: none;
       color: #999;
-      font-size: 16px;
+      font-size: 12px;
       cursor: pointer;
-      padding: 0 5px;
+      padding: 0 3px;
     }
     
     .btn-close:hover {
       color: white;
+    }
+    
+    .citizen-info-panel h3 {
+      margin-top: 0;
+      color: #4c6ef5;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+    
+    .citizen-info-panel .wallet-address {
+      font-size: 8px;
+      padding: 2px 3px;
+      margin-bottom: 2px;
+    }
+    
+    .citizen-info-panel .nft-badge {
+      font-size: 8px;
+      padding: 1px 4px;
+    }
+    
+    .citizen-info-panel p {
+      margin: 2px 0;
+      font-size: 8px;
     }
     
     .citizen-marker img {
@@ -737,13 +760,13 @@
       const nftCount = citizen.nfts ? citizen.nfts.length : 0;
       const nftCountText = `${nftCount} NFT${nftCount !== 1 ? 's' : ''}`;
       
-      // Create panel content
+      // Create panel content - more compact
       const infoContent = `
-        <h3>${citizen.city || 'Citizen Location'}</h3>
-        <div class="wallet-address">${formatWallet(citizen.wallet)}</div>
-        <p><span class="nft-badge">${nftCountText}</span></p>
-        ${citizen.message ? `<p>${citizen.message}</p>` : ''}
         <button class="btn-close" onclick="document.getElementById('citizenInfoPanel').style.display='none'">×</button>
+        <h3>${citizen.city || 'Citizen'}</h3>
+        <div class="wallet-address">${formatWallet(citizen.wallet)}</div>
+        <span class="nft-badge">${nftCountText}</span>
+        ${citizen.message ? `<p>${citizen.message}</p>` : ''}
       `;
       
       // Show info in side panel instead of popup
