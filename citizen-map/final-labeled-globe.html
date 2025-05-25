@@ -4,26 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PERKS Citizen Globe</title>
-  
-  <!-- Three.js -->
   <script src="https://unpkg.com/three@0.137.0/build/three.min.js"></script>
   <script src="https://unpkg.com/three@0.137.0/examples/js/controls/OrbitControls.js"></script>
-  
   <style>
-    body, html {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
       overflow: hidden;
       background-color: #000;
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
     #container {
+      position: relative;
       width: 100vw;
       height: 100vh;
-      position: relative;
     }
     
     .header {
@@ -89,6 +84,14 @@
       background-color: #444;
     }
     
+    .btn.danger {
+      background-color: #d32f2f;
+    }
+    
+    .btn.danger:hover {
+      background-color: #c62828;
+    }
+    
     .city-label {
       position: absolute;
       background-color: rgba(0, 0, 0, 0.6);
@@ -149,7 +152,6 @@
       <div class="title">PERKS Citizen Globe</div>
       <div class="controls">
         <button id="add-pin-btn" class="btn">Drop a Citizen Pin</button>
-        <button id="clear-pins-btn" class="btn danger">Clear All Pins</button>
       </div>
     </div>
     
@@ -170,76 +172,6 @@
         <button id="zoom-out" class="btn secondary">Zoom Out</button>
       </div>
     </div>
-    
-    <div id="instructions" class="instructions">
-      Click anywhere on the globe to place your pin
-    </div>
-    
-    <div id="pin-form-overlay" class="overlay">
-      <div class="form-container">
-        <div class="form-header">
-          <div class="form-title">Drop a Citizen Pin</div>
-          <button class="close-btn">&times;</button>
-        </div>
-        
-        <div id="step-1" class="step-container active">
-          <div class="form-group">
-            <label for="wallet-address">Your Solana Wallet Address</label>
-            <input type="text" id="wallet-address" placeholder="Enter your wallet address" />
-            <div id="wallet-error" class="error-message"></div>
-          </div>
-          <div id="loading-nfts" class="loading">
-            Loading your NFTs... Please wait.
-          </div>
-          <div id="nft-container" class="form-group" style="display: none;">
-            <label>Your PERKS NFTs</label>
-            <div id="nft-list" class="nft-list"></div>
-            <div id="nft-error" class="error-message"></div>
-          </div>
-          <div class="step-nav">
-            <div></div>
-            <button id="next-step-1" class="btn" disabled>Continue</button>
-          </div>
-        </div>
-        
-        <div id="step-2" class="step-container">
-          <div class="form-group">
-            <label>Choose Your Profile Image</label>
-            <p>Select which NFT you want to appear as your profile on the globe</p>
-            <div id="pfp-list" class="nft-list"></div>
-          </div>
-          <div class="step-nav">
-            <button id="prev-step-2" class="btn secondary">Back</button>
-            <button id="next-step-2" class="btn">Continue</button>
-          </div>
-        </div>
-        
-        <div id="step-3" class="step-container">
-          <div class="form-group">
-            <label for="message">Message (Optional)</label>
-            <textarea id="message" rows="3" placeholder="Add a message to your pin (optional)"></textarea>
-          </div>
-          <div class="step-nav">
-            <button id="prev-step-3" class="btn secondary">Back</button>
-            <button id="submit-pin" class="btn">Drop Pin</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div id="citizen-detail" class="citizen-detail">
-      <button class="close">&times;</button>
-      <div class="citizen-nft">
-        <img id="detail-nft-image" class="citizen-nft-image" src="" alt="Citizen NFT" />
-        <div id="detail-nft-name"></div>
-      </div>
-      <div id="detail-wallet" class="citizen-wallet"></div>
-      <div id="detail-message" class="citizen-message"></div>
-      <div id="detail-other-nfts">
-        <h4>Other NFTs</h4>
-        <div id="detail-nft-grid" class="nft-grid"></div>
-      </div>
-    </div>
   </div>
   
   <script>
@@ -254,18 +186,11 @@
     let zoomLevel = 1;
     let targetZoomLevel = 1;
     let lastLabelUpdateTime = 0;
-    let isPickingLocation = false;
-    let selectedLocation = null;
-    let selectedNFTs = [];
-    let selectedPfpNft = null;
-    let citizens = [];
     
     // Three.js variables
     let scene, camera, renderer, controls;
     let earth, atmosphere, bordersMesh;
     let labelContainer;
-    let pinMeshes = [];
-    let raycaster, mouse;
     
     // Cities with tiers for zoom-based visibility
     const cities = [
@@ -298,6 +223,8 @@
       { name: 'Dubai', lat: 25.2048, lng: 55.2708, tier: 3 },
       { name: 'San Francisco', lat: 37.7749, lng: -122.4194, tier: 3 },
       { name: 'Bangkok', lat: 13.7563, lng: 100.5018, tier: 3 },
+      { name: 'Istanbul', lat: 41.0082, lng: 28.9784, tier: 3 },
+      { name: 'Seoul', lat: 37.5665, lng: 126.9780, tier: 3 },
       
       // Tier 4 - Small Cities - Visible only at very close zoom
       { name: 'Amsterdam', lat: 52.3676, lng: 4.9041, tier: 4 },
@@ -307,7 +234,15 @@
       { name: 'Athens', lat: 37.9838, lng: 23.7275, tier: 4 },
       { name: 'Prague', lat: 50.0755, lng: 14.4378, tier: 4 },
       { name: 'Vancouver', lat: 49.2827, lng: -123.1207, tier: 4 },
-      { name: 'Seattle', lat: 47.6062, lng: -122.3321, tier: 4 }
+      { name: 'Seattle', lat: 47.6062, lng: -122.3321, tier: 4 },
+      { name: 'Vienna', lat: 48.2082, lng: 16.3738, tier: 4 },
+      { name: 'Dublin', lat: 53.3498, lng: -6.2603, tier: 4 },
+      { name: 'Boston', lat: 42.3601, lng: -71.0589, tier: 4 },
+      { name: 'Barcelona', lat: 41.3851, lng: 2.1734, tier: 4 },
+      { name: 'Melbourne', lat: -37.8136, lng: 144.9631, tier: 4 },
+      { name: 'Kyoto', lat: 35.0116, lng: 135.7681, tier: 4 },
+      { name: 'Edinburgh', lat: 55.9533, lng: -3.1883, tier: 4 },
+      { name: 'Wellington', lat: -41.2865, lng: 174.7762, tier: 4 }
     ];
     
     // City label objects
@@ -330,10 +265,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
       document.getElementById('container').appendChild(renderer.domElement);
-      
-      // Create raycaster for detecting globe interactions
-      raycaster = new THREE.Raycaster();
-      mouse = new THREE.Vector2();
       
       // Create controls
       controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -372,13 +303,6 @@
       
       // Handle window resize
       window.addEventListener('resize', onWindowResize);
-      
-      // Handle mouse events for pin placement
-      renderer.domElement.addEventListener('mousedown', onMouseDown);
-      renderer.domElement.addEventListener('mousemove', onMouseMove);
-      
-      // Fetch existing citizens
-      fetchCitizens();
     }
     
     function createEarth() {
@@ -738,146 +662,6 @@
       document.getElementById('zoom-out').addEventListener('click', function() {
         zoomOut();
       });
-      
-      // Add pin button
-      document.getElementById('add-pin-btn').addEventListener('click', function() {
-        startAddingPin();
-      });
-      
-      // Clear pins button
-      document.getElementById('clear-pins-btn').addEventListener('click', function() {
-        clearAllPins();
-      });
-      
-      // Form close button
-      document.querySelector('#pin-form-overlay .close-btn').addEventListener('click', function() {
-        document.getElementById('pin-form-overlay').style.display = 'none';
-      });
-      
-      // Form step navigation
-      document.getElementById('next-step-1').addEventListener('click', function() {
-        document.getElementById('step-1').classList.remove('active');
-        document.getElementById('step-2').classList.add('active');
-        
-        // Populate PFP selection with selected NFTs
-        const pfpList = document.getElementById('pfp-list');
-        pfpList.innerHTML = '';
-        
-        selectedNFTs.forEach(nft => {
-          const nftItem = document.createElement('div');
-          nftItem.className = 'nft-item';
-          nftItem.innerHTML = `
-            <img class="nft-image" src="${nft.image}" alt="${nft.name}">
-            <div class="nft-name">${nft.name}</div>
-          `;
-          
-          nftItem.addEventListener('click', () => {
-            // Clear previous selection
-            document.querySelectorAll('#pfp-list .nft-item').forEach(item => {
-              item.classList.remove('selected');
-            });
-            
-            // Select this NFT as profile picture
-            nftItem.classList.add('selected');
-            selectedPfpNft = nft;
-          });
-          
-          pfpList.appendChild(nftItem);
-        });
-        
-        // Select first NFT by default
-        if (selectedNFTs.length > 0) {
-          const firstItem = pfpList.querySelector('.nft-item');
-          if (firstItem) {
-            firstItem.classList.add('selected');
-            selectedPfpNft = selectedNFTs[0];
-          }
-        }
-      });
-      
-      document.getElementById('prev-step-2').addEventListener('click', function() {
-        document.getElementById('step-2').classList.remove('active');
-        document.getElementById('step-1').classList.add('active');
-      });
-      
-      document.getElementById('next-step-2').addEventListener('click', function() {
-        document.getElementById('step-2').classList.remove('active');
-        document.getElementById('step-3').classList.add('active');
-      });
-      
-      document.getElementById('prev-step-3').addEventListener('click', function() {
-        document.getElementById('step-3').classList.remove('active');
-        document.getElementById('step-2').classList.add('active');
-      });
-      
-      // Wallet check
-      document.getElementById('wallet-address').addEventListener('input', function() {
-        document.getElementById('wallet-error').textContent = '';
-      });
-      
-      document.getElementById('wallet-address').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          checkWalletNfts();
-        }
-      });
-      
-      // Submit pin
-      document.getElementById('submit-pin').addEventListener('click', function() {
-        savePin();
-      });
-      
-      // Citizen detail close button
-      document.querySelector('#citizen-detail .close').addEventListener('click', function() {
-        document.getElementById('citizen-detail').style.display = 'none';
-      });
-    }
-    
-    // Check wallet for NFTs
-    async function checkWalletNfts() {
-      const walletAddress = document.getElementById('wallet-address').value.trim();
-      
-      if (!walletAddress) {
-        document.getElementById('wallet-error').textContent = 'Please enter a wallet address';
-        return;
-      }
-      
-      try {
-        document.getElementById('loading-nfts').classList.add('active');
-        document.getElementById('nft-container').style.display = 'none';
-        document.getElementById('wallet-error').textContent = '';
-        
-        const response = await fetch(`/api/wallet-nfts?address=${walletAddress}`);
-        const data = await response.json();
-        
-        document.getElementById('loading-nfts').classList.remove('active');
-        
-        if (!Array.isArray(data) || data.length === 0) {
-          document.getElementById('wallet-error').textContent = 'No PERKS NFTs found in this wallet';
-          return;
-        }
-        
-        // Display NFTs
-        const nftList = document.getElementById('nft-list');
-        nftList.innerHTML = '';
-        selectedNFTs = data;
-        
-        data.forEach(nft => {
-          const nftItem = document.createElement('div');
-          nftItem.className = 'nft-item selected';
-          nftItem.innerHTML = `
-            <img class="nft-image" src="${nft.image}" alt="${nft.name}">
-            <div class="nft-name">${nft.name}</div>
-          `;
-          
-          nftList.appendChild(nftItem);
-        });
-        
-        document.getElementById('nft-container').style.display = 'block';
-        document.getElementById('next-step-1').disabled = false;
-      } catch (error) {
-        document.getElementById('loading-nfts').classList.remove('active');
-        document.getElementById('wallet-error').textContent = 'Error fetching NFTs: ' + error.message;
-      }
     }
     
     function zoomIn() {
