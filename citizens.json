@@ -1,34 +1,24 @@
 [
   {
+    "id": 1,
+    "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
     "location": [
-      37.90736658145496,
-      23.852691650390625
+      "34.88593094075317",
+      "93.86718750000001"
     ],
-    "wallet": "CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
+    "primaryNft": "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ",
+    "message": null,
     "nfts": [
-      "FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM"
+      "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ"
     ],
-    "socials": {
-      "x": "https://x.com/Whalesfriend",
-      "telegram": "",
-      "discord": ""
-    },
-    "timestamp": "2025-05-22T14:06:21.270Z"
-  },
-  {
-    "location": [
-      68.05996771218672,
-      87.72857666015625
-    ],
-    "wallet": "CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
-    "nfts": [
-      "FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM"
-    ],
-    "socials": {
-      "x": "",
-      "telegram": "https://t.me/chrisnelson",
-      "discord": ""
-    },
-    "timestamp": "2025-05-22T14:17:54.658Z"
+    "timestamp": "2025-05-22T20:48:49.364Z",
+    "nftMetadata": {
+      "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ": {
+        "name": "PERK #2785",
+        "image": "https://gateway.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN",
+        "id": "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ",
+        "owner": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4"
+      }
+    }
   }
 ]
