@@ -663,18 +663,36 @@
         selectionContainer.innerHTML = '';
         const nfts = ownersData[walletAddress];
         
-        nfts.forEach((nftId, index) => {
+        // Fetch metadata for each NFT in parallel
+        const metadataPromises = nfts.map(nftId => 
+          fetch(`/api/nft-metadata?id=${nftId}`)
+            .then(res => res.ok ? res.json() : null)
+            .catch(err => {
+              console.error(`Error fetching metadata for ${nftId}:`, err);
+              return null;
+            })
+        );
+        
+        // Wait for all metadata to be fetched
+        const nftMetadataList = await Promise.all(metadataPromises);
+        
+        // Create selection cards for each NFT
+        nftMetadataList.forEach((metadata, index) => {
+          if (!metadata) {
+            console.error(`No metadata found for NFT at index ${index}`);
+            return; // Skip this NFT
+          }
+          
+          const nftId = metadata.id;
           const nftCard = document.createElement('div');
           nftCard.className = 'nft-select-item';
           
-          const nftNumber = index + 1; // Simple numbering for demo
-          
           nftCard.innerHTML = `
             <input type="checkbox" id="nft-${index}" class="nft-select-checkbox" data-nftid="${nftId}">
-            <img src="https://gateway.irys.xyz/${nftId}" alt="PERK #${nftNumber}" 
+            <img src="${metadata.image}" alt="${metadata.name}" 
               class="nft-select-image" onerror="this.src='https://via.placeholder.com/50x50?text=NFT'">
             <div class="nft-select-info">
-              <div class="nft-select-name">PERK #${nftNumber}</div>
+              <div class="nft-select-name">${metadata.name}</div>
               <div class="nft-select-id">${nftId.substring(0, 8)}...${nftId.substring(nftId.length - 4)}</div>
             </div>
           `;
@@ -691,6 +709,11 @@
           
           selectionContainer.appendChild(nftCard);
         });
+        
+        // If no NFTs were displayed, show a message
+        if (selectionContainer.children.length === 0) {
+          selectionContainer.innerHTML = '<p style="padding: 15px;">Could not load NFT metadata. Please try again.</p>';
+        }
         
       } catch (error) {
         console.error('Error loading wallet NFTs:', error);
