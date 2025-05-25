@@ -515,37 +515,39 @@
       function initGlobe() {
         const globeElement = document.getElementById('globe');
         
-        // Format the cities for labels
+        // Format the cities for labels with enhanced visibility for night mode
         const formattedCities = majorCities.map(city => ({
           lat: city.lat,
           lng: city.lng,
           name: city.name,
-          size: (city.pop / 30) * citiesSize, // Scale by population
-          color: '#ffffff',
+          size: (city.pop / 20) * citiesSize, // Larger scale by population for better visibility
+          color: '#ff9900', // Bright orange for better contrast against night map
           altitude: 0.01
         }));
         
         globe = Globe()
-          // Use a brighter Earth texture
-          .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+          // Use night satellite imagery
+          .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
           .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
           .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
           .width(globeElement.clientWidth)
           .height(globeElement.clientHeight)
-          .pointAltitude(0.07)
-          .pointColor(() => '#9945FF')
-          .pointRadius(0.6)
+          .pointAltitude(0.08)
+          .pointColor(() => '#00ffcc')
+          .pointRadius(0.7)
           .pointsMerge(false)
-          .atmosphereColor('lightskyblue')
+          .pointResolution(12)
+          .atmosphereColor('#2d39c7')
           .atmosphereAltitude(0.15)
-          // Add city labels
+          // Add city labels with enhanced styling for night mode
           .labelsData(citiesVisible ? formattedCities : [])
-          .labelColor(() => '#ffff88')
+          .labelColor(() => '#ff9900')
           .labelSize(d => d.size)
           .labelText(d => d.name)
-          .labelDotRadius(d => d.size * 0.5)
+          .labelDotRadius(d => d.size * 0.6)
+          .labelDotOrientation(() => 'bottom')
           .labelAltitude(0.01)
-          .labelResolution(2)(globeElement);
+          .labelResolution(3)(globeElement);
         
         // Set initial view
         globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
