@@ -544,20 +544,28 @@
         }
         
         const citizens = await response.json();
+        console.log('Loaded citizens:', citizens.length);
         
         // Clear existing markers
         clearMarkers();
         
         // Add citizen markers to the map
-        citizens.forEach(citizen => {
-          createCitizenMarker(citizen);
-        });
-        
-        hideLoading();
+        for (const citizen of citizens) {
+          try {
+            createCitizenMarker(citizen);
+          } catch (err) {
+            console.error('Error creating marker for citizen:', citizen.wallet, err);
+          }
+        }
       } catch (error) {
         console.error('Error loading citizens:', error);
+      } finally {
+        // Always ensure loading is hidden no matter what
         hideLoading();
-        alert('Failed to load citizen data. Please try again later.');
+        // Force immediate UI update
+        setTimeout(() => {
+          document.getElementById('loadingOverlay').style.display = 'none';
+        }, 100);
       }
     }
     
