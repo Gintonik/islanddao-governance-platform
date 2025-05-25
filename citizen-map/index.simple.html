@@ -278,6 +278,48 @@
       color: var(--text-secondary);
     }
     
+    /* PFP Selection Grid */
+    .pfp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .pfp-item {
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 8px;
+      padding: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .pfp-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .pfp-item.selected {
+      background-color: rgba(153, 69, 255, 0.3);
+      border: 2px solid var(--primary);
+    }
+    
+    .pfp-image {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .pfp-name {
+      font-size: 14px;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
     .form-actions {
       display: flex;
       justify-content: space-between;
@@ -402,6 +444,11 @@
         <div id="nft-selection"></div>
       </div>
       
+      <div id="step-pfp" class="form-step" style="display: none;">
+        <p>Select the NFT you want to display as your profile on the map:</p>
+        <div id="pfp-selection" class="pfp-grid"></div>
+      </div>
+      
       <div id="step-4" class="form-step" style="display: none;">
         <p>Add your social links (optional):</p>
         <div>
@@ -432,6 +479,8 @@
     let currentStep = 1;
     let selectedLocation = null;
     let selectedNFTs = [];
+    let selectedPFP = null; // Store selected profile NFT
+    let nftMetadataCache = {}; // Cache for NFT metadata
     let citizenPins = [];
     let isFormOpen = false;
     
@@ -697,6 +746,7 @@
       currentStep = 1;
       selectedLocation = null;
       selectedNFTs = [];
+      selectedPFP = null;
       
       // Reset form fields
       document.getElementById('wallet-address').value = '';
@@ -704,6 +754,7 @@
       document.getElementById('telegram').value = '';
       document.getElementById('discord').value = '';
       document.getElementById('nft-selection').innerHTML = '';
+      document.getElementById('pfp-selection').innerHTML = '';
       document.getElementById('selected-location').textContent = '';
       
       // Show step 1, hide others
@@ -729,7 +780,29 @@
         return;
       }
       
-      if (currentStep < 4) {
+      // Special handling for PFP selection step
+      if (currentStep === 3 && selectedNFTs.length > 0) {
+        // Move to PFP selection step
+        document.getElementById('step-3').style.display = 'none';
+        document.getElementById('step-pfp').style.display = 'block';
+        currentStep = 'pfp';
+        
+        // Populate PFP selection grid
+        await showPFPSelection();
+        
+        return;
+      }
+      
+      // Normal flow for other steps
+      if (currentStep === 'pfp') {
+        // Move from PFP step to social info step
+        document.getElementById('step-pfp').style.display = 'none';
+        document.getElementById('step-4').style.display = 'block';
+        currentStep = 4;
+        
+        // Change button text on final step
+        document.getElementById('next-step').textContent = 'Submit';
+      } else if (currentStep < 4) {
         // Move to next step
         document.getElementById(`step-${currentStep}`).style.display = 'none';
         currentStep++;
