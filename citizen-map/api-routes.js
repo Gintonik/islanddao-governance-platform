@@ -71,23 +71,61 @@ async function saveCitizenPin(data) {
     try {
       await client.query('BEGIN');
       
-      // Insert citizen
-      const citizenResult = await client.query(
-        `INSERT INTO citizens (wallet, lat, lng, primary_nft, message)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id`,
-        [
-          data.wallet,
-          data.location[0],
-          data.location[1],
-          data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
-          data.message || null
-        ]
+      // Check if the wallet already has a pin
+      const existingCitizenResult = await client.query(
+        'SELECT id FROM citizens WHERE wallet = $1',
+        [data.wallet]
       );
       
-      const citizenId = citizenResult.rows[0].id;
+      let citizenId;
+      let isUpdate = false;
       
-      // Insert citizen NFTs
+      if (existingCitizenResult.rows.length > 0) {
+        // Update existing pin
+        isUpdate = true;
+        citizenId = existingCitizenResult.rows[0].id;
+        
+        // Update citizen location and primary NFT
+        await client.query(
+          `UPDATE citizens 
+           SET lat = $1, lng = $2, primary_nft = $3, message = $4, updated_at = NOW() 
+           WHERE id = $5`,
+          [
+            data.location[0],
+            data.location[1],
+            data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
+            data.message || null,
+            citizenId
+          ]
+        );
+        
+        // Remove existing NFT associations
+        await client.query(
+          'DELETE FROM citizen_nfts WHERE citizen_id = $1',
+          [citizenId]
+        );
+        
+        console.log(`🔄 Updated pin for wallet: ${data.wallet}`);
+      } else {
+        // Insert new citizen
+        const citizenResult = await client.query(
+          `INSERT INTO citizens (wallet, lat, lng, primary_nft, message)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id`,
+          [
+            data.wallet,
+            data.location[0],
+            data.location[1],
+            data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
+            data.message || null
+          ]
+        );
+        
+        citizenId = citizenResult.rows[0].id;
+        console.log(`📍 Added new pin for wallet: ${data.wallet}`);
+      }
+      
+      // Insert citizen NFTs (whether new or updated)
       for (const nftId of data.nfts) {
         await client.query(
           `INSERT INTO citizen_nfts (citizen_id, nft_id)
@@ -100,8 +138,9 @@ async function saveCitizenPin(data) {
       
       return { 
         success: true, 
-        message: 'Citizen pin added successfully',
-        citizenId 
+        message: isUpdate ? 'Citizen pin updated successfully' : 'Citizen pin added successfully',
+        citizenId,
+        isUpdate 
       };
     } catch (error) {
       await client.query('ROLLBACK');
