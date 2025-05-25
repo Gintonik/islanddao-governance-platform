@@ -798,43 +798,20 @@
         const result = await response.json();
         
         if (response.ok) {
-          // Handle different cases for new pin vs update
+          // Always reload citizen pins from the server to ensure consistency
+          await loadCitizenPins();
+          
+          // Clear the temporary marker
+          if (currentMarker) {
+            map.removeLayer(currentMarker);
+            currentMarker = null;
+          }
+          
+          // Show appropriate notification
           if (result.isUpdate) {
-            // For updates, we need to reload the citizen pins to get the updated data
-            await loadCitizenPins();
-            
-            // Show a notification
             alert('Your existing pin has been updated with the new location and NFTs!');
           } else {
-            // For new pins, add directly to our local array
-            citizenPins.push(pinData);
-            
-            // Keep the marker on the map but update its popup with real NFT data
-            if (currentMarker) {
-              let popupContent = `<div class="pin-popup">`;
-              
-              // Add NFT image and name from real metadata if available
-              if (nftMetadata && nftMetadata.image) {
-                popupContent += `
-                  <img class="pin-popup-image" src="${nftMetadata.image}" 
-                    alt="${nftMetadata.name}" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
-                  <div class="pin-popup-title">${nftMetadata.name || 'PERKS Citizen'}</div>
-                `;
-              } else {
-                // Fallback to generic info if no metadata
-                popupContent += `
-                  <img class="pin-popup-image" src="https://via.placeholder.com/200x200?text=NFT+Image" alt="PERKS NFT">
-                  <div class="pin-popup-title">PERKS Citizen</div>
-                `;
-              }
-              
-              // Add wallet info
-              popupContent += `<div class="pin-popup-address">Wallet: ${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>`;
-              popupContent += `</div>`;
-              
-              currentMarker.bindPopup(popupContent).openPopup();
-              currentMarker = null; // Don't remove it, it's a permanent pin now
-            }
+            alert('Your citizen pin has been added to the map!');
           }
           
           // Close the form
