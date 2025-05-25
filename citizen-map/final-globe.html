@@ -355,11 +355,51 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
       letter-spacing: 0.5px;
+      transition: opacity 0.3s ease, font-size 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* Tier-specific styling for adaptive sizing */
+    .city-label.tier-1 {
+      font-size: 13px;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .city-label.tier-2 {
+      font-size: 12px;
+      background-color: rgba(0, 0, 0, 0.65);
+    }
+    
+    .city-label.tier-3 {
+      font-size: 11px;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .city-label.tier-4 {
+      font-size: 10px;
+      background-color: rgba(0, 0, 0, 0.55);
+    }
+    
+    /* Performance monitoring */
+    #performance-stats {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #0f0;
+      padding: 5px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: monospace;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
   <div id="globe-container">
+    <div id="performance-stats">FPS: 0 | Visible Labels: 0</div>
+    
     <div class="header">
       <div class="title">PERKS Citizen Globe</div>
       <div class="controls">
@@ -374,6 +414,9 @@
       </div>
       <div class="control-item">
         <button id="toggle-borders" class="btn secondary">Hide Borders</button>
+      </div>
+      <div class="control-item">
+        <button id="toggle-labels" class="btn secondary">Toggle Labels</button>
       </div>
       <div class="control-item">
         <button id="zoom-in" class="btn secondary">Zoom In</button>
@@ -464,6 +507,15 @@
       let selectedPfpNft = null;
       let isRotating = true;
       let showBorders = true;
+      let showLabels = true;
+      let lastFrameTime = 0;
+      let frameCount = 0;
+      let fps = 0;
+      let visibleLabelCount = 0;
+      let zoomLevel = 1;
+      let targetZoomLevel = 1;
+      let lastLabelUpdateTime = 0;
+      let labelUpdateInterval = 100; // Update labels every 100ms
       
       // Three.js variables
       let scene, camera, renderer, globe, controls;
@@ -472,20 +524,79 @@
       let pinMeshes = [];
       let animationFrameId;
       
-      // Major cities with their coordinates
+      // Cities with tier categorization for zoom-based visibility
+      // tier: 1 = Mega cities (always visible)
+      // tier: 2 = Large cities (visible at medium zoom)
+      // tier: 3 = Medium cities (visible at close zoom)
+      // tier: 4 = Small cities (visible only at very close zoom)
       const cities = [
-        { name: 'New York', lat: 40.7128, lng: -74.0060 },
-        { name: 'London', lat: 51.5074, lng: -0.1278 },
-        { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
-        { name: 'Paris', lat: 48.8566, lng: 2.3522 },
-        { name: 'Beijing', lat: 39.9042, lng: 116.4074 },
-        { name: 'Moscow', lat: 55.7558, lng: 37.6173 },
-        { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
-        { name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729 },
-        { name: 'Cairo', lat: 30.0444, lng: 31.2357 },
-        { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
-        { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
-        { name: 'Singapore', lat: 1.3521, lng: 103.8198 }
+        // Tier 1 - Mega Cities - Always visible
+        { name: 'New York', lat: 40.7128, lng: -74.0060, tier: 1, pop: 8.4 },
+        { name: 'Tokyo', lat: 35.6762, lng: 139.6503, tier: 1, pop: 13.9 },
+        { name: 'London', lat: 51.5074, lng: -0.1278, tier: 1, pop: 8.9 },
+        { name: 'Shanghai', lat: 31.2304, lng: 121.4737, tier: 1, pop: 24.3 },
+        { name: 'Delhi', lat: 28.7041, lng: 77.1025, tier: 1, pop: 29.3 },
+        { name: 'Mexico City', lat: 19.4326, lng: -99.1332, tier: 1, pop: 21.6 },
+        { name: 'Beijing', lat: 39.9042, lng: 116.4074, tier: 1, pop: 21.5 },
+        { name: 'São Paulo', lat: -23.5505, lng: -46.6333, tier: 1, pop: 22.0 },
+        { name: 'Mumbai', lat: 19.0760, lng: 72.8777, tier: 1, pop: 20.4 },
+        { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, tier: 1, pop: 4.0 },
+        
+        // Tier 2 - Large Cities - Visible at medium zoom
+        { name: 'Paris', lat: 48.8566, lng: 2.3522, tier: 2, pop: 2.2 },
+        { name: 'Moscow', lat: 55.7558, lng: 37.6173, tier: 2, pop: 12.5 },
+        { name: 'Istanbul', lat: 41.0082, lng: 28.9784, tier: 2, pop: 15.5 },
+        { name: 'Seoul', lat: 37.5665, lng: 126.9780, tier: 2, pop: 9.8 },
+        { name: 'Cairo', lat: 30.0444, lng: 31.2357, tier: 2, pop: 9.5 },
+        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, tier: 2, pop: 7.5 },
+        { name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729, tier: 2, pop: 6.7 },
+        { name: 'Sydney', lat: -33.8688, lng: 151.2093, tier: 2, pop: 5.2 },
+        { name: 'Berlin', lat: 52.5200, lng: 13.4050, tier: 2, pop: 3.7 },
+        { name: 'Singapore', lat: 1.3521, lng: 103.8198, tier: 2, pop: 5.7 },
+        { name: 'Jakarta', lat: -6.2088, lng: 106.8456, tier: 2, pop: 10.6 },
+        { name: 'Bangkok', lat: 13.7563, lng: 100.5018, tier: 2, pop: 8.3 },
+        { name: 'Chicago', lat: 41.8781, lng: -87.6298, tier: 2, pop: 2.7 },
+        { name: 'Manila', lat: 14.5995, lng: 120.9842, tier: 2, pop: 13.5 },
+        { name: 'Toronto', lat: 43.6532, lng: -79.3832, tier: 2, pop: 2.9 },
+        
+        // Tier 3 - Medium Cities - Visible at close zoom
+        { name: 'Madrid', lat: 40.4168, lng: -3.7038, tier: 3, pop: 3.2 },
+        { name: 'Rome', lat: 41.9028, lng: 12.4964, tier: 3, pop: 2.9 },
+        { name: 'Dubai', lat: 25.2048, lng: 55.2708, tier: 3, pop: 3.3 },
+        { name: 'San Francisco', lat: 37.7749, lng: -122.4194, tier: 3, pop: 0.9 },
+        { name: 'Johannesburg', lat: -26.2041, lng: 28.0473, tier: 3, pop: 5.6 },
+        { name: 'Amsterdam', lat: 52.3676, lng: 4.9041, tier: 3, pop: 0.9 },
+        { name: 'Kiev', lat: 50.4501, lng: 30.5234, tier: 3, pop: 2.9 },
+        { name: 'Lima', lat: -12.0464, lng: -77.0428, tier: 3, pop: 10.7 },
+        { name: 'Warsaw', lat: 52.2297, lng: 21.0122, tier: 3, pop: 1.8 },
+        { name: 'Barcelona', lat: 41.3851, lng: 2.1734, tier: 3, pop: 1.6 },
+        { name: 'Boston', lat: 42.3601, lng: -71.0589, tier: 3, pop: 0.7 },
+        { name: 'Vienna', lat: 48.2082, lng: 16.3738, tier: 3, pop: 1.9 },
+        { name: 'Melbourne', lat: -37.8136, lng: 144.9631, tier: 3, pop: 5.0 },
+        { name: 'Auckland', lat: -36.8509, lng: 174.7645, tier: 3, pop: 1.6 },
+        { name: 'Montreal', lat: 45.5017, lng: -73.5673, tier: 3, pop: 1.8 },
+        { name: 'Vancouver', lat: 49.2827, lng: -123.1207, tier: 3, pop: 0.7 },
+        { name: 'Seattle', lat: 47.6062, lng: -122.3321, tier: 3, pop: 0.7 },
+        
+        // Tier 4 - Small Cities - Visible only at very close zoom
+        { name: 'Las Vegas', lat: 36.1699, lng: -115.1398, tier: 4, pop: 0.6 },
+        { name: 'Miami', lat: 25.7617, lng: -80.1918, tier: 4, pop: 0.5 },
+        { name: 'Lisbon', lat: 38.7223, lng: -9.1393, tier: 4, pop: 0.5 },
+        { name: 'Athens', lat: 37.9838, lng: 23.7275, tier: 4, pop: 0.7 },
+        { name: 'Prague', lat: 50.0755, lng: 14.4378, tier: 4, pop: 1.3 },
+        { name: 'Helsinki', lat: 60.1699, lng: 24.9384, tier: 4, pop: 0.7 },
+        { name: 'Oslo', lat: 59.9139, lng: 10.7522, tier: 4, pop: 0.7 },
+        { name: 'Copenhagen', lat: 55.6761, lng: 12.5683, tier: 4, pop: 0.6 },
+        { name: 'Dublin', lat: 53.3498, lng: -6.2603, tier: 4, pop: 0.5 },
+        { name: 'Cape Town', lat: -33.9249, lng: 18.4241, tier: 4, pop: 0.4 },
+        { name: 'Austin', lat: 30.2672, lng: -97.7431, tier: 4, pop: 0.9 },
+        { name: 'Denver', lat: 39.7392, lng: -104.9903, tier: 4, pop: 0.7 },
+        { name: 'Portland', lat: 45.5051, lng: -122.6750, tier: 4, pop: 0.6 },
+        { name: 'San Diego', lat: 32.7157, lng: -117.1611, tier: 4, pop: 1.4 },
+        { name: 'Kyoto', lat: 35.0116, lng: 135.7681, tier: 4, pop: 1.5 },
+        { name: 'Edinburgh', lat: 55.9533, lng: -3.1883, tier: 4, pop: 0.5 },
+        { name: 'Reykjavik', lat: 64.1466, lng: -21.9426, tier: 4, pop: 0.1 },
+        { name: 'Wellington', lat: -41.2865, lng: 174.7762, tier: 4, pop: 0.4 }
       ];
       
       // Initialize Three.js globe
