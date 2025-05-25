@@ -655,9 +655,19 @@
     </div>
     
     <div class="nav-bar">
-      <a href="/collection-grid" class="nav-item">Collection Grid</a>
+      <a href="javascript:void(0)" class="nav-item" id="collectionGridLink">Collection Grid</a>
       <a href="/citizen-map" class="nav-item active">Citizen Map</a>
     </div>
+    
+    <script>
+      // Set up the Collection Grid link to work properly
+      document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('collectionGridLink').addEventListener('click', function() {
+          // Open the Collection Grid in a new tab
+          window.open('http://localhost:5000/', '_blank');
+        });
+      });
+    </script>
     
     <div class="header-actions">
       <button class="toggle-theme-btn" id="toggleThemeBtn">
