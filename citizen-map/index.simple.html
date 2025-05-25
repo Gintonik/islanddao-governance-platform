@@ -860,6 +860,31 @@
       // "Drop a Pin" button click
       document.getElementById('drop-pin').addEventListener('click', openPinForm);
       
+      // "Clear All Pins" button click
+      document.getElementById('clear-pins').addEventListener('click', async () => {
+        if (confirm('Are you sure you want to clear all pins from the map? This action cannot be undone.')) {
+          try {
+            // Call the API to clear all pins
+            const response = await fetch('/api/clear-citizens', {
+              method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              // Reload citizen pins (should be empty now)
+              await loadCitizenPins();
+              alert('All pins have been cleared from the map.');
+            } else {
+              alert(`Error: ${result.error || 'Failed to clear pins'}`);
+            }
+          } catch (error) {
+            console.error('Error clearing pins:', error);
+            alert(`Error: ${error.message}`);
+          }
+        }
+      });
+      
       // Form controls
       document.getElementById('close-form').addEventListener('click', closePinForm);
       document.getElementById('next-step').addEventListener('click', nextStep);
