@@ -49,6 +49,30 @@
       gap: 10px;
     }
     
+    .toggle-theme-btn {
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    
+    .toggle-theme-btn:hover {
+      background-color: #34495e;
+    }
+    
+    .toggle-theme-btn.light-mode {
+      background-color: #f39c12;
+    }
+    
+    .toggle-theme-btn.light-mode:hover {
+      background-color: #e67e22;
+    }
+    
     .clear-btn {
       background-color: #e74c3c;
       color: white;
@@ -414,6 +438,10 @@
       <p>Explore NFT owners around the world</p>
     </div>
     <div class="header-actions">
+      <button class="toggle-theme-btn" id="toggleThemeBtn">
+        <span id="lightModeIcon">☀️</span>
+        <span id="darkModeIcon" style="display:none">🌙</span>
+      </button>
       <button class="clear-btn" id="clearMapBtn">Clear All Pins</button>
     </div>
   </div>
@@ -496,12 +524,21 @@
       zoomControl: false
     });
     
-    // Add a darker map theme
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+    // Create tile layers for both dark and light modes
+    const darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 19
-    }).addTo(map);
+    });
+    
+    const lightTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    });
+    
+    // Start with dark mode by default
+    darkTileLayer.addTo(map);
     
     // Add zoom control to bottom right
     L.control.zoom({
@@ -999,6 +1036,88 @@
       document.getElementById('confirmDialog').style.display = 'none';
     }
     
+    // Theme management
+    let isDarkMode = true; // Default to dark mode
+    
+    // Function to toggle between dark and light themes
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      
+      if (isDarkMode) {
+        // Switch to dark mode
+        document.body.style.backgroundColor = '#121212';
+        document.body.style.color = '#e0e0e0';
+        document.querySelector('.header').style.backgroundColor = '#1f1f1f';
+        document.querySelector('.header').style.borderBottomColor = '#333';
+        document.querySelector('.header h1').style.color = '#ffffff';
+        document.querySelector('.header p').style.color = '#c9d6de';
+        
+        // Update pin form styles
+        const pinForm = document.querySelector('.pin-form');
+        if (pinForm) {
+          pinForm.style.backgroundColor = '#1f1f1f';
+          pinForm.style.borderColor = '#333';
+        }
+        
+        // Update form inputs
+        document.querySelectorAll('.form-control').forEach(input => {
+          input.style.backgroundColor = '#2a2a2a';
+          input.style.borderColor = '#444';
+          input.style.color = '#e0e0e0';
+        });
+        
+        // Update form labels
+        document.querySelectorAll('.form-group label').forEach(label => {
+          label.style.color = '#e0e0e0';
+        });
+        
+        // Switch map tile layer
+        map.removeLayer(lightTileLayer);
+        darkTileLayer.addTo(map);
+        
+        // Update toggle button
+        document.getElementById('toggleThemeBtn').classList.remove('light-mode');
+        document.getElementById('lightModeIcon').style.display = 'none';
+        document.getElementById('darkModeIcon').style.display = 'inline';
+      } else {
+        // Switch to light mode
+        document.body.style.backgroundColor = '#f5f5f5';
+        document.body.style.color = '#333';
+        document.querySelector('.header').style.backgroundColor = '#ffffff';
+        document.querySelector('.header').style.borderBottomColor = '#e0e0e0';
+        document.querySelector('.header h1').style.color = '#3b5bdb';
+        document.querySelector('.header p').style.color = '#666';
+        
+        // Update pin form styles
+        const pinForm = document.querySelector('.pin-form');
+        if (pinForm) {
+          pinForm.style.backgroundColor = '#ffffff';
+          pinForm.style.borderColor = '#e0e0e0';
+        }
+        
+        // Update form inputs
+        document.querySelectorAll('.form-control').forEach(input => {
+          input.style.backgroundColor = '#ffffff';
+          input.style.borderColor = '#cccccc';
+          input.style.color = '#333';
+        });
+        
+        // Update form labels
+        document.querySelectorAll('.form-group label').forEach(label => {
+          label.style.color = '#333';
+        });
+        
+        // Switch map tile layer
+        map.removeLayer(darkTileLayer);
+        lightTileLayer.addTo(map);
+        
+        // Update toggle button
+        document.getElementById('toggleThemeBtn').classList.add('light-mode');
+        document.getElementById('lightModeIcon').style.display = 'inline';
+        document.getElementById('darkModeIcon').style.display = 'none';
+      }
+    }
+    
     // Event listeners
     document.getElementById('addPinBtn').addEventListener('click', startAddPin);
     document.getElementById('cancelBtn').addEventListener('click', cancelAddPin);
@@ -1009,6 +1128,9 @@
       hideClearConfirmation();
       clearAllPins();
     });
+    
+    // Theme toggle listener
+    document.getElementById('toggleThemeBtn').addEventListener('click', toggleTheme);
     
     // Initialize by loading all citizens
     loadAllCitizens();
