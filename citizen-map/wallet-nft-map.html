@@ -827,11 +827,12 @@
         ${citizen.message ? `<p>${citizen.message}</p>` : ''}
       `;
       
-      // Use standard popup but with absolute position offset
+      // Set up a right-side-anchored popup by using a very large offset
       marker.bindPopup(infoContent, {
-        offset: [80, 0], // Push it far to the right
+        offset: new L.Point(150, 0), // Explicitly use L.Point for a much larger offset
         closeButton: true,
-        autoPan: false
+        autoPan: false,
+        className: 'mini-popup' // Use our custom CSS class
       });
     }
     
