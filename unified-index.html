@@ -94,21 +94,22 @@
     
     .nft-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 15px;
       margin-bottom: 40px;
     }
     
     .nft-card {
       background-color: #1e1e1e;
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
       transition: transform 0.2s;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
     }
     
     .nft-card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
     
     .nft-image {
@@ -119,27 +120,36 @@
     }
     
     .nft-info {
-      padding: 15px;
+      padding: 10px;
     }
     
     .nft-name {
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
       color: #9945FF;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .nft-owner {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       color: #aaa;
       word-break: break-all;
-      margin-bottom: 5px;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .nft-id {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #888;
       word-break: break-all;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .load-more {
