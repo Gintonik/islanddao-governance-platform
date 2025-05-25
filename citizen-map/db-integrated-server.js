@@ -7,8 +7,8 @@ const db = require('../db');
 
 // Constants
 const PORT = 5001;
-const HTML_FILE = path.join(__dirname, 'nft-map.html');
-const GLOBE_HTML_FILE = path.join(__dirname, 'nft-map.html');
+const HTML_FILE = path.join(__dirname, 'wallet-nft-map.html');
+const GLOBE_HTML_FILE = path.join(__dirname, 'wallet-nft-map.html');
 
 // Initialize the database on startup
 async function initializeApp() {
