@@ -250,12 +250,12 @@
     }
     
     .citizen-marker {
-      width: 44px;
-      height: 44px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       overflow: hidden;
-      border: 3px solid white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      border: 2px solid white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
     }
     
     .citizen-marker img {
@@ -595,8 +595,8 @@
       const customIcon = L.divIcon({
         className: '',
         html: markerElement,
-        iconSize: [44, 44],
-        iconAnchor: [22, 22]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       });
       
       // Convert location to proper format - handle both array and numeric values
