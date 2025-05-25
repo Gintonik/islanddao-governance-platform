@@ -971,14 +971,36 @@
       }
       
       // Animation loop
-      function animate() {
+      function animate(time) {
         animationFrameId = requestAnimationFrame(animate);
         
-        // Update controls
+        // Calculate FPS for performance monitoring
+        frameCount++;
+        if (time > lastFrameTime + 1000) {
+          fps = Math.round((frameCount * 1000) / (time - lastFrameTime));
+          frameCount = 0;
+          lastFrameTime = time;
+          
+          // Update performance stats once per second
+          document.getElementById('performance-stats').textContent = 
+            `FPS: ${fps} | Visible Labels: ${visibleLabelCount}`;
+        }
+        
+        // Update controls with damping
         controls.update();
         
-        // Update city labels
-        updateCityLabels();
+        // Auto-rotate Earth if enabled
+        if (isRotating && !isPickingLocation) {
+          earthMesh.rotation.y += 0.001;
+          if (atmosphereMesh) atmosphereMesh.rotation.y += 0.001;
+          if (bordersMesh) bordersMesh.rotation.y += 0.001;
+        }
+        
+        // Update city labels at a reduced frequency for better performance
+        if (time - lastLabelUpdateTime > labelUpdateInterval) {
+          updateCityLabels();
+          lastLabelUpdateTime = time;
+        }
         
         // Render scene
         renderer.render(scene, camera);
