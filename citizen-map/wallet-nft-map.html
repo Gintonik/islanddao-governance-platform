@@ -430,7 +430,10 @@
       
       <div class="form-group">
         <label for="walletAddress">Your Wallet Address</label>
-        <input type="text" id="walletAddress" class="form-control" placeholder="Enter your Solana wallet address">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+          <input type="text" id="walletAddress" class="form-control" placeholder="Enter your Solana wallet address" style="flex: 1;">
+          <button id="loadNftsBtn" class="btn btn-submit" style="white-space: nowrap;">Load NFTs</button>
+        </div>
         <div class="error-message" id="walletError"></div>
       </div>
       
@@ -788,31 +791,33 @@
       }
     }
     
-    // Handle wallet input changes
+    // Handle wallet input changes - just clear errors
     document.getElementById('walletAddress').addEventListener('input', function() {
-      // Store the wallet address for the submit button to use
       document.getElementById('walletError').textContent = '';
       document.getElementById('walletError').style.display = 'none';
     });
     
-    // Add a button to fetch NFTs
-    document.getElementById('walletAddress').addEventListener('change', async function() {
-      const walletAddress = this.value.trim();
+    // Add event listener for the load NFTs button
+    document.getElementById('loadNftsBtn').addEventListener('click', async function() {
+      const walletAddress = document.getElementById('walletAddress').value.trim();
       
       // Reset NFT selection
       selectedNft = null;
       
-      if (walletAddress) {
-        hideError('walletError');
-        try {
-          await populateNftGrid(walletAddress);
-        } catch (error) {
-          console.error('Error in change handler:', error);
-          showError('walletError', 'Failed to load NFTs for this wallet address. Please check your input.');
-        }
-      } else {
-        // Clear NFT grid
-        document.getElementById('nftGrid').innerHTML = '';
+      if (!walletAddress) {
+        showError('walletError', 'Please enter a wallet address');
+        return;
+      }
+      
+      hideError('walletError');
+      try {
+        showLoading('Loading NFTs for wallet...');
+        await populateNftGrid(walletAddress);
+        hideLoading();
+      } catch (error) {
+        hideLoading();
+        console.error('Error loading NFTs:', error);
+        showError('walletError', 'Failed to load NFTs for this wallet. Please check the address and try again.');
       }
     });
     
