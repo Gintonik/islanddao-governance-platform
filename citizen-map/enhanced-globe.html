@@ -3,42 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PERKS Citizen Globe</title>
-  <!-- Globe.gl library -->
-  <script src="https://unpkg.com/globe.gl@2.28.3/dist/globe.gl.min.js"></script>
-  <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/d3-scale@3"></script>
+  <title>PERKS Citizen Globe - Enhanced</title>
+  
+  <!-- Load Three.js -->
+  <script src="https://unpkg.com/three@0.137.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.137.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <!-- Load D3.js for data handling -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/d3-geo.v2.min.js"></script>
+  <script src="https://d3js.org/d3-array.v2.min.js"></script>
+  
   <style>
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #000;
-      color: #f5f5f5;
       overflow: hidden;
+      background-color: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
     
-    .container {
-      display: flex;
-      flex-direction: column;
+    #globe-container {
+      width: 100vw;
       height: 100vh;
-      width: 100%;
+      position: relative;
     }
     
     .header {
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #9945FF;
-      z-index: 100;
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
+      z-index: 10;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #9945FF;
     }
     
     .title {
@@ -52,11 +56,26 @@
       gap: 10px;
     }
     
+    .controls-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 12px;
+      border-radius: 6px;
+      z-index: 10;
+      border: 1px solid #333;
+    }
+    
+    .control-item {
+      margin-bottom: 10px;
+    }
+    
     .btn {
       background-color: #9945FF;
       color: white;
       border: none;
-      padding: 10px 16px;
+      padding: 8px 16px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
@@ -67,14 +86,6 @@
       background-color: #8134E0;
     }
     
-    .btn.danger {
-      background-color: #d32f2f;
-    }
-    
-    .btn.danger:hover {
-      background-color: #c62828;
-    }
-    
     .btn.secondary {
       background-color: #333;
     }
@@ -83,9 +94,27 @@
       background-color: #444;
     }
     
-    #globeViz {
-      width: 100vw;
-      height: 100vh;
+    .btn.danger {
+      background-color: #d32f2f;
+    }
+    
+    .btn.danger:hover {
+      background-color: #c62828;
+    }
+    
+    .instructions {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      z-index: 10;
+      border: 1px solid #9945FF;
+      display: none;
     }
     
     .overlay {
@@ -98,17 +127,19 @@
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 100;
     }
     
     .form-container {
       background-color: #1a1a1a;
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 6px;
+      width: 90%;
       max-width: 500px;
-      width: 100%;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow-y: auto;
       color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
     
     .form-header {
@@ -116,6 +147,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
     }
     
     .form-title {
@@ -138,17 +171,48 @@
     
     label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       font-weight: bold;
     }
     
     input, textarea {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       border-radius: 4px;
       border: 1px solid #333;
       background-color: #242424;
       color: white;
+      font-size: 14px;
+    }
+    
+    .error-message {
+      color: #ff6b6b;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 15px;
+    }
+    
+    .loading.active {
+      display: block;
+    }
+    
+    .step-container {
+      display: none;
+    }
+    
+    .step-container.active {
+      display: block;
+    }
+    
+    .step-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
     }
     
     .nft-list {
@@ -191,88 +255,15 @@
       text-overflow: ellipsis;
     }
     
-    .step-container {
-      display: none;
-    }
-    
-    .step-container.active {
-      display: block;
-    }
-    
-    .step-nav {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-    
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 20px;
-    }
-    
-    .loading.active {
-      display: block;
-    }
-    
-    .error-message {
-      color: #f44336;
-      margin-top: 5px;
-      font-size: 14px;
-    }
-    
-    .instructions {
-      position: absolute;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 15px 25px;
-      border-radius: 30px;
-      font-weight: bold;
-      z-index: 1000;
-      border: 2px solid #9945FF;
-      text-align: center;
-      display: none;
-      font-size: 18px;
-    }
-    
-    .controls-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      padding: 15px;
-      z-index: 100;
-      border: 1px solid #333;
-      width: 220px;
-    }
-    
-    .controls-panel .control-item {
-      margin-bottom: 12px;
-    }
-    
-    .controls-panel label {
-      margin-bottom: 5px;
-      font-size: 14px;
-    }
-    
-    .controls-panel input[type="range"] {
-      width: 100%;
-      margin-top: 5px;
-    }
-    
     .citizen-detail {
       position: absolute;
-      background-color: rgba(0, 0, 0, 0.8);
-      border-radius: 8px;
+      background-color: rgba(26, 26, 26, 0.9);
+      border-radius: 6px;
       padding: 15px;
       min-width: 250px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
       display: none;
-      z-index: 900;
+      z-index: 90;
       border: 1px solid #9945FF;
     }
     
@@ -348,35 +339,84 @@
       text-overflow: ellipsis;
     }
     
+    /* City labels */
     .city-label {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.6);
       color: #fff;
-      font-weight: normal;
-      font-size: 12px;
-      padding: 2px 5px;
-      background: rgba(0,0,0,0.6);
+      padding: 3px 6px;
       border-radius: 3px;
+      font-size: 11px;
       pointer-events: none;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      white-space: nowrap;
+      z-index: 5;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
+      transition: opacity 0.3s ease, font-size 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* Tier-specific styling for adaptive sizing */
+    .city-label.tier-1 {
+      font-size: 13px;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .city-label.tier-2 {
+      font-size: 12px;
+      background-color: rgba(0, 0, 0, 0.65);
+    }
+    
+    .city-label.tier-3 {
+      font-size: 11px;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .city-label.tier-4 {
+      font-size: 10px;
+      background-color: rgba(0, 0, 0, 0.55);
+    }
+    
+    /* Performance monitoring */
+    #performance-stats {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #0f0;
+      padding: 5px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: monospace;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="header">
+  <div id="globe-container">
+    <div id="performance-stats">FPS: 0 | Visible Labels: 0</div>
+    
+    <div class="header">
       <div class="title">PERKS Citizen Globe</div>
       <div class="controls">
         <button id="add-pin-btn" class="btn">Drop a Citizen Pin</button>
         <button id="clear-pins-btn" class="btn danger">Clear All Pins</button>
       </div>
-    </header>
-    
-    <div id="globeViz"></div>
+    </div>
     
     <div class="controls-panel">
       <div class="control-item">
         <button id="toggle-rotation" class="btn secondary">Pause Rotation</button>
       </div>
       <div class="control-item">
-        <button id="toggle-cities" class="btn secondary">Hide Cities</button>
+        <button id="toggle-borders" class="btn secondary">Hide Borders</button>
+      </div>
+      <div class="control-item">
+        <button id="toggle-labels" class="btn secondary">Hide Labels</button>
       </div>
       <div class="control-item">
         <button id="zoom-in" class="btn secondary">Zoom In</button>
@@ -458,526 +498,917 @@
   </div>
   
   <script>
-    // Major cities data
-    const majorCities = [
-      { name: 'New York', lat: 40.7128, lng: -74.0060 },
-      { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
-      { name: 'London', lat: 51.5074, lng: -0.1278 },
-      { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
-      { name: 'Paris', lat: 48.8566, lng: 2.3522 },
-      { name: 'Berlin', lat: 52.5200, lng: 13.4050 },
-      { name: 'Beijing', lat: 39.9042, lng: 116.4074 },
-      { name: 'Moscow', lat: 55.7558, lng: 37.6173 },
-      { name: 'Dubai', lat: 25.2048, lng: 55.2708 },
-      { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
-      { name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729 },
-      { name: 'Cairo', lat: 30.0444, lng: 31.2357 },
-      { name: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
-      { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
-      { name: 'Istanbul', lat: 41.0082, lng: 28.9784 },
-      { name: 'Rome', lat: 41.9028, lng: 12.4964 },
-      { name: 'Chicago', lat: 41.8781, lng: -87.6298 },
-      { name: 'Toronto', lat: 43.6532, lng: -79.3832 },
-      { name: 'Seoul', lat: 37.5665, lng: 126.9780 },
-      { name: 'Bangkok', lat: 13.7563, lng: 100.5018 },
-      { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
-      { name: 'Mexico City', lat: 19.4326, lng: -99.1332 },
-      { name: 'San Francisco', lat: 37.7749, lng: -122.4194 },
-      { name: 'Madrid', lat: 40.4168, lng: -3.7038 },
-      { name: 'Shanghai', lat: 31.2304, lng: 121.4737 },
-      { name: 'Amsterdam', lat: 52.3676, lng: 4.9041 },
-      { name: 'Las Vegas', lat: 36.1699, lng: -115.1398 },
-      { name: 'Miami', lat: 25.7617, lng: -80.1918 },
-      { name: 'Johannesburg', lat: -26.2041, lng: 28.0473 },
-      { name: 'Delhi', lat: 28.7041, lng: 77.1025 }
-    ];
-
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
       // App state
-      let globe;
       let citizens = [];
       let isPickingLocation = false;
       let selectedLocation = null;
       let selectedNFTs = [];
       let selectedPfpNft = null;
       let isRotating = true;
-      let citiesVisible = true;
+      let showBorders = true;
+      let showLabels = true;
+      let lastFrameTime = 0;
+      let frameCount = 0;
+      let fps = 0;
+      let visibleLabelCount = 0;
+      let zoomLevel = 1;
+      let targetZoomLevel = 1;
+      let lastLabelUpdateTime = 0;
+      let labelUpdateInterval = 100; // Update labels every 100ms
+      let labelPool = []; // Pool of reusable label elements
+      let labelPoolSize = 100; // Maximum number of labels in the pool
       
-      // DOM elements
-      const globeElement = document.getElementById('globeViz');
-      const instructionsElement = document.getElementById('instructions');
+      // Three.js variables
+      let scene, camera, renderer, globe, controls;
+      let earthMesh, atmosphereMesh, bordersMesh, cityMarkers = [];
+      let raycaster, mouse;
+      let pinMeshes = [];
+      let animationFrameId;
       
-      // Initialize the globe
-      function initGlobe() {
-        // Initialize the globe with night mode imagery
-        globe = Globe()
-          .backgroundColor('rgba(0,0,0,0)')
-          .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-          .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
-          .width(window.innerWidth)
-          .height(window.innerHeight)
-          .atmosphereColor('rgba(45,57,199,0.8)')
-          .atmosphereAltitude(0.25)
-          .pointOfView({ lat: 20, lng: 0, altitude: 2.5 })
-          .pointAltitude(0.07)
-          .pointColor(() => '#00ffcc')
-          .pointRadius(0.7)
-          .pointResolution(12)
-          .onGlobeClick(handleGlobeClick)
-          .onPointClick(handlePointClick)(globeElement);
+      // Cities with tier categorization for zoom-based visibility
+      // tier: 1 = Mega cities (always visible)
+      // tier: 2 = Large cities (visible at medium zoom)
+      // tier: 3 = Medium cities (visible at close zoom)
+      // tier: 4 = Small cities (visible only at very close zoom)
+      const cities = [
+        // Tier 1 - Mega Cities - Always visible
+        { name: 'New York', lat: 40.7128, lng: -74.0060, tier: 1, pop: 8.4 },
+        { name: 'Tokyo', lat: 35.6762, lng: 139.6503, tier: 1, pop: 13.9 },
+        { name: 'London', lat: 51.5074, lng: -0.1278, tier: 1, pop: 8.9 },
+        { name: 'Shanghai', lat: 31.2304, lng: 121.4737, tier: 1, pop: 24.3 },
+        { name: 'Delhi', lat: 28.7041, lng: 77.1025, tier: 1, pop: 29.3 },
+        { name: 'Mexico City', lat: 19.4326, lng: -99.1332, tier: 1, pop: 21.6 },
+        { name: 'Beijing', lat: 39.9042, lng: 116.4074, tier: 1, pop: 21.5 },
+        { name: 'São Paulo', lat: -23.5505, lng: -46.6333, tier: 1, pop: 22.0 },
+        { name: 'Mumbai', lat: 19.0760, lng: 72.8777, tier: 1, pop: 20.4 },
+        { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, tier: 1, pop: 4.0 },
         
-        // Configure camera controls
-        const controls = globe.controls();
+        // Tier 2 - Large Cities - Visible at medium zoom
+        { name: 'Paris', lat: 48.8566, lng: 2.3522, tier: 2, pop: 2.2 },
+        { name: 'Moscow', lat: 55.7558, lng: 37.6173, tier: 2, pop: 12.5 },
+        { name: 'Istanbul', lat: 41.0082, lng: 28.9784, tier: 2, pop: 15.5 },
+        { name: 'Seoul', lat: 37.5665, lng: 126.9780, tier: 2, pop: 9.8 },
+        { name: 'Cairo', lat: 30.0444, lng: 31.2357, tier: 2, pop: 9.5 },
+        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, tier: 2, pop: 7.5 },
+        { name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729, tier: 2, pop: 6.7 },
+        { name: 'Sydney', lat: -33.8688, lng: 151.2093, tier: 2, pop: 5.2 },
+        { name: 'Berlin', lat: 52.5200, lng: 13.4050, tier: 2, pop: 3.7 },
+        { name: 'Singapore', lat: 1.3521, lng: 103.8198, tier: 2, pop: 5.7 },
+        { name: 'Jakarta', lat: -6.2088, lng: 106.8456, tier: 2, pop: 10.6 },
+        { name: 'Bangkok', lat: 13.7563, lng: 100.5018, tier: 2, pop: 8.3 },
+        { name: 'Chicago', lat: 41.8781, lng: -87.6298, tier: 2, pop: 2.7 },
+        { name: 'Manila', lat: 14.5995, lng: 120.9842, tier: 2, pop: 13.5 },
+        { name: 'Toronto', lat: 43.6532, lng: -79.3832, tier: 2, pop: 2.9 },
+        
+        // Tier 3 - Medium Cities - Visible at close zoom
+        { name: 'Madrid', lat: 40.4168, lng: -3.7038, tier: 3, pop: 3.2 },
+        { name: 'Rome', lat: 41.9028, lng: 12.4964, tier: 3, pop: 2.9 },
+        { name: 'Dubai', lat: 25.2048, lng: 55.2708, tier: 3, pop: 3.3 },
+        { name: 'San Francisco', lat: 37.7749, lng: -122.4194, tier: 3, pop: 0.9 },
+        { name: 'Johannesburg', lat: -26.2041, lng: 28.0473, tier: 3, pop: 5.6 },
+        { name: 'Amsterdam', lat: 52.3676, lng: 4.9041, tier: 3, pop: 0.9 },
+        { name: 'Kiev', lat: 50.4501, lng: 30.5234, tier: 3, pop: 2.9 },
+        { name: 'Lima', lat: -12.0464, lng: -77.0428, tier: 3, pop: 10.7 },
+        { name: 'Warsaw', lat: 52.2297, lng: 21.0122, tier: 3, pop: 1.8 },
+        { name: 'Barcelona', lat: 41.3851, lng: 2.1734, tier: 3, pop: 1.6 },
+        { name: 'Boston', lat: 42.3601, lng: -71.0589, tier: 3, pop: 0.7 },
+        { name: 'Vienna', lat: 48.2082, lng: 16.3738, tier: 3, pop: 1.9 },
+        { name: 'Brussels', lat: 50.8503, lng: 4.3517, tier: 3, pop: 1.2 },
+        { name: 'Munich', lat: 48.1351, lng: 11.5820, tier: 3, pop: 1.5 },
+        { name: 'Melbourne', lat: -37.8136, lng: 144.9631, tier: 3, pop: 5.0 },
+        { name: 'Auckland', lat: -36.8509, lng: 174.7645, tier: 3, pop: 1.6 },
+        { name: 'Montreal', lat: 45.5017, lng: -73.5673, tier: 3, pop: 1.8 },
+        { name: 'Vancouver', lat: 49.2827, lng: -123.1207, tier: 3, pop: 0.7 },
+        { name: 'Seattle', lat: 47.6062, lng: -122.3321, tier: 3, pop: 0.7 },
+        { name: 'Nairobi', lat: -1.2921, lng: 36.8219, tier: 3, pop: 4.4 },
+        
+        // Tier 4 - Small Cities - Visible only at very close zoom
+        { name: 'Las Vegas', lat: 36.1699, lng: -115.1398, tier: 4, pop: 0.6 },
+        { name: 'Miami', lat: 25.7617, lng: -80.1918, tier: 4, pop: 0.5 },
+        { name: 'Lisbon', lat: 38.7223, lng: -9.1393, tier: 4, pop: 0.5 },
+        { name: 'Athens', lat: 37.9838, lng: 23.7275, tier: 4, pop: 0.7 },
+        { name: 'Prague', lat: 50.0755, lng: 14.4378, tier: 4, pop: 1.3 },
+        { name: 'Helsinki', lat: 60.1699, lng: 24.9384, tier: 4, pop: 0.7 },
+        { name: 'Oslo', lat: 59.9139, lng: 10.7522, tier: 4, pop: 0.7 },
+        { name: 'Copenhagen', lat: 55.6761, lng: 12.5683, tier: 4, pop: 0.6 },
+        { name: 'Dublin', lat: 53.3498, lng: -6.2603, tier: 4, pop: 0.5 },
+        { name: 'Cape Town', lat: -33.9249, lng: 18.4241, tier: 4, pop: 0.4 },
+        { name: 'Austin', lat: 30.2672, lng: -97.7431, tier: 4, pop: 0.9 },
+        { name: 'Denver', lat: 39.7392, lng: -104.9903, tier: 4, pop: 0.7 },
+        { name: 'Portland', lat: 45.5051, lng: -122.6750, tier: 4, pop: 0.6 },
+        { name: 'San Diego', lat: 32.7157, lng: -117.1611, tier: 4, pop: 1.4 },
+        { name: 'Kyoto', lat: 35.0116, lng: 135.7681, tier: 4, pop: 1.5 },
+        { name: 'Edinburgh', lat: 55.9533, lng: -3.1883, tier: 4, pop: 0.5 },
+        { name: 'Reykjavik', lat: 64.1466, lng: -21.9426, tier: 4, pop: 0.1 },
+        { name: 'Wellington', lat: -41.2865, lng: 174.7762, tier: 4, pop: 0.4 },
+        { name: 'Quebec City', lat: 46.8139, lng: -71.2080, tier: 4, pop: 0.5 },
+        { name: 'Salzburg', lat: 47.8095, lng: 13.0550, tier: 4, pop: 0.2 },
+        { name: 'Queenstown', lat: -45.0312, lng: 168.6626, tier: 4, pop: 0.02 }
+      ];
+      
+      // Initialize Three.js globe
+      function initGlobe() {
+        // Create scene
+        scene = new THREE.Scene();
+        
+        // Create camera
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 300;
+        
+        // Create renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('globe-container').appendChild(renderer.domElement);
+        
+        // Create raycaster for interaction
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+        
+        // Create controls
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.rotateSpeed = 0.5;
+        controls.minDistance = 150;
+        controls.maxDistance = 400;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.5;
-        controls.enableZoom = true;
-        controls.enablePan = true;
-        controls.minDistance = 120;
-        controls.maxDistance = 400;
-        controls.zoomSpeed = 1.5;
+        
+        // Create Earth
+        createEarth();
+        
+        // Create atmosphere
+        createAtmosphere();
         
         // Load country borders
-        fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
-          .then(res => res.json())
-          .then(countries => {
-            globe.polygonsData(countries.features)
-              .polygonCapColor(() => 'rgba(0, 0, 0, 0)')
-              .polygonSideColor(() => 'rgba(150, 150, 150, 0.15)')
-              .polygonStrokeColor(() => 'rgba(255, 255, 255, 0.3)')
-              .polygonAltitude(0.005);
-          });
+        loadCountryBorders();
+        
+        // Initialize label pool for better performance
+        createLabelPool(labelPoolSize);
         
         // Add city labels
-        updateCityLabels();
+        addCityLabels();
         
-        // Window resize handler
-        window.addEventListener('resize', () => {
-          globe.width(window.innerWidth);
-          globe.height(window.innerHeight);
-        });
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize);
         
-        // Load citizen data
-        loadCitizenData();
+        // Handle mouse events
+        renderer.domElement.addEventListener('mousedown', onMouseDown);
+        renderer.domElement.addEventListener('mousemove', onMouseMove);
+        
+        // Start animation loop
+        animate();
       }
       
-      // Update city labels
+      // Create Earth mesh
+      function createEarth() {
+        // Create Earth geometry
+        const earthGeometry = new THREE.SphereGeometry(100, 64, 64);
+        
+        // Load Earth texture
+        const textureLoader = new THREE.TextureLoader();
+        const earthTexture = textureLoader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/2_no_clouds_8k.jpg');
+        const bumpMap = textureLoader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/elev_bump_8k.jpg');
+        const specularMap = textureLoader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/water_8k.png');
+        
+        // Create Earth material
+        const earthMaterial = new THREE.MeshPhongMaterial({
+          map: earthTexture,
+          bumpMap: bumpMap,
+          bumpScale: 0.5,
+          specularMap: specularMap,
+          specular: new THREE.Color('grey'),
+          shininess: 5
+        });
+        
+        // Create Earth mesh
+        earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        scene.add(earthMesh);
+        
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+        
+        // Add directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 3, 5);
+        scene.add(directionalLight);
+      }
+      
+      // Create atmosphere mesh
+      function createAtmosphere() {
+        const atmosphereGeometry = new THREE.SphereGeometry(102, 64, 64);
+        const atmosphereMaterial = new THREE.MeshPhongMaterial({
+          color: 0x4ca6ff,
+          transparent: true,
+          opacity: 0.2,
+          side: THREE.BackSide
+        });
+        
+        atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        scene.add(atmosphereMesh);
+      }
+      
+      // Create label pool for reuse (better performance)
+      function createLabelPool(size) {
+        const container = document.getElementById('globe-container');
+        
+        for (let i = 0; i < size; i++) {
+          const label = document.createElement('div');
+          label.className = 'city-label';
+          label.style.display = 'none';
+          container.appendChild(label);
+          labelPool.push(label);
+        }
+      }
+      
+      // Get a label from the pool
+      function getLabelFromPool() {
+        if (labelPool.length > 0) {
+          return labelPool.pop();
+        } else {
+          // Create new label if pool is empty
+          const label = document.createElement('div');
+          label.className = 'city-label';
+          document.getElementById('globe-container').appendChild(label);
+          return label;
+        }
+      }
+      
+      // Return a label to the pool when not needed
+      function returnLabelToPool(label) {
+        if (labelPool.length < labelPoolSize) {
+          label.style.display = 'none';
+          labelPool.push(label);
+        } else {
+          // Remove label if pool is full
+          label.remove();
+        }
+      }
+      
+      // Load country borders
+      function loadCountryBorders() {
+        fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+          .then(response => response.json())
+          .then(data => {
+            createBordersMesh(data);
+          })
+          .catch(error => {
+            console.error('Error loading country borders:', error);
+          });
+      }
+      
+      // Create borders mesh from GeoJSON
+      function createBordersMesh(geoJson) {
+        if (bordersMesh) {
+          scene.remove(bordersMesh);
+        }
+        
+        if (!showBorders) return;
+        
+        // Create material for borders
+        const bordersMaterial = new THREE.LineBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.5,
+          linewidth: 1
+        });
+        
+        // Create geometry for borders
+        const bordersGeometry = new THREE.BufferGeometry();
+        const vertices = [];
+        
+        // Process GeoJSON features
+        geoJson.features.forEach(feature => {
+          if (feature.geometry.type === 'Polygon') {
+            processBordersPolygon(feature.geometry.coordinates, vertices);
+          } else if (feature.geometry.type === 'MultiPolygon') {
+            feature.geometry.coordinates.forEach(polygon => {
+              processBordersPolygon(polygon, vertices);
+            });
+          }
+        });
+        
+        // Set vertices
+        bordersGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        
+        // Create borders mesh
+        bordersMesh = new THREE.LineSegments(bordersGeometry, bordersMaterial);
+        scene.add(bordersMesh);
+      }
+      
+      // Process polygon for borders
+      function processBordersPolygon(polygon, vertices) {
+        polygon.forEach(ring => {
+          for (let i = 0; i < ring.length - 1; i++) {
+            const point1 = latLongToVector3(ring[i][1], ring[i][0], 101);
+            const point2 = latLongToVector3(ring[i + 1][1], ring[i + 1][0], 101);
+            
+            vertices.push(point1.x, point1.y, point1.z);
+            vertices.push(point2.x, point2.y, point2.z);
+          }
+        });
+      }
+      
+      // Create city marker mesh
+      function createCityMarker(position) {
+        const geometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+        const marker = new THREE.Mesh(geometry, material);
+        marker.position.copy(position);
+        
+        return marker;
+      }
+      
+      // Add city labels
+      function addCityLabels() {
+        // Remove existing city labels
+        document.querySelectorAll('.city-label').forEach(label => {
+          if (!labelPool.includes(label)) {
+            returnLabelToPool(label);
+          }
+        });
+        
+        // Add new city labels
+        cities.forEach(city => {
+          // Create marker at city position
+          const position = latLongToVector3(city.lat, city.lng, 101);
+          const cityMarker = createCityMarker(position);
+          cityMarkers.push(cityMarker);
+          scene.add(cityMarker);
+          
+          // Create connecting line to anchor label visually
+          const lineGeometry = new THREE.BufferGeometry();
+          const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: 0xffffff, 
+            transparent: true, 
+            opacity: 0.3,
+            linewidth: 1
+          });
+          
+          // Create line positions
+          const linePositions = new Float32Array(6); // Two points (x, y, z) each
+          lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+          const line = new THREE.Line(lineGeometry, lineMaterial);
+          line.visible = false;
+          scene.add(line);
+          
+          // Create label element with tier-specific styling
+          const label = getLabelFromPool();
+          label.className = `city-label tier-${city.tier || 1}`;
+          label.textContent = city.name;
+          label.style.display = 'none'; // Hidden initially
+          
+          // Save reference to the label, position, and additional data
+          city.label = label;
+          city.position = position;
+          city.visible = false;
+          city.marker = cityMarker;
+          city.line = line;
+        });
+        
+        // Initial label update
+        updateCityLabels();
+      }
+      
+      // Update city label positions with advanced features
       function updateCityLabels() {
-        if (!globe || !citiesVisible) {
-          globe?.customLayerData([]);
+        // Skip updates if labels are hidden
+        if (!showLabels) {
+          cities.forEach(city => {
+            if (city.label) city.label.style.display = 'none';
+            if (city.line) city.line.visible = false;
+          });
+          visibleLabelCount = 0;
           return;
         }
         
-        const cityLabels = majorCities.map(city => ({
-          lat: city.lat,
-          lng: city.lng,
-          alt: 0.01,
-          text: city.name,
-          color: '#ffffff',
-          size: 0.8,
-          dotRadius: 0.2,
-          radius: 0.3
-        }));
+        // Calculate zoom factor based on camera distance for tier-based visibility
+        const cameraDistance = camera.position.length();
+        const normalizedZoom = Math.max(0, Math.min(1, 
+          (controls.maxDistance - cameraDistance) / (controls.maxDistance - controls.minDistance)
+        ));
         
-        // Add city labels as custom layer
-        globe.customLayerData(cityLabels)
-          .customThreeObject(d => {
-            // Create text label
-            const label = document.createElement('div');
-            label.textContent = d.text;
-            label.className = 'city-label';
+        // Get viewport center for context-aware placement
+        const viewportCenter = {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2
+        };
+        
+        // Reset visible label count for performance tracking
+        visibleLabelCount = 0;
+        
+        // Track occupied screen positions to prevent overlaps
+        const occupiedPositions = [];
+        
+        // Process cities in order of importance (tier) for better placement
+        [...cities]
+          // Sort by tier (most important first)
+          .sort((a, b) => (a.tier || 4) - (b.tier || 4))
+          .forEach(city => {
+            if (!city.label) return;
             
-            // Create label object
-            const labelObj = new THREE.CSS2DObject(label);
-            labelObj.position.set(0, 0, 0);
-            return labelObj;
-          })
-          .customThreeObjectUpdate((obj, d) => {
-            // Position the label
-            const pos = globe.getCoords(d.lat, d.lng, d.alt);
-            obj.position.set(pos.x, pos.y, pos.z);
+            // Determine visibility based on zoom level and city tier
+            const shouldShowByTier = (
+              (city.tier === 1) || // Tier 1 - always visible
+              (city.tier === 2 && normalizedZoom > 0.4) || // Tier 2 - medium zoom
+              (city.tier === 3 && normalizedZoom > 0.65) || // Tier 3 - close zoom
+              (city.tier === 4 && normalizedZoom > 0.85)  // Tier 4 - very close zoom only
+            );
+            
+            if (!shouldShowByTier) {
+              // Hide label if it shouldn't be visible at current zoom
+              city.label.style.display = 'none';
+              if (city.line) city.line.visible = false;
+              return;
+            }
+            
+            // Get 3D position of city on globe
+            const position = latLongToVector3(city.lat, city.lng, 100);
+            
+            // Apply current earth rotation to get world position
+            const worldPosition = position.clone().applyMatrix4(earthMesh.matrixWorld);
+            
+            // Calculate offset position for label (further out from globe center)
+            const offsetFactor = 105 + (4 - (city.tier || 1)) * 2; // Larger offset for more important cities
+            const offsetPosition = position.clone().normalize().multiplyScalar(offsetFactor);
+            const worldOffsetPosition = offsetPosition.clone().applyMatrix4(earthMesh.matrixWorld);
+            
+            // Convert positions to screen coordinates
+            const screenPosition = worldToScreen(worldPosition);
+            const offsetScreenPosition = worldToScreen(worldOffsetPosition);
+            
+            // Check if city is visible (in front of the globe)
+            const isBehindGlobe = screenPosition.z > 0.05;
+            
+            if (isBehindGlobe) {
+              // Hide label if city is on the far side of the globe
+              city.label.style.display = 'none';
+              if (city.line) city.line.visible = false;
+            } else {
+              // Apply adaptive sizing based on zoom and importance
+              const baseFontSize = 10 + (4 - (city.tier || 4)) * 0.8; // Base size depends on tier
+              const zoomFactor = 1 + normalizedZoom * 0.5; // Bigger text when zoomed in
+              const fontSize = Math.max(9, Math.min(14, baseFontSize * zoomFactor));
+              
+              // Add tier-specific class for styling
+              city.label.className = `city-label tier-${city.tier || 1}`;
+              
+              // Apply adaptive sizing
+              city.label.style.fontSize = `${fontSize}px`;
+              
+              // Calculate a unique position for this label to avoid overlaps
+              const labelWidth = city.name.length * fontSize * 0.6; // Approximate label width
+              const labelHeight = fontSize * 2; // Approximate label height
+              
+              // Find non-overlapping position using context-aware algorithm
+              let finalPosition = {
+                x: offsetScreenPosition.x,
+                y: offsetScreenPosition.y
+              };
+              
+              // Check if label would overlap with existing labels
+              let hasOverlap = false;
+              for (const occupied of occupiedPositions) {
+                // Simple rectangular overlap check
+                if (Math.abs(finalPosition.x - occupied.x) < (labelWidth + occupied.width) / 2 &&
+                    Math.abs(finalPosition.y - occupied.y) < (labelHeight + occupied.height) / 2) {
+                  hasOverlap = true;
+                  break;
+                }
+              }
+              
+              // If there's an overlap, try to find a better position
+              if (hasOverlap) {
+                // Calculate direction vector from center to city
+                const dirX = screenPosition.x - viewportCenter.x;
+                const dirY = screenPosition.y - viewportCenter.y;
+                const length = Math.sqrt(dirX * dirX + dirY * dirY);
+                
+                if (length > 0) {
+                  // Normalize direction vector
+                  const normX = dirX / length;
+                  const normY = dirY / length;
+                  
+                  // Try a position further out
+                  finalPosition.x = screenPosition.x + normX * (labelWidth + 10);
+                  finalPosition.y = screenPosition.y + normY * (labelHeight + 10);
+                }
+              }
+              
+              // Show and position the label
+              city.label.style.display = 'block';
+              city.label.style.left = finalPosition.x + 'px';
+              city.label.style.top = finalPosition.y + 'px';
+              
+              // Calculate distance from viewport center for opacity
+              const distFromCenter = Math.sqrt(
+                Math.pow(screenPosition.x - viewportCenter.x, 2) +
+                Math.pow(screenPosition.y - viewportCenter.y, 2)
+              );
+              const maxDist = Math.max(viewportCenter.x, viewportCenter.y) * 1.2;
+              const normalizedDist = Math.min(1, distFromCenter / maxDist);
+              
+              // Fade out labels near the edge of the viewport
+              const opacity = 1 - Math.pow(normalizedDist, 2);
+              city.label.style.opacity = opacity;
+              
+              // Update the line connecting the city to its label
+              if (city.line) {
+                // Update line positions
+                const positions = city.line.geometry.attributes.position;
+                positions.setXYZ(0, worldPosition.x, worldPosition.y, worldPosition.z);
+                positions.setXYZ(1, worldOffsetPosition.x, worldOffsetPosition.y, worldOffsetPosition.z);
+                positions.needsUpdate = true;
+                
+                // Update line visibility and opacity
+                city.line.visible = true;
+                city.line.material.opacity = opacity * 0.5; // Line is less visible than label
+              }
+              
+              // Add this label's position to occupied positions list
+              occupiedPositions.push({
+                x: finalPosition.x,
+                y: finalPosition.y,
+                width: labelWidth,
+                height: labelHeight
+              });
+              
+              // Increment visible label count for performance monitoring
+              visibleLabelCount++;
+            }
           });
       }
       
-      // Handle globe click
-      function handleGlobeClick({ lat, lng }) {
-        if (isPickingLocation) {
-          selectedLocation = [lat, lng];
-          isPickingLocation = false;
-          document.body.style.cursor = 'default';
-          instructionsElement.style.display = 'none';
-          openPinForm();
-        }
+      // Convert latitude and longitude to 3D vector
+      function latLongToVector3(lat, lng, radius) {
+        const phi = (90 - lat) * Math.PI / 180;
+        const theta = (lng + 180) * Math.PI / 180;
+        
+        const x = -radius * Math.sin(phi) * Math.cos(theta);
+        const y = radius * Math.cos(phi);
+        const z = radius * Math.sin(phi) * Math.sin(theta);
+        
+        return new THREE.Vector3(x, y, z);
       }
       
-      // Handle point click
-      function handlePointClick(point) {
-        if (!isPickingLocation && point.citizen) {
-          showCitizenDetail(point.citizen);
-        }
+      // Convert 3D vector to latitude and longitude
+      function latLongToLatLng(vector) {
+        const normalized = vector.clone().normalize();
+        
+        const lat = 90 - Math.acos(normalized.y) * 180 / Math.PI;
+        const lng = Math.atan2(normalized.z, -normalized.x) * 180 / Math.PI;
+        
+        return { lat, lng };
       }
       
-      // Load citizen data
-      async function loadCitizenData() {
-        try {
-          const response = await fetch('/citizens.json');
-          citizens = await response.json();
-          updateGlobePoints();
-        } catch (error) {
-          console.error('Error loading citizen data:', error);
-        }
-      }
-      
-      // Update globe points
-      function updateGlobePoints() {
-        if (!globe) return;
+      // Convert world position to screen coordinates
+      function worldToScreen(worldPosition) {
+        const vector = worldPosition.clone();
+        vector.project(camera);
         
-        const pointsData = citizens.map(citizen => ({
-          lat: citizen.location[0],
-          lng: citizen.location[1],
-          size: 0.8,
-          citizen: citizen
-        }));
-        
-        globe.pointsData(pointsData);
-      }
-      
-      // Format wallet address for display
-      function formatWallet(wallet) {
-        if (!wallet) return '';
-        return `${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`;
-      }
-      
-      // Zoom in function
-      function zoomIn() {
-        if (!globe) return;
-        
-        const controls = globe.controls();
-        const currentDistance = controls.getDistance();
-        const newDistance = Math.max(currentDistance * 0.8, controls.minDistance);
-        
-        controls.dollyTo(newDistance, true);
-      }
-      
-      // Zoom out function
-      function zoomOut() {
-        if (!globe) return;
-        
-        const controls = globe.controls();
-        const currentDistance = controls.getDistance();
-        const newDistance = Math.min(currentDistance * 1.2, controls.maxDistance);
-        
-        controls.dollyTo(newDistance, true);
-      }
-      
-      // Toggle rotation
-      function toggleRotation() {
-        if (!globe) return;
-        
-        isRotating = !isRotating;
-        globe.controls().autoRotate = isRotating;
-        
-        // Update button text
-        document.getElementById('toggle-rotation').textContent = 
-          isRotating ? 'Pause Rotation' : 'Resume Rotation';
-      }
-      
-      // Toggle city labels
-      function toggleCities() {
-        citiesVisible = !citiesVisible;
-        updateCityLabels();
-        
-        // Update button text
-        document.getElementById('toggle-cities').textContent = 
-          citiesVisible ? 'Hide Cities' : 'Show Cities';
-      }
-      
-      // Fetch NFT metadata
-      async function fetchNftMetadata(nftId) {
-        try {
-          const response = await fetch(`/api/nft-metadata?id=${nftId}`);
-          return await response.json();
-        } catch (error) {
-          console.error('Error fetching NFT metadata:', error);
-          return null;
-        }
-      }
-      
-      // Show citizen detail
-      function showCitizenDetail(citizen) {
-        const detailElement = document.getElementById('citizen-detail');
-        const nftImageElement = document.getElementById('detail-nft-image');
-        const nftNameElement = document.getElementById('detail-nft-name');
-        const walletElement = document.getElementById('detail-wallet');
-        const messageElement = document.getElementById('detail-message');
-        const nftGridElement = document.getElementById('detail-nft-grid');
-        
-        // Position the detail popup in the center
-        detailElement.style.left = '50%';
-        detailElement.style.top = '50%';
-        detailElement.style.transform = 'translate(-50%, -50%)';
-        
-        // Clear previous NFT grid
-        nftGridElement.innerHTML = '';
-        
-        // Set wallet address
-        walletElement.textContent = `Wallet: ${formatWallet(citizen.wallet)}`;
-        
-        // Set message if available
-        if (citizen.message) {
-          messageElement.textContent = citizen.message;
-          messageElement.style.display = 'block';
-        } else {
-          messageElement.style.display = 'none';
-        }
-        
-        // Load primary NFT details
-        const primaryNftId = citizen.pfp_nft || (citizen.nfts && citizen.nfts.length > 0 ? citizen.nfts[0] : null);
-        
-        if (primaryNftId) {
-          fetchNftMetadata(primaryNftId)
-            .then(metadata => {
-              if (!metadata || !metadata.image) {
-                nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
-                nftNameElement.textContent = 'PERKS NFT';
-                return;
-              }
-              
-              nftImageElement.src = metadata.image;
-              nftNameElement.textContent = metadata.name || 'PERKS NFT';
-              
-              // Load other NFTs
-              if (citizen.nfts && citizen.nfts.length > 0) {
-                // Add all NFTs except the primary one to the grid
-                citizen.nfts.forEach(nftId => {
-                  if (nftId !== primaryNftId) {
-                    fetchNftMetadata(nftId)
-                      .then(nftData => {
-                        if (!nftData || !nftData.image) return;
-                        
-                        const nftElement = document.createElement('div');
-                        nftElement.className = 'other-nft';
-                        nftElement.innerHTML = `
-                          <img class="other-nft-image" src="${nftData.image}" alt="${nftData.name || 'NFT'}" />
-                          <div class="other-nft-name">${nftData.name || 'NFT'}</div>
-                        `;
-                        nftGridElement.appendChild(nftElement);
-                      })
-                      .catch(console.error);
-                  }
-                });
-                
-                document.getElementById('detail-other-nfts').style.display = 
-                  citizen.nfts.length > 1 ? 'block' : 'none';
-              } else {
-                document.getElementById('detail-other-nfts').style.display = 'none';
-              }
-            })
-            .catch(error => {
-              console.error('Error loading NFT details:', error);
-              nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
-              nftNameElement.textContent = 'PERKS NFT';
-            });
-        } else {
-          nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
-          nftNameElement.textContent = 'Citizen';
-          document.getElementById('detail-other-nfts').style.display = 'none';
-        }
-        
-        // Show the detail popup
-        detailElement.style.display = 'block';
-        
-        // Add close handler
-        document.querySelector('#citizen-detail .close').onclick = () => {
-          detailElement.style.display = 'none';
+        return {
+          x: (vector.x * 0.5 + 0.5) * window.innerWidth,
+          y: (-vector.y * 0.5 + 0.5) * window.innerHeight,
+          z: vector.z
         };
       }
       
-      // Open the pin form
-      function openPinForm() {
-        document.getElementById('pin-form-overlay').style.display = 'flex';
-        
-        // Make sure wallet field is ready for input
-        const walletField = document.getElementById('wallet-address');
-        walletField.value = '';
-        walletField.focus();
-        
-        // Reset form
-        resetForm();
+      // Handle window resize
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
       }
       
-      // Close the pin form
-      function closePinForm() {
-        document.getElementById('pin-form-overlay').style.display = 'none';
-        resetForm();
+      // Handle mouse down event
+      function onMouseDown(event) {
+        if (!isPickingLocation) return;
         
-        // Reset the placement mode
-        isPickingLocation = false;
-        document.body.style.cursor = 'default';
-        instructionsElement.style.display = 'none';
+        // Calculate normalized device coordinates
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         
-        // Resume rotation if it was previously enabled
-        if (isRotating && globe) {
-          const controls = globe.controls();
-          controls.autoRotate = true;
+        // Update raycaster
+        raycaster.setFromCamera(mouse, camera);
+        
+        // Check for intersections with Earth
+        const intersects = raycaster.intersectObject(earthMesh);
+        
+        if (intersects.length > 0) {
+          // Get intersection point
+          const intersectionPoint = intersects[0].point;
+          
+          // Convert to latitude and longitude
+          selectedLocation = latLongToLatLng(intersectionPoint);
+          
+          // Show pin form
+          document.getElementById('pin-form-overlay').style.display = 'flex';
+          document.getElementById('instructions').style.display = 'none';
+          
+          // Stop rotation while form is open
+          controls.autoRotate = false;
+          isRotating = false;
+          
+          // Exit picking mode
+          isPickingLocation = false;
         }
       }
       
-      // Reset the form state
-      function resetForm() {
-        // Reset NFT lists
-        document.getElementById('nft-list').innerHTML = '';
-        document.getElementById('pfp-list').innerHTML = '';
-        
-        // Reset message
-        document.getElementById('message').value = '';
-        
-        // Hide NFT container
-        document.getElementById('nft-container').style.display = 'none';
-        
-        // Show step 1
-        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-        document.getElementById('step-1').classList.add('active');
-        
-        // Reset error messages
-        document.getElementById('wallet-error').textContent = '';
-        document.getElementById('nft-error').textContent = '';
-        
-        // Reset state
-        selectedNFTs = [];
-        selectedPfpNft = null;
-        
-        // Disable continue button
-        document.getElementById('next-step-1').disabled = true;
+      // Handle mouse move event
+      function onMouseMove(event) {
+        // Calculate normalized device coordinates
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       }
       
-      // Fetch wallet NFTs
-      async function fetchWalletNFTs(walletAddress) {
-        try {
-          document.getElementById('loading-nfts').classList.add('active');
-          document.getElementById('nft-container').style.display = 'none';
+      // Animation loop
+      function animate(time) {
+        animationFrameId = requestAnimationFrame(animate);
+        
+        // Calculate FPS for performance monitoring
+        frameCount++;
+        if (time - lastFrameTime > 1000) {
+          fps = Math.round((frameCount * 1000) / (time - lastFrameTime));
+          frameCount = 0;
+          lastFrameTime = time;
           
+          // Update performance stats once per second
+          document.getElementById('performance-stats').textContent = 
+            `FPS: ${fps} | Visible Labels: ${visibleLabelCount}`;
+        }
+        
+        // Update controls with damping
+        controls.update();
+        
+        // Update city labels at a reduced frequency for better performance
+        if (time - lastLabelUpdateTime > labelUpdateInterval) {
+          updateCityLabels();
+          lastLabelUpdateTime = time;
+        }
+        
+        // Smooth zoom interpolation if target zoom differs from current
+        if (Math.abs(zoomLevel - targetZoomLevel) > 0.01) {
+          zoomLevel += (targetZoomLevel - zoomLevel) * 0.1;
+          
+          // Apply zoom level to camera
+          const direction = camera.position.clone().normalize();
+          const distance = controls.minDistance + (1 - zoomLevel) * (controls.maxDistance - controls.minDistance);
+          camera.position.copy(direction.multiplyScalar(distance));
+        }
+        
+        // Render scene
+        renderer.render(scene, camera);
+      }
+      
+      // Add pin meshes to globe
+      function addPinMeshes() {
+        // Clear existing pin meshes
+        pinMeshes.forEach(mesh => {
+          scene.remove(mesh);
+        });
+        pinMeshes = [];
+        
+        // Add new pin meshes
+        citizens.forEach(citizen => {
+          // Create pin at citizen location
+          const position = latLongToVector3(citizen.latitude, citizen.longitude, 101);
+          
+          // Create pin geometry
+          const pinGeometry = new THREE.ConeGeometry(1.5, 5, 8);
+          pinGeometry.rotateX(Math.PI / 2);
+          
+          // Create pin material with citizen color
+          const pinMaterial = new THREE.MeshBasicMaterial({ color: 0x9945FF });
+          
+          // Create pin mesh
+          const pinMesh = new THREE.Mesh(pinGeometry, pinMaterial);
+          pinMesh.position.copy(position);
+          
+          // Make pin point outward from center
+          pinMesh.lookAt(0, 0, 0);
+          pinMesh.rotateX(Math.PI / 2);
+          
+          // Save reference to citizen
+          pinMesh.userData.citizen = citizen;
+          
+          // Add to scene and pinMeshes array
+          scene.add(pinMesh);
+          pinMeshes.push(pinMesh);
+        });
+      }
+      
+      // Fetch citizens data from API
+      async function fetchCitizens() {
+        try {
+          const response = await fetch('/citizens.json');
+          const data = await response.json();
+          
+          if (Array.isArray(data)) {
+            citizens = data;
+            addPinMeshes();
+          }
+        } catch (error) {
+          console.error('Error fetching citizens data:', error);
+        }
+      }
+      
+      // Start adding a new pin
+      function startAddingPin() {
+        isPickingLocation = true;
+        controls.autoRotate = false;
+        isRotating = false;
+        document.getElementById('instructions').style.display = 'block';
+        
+        // Reset form
+        document.getElementById('wallet-address').value = '';
+        document.getElementById('wallet-error').textContent = '';
+        document.getElementById('nft-list').innerHTML = '';
+        document.getElementById('pfp-list').innerHTML = '';
+        document.getElementById('message').value = '';
+        document.getElementById('loading-nfts').classList.remove('active');
+        document.getElementById('nft-container').style.display = 'none';
+        document.getElementById('next-step-1').disabled = true;
+        
+        // Reset step navigation
+        document.getElementById('step-1').classList.add('active');
+        document.getElementById('step-2').classList.remove('active');
+        document.getElementById('step-3').classList.remove('active');
+        
+        // Reset selection
+        selectedNFTs = [];
+        selectedPfpNft = null;
+      }
+      
+      // Clear all pins
+      async function clearAllPins() {
+        if (!confirm('Are you sure you want to clear all citizen pins?')) return;
+        
+        try {
+          const response = await fetch('/api/citizens', {
+            method: 'DELETE'
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            citizens = [];
+            addPinMeshes();
+            alert('All citizen pins have been cleared');
+          } else {
+            alert('Error clearing pins: ' + result.message);
+          }
+        } catch (error) {
+          console.error('Error clearing pins:', error);
+          alert('Error clearing pins. Please try again.');
+        }
+      }
+      
+      // Zoom in function with smooth easing
+      function zoomIn() {
+        if (!controls) return;
+        
+        // Update target zoom level for smooth animation
+        targetZoomLevel = Math.min(1, targetZoomLevel + 0.2);
+        
+        // Get current camera position and direction
+        const currentDist = camera.position.length();
+        const newDist = Math.max(currentDist * 0.8, controls.minDistance);
+        const cameraDir = camera.position.clone().normalize();
+        
+        // Start positions for animation
+        const startPos = camera.position.clone();
+        const endPos = cameraDir.multiplyScalar(newDist);
+        
+        // Animate zoom with easing
+        const startTime = Date.now();
+        const duration = 800; // 800ms for smooth transition
+        
+        function animateZoom() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Cubic ease-out for smooth deceleration
+          const eased = 1 - Math.pow(1 - progress, 3);
+          
+          // Interpolate position
+          camera.position.lerpVectors(startPos, endPos, eased);
+          
+          // Update controls
+          controls.update();
+          
+          // Continue animation if not complete
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        }
+        
+        // Start animation
+        animateZoom();
+      }
+      
+      // Zoom out function with smooth easing
+      function zoomOut() {
+        if (!controls) return;
+        
+        // Update target zoom level for smooth animation
+        targetZoomLevel = Math.max(0, targetZoomLevel - 0.2);
+        
+        // Get current camera position and direction
+        const currentDist = camera.position.length();
+        const newDist = Math.min(currentDist * 1.2, controls.maxDistance);
+        const cameraDir = camera.position.clone().normalize();
+        
+        // Start positions for animation
+        const startPos = camera.position.clone();
+        const endPos = cameraDir.multiplyScalar(newDist);
+        
+        // Animate zoom with easing
+        const startTime = Date.now();
+        const duration = 800; // 800ms for smooth transition
+        
+        function animateZoom() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // Cubic ease-out for smooth deceleration
+          const eased = 1 - Math.pow(1 - progress, 3);
+          
+          // Interpolate position
+          camera.position.lerpVectors(startPos, endPos, eased);
+          
+          // Update controls
+          controls.update();
+          
+          // Continue animation if not complete
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        }
+        
+        // Start animation
+        animateZoom();
+      }
+      
+      // Toggle rotation function
+      function toggleRotation() {
+        isRotating = !isRotating;
+        
+        // Update button text
+        const button = document.getElementById('toggle-rotation');
+        button.textContent = isRotating ? 'Pause Rotation' : 'Resume Rotation';
+        
+        // Toggle autoRotate property on controls
+        controls.autoRotate = isRotating;
+      }
+      
+      // Toggle borders function
+      function toggleBorders() {
+        showBorders = !showBorders;
+        
+        // Update button text
+        const button = document.getElementById('toggle-borders');
+        button.textContent = showBorders ? 'Hide Borders' : 'Show Borders';
+        
+        // Reload borders
+        loadCountryBorders();
+      }
+      
+      // Toggle labels function
+      function toggleLabels() {
+        showLabels = !showLabels;
+        
+        // Update button text
+        const button = document.getElementById('toggle-labels');
+        button.textContent = showLabels ? 'Hide Labels' : 'Show Labels';
+        
+        // Update all labels immediately
+        updateCityLabels();
+      }
+      
+      // Fetch NFTs for a wallet
+      async function fetchWalletNfts(walletAddress) {
+        try {
           const response = await fetch(`/api/wallet-nfts?address=${walletAddress}`);
           const data = await response.json();
           
-          document.getElementById('loading-nfts').classList.remove('active');
-          
-          if (data.error) {
-            document.getElementById('wallet-error').textContent = data.error;
-            return null;
+          if (!Array.isArray(data)) {
+            throw new Error('Invalid response from server');
           }
           
-          if (!data.nfts || data.nfts.length === 0) {
-            document.getElementById('wallet-error').textContent = 'No PERKS NFTs found in this wallet.';
-            return null;
-          }
-          
-          return data.nfts;
+          return data;
         } catch (error) {
           console.error('Error fetching wallet NFTs:', error);
-          document.getElementById('loading-nfts').classList.remove('active');
-          document.getElementById('wallet-error').textContent = 'Error fetching NFTs. Please try again.';
-          return null;
+          throw error;
         }
       }
       
-      // Populate NFT list
-      function populateNFTList(nfts) {
-        const nftListElement = document.getElementById('nft-list');
-        const pfpListElement = document.getElementById('pfp-list');
-        
-        nftListElement.innerHTML = '';
-        pfpListElement.innerHTML = '';
-        
-        // Auto-select all NFTs
-        selectedNFTs = nfts.map(nft => nft.id);
-        
-        // If there's only one NFT, auto-select it as profile
-        if (nfts.length === 1) {
-          selectedPfpNft = nfts[0].id;
-        }
-        
-        nfts.forEach(nft => {
-          // Create elements for NFT list (step 1)
-          const nftItem = document.createElement('div');
-          nftItem.className = 'nft-item selected';
-          nftItem.setAttribute('data-id', nft.id);
-          nftItem.innerHTML = `
-            <img class="nft-image" src="${nft.image}" alt="${nft.name}" />
-            <div class="nft-name">${nft.name}</div>
-          `;
-          nftListElement.appendChild(nftItem);
-          
-          // Create elements for PFP selection (step 2)
-          const pfpItem = document.createElement('div');
-          pfpItem.className = 'nft-item' + (nfts.length === 1 ? ' selected' : '');
-          pfpItem.setAttribute('data-id', nft.id);
-          pfpItem.innerHTML = `
-            <img class="nft-image" src="${nft.image}" alt="${nft.name}" />
-            <div class="nft-name">${nft.name}</div>
-          `;
-          pfpListElement.appendChild(pfpItem);
-          
-          // Add click handler for NFT selection (step 1)
-          nftItem.addEventListener('click', () => {
-            nftItem.classList.toggle('selected');
-            
-            if (nftItem.classList.contains('selected')) {
-              // Add to selected NFTs
-              if (!selectedNFTs.includes(nft.id)) {
-                selectedNFTs.push(nft.id);
-              }
-            } else {
-              // Remove from selected NFTs
-              selectedNFTs = selectedNFTs.filter(id => id !== nft.id);
-            }
-            
-            // Enable/disable continue button based on selection
-            document.getElementById('next-step-1').disabled = selectedNFTs.length === 0;
-          });
-          
-          // Add click handler for PFP selection (step 2)
-          pfpItem.addEventListener('click', () => {
-            // Remove selected class from all items
-            document.querySelectorAll('#pfp-list .nft-item').forEach(item => {
-              item.classList.remove('selected');
-            });
-            
-            // Add selected class to clicked item
-            pfpItem.classList.add('selected');
-            
-            // Update selected PFP
-            selectedPfpNft = nft.id;
-          });
-        });
-        
-        // Show NFT container
-        document.getElementById('nft-container').style.display = 'block';
-        
-        // Enable continue button if NFTs were auto-selected
-        document.getElementById('next-step-1').disabled = selectedNFTs.length === 0;
-      }
-      
-      // Submit the pin
-      async function submitPin() {
+      // Save citizen pin to server
+      async function saveCitizenPin(pinData) {
         try {
-          const walletAddress = document.getElementById('wallet-address').value.trim();
-          const message = document.getElementById('message').value.trim();
-          
-          if (!selectedLocation || selectedNFTs.length === 0 || !selectedPfpNft) {
-            alert('Please complete all required fields before submitting.');
-            return;
-          }
-          
-          const pinData = {
-            wallet: walletAddress,
-            location: selectedLocation,
-            nfts: selectedNFTs,
-            pfp_nft: selectedPfpNft,
-            message: message,
-            timestamp: new Date().toISOString()
-          };
-          
-          const response = await fetch('/api/save-citizen', {
+          const response = await fetch('/api/citizens', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -987,180 +1418,215 @@
           
           const result = await response.json();
           
-          if (result.error) {
-            alert(`Error: ${result.error}`);
+          if (!result.success) {
+            throw new Error(result.message || 'Unknown error');
+          }
+          
+          return result;
+        } catch (error) {
+          console.error('Error saving citizen pin:', error);
+          throw error;
+        }
+      }
+      
+      // Truncate wallet address for display
+      function truncateWallet(wallet) {
+        if (!wallet) return '';
+        return `${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`;
+      }
+      
+      // Update UI event listeners
+      function initEventListeners() {
+        // Toggle rotation button
+        document.getElementById('toggle-rotation').addEventListener('click', toggleRotation);
+        
+        // Toggle borders button
+        document.getElementById('toggle-borders').addEventListener('click', toggleBorders);
+        
+        // Toggle labels button
+        document.getElementById('toggle-labels').addEventListener('click', toggleLabels);
+        
+        // Add citizen pin button
+        document.getElementById('add-pin-btn').addEventListener('click', startAddingPin);
+        
+        // Clear pins button
+        document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
+        
+        // Zoom buttons
+        document.getElementById('zoom-in').addEventListener('click', zoomIn);
+        document.getElementById('zoom-out').addEventListener('click', zoomOut);
+        
+        // Form close button
+        document.querySelector('#pin-form-overlay .close-btn').addEventListener('click', () => {
+          document.getElementById('pin-form-overlay').style.display = 'none';
+        });
+        
+        // Wallet input and NFT selection
+        document.getElementById('wallet-address').addEventListener('input', function() {
+          document.getElementById('wallet-error').textContent = '';
+        });
+        
+        // Check wallet button (next step 1)
+        document.getElementById('next-step-1').addEventListener('click', async function() {
+          document.getElementById('step-1').classList.remove('active');
+          document.getElementById('step-2').classList.add('active');
+          
+          // Populate PFP selection with selected NFTs
+          const pfpList = document.getElementById('pfp-list');
+          pfpList.innerHTML = '';
+          
+          selectedNFTs.forEach(nft => {
+            const nftItem = document.createElement('div');
+            nftItem.className = 'nft-item';
+            nftItem.innerHTML = `
+              <img class="nft-image" src="${nft.image}" alt="${nft.name}">
+              <div class="nft-name">${nft.name}</div>
+            `;
+            
+            nftItem.addEventListener('click', () => {
+              // Clear previous selection
+              document.querySelectorAll('#pfp-list .nft-item').forEach(item => {
+                item.classList.remove('selected');
+              });
+              
+              // Select this NFT as profile picture
+              nftItem.classList.add('selected');
+              selectedPfpNft = nft;
+            });
+            
+            pfpList.appendChild(nftItem);
+          });
+          
+          // Select first NFT by default
+          if (selectedNFTs.length > 0) {
+            const firstItem = pfpList.querySelector('.nft-item');
+            if (firstItem) {
+              firstItem.classList.add('selected');
+              selectedPfpNft = selectedNFTs[0];
+            }
+          }
+        });
+        
+        // Step 2 navigation
+        document.getElementById('prev-step-2').addEventListener('click', function() {
+          document.getElementById('step-2').classList.remove('active');
+          document.getElementById('step-1').classList.add('active');
+        });
+        
+        document.getElementById('next-step-2').addEventListener('click', function() {
+          if (!selectedPfpNft) {
+            alert('Please select a profile picture');
             return;
           }
           
-          // Close the form
-          closePinForm();
+          document.getElementById('step-2').classList.remove('active');
+          document.getElementById('step-3').classList.add('active');
+        });
+        
+        // Step 3 navigation
+        document.getElementById('prev-step-3').addEventListener('click', function() {
+          document.getElementById('step-3').classList.remove('active');
+          document.getElementById('step-2').classList.add('active');
+        });
+        
+        // Wallet check button
+        document.getElementById('wallet-address').addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            checkWallet();
+          }
+        });
+        
+        async function checkWallet() {
+          const walletAddress = document.getElementById('wallet-address').value.trim();
           
-          // Reload data to show the new pin
-          await loadCitizenData();
+          if (!walletAddress) {
+            document.getElementById('wallet-error').textContent = 'Please enter a wallet address';
+            return;
+          }
           
-          alert('Your citizen pin has been added to the globe!');
-        } catch (error) {
-          console.error('Error submitting pin:', error);
-          alert('An error occurred while saving your pin. Please try again.');
-        }
-      }
-      
-      // Clear all pins
-      async function clearAllPins() {
-        if (confirm('Are you sure you want to clear all citizen pins? This action cannot be undone.')) {
           try {
-            const response = await fetch('/api/clear-citizens', {
-              method: 'POST'
-            });
+            document.getElementById('loading-nfts').classList.add('active');
+            document.getElementById('nft-container').style.display = 'none';
+            document.getElementById('wallet-error').textContent = '';
             
-            const result = await response.json();
+            const nfts = await fetchWalletNfts(walletAddress);
             
-            if (result.error) {
-              alert(`Error: ${result.error}`);
+            document.getElementById('loading-nfts').classList.remove('active');
+            
+            if (nfts.length === 0) {
+              document.getElementById('wallet-error').textContent = 'No PERKS NFTs found in this wallet';
               return;
             }
             
-            // Update the globe
-            citizens = [];
-            updateGlobePoints();
+            // Display NFTs
+            const nftList = document.getElementById('nft-list');
+            nftList.innerHTML = '';
+            selectedNFTs = nfts;
             
-            alert('All citizen pins have been cleared.');
+            nfts.forEach(nft => {
+              const nftItem = document.createElement('div');
+              nftItem.className = 'nft-item selected';
+              nftItem.innerHTML = `
+                <img class="nft-image" src="${nft.image}" alt="${nft.name}">
+                <div class="nft-name">${nft.name}</div>
+              `;
+              
+              nftList.appendChild(nftItem);
+            });
+            
+            document.getElementById('nft-container').style.display = 'block';
+            document.getElementById('next-step-1').disabled = false;
           } catch (error) {
-            console.error('Error clearing pins:', error);
-            alert('An error occurred while clearing pins. Please try again.');
+            document.getElementById('loading-nfts').classList.remove('active');
+            document.getElementById('wallet-error').textContent = 'Error fetching NFTs: ' + error.message;
           }
         }
+        
+        // Submit pin button
+        document.getElementById('submit-pin').addEventListener('click', async function() {
+          if (!selectedLocation || !selectedPfpNft) {
+            alert('Missing required information');
+            return;
+          }
+          
+          const walletAddress = document.getElementById('wallet-address').value.trim();
+          const message = document.getElementById('message').value.trim();
+          
+          const pinData = {
+            wallet: walletAddress,
+            latitude: selectedLocation.lat,
+            longitude: selectedLocation.lng,
+            message: message,
+            nft: selectedPfpNft,
+            nfts: selectedNFTs
+          };
+          
+          try {
+            await saveCitizenPin(pinData);
+            
+            // Close form
+            document.getElementById('pin-form-overlay').style.display = 'none';
+            
+            // Refresh citizens
+            await fetchCitizens();
+            
+            // Show success message
+            alert('Your citizen pin has been added to the map!');
+          } catch (error) {
+            alert('Error saving pin: ' + error.message);
+          }
+        });
+        
+        // Detail panel close button
+        document.querySelector('#citizen-detail .close').addEventListener('click', () => {
+          document.getElementById('citizen-detail').style.display = 'none';
+        });
       }
       
-      // Event Listeners
-      
-      // Add pin button
-      document.getElementById('add-pin-btn').addEventListener('click', () => {
-        isPickingLocation = true;
-        document.body.style.cursor = 'crosshair';
-        instructionsElement.style.display = 'block';
-        
-        // Stop globe rotation while picking location
-        if (globe) {
-          const controls = globe.controls();
-          controls.autoRotate = false;
-        }
-      });
-      
-      // Clear pins button
-      document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
-      
-      // Close form button
-      document.querySelector('.close-btn').addEventListener('click', closePinForm);
-      
-      // Toggle rotation button
-      document.getElementById('toggle-rotation').addEventListener('click', toggleRotation);
-      
-      // Toggle cities button
-      document.getElementById('toggle-cities').addEventListener('click', toggleCities);
-      
-      // Zoom in button
-      document.getElementById('zoom-in').addEventListener('click', zoomIn);
-      
-      // Zoom out button
-      document.getElementById('zoom-out').addEventListener('click', zoomOut);
-      
-      // Wallet input change
-      document.getElementById('wallet-address').addEventListener('input', function() {
-        // Clear error message
-        document.getElementById('wallet-error').textContent = '';
-        
-        const walletValue = this.value.trim();
-        
-        // Enable continue button as soon as there's any input
-        document.getElementById('next-step-1').disabled = walletValue === '';
-        
-        // Give immediate visual feedback about the wallet format
-        if (walletValue && walletValue.length < 32) {
-          this.style.borderColor = '#FFA500'; // Orange - potentially valid but incomplete
-        } else if (walletValue && walletValue.length >= 32) {
-          this.style.borderColor = '#00FF00'; // Green - likely valid
-        } else {
-          this.style.borderColor = '#FF0000'; // Red - empty or invalid
-        }
-      });
-      
-      // Next button - Step 1
-      document.getElementById('next-step-1').addEventListener('click', async function() {
-        const walletAddress = document.getElementById('wallet-address').value.trim();
-        
-        if (!walletAddress) {
-          document.getElementById('wallet-error').textContent = 'Please enter a wallet address.';
-          document.getElementById('wallet-address').style.borderColor = '#FF0000';
-          document.getElementById('wallet-address').focus();
-          return;
-        }
-        
-        // Basic Solana address validation (should be at least 32 chars)
-        if (walletAddress.length < 32) {
-          document.getElementById('wallet-error').textContent = 'Please enter a valid Solana wallet address.';
-          document.getElementById('wallet-address').style.borderColor = '#FF0000';
-          document.getElementById('wallet-address').focus();
-          return;
-        }
-        
-        // Check if the wallet has any NFTs
-        const nfts = await fetchWalletNFTs(walletAddress);
-        
-        if (!nfts) {
-          // Error message already set by fetchWalletNFTs
-          return;
-        }
-        
-        // Populate NFT list
-        populateNFTList(nfts);
-        
-        // If there's only one NFT, skip to step 3
-        if (nfts.length === 1) {
-          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-          document.getElementById('step-3').classList.add('active');
-        } else {
-          // Go to step 2 (PFP selection)
-          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-          document.getElementById('step-2').classList.add('active');
-        }
-      });
-      
-      // Back button - Step 2
-      document.getElementById('prev-step-2').addEventListener('click', function() {
-        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-        document.getElementById('step-1').classList.add('active');
-      });
-      
-      // Next button - Step 2
-      document.getElementById('next-step-2').addEventListener('click', function() {
-        if (!selectedPfpNft) {
-          alert('Please select a profile NFT to represent you on the globe.');
-          return;
-        }
-        
-        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-        document.getElementById('step-3').classList.add('active');
-      });
-      
-      // Back button - Step 3
-      document.getElementById('prev-step-3').addEventListener('click', function() {
-        // If we have only one NFT, go back to step 1
-        const nftList = document.querySelectorAll('#nft-list .nft-item');
-        if (nftList.length === 1) {
-          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-          document.getElementById('step-1').classList.add('active');
-        } else {
-          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
-          document.getElementById('step-2').classList.add('active');
-        }
-      });
-      
-      // Submit button
-      document.getElementById('submit-pin').addEventListener('click', submitPin);
-      
-      // Initialize the globe
+      // Initialize app
       initGlobe();
+      fetchCitizens();
+      initEventListeners();
     });
   </script>
 </body>
