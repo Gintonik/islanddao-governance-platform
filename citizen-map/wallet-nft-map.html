@@ -640,19 +640,31 @@
       showLoading('Loading NFTs for this wallet...');
       
       try {
+        console.log('Fetching NFTs for wallet:', walletAddress);
         const response = await fetch(`/api/wallet-nfts?wallet=${encodeURIComponent(walletAddress)}`);
+        
         if (!response.ok) {
-          throw new Error('Failed to load NFTs');
+          console.error('API response not ok:', response.status, response.statusText);
+          throw new Error(`Failed to load NFTs: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('API response data:', data);
         
         if (data.error) {
+          console.error('API returned error:', data.error);
           throw new Error(data.error);
         }
         
+        // Handle the case where data.nfts might be undefined
+        if (!data.nfts) {
+          console.warn('No NFTs found in API response');
+          hideLoading();
+          return [];
+        }
+        
         hideLoading();
-        return data.nfts || [];
+        return data.nfts;
       } catch (error) {
         console.error('Error loading wallet NFTs:', error);
         hideLoading();
@@ -709,8 +721,23 @@
       nftGrid.appendChild(noNftsMessage);
       
       try {
-        // Fetch wallet's NFTs
-        walletNfts = await getWalletNfts(walletAddress);
+        console.log('Fetching NFTs for wallet:', walletAddress);
+        
+        // Fetch wallet's NFTs - this returns an object with a 'nfts' property
+        const response = await fetch(`/api/wallet-nfts?wallet=${encodeURIComponent(walletAddress)}`);
+        if (!response.ok) {
+          throw new Error(`Error fetching NFTs: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('API response:', data);
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Extract the nfts array from the response
+        walletNfts = data.nfts || [];
         
         if (walletNfts.length === 0) {
           // Show no NFTs message
@@ -728,7 +755,7 @@
           nftItem.dataset.id = nft.id;
           
           const img = document.createElement('img');
-          img.src = nft.image || 'https://via.placeholder.com/200?text=NFT';
+          img.src = nft.image || nft.imageUrl || 'https://via.placeholder.com/200?text=NFT';
           img.alt = nft.name;
           nftItem.appendChild(img);
           
@@ -747,6 +774,10 @@
             // Select this NFT
             nftItem.classList.add('selected');
             selectedNft = nft;
+            
+            // Show selection message
+            document.getElementById('nftSelectionStatus').textContent = `Selected: ${nft.name}`;
+            document.getElementById('nftSelectionStatus').style.display = 'block';
           });
           
           nftGrid.appendChild(nftItem);
@@ -758,6 +789,13 @@
     }
     
     // Handle wallet input changes
+    document.getElementById('walletAddress').addEventListener('input', function() {
+      // Store the wallet address for the submit button to use
+      document.getElementById('walletError').textContent = '';
+      document.getElementById('walletError').style.display = 'none';
+    });
+    
+    // Add a button to fetch NFTs
     document.getElementById('walletAddress').addEventListener('change', async function() {
       const walletAddress = this.value.trim();
       
@@ -766,7 +804,12 @@
       
       if (walletAddress) {
         hideError('walletError');
-        await populateNftGrid(walletAddress);
+        try {
+          await populateNftGrid(walletAddress);
+        } catch (error) {
+          console.error('Error in change handler:', error);
+          showError('walletError', 'Failed to load NFTs for this wallet address. Please check your input.');
+        }
       } else {
         // Clear NFT grid
         document.getElementById('nftGrid').innerHTML = '';
