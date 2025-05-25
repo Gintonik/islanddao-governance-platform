@@ -7,6 +7,36 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
+    /* Fixed info panel style */
+    .fixed-info-panel {
+      position: fixed;
+      bottom: 70px;
+      right: 10px;
+      background-color: rgba(30, 30, 30, 0.9);
+      color: #e0e0e0;
+      border-radius: 4px;
+      padding: 8px;
+      width: 120px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      border: 1px solid #444;
+      z-index: 1000;
+      font-size: 10px;
+      display: none;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      color: #999;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .close-btn:hover {
+      color: white;
+    }
+    
     /* Custom tooltip style */
     .map-tooltip {
       position: fixed;
@@ -595,6 +625,12 @@
   
   <div class="citizen-info-panel" id="citizenInfoPanel"></div>
   
+  <!-- Fixed info panel that will replace popups -->
+  <div id="fixedInfoPanel" class="fixed-info-panel">
+    <span class="close-btn" onclick="document.getElementById('fixedInfoPanel').style.display='none'">×</span>
+    <div id="fixedInfoContent"></div>
+  </div>
+  
   <div class="instruction-box" id="instructionBox">
     <h3>Click on the Map</h3>
     <p>Select where you want to place your pin</p>
@@ -827,12 +863,21 @@
         ${citizen.message ? `<p>${citizen.message}</p>` : ''}
       `;
       
-      // Set up a right-side-anchored popup by using a very large offset
-      marker.bindPopup(infoContent, {
-        offset: new L.Point(150, 0), // Explicitly use L.Point for a much larger offset
-        closeButton: true,
-        autoPan: false,
-        className: 'mini-popup' // Use our custom CSS class
+      // Don't use popups at all - use our fixed panel instead
+      marker.unbindPopup(); // Remove any popup binding
+      
+      // Use click event to show info in our fixed panel
+      marker.on('click', function(e) {
+        // Get our fixed panel
+        const fixedPanel = document.getElementById('fixedInfoPanel');
+        const contentArea = document.getElementById('fixedInfoContent');
+        
+        // Set content and display
+        contentArea.innerHTML = infoContent;
+        fixedPanel.style.display = 'block';
+        
+        // Stop propagation so map click doesn't interfere
+        L.DomEvent.stopPropagation(e);
       });
     }
     
