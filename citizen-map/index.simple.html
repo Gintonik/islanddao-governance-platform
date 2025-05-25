@@ -4,181 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PERKS Citizen Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-    crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
-    crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
   <style>
-    :root {
-      --primary: #9945FF;
-      --primary-dark: #8134E0;
-      --secondary: #14F195;
-      --background: #121212;
-      --card-bg: #222;
-      --text: #FFFFFF;
-      --text-secondary: #AAA;
-      --border: #333;
-    }
-    
-    * {
-      box-sizing: border-box;
+    body, html {
       margin: 0;
       padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #f5f5f5;
+      background-color: #121212;
     }
     
-    body {
-      font-family: Arial, sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-    }
-    
-    /* Header styles */
-    header {
-      background-color: rgba(25, 25, 25, 0.9);
-      padding: 20px 0;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-    
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 20px;
-    }
-    
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: var(--primary);
-    }
-    
-    .nav-links {
-      display: flex;
-      gap: 20px;
-    }
-    
-    .nav-link {
-      color: var(--text);
-      text-decoration: none;
-      font-weight: bold;
-      padding: 8px 12px;
-      border-radius: 4px;
-      transition: all 0.2s;
-    }
-    
-    .nav-link:hover {
-      background-color: rgba(153, 69, 255, 0.1);
-    }
-    
-    .nav-link.active {
-      background-color: var(--primary);
-      color: white;
-    }
-    
-    /* Main content */
-    .main-container {
+    .container {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 72px); /* Subtract header height */
+      height: 100vh;
     }
     
-    .page-header {
+    .header {
+      background-color: #1a1a1a;
+      color: white;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 20px;
-      background-color: var(--card-bg);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid #9945FF;
     }
     
-    .button {
-      background-color: var(--primary);
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #9945FF;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      background-color: #9945FF;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 4px;
-      font-weight: bold;
       cursor: pointer;
+      font-weight: bold;
       transition: background-color 0.2s;
     }
     
-    .button:hover {
-      background-color: var(--primary-dark);
+    .btn:hover {
+      background-color: #8134E0;
     }
     
-    /* Map container */
-    #map-container {
+    .btn.secondary {
+      background-color: #333;
+    }
+    
+    .btn.secondary:hover {
+      background-color: #444;
+    }
+    
+    .btn.danger {
+      background-color: #d32f2f;
+    }
+    
+    .btn.danger:hover {
+      background-color: #c62828;
+    }
+    
+    .view-tabs {
+      display: flex;
+      background-color: #1a1a1a;
+      padding: 10px 20px 0;
+    }
+    
+    .tab {
+      padding: 8px 16px;
+      margin-right: 10px;
+      cursor: pointer;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      border: 1px solid #333;
+      border-bottom: none;
+      position: relative;
+      background-color: #333;
+      transition: background-color 0.2s;
+    }
+    
+    .tab.active {
+      background-color: #121212;
+      border-color: #9945FF;
+      z-index: 2;
+    }
+    
+    .tab:hover:not(.active) {
+      background-color: #444;
+    }
+    
+    .content {
       flex: 1;
-      width: 100%;
       position: relative;
     }
     
-    #map {
-      height: 100%;
-      width: 100%;
-      background-color: var(--background);
-      z-index: 1;
-    }
-    
-    .loading {
+    .view {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 15px 30px;
-      border-radius: 5px;
-      z-index: 1000;
-    }
-    
-    /* Leaflet Dark Theme Customization */
-    .leaflet-container {
-      background-color: #1a1a1a;
-      outline: 0;
-    }
-    
-    .leaflet-tile-pane {
-      filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
-    }
-    
-    .leaflet-control-attribution {
-      background-color: rgba(0, 0, 0, 0.7) !important;
-      color: #aaa !important;
-    }
-    
-    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-      background-color: var(--card-bg);
-      color: white;
-      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
-    }
-    
-    /* Pin Creation Form */
-    #pin-form {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       display: none;
+    }
+    
+    .view.active {
+      display: block;
+    }
+    
+    #map-view {
+      background-color: #121212;
+    }
+    
+    #globe-view {
+      background-color: #000000;
+    }
+    
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    
+    #globe {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .overlay {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: var(--card-bg);
-      padding: 25px;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
+    
+    .form-container {
+      background-color: #1a1a1a;
+      padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      z-index: 2000;
       max-width: 500px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
+      width: 100%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      color: white;
     }
     
     .form-header {
@@ -186,964 +169,952 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border);
     }
     
-    .close-button {
+    .form-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #9945FF;
+    }
+    
+    .close-btn {
       background: none;
       border: none;
-      color: var(--text-secondary);
+      color: #ccc;
       font-size: 24px;
       cursor: pointer;
-      transition: color 0.2s;
     }
     
-    .close-button:hover {
-      color: var(--text);
-    }
-    
-    .form-step {
-      margin-bottom: 20px;
-    }
-    
-    .form-step p {
+    .form-group {
       margin-bottom: 15px;
     }
     
-    .form-input {
-      width: 100%;
-      padding: 12px;
-      background-color: rgba(255, 255, 255, 0.1);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 4px;
-      margin: 10px 0;
-    }
-    
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    
-    .form-label {
+    label {
       display: block;
-      margin-bottom: 8px;
-      color: var(--text-secondary);
-    }
-    
-    #nft-selection {
-      max-height: 300px;
-      overflow-y: auto;
-      margin: 15px 0;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-    }
-    
-    .nft-select-item {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .nft-select-item:last-child {
-      border-bottom: none;
-    }
-    
-    .nft-select-checkbox {
-      margin-right: 15px;
-    }
-    
-    .nft-select-image {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      background-color: #333;
-      margin-right: 15px;
-      border-radius: 4px;
-    }
-    
-    .nft-select-info {
-      flex: 1;
-    }
-    
-    .nft-select-name {
+      margin-bottom: 5px;
       font-weight: bold;
-      margin-bottom: 4px;
     }
     
-    .nft-select-id {
-      font-size: 12px;
-      color: var(--text-secondary);
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background-color: #242424;
+      color: white;
     }
     
-    /* PFP Selection Grid */
-    .pfp-grid {
+    .nft-list {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin: 15px 0;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
     }
     
-    .pfp-item {
+    .nft-item {
       position: relative;
       cursor: pointer;
-      transition: all 0.2s;
-      border-radius: 8px;
-      padding: 8px;
-      background-color: rgba(255, 255, 255, 0.05);
+      border: 2px solid transparent;
+      border-radius: 4px;
+      overflow: hidden;
+      transition: transform 0.2s;
     }
     
-    .pfp-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+    .nft-item.selected {
+      border-color: #9945FF;
+      transform: scale(1.05);
     }
     
-    .pfp-item.selected {
-      background-color: rgba(153, 69, 255, 0.3);
-      border: 2px solid var(--primary);
-    }
-    
-    .pfp-image {
+    .nft-image {
       width: 100%;
-      aspect-ratio: 1/1;
+      aspect-ratio: 1;
       object-fit: cover;
-      border-radius: 6px;
-      margin-bottom: 8px;
     }
     
-    .pfp-name {
-      font-size: 14px;
-      text-align: center;
+    .nft-name {
+      font-size: 10px;
+      padding: 4px;
+      background-color: rgba(0, 0, 0, 0.7);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
     }
     
-    .form-actions {
+    .step-container {
+      display: none;
+    }
+    
+    .step-container.active {
+      display: block;
+    }
+    
+    .step-nav {
       display: flex;
       justify-content: space-between;
       margin-top: 20px;
     }
     
-    /* Popup styles */
-    .pin-popup {
-      min-width: 200px;
+    .marker-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #9945FF;
     }
     
-    .pin-popup-image {
-      width: 100%;
-      height: auto;
-      max-height: 180px;
-      object-fit: contain;
-      background-color: #333;
-      margin-bottom: 15px;
-      border-radius: 4px;
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
     }
     
-    .pin-popup-title {
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: var(--primary);
+    .loading.active {
+      display: block;
     }
     
-    .pin-popup-address {
-      color: var(--text-secondary);
-      font-size: 12px;
-      word-break: break-all;
+    .citizen-detail {
+      position: absolute;
+      background-color: rgba(26, 26, 26, 0.9);
+      border-radius: 8px;
+      padding: 15px;
+      min-width: 250px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 900;
+      border: 1px solid #9945FF;
+    }
+    
+    .citizen-detail .close {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    
+    .citizen-nft {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
     }
     
-    .pin-popup-socials {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-      flex-wrap: wrap;
-    }
-    
-    .social-link {
-      display: inline-block;
-      padding: 5px 10px;
-      background-color: rgba(255, 255, 255, 0.1);
-      color: var(--text);
+    .citizen-nft-image {
+      width: 50px;
+      height: 50px;
       border-radius: 4px;
-      text-decoration: none;
-      font-size: 12px;
-      transition: background-color 0.2s;
+      object-fit: cover;
     }
     
-    .social-link:hover {
-      background-color: rgba(255, 255, 255, 0.2);
+    .citizen-wallet {
+      font-size: 12px;
+      color: #ccc;
+      margin-bottom: 10px;
     }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .header-content {
-        flex-direction: column;
-        gap: 15px;
-      }
-      
-      .pin-popup {
-        max-width: 250px;
-      }
+    
+    .citizen-message {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .other-nft {
+      position: relative;
+      cursor: pointer;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .other-nft-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+    
+    .other-nft-name {
+      font-size: 10px;
+      padding: 4px;
+      background-color: rgba(0, 0, 0, 0.7);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .error-message {
+      color: #f44336;
+      margin-top: 5px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <div class="logo">PERKS</div>
-      <nav class="nav-links">
-        <a href="/" class="nav-link">Collection</a>
-        <a href="/citizen-map" class="nav-link active">Citizen Map</a>
-      </nav>
-    </div>
-  </header>
-  
-  <div class="main-container">
-    <div class="page-header">
-      <h1>PERKS Citizen Map</h1>
-      <div class="header-buttons">
-        <button id="drop-pin" class="button">Drop a Citizen Pin</button>
-        <button id="clear-pins" class="button" style="background-color: #FF5555; margin-left: 10px;">Clear All Pins</button>
+  <div class="container">
+    <header class="header">
+      <div class="title">PERKS Citizen Map</div>
+      <div class="controls">
+        <button id="add-pin-btn" class="btn">Drop a Citizen Pin</button>
+        <button id="clear-pins-btn" class="btn danger">Clear All Pins</button>
       </div>
+    </header>
+    
+    <div class="view-tabs">
+      <div class="tab active" data-view="map-view">2D Map View</div>
+      <div class="tab" data-view="globe-view">3D Globe View</div>
     </div>
     
-    <div id="map-container">
-      <div class="loading">Loading map... Please wait.</div>
-      <div id="map"></div>
-    </div>
-    
-    <!-- Pin Creation Form -->
-    <div id="pin-form">
-      <div class="form-header">
-        <h2>Add Citizen Pin</h2>
-        <button id="close-form" class="close-button">&times;</button>
+    <div class="content">
+      <div id="map-view" class="view active">
+        <div id="map"></div>
       </div>
-      
-      <div id="step-1" class="form-step">
-        <p>Click on the map to select your location.</p>
-        <div id="selected-location" style="margin-top: 10px; font-size: 14px; color: var(--text-secondary);"></div>
-      </div>
-      
-      <div id="step-2" class="form-step" style="display: none;">
-        <p>Enter your Solana wallet address:</p>
-        <input type="text" id="wallet-address" class="form-input" placeholder="Solana wallet address">
-        <button id="check-wallet" class="button">Check NFTs</button>
-      </div>
-      
-      <div id="loading-message" class="form-step" style="display: none;">
-        <div style="text-align: center; padding: 20px;">
-          <div class="loading-spinner" style="display: inline-block; width: 30px; height: 30px;"></div>
-          <p>Loading your NFTs from the database...</p>
-        </div>
-      </div>
-      
-      <div id="step-3" class="form-step" style="display: none;">
-        <p>Select your PERKS NFTs to add to this location:</p>
-        <div id="nft-selection"></div>
-      </div>
-      
-      <div id="step-pfp" class="form-step" style="display: none;">
-        <p>Select the NFT you want to display as your profile on the map:</p>
-        <div id="pfp-selection" class="pfp-grid"></div>
-      </div>
-      
-      <div id="step-4" class="form-step" style="display: none;">
-        <p>Add your social links (optional):</p>
-        <div>
-          <label for="x-handle" class="form-label">X/Twitter:</label>
-          <input type="text" id="x-handle" class="form-input" placeholder="@username">
-        </div>
-        <div>
-          <label for="telegram" class="form-label">Telegram:</label>
-          <input type="text" id="telegram" class="form-input" placeholder="@username or t.me/username">
-        </div>
-        <div>
-          <label for="discord" class="form-label">Discord:</label>
-          <input type="text" id="discord" class="form-input" placeholder="username#1234">
-        </div>
-      </div>
-      
-      <div class="form-actions">
-        <button id="prev-step" class="button" style="background-color: var(--border); display: none;">Back</button>
-        <button id="next-step" class="button">Next</button>
+      <div id="globe-view" class="view">
+        <div id="globe"></div>
       </div>
     </div>
   </div>
-
+  
+  <div id="pin-form-overlay" class="overlay">
+    <div class="form-container">
+      <div class="form-header">
+        <div class="form-title">Drop a Citizen Pin</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      
+      <div id="step-1" class="step-container active">
+        <div class="form-group">
+          <label for="wallet-address">Your Solana Wallet Address</label>
+          <input type="text" id="wallet-address" placeholder="Enter your wallet address" />
+          <div id="wallet-error" class="error-message"></div>
+        </div>
+        <div id="loading-nfts" class="loading">
+          Loading your NFTs... Please wait.
+        </div>
+        <div id="nft-container" class="form-group" style="display: none;">
+          <label>Your PERKS NFTs</label>
+          <div id="nft-list" class="nft-list"></div>
+          <div id="nft-error" class="error-message"></div>
+        </div>
+        <div class="step-nav">
+          <div></div>
+          <button id="next-step-1" class="btn" disabled>Continue</button>
+        </div>
+      </div>
+      
+      <div id="step-2" class="step-container">
+        <div class="form-group">
+          <label>Choose Your Profile Image</label>
+          <p>Select which NFT you want to appear as your profile on the map</p>
+          <div id="pfp-list" class="nft-list"></div>
+        </div>
+        <div class="step-nav">
+          <button id="prev-step-2" class="btn secondary">Back</button>
+          <button id="next-step-2" class="btn">Continue</button>
+        </div>
+      </div>
+      
+      <div id="step-3" class="step-container">
+        <div class="form-group">
+          <label for="message">Message (Optional)</label>
+          <textarea id="message" rows="3" placeholder="Add a message to your pin (optional)"></textarea>
+        </div>
+        <div class="step-nav">
+          <button id="prev-step-3" class="btn secondary">Back</button>
+          <button id="submit-pin" class="btn">Drop Pin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="citizen-detail" class="citizen-detail">
+    <button class="close">&times;</button>
+    <div class="citizen-nft">
+      <img id="detail-nft-image" class="citizen-nft-image" src="" alt="Citizen NFT" />
+      <div id="detail-nft-name"></div>
+    </div>
+    <div id="detail-wallet" class="citizen-wallet"></div>
+    <div id="detail-message" class="citizen-message"></div>
+    <div id="detail-other-nfts">
+      <h4>Other NFTs</h4>
+      <div id="detail-nft-grid" class="nft-grid"></div>
+    </div>
+  </div>
+  
   <script>
-    // Global variables for map functionality
-    let map;
-    let currentMarker = null;
-    let currentStep = 1;
-    let selectedLocation = null;
-    let selectedNFTs = [];
-    let selectedPFP = null; // Store selected profile NFT
-    let nftMetadataCache = {}; // Cache for NFT metadata
-    let citizenPins = [];
-    let isFormOpen = false;
-    
-    // Initialize Leaflet map with dark theme
-    function initMap() {
-      // Create map centered on world view
-      map = L.map('map').setView([20, 0], 2);
+    // Main application
+    document.addEventListener('DOMContentLoaded', function() {
+      // App state
+      let map;
+      let globe;
+      let citizens = [];
+      let nftOwners = {};
+      let isPickingLocation = false;
+      let selectedLocation = null;
+      let selectedNFTs = [];
+      let selectedPfpNft = null;
       
-      // Add dark-themed tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
+      // View switching
+      const tabs = document.querySelectorAll('.tab');
+      const views = document.querySelectorAll('.view');
       
-      // Load existing pins
-      loadCitizenPins();
-      
-      // Hide loading message
-      document.querySelector('.loading').style.display = 'none';
-      
-      // Setup map click event for pin placement
-      map.on('click', function(e) {
-        if (isFormOpen && currentStep === 1) {
-          placeMarker(e.latlng);
-        }
-      });
-    }
-    
-    // Load citizen pins from JSON file
-    async function loadCitizenPins() {
-      try {
-        const response = await fetch('/citizens.json');
-        const data = await response.json();
-        citizenPins = data;
-        
-        // Display pins on the map
-        displayCitizenPins();
-      } catch (error) {
-        console.error('Error loading citizen pins:', error);
-      }
-    }
-    
-    // Track all markers for easy removal
-    let allMarkers = [];
-    
-    // Clear all markers from the map
-    function clearAllMarkers() {
-      // Remove each marker from the map
-      allMarkers.forEach(marker => {
-        map.removeLayer(marker);
-      });
-      
-      // Reset the markers array
-      allMarkers = [];
-    }
-    
-    // Create a custom icon with an NFT image
-    function createNftIcon(imageUrl) {
-      return L.divIcon({
-        html: `<div class="nft-marker">
-                <img src="${imageUrl}" alt="NFT" onerror="this.src='https://via.placeholder.com/40x40?text=NFT'">
-              </div>`,
-        className: 'custom-nft-marker',
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -35]
-      });
-    }
-    
-    // Display all citizen pins on the map
-    function displayCitizenPins() {
-      // Clear all existing markers first
-      clearAllMarkers();
-      
-      if (!citizenPins || citizenPins.length === 0) return;
-      
-      // Add custom marker styles to the document
-      if (!document.getElementById('marker-styles')) {
-        const style = document.createElement('style');
-        style.id = 'marker-styles';
-        style.textContent = `
-          .custom-nft-marker {
-            background: none;
-            border: none;
-          }
-          .nft-marker {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid #9945FF;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-          }
-          .nft-marker img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-        `;
-        document.head.appendChild(style);
-      }
-      
-      citizenPins.forEach(async pin => {
-        const position = L.latLng(pin.location[0], pin.location[1]);
-        
-        // Get NFT image for this pin
-        let imageUrl = 'https://via.placeholder.com/40x40?text=NFT';
-        
-        // Determine which NFT to use for the pin image
-        // First try the pfp field, then fall back to primaryNft
-        const displayNftId = pin.pfp || pin.primaryNft;
-        
-        if (displayNftId) {
-          // Check if we already have this metadata cached
-          if (nftMetadataCache[displayNftId] && nftMetadataCache[displayNftId].image) {
-            imageUrl = nftMetadataCache[displayNftId].image;
-          } else {
-            // Fetch the NFT metadata if not already available
-            try {
-              const response = await fetch(`/api/nft-metadata?id=${displayNftId}`);
-              if (response.ok) {
-                const nftData = await response.json();
-                if (nftData && nftData.image) {
-                  imageUrl = nftData.image;
-                  // Cache the metadata for future use
-                  nftMetadataCache[displayNftId] = nftData;
-                }
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const viewId = tab.getAttribute('data-view');
+          
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          // Update active view
+          views.forEach(view => {
+            view.classList.remove('active');
+            if (view.id === viewId) {
+              view.classList.add('active');
+              
+              // If switching to globe view, ensure it's initialized
+              if (viewId === 'globe-view' && !globe) {
+                initGlobe();
               }
-            } catch (error) {
-              console.error('Error fetching NFT image for pin:', error);
             }
-          }
-        }
+          });
+        });
+      });
+      
+      // Initialize the 2D map
+      function initMap() {
+        map = L.map('map').setView([20, 0], 2);
         
-        // Create a custom marker with the NFT image
-        const marker = L.marker(position, {
-          icon: createNftIcon(imageUrl)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 18
         }).addTo(map);
         
-        // Add to our marker tracking array
-        allMarkers.push(marker);
+        // Enable location picking
+        map.on('click', function(e) {
+          if (isPickingLocation) {
+            selectedLocation = [e.latlng.lat, e.latlng.lng];
+            isPickingLocation = false;
+            openPinForm();
+          }
+        });
+      }
+      
+      // Initialize the 3D globe
+      function initGlobe() {
+        const globeElement = document.getElementById('globe');
         
-        // Create popup content
-        let popupContent = '<div class="pin-popup">';
+        globe = Globe()
+          .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+          .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+          .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+          .width(globeElement.clientWidth)
+          .height(globeElement.clientHeight)
+          .pointAltitude(0.05)
+          .pointColor(() => '#9945FF')
+          .pointRadius(0.5)
+          .pointsMerge(false)(globeElement);
         
-        // Display an NFT image if available
-        // First try primary NFT, then fall back to first NFT in the list
-        let nftToShow = null;
+        // Set initial view
+        globe.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
         
-        if (pin.primaryNft && pin.nftMetadata && pin.nftMetadata[pin.primaryNft]) {
-          // Use the primary NFT if available
-          nftToShow = pin.nftMetadata[pin.primaryNft];
-        } else if (pin.nfts && pin.nfts.length > 0 && pin.nftMetadata && pin.nftMetadata[pin.nfts[0]]) {
-          // Fall back to the first NFT in the list
-          nftToShow = pin.nftMetadata[pin.nfts[0]];
-        }
+        // Enable auto-rotation
+        const controls = globe.controls();
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
         
-        if (nftToShow) {
-          popupContent += `
-            <img class="pin-popup-image" src="${nftToShow.image}" 
-              alt="${nftToShow.name}" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
-            <div class="pin-popup-title">${nftToShow.name}</div>
+        // Handle globe click for placing pins
+        globe.onGlobeClick(({ lat, lng }) => {
+          if (isPickingLocation) {
+            selectedLocation = [lat, lng];
+            isPickingLocation = false;
+            openPinForm();
+          }
+        });
+        
+        // Format point label for globe
+        globe.pointLabel(point => {
+          const citizen = point.citizen;
+          if (!citizen) return '';
+          
+          return `
+            <div style="
+              background: rgba(20, 20, 20, 0.9);
+              color: white;
+              border-radius: 6px;
+              padding: 10px;
+              width: 200px;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+              border: 1px solid #9945FF;
+            ">
+              <div style="font-weight: bold; margin-bottom: 5px;">
+                ${citizen.nfts && citizen.nfts.length > 0 ? `PERK NFTs (${citizen.nfts.length})` : 'Citizen'}
+              </div>
+              <div style="font-size: 12px; margin-bottom: 5px;">
+                Wallet: ${formatWallet(citizen.wallet)}
+              </div>
+              ${citizen.message ? `<div style="font-size: 12px; margin-bottom: 5px;">${citizen.message}</div>` : ''}
+            </div>
           `;
+        });
+        
+        // Update globe with citizen data
+        updateGlobeData();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          if (globe) {
+            globe.width(globeElement.clientWidth);
+            globe.height(globeElement.clientHeight);
+          }
+        });
+      }
+      
+      // Update globe data with citizens
+      function updateGlobeData() {
+        if (!globe) return;
+        
+        // Format data for globe points
+        const pointsData = citizens.map(citizen => ({
+          lat: citizen.location[0],
+          lng: citizen.location[1],
+          citizen
+        }));
+        
+        globe.pointsData(pointsData);
+      }
+      
+      // Format wallet address for display
+      function formatWallet(wallet) {
+        if (!wallet) return '';
+        return `${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`;
+      }
+      
+      // Load citizens data
+      async function loadData() {
+        try {
+          const response = await fetch('/citizens.json');
+          citizens = await response.json();
+          
+          // Load NFT ownership data
+          const ownersResponse = await fetch('/nft-owners.json');
+          nftOwners = await ownersResponse.json();
+          
+          // Update the map with citizen markers
+          updateMarkers();
+          
+          // Update globe data if initialized
+          updateGlobeData();
+        } catch (error) {
+          console.error('Error loading data:', error);
+        }
+      }
+      
+      // Update map markers
+      function updateMarkers() {
+        // Clear existing markers
+        if (map._layers) {
+          Object.keys(map._layers).forEach(key => {
+            if (map._layers[key]._icon) {
+              map.removeLayer(map._layers[key]);
+            }
+          });
         }
         
-        // Add wallet info
-        popupContent += `<div class="pin-popup-address">Wallet: ${pin.wallet.substring(0, 8)}...${pin.wallet.substring(pin.wallet.length - 6)}</div>`;
+        // Add markers for each citizen
+        citizens.forEach(citizen => {
+          const hasValidLocation = 
+            citizen.location && 
+            Array.isArray(citizen.location) && 
+            citizen.location.length === 2 && 
+            !isNaN(citizen.location[0]) && 
+            !isNaN(citizen.location[1]);
+          
+          if (!hasValidLocation) return;
+          
+          // Create custom icon using the citizen's profile NFT image
+          let iconUrl = 'https://cryptologos.cc/logos/solana-sol-logo.png'; // Default icon
+          
+          // Use the profile NFT image if available
+          if (citizen.pfp_nft) {
+            // Fetch the NFT metadata to get the image URL
+            fetchNftMetadata(citizen.pfp_nft)
+              .then(metadata => {
+                if (metadata && metadata.image) {
+                  // Create marker with NFT image
+                  createMarker(citizen, metadata.image);
+                } else {
+                  // Use default icon if metadata not available
+                  createMarker(citizen, iconUrl);
+                }
+              })
+              .catch(error => {
+                console.error('Error fetching NFT metadata:', error);
+                createMarker(citizen, iconUrl);
+              });
+          } else if (citizen.nfts && citizen.nfts.length > 0) {
+            // Use the first NFT as profile if no specific profile NFT
+            fetchNftMetadata(citizen.nfts[0])
+              .then(metadata => {
+                if (metadata && metadata.image) {
+                  createMarker(citizen, metadata.image);
+                } else {
+                  createMarker(citizen, iconUrl);
+                }
+              })
+              .catch(error => {
+                console.error('Error fetching NFT metadata:', error);
+                createMarker(citizen, iconUrl);
+              });
+          } else {
+            // No NFTs, use default icon
+            createMarker(citizen, iconUrl);
+          }
+        });
+      }
+      
+      // Create a marker for a citizen
+      function createMarker(citizen, iconUrl) {
+        const customIcon = L.divIcon({
+          className: 'marker-icon',
+          html: `<img src="${iconUrl}" width="100%" height="100%" style="border-radius: 50%;">`
+        });
         
-        // Add social links if available
-        if (pin.socials) {
-          popupContent += '<div class="pin-popup-socials">';
-          if (pin.socials.x) {
-            popupContent += `<a href="${pin.socials.x}" target="_blank" class="social-link">X/Twitter</a>`;
-          }
-          if (pin.socials.telegram) {
-            popupContent += `<a href="${pin.socials.telegram}" target="_blank" class="social-link">Telegram</a>`;
-          }
-          if (pin.socials.discord) {
-            popupContent += `<a href="#" class="social-link">Discord: ${pin.socials.discord}</a>`;
-          }
-          popupContent += '</div>';
+        const marker = L.marker(citizen.location, { icon: customIcon }).addTo(map);
+        
+        // Add click handler to show citizen details
+        marker.on('click', () => {
+          showCitizenDetail(citizen, marker);
+        });
+      }
+      
+      // Fetch NFT metadata
+      async function fetchNftMetadata(nftId) {
+        try {
+          const response = await fetch(`/api/nft-metadata?id=${nftId}`);
+          return await response.json();
+        } catch (error) {
+          console.error('Error fetching NFT metadata:', error);
+          return null;
+        }
+      }
+      
+      // Show citizen detail popup
+      function showCitizenDetail(citizen, marker) {
+        const detailElement = document.getElementById('citizen-detail');
+        const nftImageElement = document.getElementById('detail-nft-image');
+        const nftNameElement = document.getElementById('detail-nft-name');
+        const walletElement = document.getElementById('detail-wallet');
+        const messageElement = document.getElementById('detail-message');
+        const nftGridElement = document.getElementById('detail-nft-grid');
+        
+        // Get marker position for positioning the popup
+        const markerPos = marker.getLatLng();
+        const point = map.latLngToContainerPoint(markerPos);
+        
+        // Position the detail popup
+        detailElement.style.left = `${point.x + 20}px`;
+        detailElement.style.top = `${point.y - 100}px`;
+        
+        // Clear previous NFT grid
+        nftGridElement.innerHTML = '';
+        
+        // Set wallet address
+        walletElement.textContent = `Wallet: ${formatWallet(citizen.wallet)}`;
+        
+        // Set message if available
+        if (citizen.message) {
+          messageElement.textContent = citizen.message;
+          messageElement.style.display = 'block';
+        } else {
+          messageElement.style.display = 'none';
         }
         
-        popupContent += '</div>';
+        // Load primary NFT details
+        const primaryNftId = citizen.pfp_nft || (citizen.nfts && citizen.nfts.length > 0 ? citizen.nfts[0] : null);
         
-        // Bind the popup to the marker
-        marker.bindPopup(popupContent);
-      });
-    }
-    
-    // Place a temporary marker on the map
-    function placeMarker(latlng) {
-      // Remove existing temporary marker if any
-      if (currentMarker) {
-        map.removeLayer(currentMarker);
-      }
-      
-      // Create new marker with a purple circle icon
-      const tempIcon = L.divIcon({
-        html: `<div class="temp-marker">
-                <div class="inner-circle"></div>
-              </div>`,
-        className: 'custom-temp-marker',
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -35]
-      });
-      
-      // Add styles for temporary marker if not already added
-      if (!document.getElementById('temp-marker-styles')) {
-        const style = document.createElement('style');
-        style.id = 'temp-marker-styles';
-        style.textContent = `
-          .custom-temp-marker {
-            background: none;
-            border: none;
-          }
-          .temp-marker {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid #9945FF;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            background-color: rgba(153, 69, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .inner-circle {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background-color: #9945FF;
-          }
-        `;
-        document.head.appendChild(style);
-      }
-      
-      // Create new marker with custom icon
-      currentMarker = L.marker(latlng, {
-        icon: tempIcon
-      }).addTo(map);
-      
-      // Update selected location
-      selectedLocation = [latlng.lat, latlng.lng];
-      document.getElementById('selected-location').textContent = `Latitude: ${latlng.lat.toFixed(4)}, Longitude: ${latlng.lng.toFixed(4)}`;
-    }
-    
-    // Open the pin creation form
-    function openPinForm() {
-      isFormOpen = true;
-      document.getElementById('pin-form').style.display = 'block';
-      resetForm();
-    }
-    
-    // Close the pin creation form
-    function closePinForm() {
-      isFormOpen = false;
-      document.getElementById('pin-form').style.display = 'none';
-      
-      // Remove temporary marker
-      if (currentMarker) {
-        map.removeLayer(currentMarker);
-        currentMarker = null;
-      }
-      
-      // Reset form state
-      resetForm();
-    }
-    
-    // Reset form to initial state
-    function resetForm() {
-      currentStep = 1;
-      selectedLocation = null;
-      selectedNFTs = [];
-      selectedPFP = null;
-      
-      // Reset form fields
-      document.getElementById('wallet-address').value = '';
-      document.getElementById('x-handle').value = '';
-      document.getElementById('telegram').value = '';
-      document.getElementById('discord').value = '';
-      document.getElementById('nft-selection').innerHTML = '';
-      document.getElementById('pfp-selection').innerHTML = '';
-      document.getElementById('selected-location').textContent = '';
-      
-      // Show step 1, hide others
-      document.querySelectorAll('.form-step').forEach(step => step.style.display = 'none');
-      document.getElementById('step-1').style.display = 'block';
-      
-      // Reset buttons
-      document.getElementById('prev-step').style.display = 'none';
-      document.getElementById('next-step').textContent = 'Next';
-    }
-    
-    // Go to the next step in the form
-    async function nextStep() {
-      // Validate current step
-      if (currentStep === 1 && !selectedLocation) {
-        alert('Please select a location on the map first.');
-        return;
-      } else if (currentStep === 2 && !document.getElementById('wallet-address').value.trim()) {
-        alert('Please enter your Solana wallet address.');
-        return;
-      } else if (currentStep === 3 && selectedNFTs.length === 0) {
-        alert('Please select at least one NFT.');
-        return;
-      }
-      
-      // Special handling for PFP selection step
-      if (currentStep === 3 && selectedNFTs.length > 0) {
-        // Move to PFP selection step
-        document.getElementById('step-3').style.display = 'none';
-        document.getElementById('step-pfp').style.display = 'block';
-        currentStep = 'pfp';
-        
-        // Populate PFP selection grid
-        await showPFPSelection();
-        
-        return;
-      }
-      
-      // Normal flow for other steps
-      if (currentStep === 'pfp') {
-        // Move from PFP step to social info step
-        document.getElementById('step-pfp').style.display = 'none';
-        document.getElementById('step-4').style.display = 'block';
-        currentStep = 4;
-        
-        // Change button text on final step
-        document.getElementById('next-step').textContent = 'Submit';
-      } else if (currentStep < 4) {
-        // Move to next step
-        document.getElementById(`step-${currentStep}`).style.display = 'none';
-        currentStep++;
-        document.getElementById(`step-${currentStep}`).style.display = 'block';
-        
-        // Show back button after step 1
-        document.getElementById('prev-step').style.display = 'block';
-        
-        // Load NFTs for step 3
-        if (currentStep === 3) {
-          const walletAddress = document.getElementById('wallet-address').value.trim();
-          await loadWalletNFTs(walletAddress);
-        }
-        
-        // Change button text on final step
-        if (currentStep === 4) {
-          document.getElementById('next-step').textContent = 'Submit';
-        }
-      } else {
-        // Submit the form
-        submitPinData();
-      }
-    }
-    
-    // Go to the previous step in the form
-    function prevStep() {
-      if (currentStep === 'pfp') {
-        // From PFP selection back to NFT selection
-        document.getElementById('step-pfp').style.display = 'none';
-        document.getElementById('step-3').style.display = 'block';
-        currentStep = 3;
-        
-        // Reset selected PFP if going back
-        selectedPFP = null;
-      } else if (currentStep > 1) {
-        document.getElementById(`step-${currentStep}`).style.display = 'none';
-        currentStep--;
-        document.getElementById(`step-${currentStep}`).style.display = 'block';
-        
-        // Hide back button on step 1
-        if (currentStep === 1) {
-          document.getElementById('prev-step').style.display = 'none';
-        }
-        
-        // Reset next button text
-        document.getElementById('next-step').textContent = 'Next';
-      }
-    }
-    
-    // Function to show PFP selection UI
-    async function showPFPSelection() {
-      const pfpContainer = document.getElementById('pfp-selection');
-      pfpContainer.innerHTML = '<p style="padding: 15px;">Loading NFT profile options...</p>';
-      
-      try {
-        // Load metadata for all selected NFTs
-        const metadataPromises = selectedNFTs.map(nftId => 
-          fetch(`/api/nft-metadata?id=${nftId}`)
-            .then(res => res.ok ? res.json() : null)
-            .catch(err => {
-              console.error(`Error fetching metadata for ${nftId}:`, err);
-              return null;
+        if (primaryNftId) {
+          fetchNftMetadata(primaryNftId)
+            .then(metadata => {
+              nftImageElement.src = metadata.image || '';
+              nftNameElement.textContent = metadata.name || 'PERKS NFT';
+              
+              // Load other NFTs
+              if (citizen.nfts && citizen.nfts.length > 0) {
+                // Add all NFTs except the primary one to the grid
+                citizen.nfts.forEach(nftId => {
+                  if (nftId !== primaryNftId) {
+                    fetchNftMetadata(nftId)
+                      .then(nftData => {
+                        const nftElement = document.createElement('div');
+                        nftElement.className = 'other-nft';
+                        nftElement.innerHTML = `
+                          <img class="other-nft-image" src="${nftData.image || ''}" alt="${nftData.name || 'NFT'}" />
+                          <div class="other-nft-name">${nftData.name || 'NFT'}</div>
+                        `;
+                        nftGridElement.appendChild(nftElement);
+                      })
+                      .catch(console.error);
+                  }
+                });
+                
+                document.getElementById('detail-other-nfts').style.display = 
+                  citizen.nfts.length > 1 ? 'block' : 'none';
+              } else {
+                document.getElementById('detail-other-nfts').style.display = 'none';
+              }
             })
-        );
-        
-        const nftMetadataList = await Promise.all(metadataPromises);
-        
-        // Create PFP selection grid
-        pfpContainer.innerHTML = '';
-        
-        // Auto-select if only one NFT
-        if (nftMetadataList.length === 1 && nftMetadataList[0]) {
-          selectedPFP = nftMetadataList[0].id;
+            .catch(error => {
+              console.error('Error loading NFT details:', error);
+              nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
+              nftNameElement.textContent = 'PERKS NFT';
+            });
+        } else {
+          nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
+          nftNameElement.textContent = 'Citizen';
+          document.getElementById('detail-other-nfts').style.display = 'none';
         }
         
-        nftMetadataList.forEach((metadata, index) => {
-          if (!metadata) return;
+        // Show the detail popup
+        detailElement.style.display = 'block';
+        
+        // Add close handler
+        document.querySelector('#citizen-detail .close').onclick = () => {
+          detailElement.style.display = 'none';
+        };
+      }
+      
+      // Open the pin form
+      function openPinForm() {
+        document.getElementById('pin-form-overlay').style.display = 'flex';
+        resetForm();
+      }
+      
+      // Close the pin form
+      function closePinForm() {
+        document.getElementById('pin-form-overlay').style.display = 'none';
+        resetForm();
+      }
+      
+      // Reset the form state
+      function resetForm() {
+        // Clear wallet address
+        document.getElementById('wallet-address').value = '';
+        
+        // Clear NFT list
+        document.getElementById('nft-list').innerHTML = '';
+        document.getElementById('pfp-list').innerHTML = '';
+        
+        // Reset message
+        document.getElementById('message').value = '';
+        
+        // Hide NFT container
+        document.getElementById('nft-container').style.display = 'none';
+        
+        // Show step 1
+        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-1').classList.add('active');
+        
+        // Reset error messages
+        document.getElementById('wallet-error').textContent = '';
+        document.getElementById('nft-error').textContent = '';
+        
+        // Reset state
+        selectedNFTs = [];
+        selectedPfpNft = null;
+        
+        // Disable continue button
+        document.getElementById('next-step-1').disabled = true;
+      }
+      
+      // Fetch wallet NFTs
+      async function fetchWalletNFTs(walletAddress) {
+        try {
+          document.getElementById('loading-nfts').classList.add('active');
+          document.getElementById('nft-container').style.display = 'none';
           
-          const nftId = metadata.id;
-          const pfpItem = document.createElement('div');
-          pfpItem.className = 'pfp-item';
-          pfpItem.dataset.nftid = nftId;
+          const response = await fetch(`/api/wallet-nfts?address=${walletAddress}`);
+          const data = await response.json();
           
-          if (nftId === selectedPFP) {
-            pfpItem.classList.add('selected');
+          document.getElementById('loading-nfts').classList.remove('active');
+          
+          if (data.error) {
+            document.getElementById('wallet-error').textContent = data.error;
+            return null;
           }
           
-          pfpItem.innerHTML = `
-            <img src="${metadata.image}" alt="${metadata.name}" 
-              class="pfp-image" onerror="this.src='https://via.placeholder.com/150x150?text=NFT'">
-            <div class="pfp-name">${metadata.name}</div>
-          `;
+          if (!data.nfts || data.nfts.length === 0) {
+            document.getElementById('wallet-error').textContent = 'No PERKS NFTs found in this wallet.';
+            return null;
+          }
           
-          // Add click handler to select PFP
+          return data.nfts;
+        } catch (error) {
+          console.error('Error fetching wallet NFTs:', error);
+          document.getElementById('loading-nfts').classList.remove('active');
+          document.getElementById('wallet-error').textContent = 'Error fetching NFTs. Please try again.';
+          return null;
+        }
+      }
+      
+      // Populate NFT list
+      function populateNFTList(nfts) {
+        const nftListElement = document.getElementById('nft-list');
+        const pfpListElement = document.getElementById('pfp-list');
+        
+        nftListElement.innerHTML = '';
+        pfpListElement.innerHTML = '';
+        
+        // Auto-select all NFTs
+        selectedNFTs = nfts.map(nft => nft.id);
+        
+        // If there's only one NFT, auto-select it as profile
+        if (nfts.length === 1) {
+          selectedPfpNft = nfts[0].id;
+        }
+        
+        nfts.forEach(nft => {
+          // Create elements for NFT list (step 1)
+          const nftItem = document.createElement('div');
+          nftItem.className = 'nft-item selected';
+          nftItem.setAttribute('data-id', nft.id);
+          nftItem.innerHTML = `
+            <img class="nft-image" src="${nft.image}" alt="${nft.name}" />
+            <div class="nft-name">${nft.name}</div>
+          `;
+          nftListElement.appendChild(nftItem);
+          
+          // Create elements for PFP selection (step 2)
+          const pfpItem = document.createElement('div');
+          pfpItem.className = 'nft-item' + (nfts.length === 1 ? ' selected' : '');
+          pfpItem.setAttribute('data-id', nft.id);
+          pfpItem.innerHTML = `
+            <img class="nft-image" src="${nft.image}" alt="${nft.name}" />
+            <div class="nft-name">${nft.name}</div>
+          `;
+          pfpListElement.appendChild(pfpItem);
+          
+          // Add click handler for NFT selection (step 1)
+          nftItem.addEventListener('click', () => {
+            nftItem.classList.toggle('selected');
+            
+            if (nftItem.classList.contains('selected')) {
+              // Add to selected NFTs
+              if (!selectedNFTs.includes(nft.id)) {
+                selectedNFTs.push(nft.id);
+              }
+            } else {
+              // Remove from selected NFTs
+              selectedNFTs = selectedNFTs.filter(id => id !== nft.id);
+            }
+            
+            // Enable/disable continue button based on selection
+            document.getElementById('next-step-1').disabled = selectedNFTs.length === 0;
+          });
+          
+          // Add click handler for PFP selection (step 2)
           pfpItem.addEventListener('click', () => {
             // Remove selected class from all items
-            document.querySelectorAll('.pfp-item').forEach(item => {
+            document.querySelectorAll('#pfp-list .nft-item').forEach(item => {
               item.classList.remove('selected');
             });
             
             // Add selected class to clicked item
             pfpItem.classList.add('selected');
             
-            // Set selected PFP
-            selectedPFP = nftId;
-            console.log('Selected PFP:', selectedPFP);
+            // Update selected PFP
+            selectedPfpNft = nft.id;
+          });
+        });
+        
+        // Show NFT container
+        document.getElementById('nft-container').style.display = 'block';
+        
+        // Enable continue button if NFTs were auto-selected
+        document.getElementById('next-step-1').disabled = selectedNFTs.length === 0;
+      }
+      
+      // Submit the pin
+      async function submitPin() {
+        try {
+          const walletAddress = document.getElementById('wallet-address').value.trim();
+          const message = document.getElementById('message').value.trim();
+          
+          if (!selectedLocation || selectedNFTs.length === 0 || !selectedPfpNft) {
+            alert('Please complete all required fields before submitting.');
+            return;
+          }
+          
+          const pinData = {
+            wallet: walletAddress,
+            location: selectedLocation,
+            nfts: selectedNFTs,
+            pfp_nft: selectedPfpNft,
+            message: message,
+            timestamp: new Date().toISOString()
+          };
+          
+          const response = await fetch('/api/save-citizen', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pinData)
           });
           
-          pfpContainer.appendChild(pfpItem);
-        });
-        
-        // If nothing was displayed
-        if (pfpContainer.children.length === 0) {
-          pfpContainer.innerHTML = '<p style="padding: 15px;">Could not load NFT profile options. Please go back and try again.</p>';
-        }
-      } catch (error) {
-        console.error('Error showing PFP selection:', error);
-        pfpContainer.innerHTML = `<p style="padding: 15px;">Error loading NFT profile options: ${error.message}</p>`;
-      }
-    }
-    
-    // Load NFTs for a wallet
-    async function loadWalletNFTs(walletAddress) {
-      try {
-        const selectionContainer = document.getElementById('nft-selection');
-        selectionContainer.innerHTML = '<p style="padding: 15px;">Loading NFTs...</p>';
-        
-        // Fetch NFT owners data
-        const response = await fetch('/nft-owners.json');
-        const ownersData = await response.json();
-        
-        // Check if wallet has any NFTs
-        if (!ownersData[walletAddress] || ownersData[walletAddress].length === 0) {
-          selectionContainer.innerHTML = '<p style="padding: 15px;">No PERKS NFTs found for this wallet address.</p>';
-          return;
-        }
-        
-        // Display NFTs for selection
-        selectionContainer.innerHTML = '';
-        const nfts = ownersData[walletAddress];
-        
-        // Fetch metadata for each NFT in parallel
-        const metadataPromises = nfts.map(nftId => 
-          fetch(`/api/nft-metadata?id=${nftId}`)
-            .then(res => res.ok ? res.json() : null)
-            .catch(err => {
-              console.error(`Error fetching metadata for ${nftId}:`, err);
-              return null;
-            })
-        );
-        
-        // Wait for all metadata to be fetched
-        const nftMetadataList = await Promise.all(metadataPromises);
-        
-        // Create selection cards for each NFT
-        nftMetadataList.forEach((metadata, index) => {
-          if (!metadata) {
-            console.error(`No metadata found for NFT at index ${index}`);
-            return; // Skip this NFT
-          }
+          const result = await response.json();
           
-          const nftId = metadata.id;
-          const nftCard = document.createElement('div');
-          nftCard.className = 'nft-select-item';
-          
-          nftCard.innerHTML = `
-            <input type="checkbox" id="nft-${index}" class="nft-select-checkbox" data-nftid="${nftId}">
-            <img src="${metadata.image}" alt="${metadata.name}" 
-              class="nft-select-image" onerror="this.src='https://via.placeholder.com/50x50?text=NFT'">
-            <div class="nft-select-info">
-              <div class="nft-select-name">${metadata.name}</div>
-              <div class="nft-select-id">${nftId.substring(0, 8)}...${nftId.substring(nftId.length - 4)}</div>
-            </div>
-          `;
-          
-          // Add click handler for checkbox
-          const checkbox = nftCard.querySelector(`#nft-${index}`);
-          checkbox.addEventListener('change', () => {
-            if (checkbox.checked) {
-              selectedNFTs.push(nftId);
-            } else {
-              selectedNFTs = selectedNFTs.filter(id => id !== nftId);
-            }
-          });
-          
-          selectionContainer.appendChild(nftCard);
-        });
-        
-        // If no NFTs were displayed, show a message
-        if (selectionContainer.children.length === 0) {
-          selectionContainer.innerHTML = '<p style="padding: 15px;">Could not load NFT metadata. Please try again.</p>';
-        }
-        
-      } catch (error) {
-        console.error('Error loading wallet NFTs:', error);
-        document.getElementById('nft-selection').innerHTML = `<p style="padding: 15px;">Error loading NFTs: ${error.message}</p>`;
-      }
-    }
-    
-    // Submit the pin data
-    async function submitPinData() {
-      try {
-        const walletAddress = document.getElementById('wallet-address').value.trim();
-        const xHandle = document.getElementById('x-handle').value.trim();
-        const telegram = document.getElementById('telegram').value.trim();
-        const discord = document.getElementById('discord').value.trim();
-        
-        // First, fetch real NFT metadata for the selected NFTs
-        let nftMetadata = {};
-        
-        // Fetch metadata for the first NFT to use for the pin
-        if (selectedNFTs.length > 0) {
-          try {
-            // Get the primary NFT metadata directly from the database
-            const metadataResponse = await fetch(`/api/nft-metadata?id=${selectedNFTs[0]}`);
-            if (metadataResponse.ok) {
-              const metadata = await metadataResponse.json();
-              nftMetadata = metadata;
-              console.log('Got NFT metadata:', metadata);
-            } else {
-              console.error('Failed to fetch NFT metadata');
-            }
-          } catch (error) {
-            console.error('Error fetching NFT metadata:', error);
-          }
-        }
-        
-        // Create pin data object with primary NFT and profile image
-        const pinData = {
-          location: selectedLocation,
-          wallet: walletAddress,
-          nfts: selectedNFTs,
-          primaryNft: selectedNFTs.length > 0 ? selectedNFTs[0] : null,
-          pfp: selectedPFP || (selectedNFTs.length > 0 ? selectedNFTs[0] : null), // Use selected PFP or first NFT as fallback
-          socials: {
-            x: xHandle ? (xHandle.startsWith('https://') ? xHandle : `https://x.com/${xHandle.startsWith('@') ? xHandle.substring(1) : xHandle}`) : '',
-            telegram: telegram ? (telegram.startsWith('https://') ? telegram : `https://t.me/${telegram.startsWith('@') ? telegram.substring(1) : telegram}`) : '',
-            discord: discord || ''
-          },
-          timestamp: new Date().toISOString()
-        };
-        
-        // Send data to server
-        const response = await fetch('/api/save-citizen', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(pinData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-          // Always reload citizen pins from the server to ensure consistency
-          await loadCitizenPins();
-          
-          // Clear the temporary marker
-          if (currentMarker) {
-            map.removeLayer(currentMarker);
-            currentMarker = null;
-          }
-          
-          // Show appropriate notification
-          if (result.isUpdate) {
-            alert('Your existing pin has been updated with the new location and NFTs!');
-          } else {
-            alert('Your citizen pin has been added to the map!');
+          if (result.error) {
+            alert(`Error: ${result.error}`);
+            return;
           }
           
           // Close the form
           closePinForm();
           
-          // Show success message
-          alert('Your citizen pin has been added successfully!');
-        } else {
-          alert(`Error: ${result.error || 'Failed to save citizen data'}`);
+          // Reload data to show the new pin
+          await loadData();
+          
+          alert('Your citizen pin has been added to the map!');
+        } catch (error) {
+          console.error('Error submitting pin:', error);
+          alert('An error occurred while saving your pin. Please try again.');
         }
-        
-      } catch (error) {
-        console.error('Error submitting pin data:', error);
-        alert(`Error submitting data: ${error.message}`);
       }
-    }
-    
-    // Initialize map and form handlers when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize map when page loads
-      setTimeout(initMap, 100);
       
-      // "Drop a Pin" button click
-      document.getElementById('drop-pin').addEventListener('click', openPinForm);
-      
-      // "Clear All Pins" button click
-      document.getElementById('clear-pins').addEventListener('click', async () => {
-        if (confirm('Are you sure you want to clear all pins from the map? This action cannot be undone.')) {
+      // Clear all pins
+      async function clearAllPins() {
+        if (confirm('Are you sure you want to clear all citizen pins? This action cannot be undone.')) {
           try {
-            // Call the API to clear all pins
             const response = await fetch('/api/clear-citizens', {
               method: 'POST'
             });
             
             const result = await response.json();
             
-            if (response.ok) {
-              // Reload citizen pins (should be empty now)
-              await loadCitizenPins();
-              alert('All pins have been cleared from the map.');
-            } else {
-              alert(`Error: ${result.error || 'Failed to clear pins'}`);
+            if (result.error) {
+              alert(`Error: ${result.error}`);
+              return;
             }
+            
+            // Reload data to update the map
+            await loadData();
+            
+            alert('All citizen pins have been cleared.');
           } catch (error) {
             console.error('Error clearing pins:', error);
-            alert(`Error: ${error.message}`);
+            alert('An error occurred while clearing pins. Please try again.');
           }
+        }
+      }
+      
+      // Event Listeners
+      
+      // Add pin button
+      document.getElementById('add-pin-btn').addEventListener('click', () => {
+        isPickingLocation = true;
+        alert('Click anywhere on the map or globe to place your pin.');
+      });
+      
+      // Clear pins button
+      document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
+      
+      // Close form button
+      document.querySelector('.close-btn').addEventListener('click', closePinForm);
+      
+      // Wallet input change
+      document.getElementById('wallet-address').addEventListener('input', function() {
+        // Clear error message
+        document.getElementById('wallet-error').textContent = '';
+        
+        // Enable/disable continue button based on input
+        document.getElementById('next-step-1').disabled = this.value.trim() === '';
+      });
+      
+      // Next button - Step 1
+      document.getElementById('next-step-1').addEventListener('click', async function() {
+        const walletAddress = document.getElementById('wallet-address').value.trim();
+        
+        if (!walletAddress) {
+          document.getElementById('wallet-error').textContent = 'Please enter a wallet address.';
+          return;
+        }
+        
+        // Check if the wallet has any NFTs
+        const nfts = await fetchWalletNFTs(walletAddress);
+        
+        if (!nfts) {
+          // Error message already set by fetchWalletNFTs
+          return;
+        }
+        
+        // Populate NFT list
+        populateNFTList(nfts);
+        
+        // If there's only one NFT, skip to step 3
+        if (nfts.length === 1) {
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-3').classList.add('active');
+        } else {
+          // Go to step 2 (PFP selection)
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-2').classList.add('active');
         }
       });
       
-      // Form controls
-      document.getElementById('close-form').addEventListener('click', closePinForm);
-      document.getElementById('next-step').addEventListener('click', nextStep);
-      document.getElementById('prev-step').addEventListener('click', prevStep);
-      document.getElementById('check-wallet').addEventListener('click', async () => {
-        const walletAddress = document.getElementById('wallet-address').value.trim();
-        if (walletAddress) {
-          await loadWalletNFTs(walletAddress);
-          nextStep();
+      // Back button - Step 2
+      document.getElementById('prev-step-2').addEventListener('click', function() {
+        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-1').classList.add('active');
+      });
+      
+      // Next button - Step 2
+      document.getElementById('next-step-2').addEventListener('click', function() {
+        if (!selectedPfpNft) {
+          alert('Please select a profile NFT to represent you on the map.');
+          return;
+        }
+        
+        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-3').classList.add('active');
+      });
+      
+      // Back button - Step 3
+      document.getElementById('prev-step-3').addEventListener('click', function() {
+        // If we have only one NFT, go back to step 1
+        const nftList = document.querySelectorAll('#nft-list .nft-item');
+        if (nftList.length === 1) {
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-1').classList.add('active');
         } else {
-          alert('Please enter your Solana wallet address.');
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-2').classList.add('active');
         }
       });
+      
+      // Submit button
+      document.getElementById('submit-pin').addEventListener('click', submitPin);
+      
+      // Initialize the application
+      initMap();
+      loadData();
     });
   </script>
 </body>
