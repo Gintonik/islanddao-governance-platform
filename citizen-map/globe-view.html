@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS Citizen Globe</title>
+  <script src="https://unpkg.com/globe.gl@2.28.3/dist/globe.gl.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #globeViz {
+      width: 100vw;
+      height: 100vh;
+    }
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(26, 26, 26, 0.8);
+      color: white;
+      padding: 10px 20px;
+      height: 60px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s;
+    }
+    .add-pin-btn {
+      background-color: #9945FF;
+      color: white;
+    }
+    .add-pin-btn:hover {
+      background-color: #8134E0;
+    }
+    .clear-pins-btn {
+      background-color: #444;
+      color: white;
+    }
+    .clear-pins-btn:hover {
+      background-color: #d32f2f;
+    }
+    .tooltip {
+      padding: 10px;
+      background: rgba(20, 20, 20, 0.9);
+      color: white;
+      border-radius: 6px;
+      border: 1px solid #9945FF;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      font-size: 14px;
+      max-width: 250px;
+    }
+    .tooltip h3 {
+      margin: 0 0 5px 0;
+    }
+    .tooltip p {
+      margin: 0 0 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="title">PERKS Citizen Globe</h1>
+    <div class="button-group">
+      <button class="btn clear-pins-btn" id="clearPinsBtn">Clear All Pins</button>
+      <button class="btn add-pin-btn" id="addPinBtn">Drop a Citizen Pin</button>
+    </div>
+  </div>
+
+  <div id="globeViz"></div>
+
+  <script>
+    // Initialize the globe
+    const globe = Globe()
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+      .pointOfView({ lat: 20, lng: 0, altitude: 2.5 })
+      .width(window.innerWidth)
+      .height(window.innerHeight)
+      .pointAltitude(0.05)
+      .pointColor(() => '#9945FF')
+      .pointRadius(0.8)
+      .pointLabel(point => {
+        const citizen = point.citizen;
+        if (!citizen) return '';
+        
+        return `
+          <div class="tooltip">
+            <h3>${citizen.nfts?.length > 0 ? `PERK NFTs (${citizen.nfts.length})` : 'Citizen'}</h3>
+            <p>Wallet: ${citizen.wallet.substring(0, 6)}...${citizen.wallet.substring(citizen.wallet.length - 4)}</p>
+            ${citizen.message ? `<p>${citizen.message}</p>` : ''}
+            <small>Added: ${new Date(citizen.timestamp).toLocaleString()}</small>
+          </div>
+        `;
+      })(document.getElementById('globeViz'));
+
+    // Variables for state
+    let citizens = [];
+    let isPickingLocation = false;
+    let selectedLocation = null;
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      globe.width(window.innerWidth).height(window.innerHeight);
+    });
+
+    // Setup globe auto-rotation
+    const controls = globe.controls();
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+    controls.addEventListener('start', () => {
+      controls.autoRotate = false;
+    });
+
+    // Add pin button
+    document.getElementById('addPinBtn').addEventListener('click', () => {
+      isPickingLocation = true;
+      document.getElementById('addPinBtn').disabled = true;
+      document.body.style.cursor = 'crosshair';
+    });
+
+    // Clear pins button
+    document.getElementById('clearPinsBtn').addEventListener('click', async () => {
+      if (confirm('Are you sure you want to clear all citizen pins?')) {
+        try {
+          const response = await fetch('/api/clear-citizens', {
+            method: 'POST'
+          });
+          
+          if (response.ok) {
+            citizens = [];
+            updateGlobeData();
+          } else {
+            alert('Failed to clear pins. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error clearing pins:', error);
+          alert('Failed to clear pins. Please try again.');
+        }
+      }
+    });
+
+    // Handle globe click for placing pins
+    globe.onGlobeClick(({ lat, lng }) => {
+      if (isPickingLocation) {
+        selectedLocation = [lat, lng];
+        isPickingLocation = false;
+        document.body.style.cursor = 'default';
+        document.getElementById('addPinBtn').disabled = false;
+        
+        // Redirect to the pin form
+        window.location.href = `/citizen-map/pin-form.html?lat=${lat}&lng=${lng}`;
+      }
+    });
+
+    // Fetch citizens data
+    async function fetchCitizens() {
+      try {
+        const response = await fetch('/citizens.json');
+        citizens = await response.json();
+        updateGlobeData();
+      } catch (error) {
+        console.error('Error loading citizens:', error);
+      }
+    }
+
+    // Update globe data
+    function updateGlobeData() {
+      // Format data for globe points
+      const pointsData = citizens.map(citizen => ({
+        lat: citizen.location[0],
+        lng: citizen.location[1],
+        size: 0.8,
+        color: '#9945FF',
+        citizen: citizen
+      }));
+      
+      globe.pointsData(pointsData);
+    }
+
+    // Initial data load
+    fetchCitizens();
+  </script>
+</body>
+</html>

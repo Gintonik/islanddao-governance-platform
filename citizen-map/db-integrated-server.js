@@ -8,6 +8,7 @@ const db = require('../db');
 // Constants
 const PORT = 5001;
 const HTML_FILE = path.join(__dirname, 'index.simple.html');
+const GLOBE_HTML_FILE = path.join(__dirname, 'globe.html');
 
 // Initialize the database on startup
 async function initializeApp() {
@@ -46,6 +47,10 @@ function startServer() {
       // Serve the HTML file for the root route
       if (req.url === '/' || req.url === '/index.html') {
         serveFile(res, HTML_FILE, 'text/html');
+      }
+      // Serve the globe view HTML
+      else if (req.url === '/globe' || req.url === '/globe.html') {
+        serveFile(res, GLOBE_HTML_FILE, 'text/html');
       } 
       // Serve citizens data from database
       else if (req.url === '/citizens.json') {
