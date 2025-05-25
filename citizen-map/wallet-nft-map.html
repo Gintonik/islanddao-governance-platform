@@ -596,8 +596,24 @@
         iconAnchor: [22, 22]
       });
       
+      // Convert location to proper format - handle both array and numeric values
+      let lat, lng;
+      
+      if (Array.isArray(citizen.location)) {
+        // Convert string values to numbers if needed
+        lat = parseFloat(citizen.location[0]);
+        lng = parseFloat(citizen.location[1]);
+      } else if (citizen.lat !== undefined && citizen.lng !== undefined) {
+        // Handle direct lat/lng properties
+        lat = parseFloat(citizen.lat);
+        lng = parseFloat(citizen.lng);
+      } else {
+        console.error('Invalid location format for citizen:', citizen);
+        return; // Skip this marker
+      }
+      
       // Create marker and add to map
-      const marker = L.marker(citizen.location, { icon: customIcon }).addTo(map);
+      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
       
       // Track the marker
       citizenMarkers.push(marker);
