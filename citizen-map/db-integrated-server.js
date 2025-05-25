@@ -141,7 +141,7 @@ function startServer() {
       // API endpoint to clear all citizens
       else if (req.method === 'POST' && req.url === '/api/clear-citizens') {
         try {
-          const result = await citizenMapDb.clearCitizens();
+          const result = await apiRoutes.clearAllCitizens();
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(result));
         } catch (error) {

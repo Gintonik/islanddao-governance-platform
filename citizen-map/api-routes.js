@@ -156,6 +156,46 @@ async function saveCitizenPin(data) {
 }
 
 /**
+ * Clear all citizen pins from the database
+ * 
+ * @returns {Promise<Object>} - Result of the operation
+ */
+async function clearAllCitizens() {
+  try {
+    // Connect to database
+    const client = await db.pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Delete all citizen NFT associations first (foreign key constraint)
+      await client.query('DELETE FROM citizen_nfts');
+      
+      // Delete all citizens
+      await client.query('DELETE FROM citizens');
+      
+      await client.query('COMMIT');
+      
+      console.log('🧹 Cleared all citizen pins from the database');
+      
+      return { 
+        success: true, 
+        message: 'All citizen pins have been cleared' 
+      };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error clearing citizen pins:', error);
+      return { error: error.message };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error in clearAllCitizens:', error);
+    return { error: error.message };
+  }
+}
+
+/**
  * Get all citizens with their NFT data
  * 
  * @returns {Promise<Array>} - List of all citizens
@@ -224,5 +264,6 @@ async function getAllCitizens() {
 module.exports = {
   getWalletNfts,
   saveCitizenPin,
-  getAllCitizens
+  getAllCitizens,
+  clearAllCitizens
 };
