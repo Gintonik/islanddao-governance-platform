@@ -475,13 +475,13 @@
         // Create popup content
         let popupContent = '<div class="pin-popup">';
         
-        // Display the first NFT image if available
-        if (pin.nfts && pin.nfts.length > 0) {
-          const nftId = pin.nfts[0];
+        // Display the primary NFT image if available
+        if (pin.primaryNft && pin.nftMetadata && pin.nftMetadata[pin.primaryNft]) {
+          const nftMetadata = pin.nftMetadata[pin.primaryNft];
           popupContent += `
-            <img class="pin-popup-image" src="https://gateway.irys.xyz/${nftId}" 
-              alt="PERK NFT" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
-            <div class="pin-popup-title">PERKS Citizen</div>
+            <img class="pin-popup-image" src="${nftMetadata.image}" 
+              alt="${nftMetadata.name}" onerror="this.src='https://via.placeholder.com/200x200?text=NFT+Image'">
+            <div class="pin-popup-title">${nftMetadata.name}</div>
           `;
         }
         
