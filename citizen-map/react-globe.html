@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS Citizen Map</title>
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/react-globe.gl"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
+    #globeViz {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="globeViz"></div>
+
+  <script>
+    const { useState, useEffect } = React;
+    const ReactGlobe = ReactGlobeGl;
+
+    // Sample data
+    const places = [
+      { name: "New York", lat: 40.7128, lng: -74.0060, size: 1.5, color: "white" },
+      { name: "London", lat: 51.5074, lng: -0.1278, size: 1.5, color: "white" },
+      { name: "Tokyo", lat: 35.6762, lng: 139.6503, size: 1.5, color: "white" },
+      { name: "Paris", lat: 48.8566, lng: 2.3522, size: 1.2, color: "white" },
+      { name: "Beijing", lat: 39.9042, lng: 116.4074, size: 1.2, color: "white" },
+    ];
+    
+    // Citizen data
+    const citizens = [
+      { wallet: "8XtAhcCJRFkk52sFaXeRBM5Ajm7NgJAVQWwZL5Ba5WJK", lat: 40.7128, lng: -74.0060, size: 0.5, color: "#4c6ef5" },
+      { wallet: "6J8T9JRNrpNQJKfvLnrDYCrBjK7ZpEaAGRoE4NhbDCpG", lat: 51.5074, lng: -0.1278, size: 0.5, color: "#4c6ef5" },
+      { wallet: "DziwJZQpCmcXFsEXnF1vZ5tbjwxJBwL16sXS1jKDzVkC", lat: 35.6762, lng: 139.6503, size: 0.5, color: "#4c6ef5" }
+    ];
+
+    // Globe component
+    function Globe() {
+      const [places] = useState([
+        { name: "New York", lat: 40.7128, lng: -74.0060, size: 1.5, color: "white" },
+        { name: "London", lat: 51.5074, lng: -0.1278, size: 1.5, color: "white" },
+        { name: "Tokyo", lat: 35.6762, lng: 139.6503, size: 1.5, color: "white" },
+        { name: "Paris", lat: 48.8566, lng: 2.3522, size: 1.2, color: "white" },
+        { name: "Beijing", lat: 39.9042, lng: 116.4074, size: 1.2, color: "white" },
+      ]);
+      
+      const [citizens] = useState([
+        { wallet: "8XtAhcCJRFkk52sFaXeRBM5Ajm7NgJAVQWwZL5Ba5WJK", lat: 40.7128, lng: -74.0060, size: 0.5, color: "#4c6ef5" },
+        { wallet: "6J8T9JRNrpNQJKfvLnrDYCrBjK7ZpEaAGRoE4NhbDCpG", lat: 51.5074, lng: -0.1278, size: 0.5, color: "#4c6ef5" },
+        { wallet: "DziwJZQpCmcXFsEXnF1vZ5tbjwxJBwL16sXS1jKDzVkC", lat: 35.6762, lng: 139.6503, size: 0.5, color: "#4c6ef5" }
+      ]);
+
+      return React.createElement(ReactGlobe, {
+        globeImageUrl: 'https://unpkg.com/three-globe/example/img/earth-night.jpg',
+        bumpImageUrl: 'https://unpkg.com/three-globe/example/img/earth-topology.png',
+        backgroundImageUrl: 'https://unpkg.com/three-globe/example/img/night-sky.png',
+        
+        // City labels
+        labelsData: places,
+        labelLat: d => d.lat,
+        labelLng: d => d.lng,
+        labelText: d => d.name,
+        labelSize: d => d.size,
+        labelDotRadius: d => d.size,
+        labelColor: d => d.color,
+        labelResolution: 2,
+        
+        // Citizen points
+        pointsData: citizens,
+        pointLat: d => d.lat,
+        pointLng: d => d.lng,
+        pointColor: d => d.color,
+        pointAltitude: 0.03,
+        pointRadius: 0.5,
+        pointsMerge: true,
+        
+        // Atmosphere and globe settings
+        atmosphereColor: "#3a228a",
+        atmosphereAltitude: 0.25,
+        showGraticules: true,
+        
+        // Interaction
+        onPointClick: point => alert(`Wallet: ${point.wallet}`),
+        
+        // Animation
+        animateIn: true
+      });
+    }
+
+    // Render the component
+    ReactDOM.render(
+      React.createElement(Globe),
+      document.getElementById('globeViz')
+    );
+  </script>
+</body>
+</html>
