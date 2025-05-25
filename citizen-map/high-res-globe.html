@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS Citizen Globe</title>
+  <script src="https://unpkg.com/globe.gl@2.28.3/dist/globe.gl.min.js"></script>
+  <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      overflow: hidden;
+    }
+    
+    .container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    
+    #globeViz {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #9945FF;
+    }
+    
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #9945FF;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .controls-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 12px;
+      border-radius: 6px;
+      z-index: 10;
+      border: 1px solid #333;
+    }
+    
+    .control-item {
+      margin-bottom: 10px;
+    }
+    
+    .btn {
+      background-color: #9945FF;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background-color: #8134E0;
+    }
+    
+    .btn.secondary {
+      background-color: #333;
+    }
+    
+    .btn.secondary:hover {
+      background-color: #444;
+    }
+    
+    .btn.danger {
+      background-color: #d32f2f;
+    }
+    
+    .btn.danger:hover {
+      background-color: #c62828;
+    }
+    
+    .instructions {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      z-index: 10;
+      border: 1px solid #9945FF;
+      display: none;
+    }
+    
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .form-container {
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 6px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .form-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #9945FF;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background-color: #242424;
+      color: white;
+      font-size: 14px;
+    }
+    
+    .error-message {
+      color: #ff6b6b;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 15px;
+    }
+    
+    .loading.active {
+      display: block;
+    }
+    
+    .step-container {
+      display: none;
+    }
+    
+    .step-container.active {
+      display: block;
+    }
+    
+    .step-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .nft-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .nft-item {
+      position: relative;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    
+    .nft-item.selected {
+      border-color: #9945FF;
+      transform: scale(1.05);
+    }
+    
+    .nft-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+    
+    .nft-name {
+      font-size: 10px;
+      padding: 4px;
+      background-color: rgba(0, 0, 0, 0.7);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .citizen-detail {
+      position: absolute;
+      background-color: rgba(26, 26, 26, 0.9);
+      border-radius: 6px;
+      padding: 15px;
+      min-width: 250px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 90;
+      border: 1px solid #9945FF;
+    }
+    
+    .citizen-detail .close {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    
+    .citizen-nft {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .citizen-nft-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+    
+    .citizen-wallet {
+      font-size: 12px;
+      color: #ccc;
+      margin-bottom: 10px;
+    }
+    
+    .citizen-message {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 5px;
+    }
+    
+    .other-nft {
+      position: relative;
+      cursor: pointer;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .other-nft-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+    
+    .other-nft-name {
+      font-size: 10px;
+      padding: 4px;
+      background-color: rgba(0, 0, 0, 0.7);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">PERKS Citizen Globe</div>
+      <div class="controls">
+        <button id="add-pin-btn" class="btn">Drop a Citizen Pin</button>
+        <button id="clear-pins-btn" class="btn danger">Clear All Pins</button>
+      </div>
+    </div>
+    
+    <div id="globeViz"></div>
+    
+    <div class="controls-panel">
+      <div class="control-item">
+        <button id="toggle-rotation" class="btn secondary">Pause Rotation</button>
+      </div>
+      <div class="control-item">
+        <button id="toggle-borders" class="btn secondary">Hide Borders</button>
+      </div>
+      <div class="control-item">
+        <button id="zoom-in" class="btn secondary">Zoom In</button>
+      </div>
+      <div class="control-item">
+        <button id="zoom-out" class="btn secondary">Zoom Out</button>
+      </div>
+    </div>
+    
+    <div id="instructions" class="instructions">
+      Click anywhere on the globe to place your pin
+    </div>
+  </div>
+  
+  <div id="pin-form-overlay" class="overlay">
+    <div class="form-container">
+      <div class="form-header">
+        <div class="form-title">Drop a Citizen Pin</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      
+      <div id="step-1" class="step-container active">
+        <div class="form-group">
+          <label for="wallet-address">Your Solana Wallet Address</label>
+          <input type="text" id="wallet-address" placeholder="Enter your wallet address" />
+          <div id="wallet-error" class="error-message"></div>
+        </div>
+        <div id="loading-nfts" class="loading">
+          Loading your NFTs... Please wait.
+        </div>
+        <div id="nft-container" class="form-group" style="display: none;">
+          <label>Your PERKS NFTs</label>
+          <div id="nft-list" class="nft-list"></div>
+          <div id="nft-error" class="error-message"></div>
+        </div>
+        <div class="step-nav">
+          <div></div>
+          <button id="next-step-1" class="btn" disabled>Continue</button>
+        </div>
+      </div>
+      
+      <div id="step-2" class="step-container">
+        <div class="form-group">
+          <label>Choose Your Profile Image</label>
+          <p>Select which NFT you want to appear as your profile on the globe</p>
+          <div id="pfp-list" class="nft-list"></div>
+        </div>
+        <div class="step-nav">
+          <button id="prev-step-2" class="btn secondary">Back</button>
+          <button id="next-step-2" class="btn">Continue</button>
+        </div>
+      </div>
+      
+      <div id="step-3" class="step-container">
+        <div class="form-group">
+          <label for="message">Message (Optional)</label>
+          <textarea id="message" rows="3" placeholder="Add a message to your pin (optional)"></textarea>
+        </div>
+        <div class="step-nav">
+          <button id="prev-step-3" class="btn secondary">Back</button>
+          <button id="submit-pin" class="btn">Drop Pin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="citizen-detail" class="citizen-detail">
+    <button class="close">&times;</button>
+    <div class="citizen-nft">
+      <img id="detail-nft-image" class="citizen-nft-image" src="" alt="Citizen NFT" />
+      <div id="detail-nft-name"></div>
+    </div>
+    <div id="detail-wallet" class="citizen-wallet"></div>
+    <div id="detail-message" class="citizen-message"></div>
+    <div id="detail-other-nfts">
+      <h4>Other NFTs</h4>
+      <div id="detail-nft-grid" class="nft-grid"></div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // App state
+      let globe;
+      let citizens = [];
+      let isPickingLocation = false;
+      let selectedLocation = null;
+      let selectedNFTs = [];
+      let selectedPfpNft = null;
+      let isRotating = true;
+      let showBorders = true;
+      
+      // DOM elements
+      const globeEl = document.getElementById('globeViz');
+      const instructionsEl = document.getElementById('instructions');
+      const pinFormOverlay = document.getElementById('pin-form-overlay');
+      const citizenDetailEl = document.getElementById('citizen-detail');
+      
+      // Initialize globe
+      async function initGlobe() {
+        // Create globe with high-resolution Earth texture
+        globe = Globe({
+          waitForGlobeReady: true,
+          animateIn: true
+        })
+          .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+          .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+          .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+          .width(window.innerWidth)
+          .height(window.innerHeight)
+          .atmosphereColor('#4ECDC4')
+          .atmosphereAltitude(0.25)
+          .pointOfView({ lat: 30, lng: 10, altitude: 2.5 })
+          // Configure points (citizen pins)
+          .pointAltitude(0.07)
+          .pointColor(() => '#00ffcc')
+          .pointRadius(0.7)
+          .pointResolution(20)
+          .pointLabel(point => {
+            const citizen = point.citizen;
+            if (!citizen) return '';
+            
+            return `
+              <div style="
+                background: rgba(20, 20, 20, 0.9);
+                color: white;
+                border-radius: 6px;
+                padding: 10px;
+                width: 200px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+                border: 1px solid #9945FF;
+                font-family: sans-serif;
+              ">
+                <div style="font-weight: bold; margin-bottom: 5px;">
+                  ${citizen.nfts && citizen.nfts.length > 0 ? `PERK NFTs (${citizen.nfts.length})` : 'Citizen'}
+                </div>
+                <div style="font-size: 12px; margin-bottom: 5px;">
+                  Wallet: ${formatWallet(citizen.wallet)}
+                </div>
+                ${citizen.message ? `<div style="font-size: 12px; margin-bottom: 5px;">${citizen.message}</div>` : ''}
+              </div>
+            `;
+          })
+          // Event handlers
+          .onGlobeClick(handleGlobeClick)
+          .onPointClick(handlePointClick)(globeEl);
+          
+        // Load country data for borders
+        try {
+          const response = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson');
+          const countries = await response.json();
+          
+          updateBorders(countries);
+        } catch (error) {
+          console.error('Error loading country borders:', error);
+        }
+        
+        // Configure controls
+        const controls = globe.controls();
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.minDistance = 120;
+        controls.maxDistance = 400;
+        controls.zoomSpeed = 1.5;
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          globe.width(window.innerWidth);
+          globe.height(window.innerHeight);
+        });
+        
+        // Load initial data
+        loadCitizenData();
+      }
+      
+      // Update country borders display
+      function updateBorders(countries) {
+        if (!globe) return;
+        
+        if (showBorders) {
+          globe.polygonsData(countries.features)
+            .polygonCapColor(() => 'rgba(175, 175, 175, 0.0)')
+            .polygonSideColor(() => 'rgba(175, 175, 175, 0.15)')
+            .polygonStrokeColor(() => 'rgba(255, 255, 255, 0.4)')
+            .polygonAltitude(0.006);
+          
+          // Add city rings to the globe for major cities
+          const cityMarkers = [
+            { lat: 40.7128, lng: -74.0060, name: 'New York' },
+            { lat: 51.5074, lng: -0.1278, name: 'London' },
+            { lat: 35.6762, lng: 139.6503, name: 'Tokyo' },
+            { lat: 48.8566, lng: 2.3522, name: 'Paris' },
+            { lat: 39.9042, lng: 116.4074, name: 'Beijing' },
+            { lat: 19.0760, lng: 72.8777, name: 'Mumbai' },
+            { lat: -33.8688, lng: 151.2093, name: 'Sydney' },
+            { lat: -22.9068, lng: -43.1729, name: 'Rio de Janeiro' },
+            { lat: 34.0522, lng: -118.2437, name: 'Los Angeles' },
+            { lat: 55.7558, lng: 37.6173, name: 'Moscow' }
+          ].map(city => ({
+            lat: city.lat,
+            lng: city.lng,
+            maxR: 4,
+            propagationSpeed: 1,
+            repeatPeriod: 1000,
+            name: city.name
+          }));
+          
+          globe
+            .ringsData(cityMarkers)
+            .ringColor(() => 'rgba(255, 255, 255, 0.4)')
+            .ringMaxRadius('maxR')
+            .ringPropagationSpeed('propagationSpeed')
+            .ringRepeatPeriod('repeatPeriod');
+            
+          // Add labels for major cities
+          globe
+            .labelsData(cityMarkers)
+            .labelLat(d => d.lat)
+            .labelLng(d => d.lng)
+            .labelText(d => d.name)
+            .labelSize(1)
+            .labelDotRadius(0.4)
+            .labelColor(() => '#ffffff')
+            .labelResolution(6);
+        } else {
+          globe
+            .polygonsData([])
+            .ringsData([])
+            .labelsData([]);
+        }
+      }
+      
+      // Load citizen data from server
+      async function loadCitizenData() {
+        try {
+          const response = await fetch('/citizens.json');
+          citizens = await response.json();
+          updateGlobePoints();
+        } catch (error) {
+          console.error('Error loading citizen data:', error);
+        }
+      }
+      
+      // Update globe points with citizen data
+      function updateGlobePoints() {
+        if (!globe) return;
+        
+        const pointsData = citizens.map(citizen => ({
+          lat: citizen.location[0],
+          lng: citizen.location[1],
+          citizen: citizen
+        }));
+        
+        globe.pointsData(pointsData);
+      }
+      
+      // Handle globe click for placing pins
+      function handleGlobeClick({ lat, lng }) {
+        if (isPickingLocation) {
+          selectedLocation = [lat, lng];
+          isPickingLocation = false;
+          document.body.style.cursor = 'default';
+          instructionsEl.style.display = 'none';
+          openPinForm();
+        }
+      }
+      
+      // Handle point click for showing citizen details
+      function handlePointClick(point) {
+        if (!isPickingLocation && point.citizen) {
+          showCitizenDetail(point.citizen);
+        }
+      }
+      
+      // Open pin form
+      function openPinForm() {
+        pinFormOverlay.style.display = 'flex';
+        
+        // Focus wallet field
+        const walletField = document.getElementById('wallet-address');
+        walletField.value = '';
+        walletField.focus();
+        
+        // Reset form state
+        resetForm();
+      }
+      
+      // Close pin form
+      function closePinForm() {
+        pinFormOverlay.style.display = 'none';
+        resetForm();
+        
+        // Reset picking mode
+        isPickingLocation = false;
+        document.body.style.cursor = 'default';
+        instructionsEl.style.display = 'none';
+        
+        // Resume rotation if enabled
+        if (isRotating && globe) {
+          globe.controls().autoRotate = true;
+        }
+      }
+      
+      // Reset form state
+      function resetForm() {
+        // Clear NFT lists
+        document.getElementById('nft-list').innerHTML = '';
+        document.getElementById('pfp-list').innerHTML = '';
+        
+        // Reset message
+        document.getElementById('message').value = '';
+        
+        // Hide NFT container
+        document.getElementById('nft-container').style.display = 'none';
+        
+        // Show step 1
+        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-1').classList.add('active');
+        
+        // Reset error messages
+        document.getElementById('wallet-error').textContent = '';
+        document.getElementById('nft-error').textContent = '';
+        
+        // Reset state
+        selectedNFTs = [];
+        selectedPfpNft = null;
+        
+        // Disable continue button
+        document.getElementById('next-step-1').disabled = true;
+      }
+      
+      // Fetch wallet NFTs
+      async function fetchWalletNFTs(walletAddress) {
+        try {
+          document.getElementById('loading-nfts').classList.add('active');
+          document.getElementById('nft-container').style.display = 'none';
+          
+          const response = await fetch(`/api/wallet-nfts?address=${walletAddress}`);
+          const data = await response.json();
+          
+          document.getElementById('loading-nfts').classList.remove('active');
+          
+          if (data.error) {
+            document.getElementById('wallet-error').textContent = data.error;
+            return null;
+          }
+          
+          if (!data.nfts || data.nfts.length === 0) {
+            document.getElementById('wallet-error').textContent = 'No PERKS NFTs found in this wallet.';
+            return null;
+          }
+          
+          return data.nfts;
+        } catch (error) {
+          console.error('Error fetching wallet NFTs:', error);
+          document.getElementById('loading-nfts').classList.remove('active');
+          document.getElementById('wallet-error').textContent = 'Error fetching NFTs. Please try again.';
+          return null;
+        }
+      }
+      
+      // Populate NFT list in form
+      function populateNFTList(nfts) {
+        const nftListElement = document.getElementById('nft-list');
+        const pfpListElement = document.getElementById('pfp-list');
+        
+        nftListElement.innerHTML = '';
+        pfpListElement.innerHTML = '';
+        
+        // Auto-select all NFTs
+        selectedNFTs = nfts.map(nft => nft.id);
+        
+        // If there's only one NFT, auto-select it as profile
+        if (nfts.length === 1) {
+          selectedPfpNft = nfts[0].id;
+        }
+        
+        nfts.forEach(nft => {
+          // Create elements for NFT list (step 1)
+          const nftItem = document.createElement('div');
+          nftItem.className = 'nft-item selected';
+          nftItem.setAttribute('data-id', nft.id);
+          nftItem.innerHTML = `
+            <img class="nft-image" src="${nft.image}" alt="${nft.name}" />
+            <div class="nft-name">${nft.name}</div>
+          `;
+          nftListElement.appendChild(nftItem);
+          
+          // Create elements for PFP selection (step 2)
+          const pfpItem = document.createElement('div');
+          pfpItem.className = 'nft-item' + (nfts.length === 1 ? ' selected' : '');
+          pfpItem.setAttribute('data-id', nft.id);
+          pfpItem.innerHTML = `
+            <img class="nft-image" src="${nft.image}" alt="${nft.name}" />
+            <div class="nft-name">${nft.name}</div>
+          `;
+          pfpListElement.appendChild(pfpItem);
+          
+          // Add click handler for NFT selection (step 1)
+          nftItem.addEventListener('click', () => {
+            nftItem.classList.toggle('selected');
+            
+            if (nftItem.classList.contains('selected')) {
+              // Add to selected NFTs
+              if (!selectedNFTs.includes(nft.id)) {
+                selectedNFTs.push(nft.id);
+              }
+            } else {
+              // Remove from selected NFTs
+              selectedNFTs = selectedNFTs.filter(id => id !== nft.id);
+            }
+            
+            // Enable/disable continue button based on selection
+            document.getElementById('next-step-1').disabled = selectedNFTs.length === 0;
+          });
+          
+          // Add click handler for PFP selection (step 2)
+          pfpItem.addEventListener('click', () => {
+            // Remove selected class from all items
+            document.querySelectorAll('#pfp-list .nft-item').forEach(item => {
+              item.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked item
+            pfpItem.classList.add('selected');
+            
+            // Update selected PFP
+            selectedPfpNft = nft.id;
+          });
+        });
+        
+        // Show NFT container
+        document.getElementById('nft-container').style.display = 'block';
+        
+        // Enable continue button if NFTs were auto-selected
+        document.getElementById('next-step-1').disabled = selectedNFTs.length === 0;
+      }
+      
+      // Submit pin to server
+      async function submitPin() {
+        try {
+          const walletAddress = document.getElementById('wallet-address').value.trim();
+          const message = document.getElementById('message').value.trim();
+          
+          if (!selectedLocation || selectedNFTs.length === 0 || !selectedPfpNft) {
+            alert('Please complete all required fields before submitting.');
+            return;
+          }
+          
+          const pinData = {
+            wallet: walletAddress,
+            location: selectedLocation,
+            nfts: selectedNFTs,
+            pfp_nft: selectedPfpNft,
+            message: message,
+            timestamp: new Date().toISOString()
+          };
+          
+          const response = await fetch('/api/save-citizen', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pinData)
+          });
+          
+          const result = await response.json();
+          
+          if (result.error) {
+            alert(`Error: ${result.error}`);
+            return;
+          }
+          
+          // Close the form
+          closePinForm();
+          
+          // Reload data to show the new pin
+          await loadCitizenData();
+          
+          alert('Your citizen pin has been added to the globe!');
+        } catch (error) {
+          console.error('Error submitting pin:', error);
+          alert('An error occurred while saving your pin. Please try again.');
+        }
+      }
+      
+      // Clear all pins
+      async function clearAllPins() {
+        if (confirm('Are you sure you want to clear all citizen pins? This action cannot be undone.')) {
+          try {
+            const response = await fetch('/api/clear-citizens', {
+              method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.error) {
+              alert(`Error: ${result.error}`);
+              return;
+            }
+            
+            // Update the globe
+            citizens = [];
+            updateGlobePoints();
+            
+            alert('All citizen pins have been cleared.');
+          } catch (error) {
+            console.error('Error clearing pins:', error);
+            alert('An error occurred while clearing pins. Please try again.');
+          }
+        }
+      }
+      
+      // Fetch NFT metadata
+      async function fetchNftMetadata(nftId) {
+        try {
+          const response = await fetch(`/api/nft-metadata?id=${nftId}`);
+          return await response.json();
+        } catch (error) {
+          console.error('Error fetching NFT metadata:', error);
+          return null;
+        }
+      }
+      
+      // Show citizen detail popup
+      function showCitizenDetail(citizen) {
+        const nftImageElement = document.getElementById('detail-nft-image');
+        const nftNameElement = document.getElementById('detail-nft-name');
+        const walletElement = document.getElementById('detail-wallet');
+        const messageElement = document.getElementById('detail-message');
+        const nftGridElement = document.getElementById('detail-nft-grid');
+        
+        // Position the detail popup in the center
+        citizenDetailEl.style.left = '50%';
+        citizenDetailEl.style.top = '50%';
+        citizenDetailEl.style.transform = 'translate(-50%, -50%)';
+        
+        // Clear previous NFT grid
+        nftGridElement.innerHTML = '';
+        
+        // Set wallet address
+        walletElement.textContent = `Wallet: ${formatWallet(citizen.wallet)}`;
+        
+        // Set message if available
+        if (citizen.message) {
+          messageElement.textContent = citizen.message;
+          messageElement.style.display = 'block';
+        } else {
+          messageElement.style.display = 'none';
+        }
+        
+        // Load primary NFT details
+        const primaryNftId = citizen.pfp_nft || (citizen.nfts && citizen.nfts.length > 0 ? citizen.nfts[0] : null);
+        
+        if (primaryNftId) {
+          fetchNftMetadata(primaryNftId)
+            .then(metadata => {
+              if (!metadata || !metadata.image) {
+                nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
+                nftNameElement.textContent = 'PERKS NFT';
+                return;
+              }
+              
+              nftImageElement.src = metadata.image;
+              nftNameElement.textContent = metadata.name || 'PERKS NFT';
+              
+              // Load other NFTs
+              if (citizen.nfts && citizen.nfts.length > 0) {
+                // Add all NFTs except the primary one to the grid
+                citizen.nfts.forEach(nftId => {
+                  if (nftId !== primaryNftId) {
+                    fetchNftMetadata(nftId)
+                      .then(nftData => {
+                        if (!nftData || !nftData.image) return;
+                        
+                        const nftElement = document.createElement('div');
+                        nftElement.className = 'other-nft';
+                        nftElement.innerHTML = `
+                          <img class="other-nft-image" src="${nftData.image}" alt="${nftData.name || 'NFT'}" />
+                          <div class="other-nft-name">${nftData.name || 'NFT'}</div>
+                        `;
+                        nftGridElement.appendChild(nftElement);
+                      })
+                      .catch(console.error);
+                  }
+                });
+                
+                document.getElementById('detail-other-nfts').style.display = 
+                  citizen.nfts.length > 1 ? 'block' : 'none';
+              } else {
+                document.getElementById('detail-other-nfts').style.display = 'none';
+              }
+            })
+            .catch(error => {
+              console.error('Error loading NFT details:', error);
+              nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
+              nftNameElement.textContent = 'PERKS NFT';
+            });
+        } else {
+          nftImageElement.src = 'https://cryptologos.cc/logos/solana-sol-logo.png';
+          nftNameElement.textContent = 'Citizen';
+          document.getElementById('detail-other-nfts').style.display = 'none';
+        }
+        
+        // Show the detail popup
+        citizenDetailEl.style.display = 'block';
+      }
+      
+      // Format wallet address for display
+      function formatWallet(wallet) {
+        if (!wallet) return '';
+        return `${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`;
+      }
+      
+      // Zoom in function
+      function zoomIn() {
+        if (!globe) return;
+        
+        const controls = globe.controls();
+        const currentDistance = controls.getDistance();
+        const newDistance = Math.max(currentDistance * 0.8, controls.minDistance);
+        
+        controls.dollyTo(newDistance, true);
+      }
+      
+      // Zoom out function
+      function zoomOut() {
+        if (!globe) return;
+        
+        const controls = globe.controls();
+        const currentDistance = controls.getDistance();
+        const newDistance = Math.min(currentDistance * 1.2, controls.maxDistance);
+        
+        controls.dollyTo(newDistance, true);
+      }
+      
+      // Toggle rotation function
+      function toggleRotation() {
+        if (!globe) return;
+        
+        isRotating = !isRotating;
+        globe.controls().autoRotate = isRotating;
+        
+        // Update button text
+        document.getElementById('toggle-rotation').textContent = 
+          isRotating ? 'Pause Rotation' : 'Resume Rotation';
+      }
+      
+      // Toggle borders function
+      function toggleBorders() {
+        showBorders = !showBorders;
+        
+        // Update button text
+        document.getElementById('toggle-borders').textContent = 
+          showBorders ? 'Hide Borders' : 'Show Borders';
+          
+        // Fetch borders data if needed
+        if (showBorders) {
+          fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+            .then(res => res.json())
+            .then(countries => {
+              updateBorders(countries);
+            })
+            .catch(console.error);
+        } else {
+          updateBorders({ features: [] });
+        }
+      }
+      
+      // Event Listeners
+      
+      // Add pin button
+      document.getElementById('add-pin-btn').addEventListener('click', () => {
+        isPickingLocation = true;
+        document.body.style.cursor = 'crosshair';
+        instructionsEl.style.display = 'block';
+        
+        // Stop globe rotation while picking location
+        if (globe) {
+          globe.controls().autoRotate = false;
+        }
+      });
+      
+      // Clear pins button
+      document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
+      
+      // Toggle rotation button
+      document.getElementById('toggle-rotation').addEventListener('click', toggleRotation);
+      
+      // Toggle borders button
+      document.getElementById('toggle-borders').addEventListener('click', toggleBorders);
+      
+      // Zoom buttons
+      document.getElementById('zoom-in').addEventListener('click', zoomIn);
+      document.getElementById('zoom-out').addEventListener('click', zoomOut);
+      
+      // Close citizen detail
+      document.querySelector('#citizen-detail .close').addEventListener('click', () => {
+        citizenDetailEl.style.display = 'none';
+      });
+      
+      // Close pin form
+      document.querySelector('.close-btn').addEventListener('click', closePinForm);
+      
+      // Wallet input
+      document.getElementById('wallet-address').addEventListener('input', function() {
+        // Clear error message
+        document.getElementById('wallet-error').textContent = '';
+        
+        const walletValue = this.value.trim();
+        
+        // Enable continue button as soon as there's any input
+        document.getElementById('next-step-1').disabled = walletValue === '';
+        
+        // Give immediate visual feedback about the wallet format
+        if (walletValue && walletValue.length < 32) {
+          this.style.borderColor = '#FFA500'; // Orange - potentially valid but incomplete
+        } else if (walletValue && walletValue.length >= 32) {
+          this.style.borderColor = '#00FF00'; // Green - likely valid
+        } else {
+          this.style.borderColor = '#FF0000'; // Red - empty or invalid
+        }
+      });
+      
+      // Next button - Step 1
+      document.getElementById('next-step-1').addEventListener('click', async function() {
+        const walletAddress = document.getElementById('wallet-address').value.trim();
+        
+        if (!walletAddress) {
+          document.getElementById('wallet-error').textContent = 'Please enter a wallet address.';
+          document.getElementById('wallet-address').style.borderColor = '#FF0000';
+          document.getElementById('wallet-address').focus();
+          return;
+        }
+        
+        // Basic Solana address validation (should be at least 32 chars)
+        if (walletAddress.length < 32) {
+          document.getElementById('wallet-error').textContent = 'Please enter a valid Solana wallet address.';
+          document.getElementById('wallet-address').style.borderColor = '#FF0000';
+          document.getElementById('wallet-address').focus();
+          return;
+        }
+        
+        // Check if the wallet has any NFTs
+        const nfts = await fetchWalletNFTs(walletAddress);
+        
+        if (!nfts) {
+          // Error message already set by fetchWalletNFTs
+          return;
+        }
+        
+        // Populate NFT list
+        populateNFTList(nfts);
+        
+        // If there's only one NFT, skip to step 3
+        if (nfts.length === 1) {
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-3').classList.add('active');
+        } else {
+          // Go to step 2 (PFP selection)
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-2').classList.add('active');
+        }
+      });
+      
+      // Back button - Step 2
+      document.getElementById('prev-step-2').addEventListener('click', function() {
+        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-1').classList.add('active');
+      });
+      
+      // Next button - Step 2
+      document.getElementById('next-step-2').addEventListener('click', function() {
+        if (!selectedPfpNft) {
+          alert('Please select a profile NFT to represent you on the globe.');
+          return;
+        }
+        
+        document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+        document.getElementById('step-3').classList.add('active');
+      });
+      
+      // Back button - Step 3
+      document.getElementById('prev-step-3').addEventListener('click', function() {
+        // If we have only one NFT, go back to step 1
+        const nftList = document.querySelectorAll('#nft-list .nft-item');
+        if (nftList.length === 1) {
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-1').classList.add('active');
+        } else {
+          document.querySelectorAll('.step-container').forEach(step => step.classList.remove('active'));
+          document.getElementById('step-2').classList.add('active');
+        }
+      });
+      
+      // Submit button
+      document.getElementById('submit-pin').addEventListener('click', submitPin);
+      
+      // Initialize
+      initGlobe();
+    });
+  </script>
+</body>
+</html>
