@@ -7,6 +7,23 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
+    /* Force smaller popups */
+    .leaflet-popup-content-wrapper {
+      padding: 5px !important;
+      max-width: 150px !important;
+      font-size: 10px !important;
+    }
+    
+    .leaflet-popup-content {
+      margin: 5px !important;
+      width: auto !important;
+      max-width: 140px !important;
+    }
+    
+    .leaflet-popup {
+      margin-bottom: 10px !important;
+    }
+    
     body {
       margin: 0;
       padding: 0;
