@@ -10,18 +10,25 @@
     /* Fixed info panel style */
     .fixed-info-panel {
       position: fixed;
-      bottom: 70px;
-      right: 10px;
-      background-color: rgba(30, 30, 30, 0.9);
-      color: #e0e0e0;
-      border-radius: 4px;
-      padding: 8px;
-      width: 120px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-      border: 1px solid #444;
-      z-index: 1000;
-      font-size: 10px;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      padding: 25px;
+      max-width: 400px;
+      z-index: 1001;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: translateX(100%) scale(0.8);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       display: none;
+    }
+    
+    .fixed-info-panel.show {
+      transform: translateX(0) scale(1);
+      opacity: 1;
     }
     
     .close-btn {
@@ -678,7 +685,7 @@
   
   <!-- Fixed info panel that will replace popups -->
   <div id="fixedInfoPanel" class="fixed-info-panel">
-    <span class="close-btn" onclick="document.getElementById('fixedInfoPanel').style.display='none'">×</span>
+    <span class="close-btn" onclick="closeInfoPanel()">×</span>
     <div id="fixedInfoContent"></div>
   </div>
   
@@ -885,11 +892,11 @@
         const img = document.createElement('img');
         img.src = pfpUrl;
         img.alt = citizen.wallet;
-        img.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); display: block;';
+        img.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); display: block; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;';
         
         img.onerror = function() {
           const fallback = document.createElement('div');
-          fallback.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);';
+          fallback.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;';
           fallback.textContent = 'N';
           this.parentNode.replaceChild(fallback, this);
         };
@@ -897,7 +904,7 @@
         markerElement.appendChild(img);
       } else {
         const fallback = document.createElement('div');
-        fallback.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);';
+        fallback.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;';
         fallback.textContent = 'N';
         markerElement.appendChild(fallback);
       }
@@ -998,15 +1005,49 @@
       // Don't use popups at all - use our fixed panel instead
       marker.unbindPopup(); // Remove any popup binding
       
-      // Use click event to show info in our fixed panel
+      // Use click event to show info in our fixed panel with animation
       marker.on('click', function(e) {
-        // Get our fixed panel
+        // Close any existing panel first
         const fixedPanel = document.getElementById('fixedInfoPanel');
         const contentArea = document.getElementById('fixedInfoContent');
         
-        // Set content and display
+        // If panel is already open, close it first
+        if (fixedPanel.classList.contains('show')) {
+          fixedPanel.classList.remove('show');
+          setTimeout(() => {
+            fixedPanel.style.display = 'none';
+          }, 400);
+          return;
+        }
+        
+        // Animate marker scale on click
+        const markerImg = markerElement.querySelector('img') || markerElement.querySelector('div');
+        if (markerImg) {
+          markerImg.style.transform = 'scale(1.2)';
+          markerImg.style.boxShadow = '0 4px 16px rgba(153, 69, 255, 0.6)';
+          markerImg.style.borderColor = '#9945FF';
+          
+          setTimeout(() => {
+            markerImg.style.transform = 'scale(1)';
+            markerImg.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)';
+            markerImg.style.borderColor = 'white';
+          }, 200);
+        }
+        
+        // Set content and show with animation
         contentArea.innerHTML = infoContent;
         fixedPanel.style.display = 'block';
+        
+        // Trigger animation after display
+        requestAnimationFrame(() => {
+          fixedPanel.classList.add('show');
+        });
+        
+        // Smooth zoom to marker
+        map.flyTo([citizen.lat, citizen.lng], Math.max(map.getZoom(), 8), {
+          duration: 0.8,
+          easeLinearity: 0.25
+        });
         
         // Stop propagation so map click doesn't interfere
         L.DomEvent.stopPropagation(e);
