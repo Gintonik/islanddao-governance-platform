@@ -90,21 +90,51 @@ async function saveCitizen(data) {
   try {
     await client.query('BEGIN');
     
-    // Insert citizen
-    const citizenResult = await client.query(
-      `INSERT INTO citizens (wallet, lat, lng, primary_nft, message)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id`,
-      [
-        data.wallet,
-        data.location[0],
-        data.location[1],
-        data.primaryNft,
-        data.message || null
-      ]
+    // Check if wallet already has a pin
+    const existingResult = await client.query(
+      'SELECT id FROM citizens WHERE wallet = $1',
+      [data.wallet]
     );
     
-    const citizenId = citizenResult.rows[0].id;
+    let citizenId;
+    
+    if (existingResult.rows.length > 0) {
+      // Update existing citizen
+      citizenId = existingResult.rows[0].id;
+      await client.query(
+        `UPDATE citizens SET lat = $1, lng = $2, primary_nft = $3, message = $4, pfp_nft = $5, image_url = $6
+         WHERE wallet = $7`,
+        [
+          data.location[0],
+          data.location[1],
+          data.primaryNft,
+          data.message || null,
+          data.pfp || null,
+          data.pfpImageUrl || null,
+          data.wallet
+        ]
+      );
+      
+      // Clear existing NFTs
+      await client.query('DELETE FROM citizen_nfts WHERE citizen_id = $1', [citizenId]);
+    } else {
+      // Insert new citizen
+      const citizenResult = await client.query(
+        `INSERT INTO citizens (wallet, lat, lng, primary_nft, message, pfp_nft, image_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id`,
+        [
+          data.wallet,
+          data.location[0],
+          data.location[1],
+          data.primaryNft,
+          data.message || null,
+          data.pfp || null,
+          data.pfpImageUrl || null
+        ]
+      );
+      citizenId = citizenResult.rows[0].id;
+    }
     
     // Insert citizen NFTs
     for (const nftId of data.nfts) {
