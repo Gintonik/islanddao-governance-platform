@@ -863,13 +863,16 @@
       
       // Add the NFT image with error handling
       const img = document.createElement('img');
-      img.src = pfpUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiM5OTQ1RkYiLz4KPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeD0iOCIgeT0iOCI+CjxwYXRoIGQ9Ik04IDBDMy41ODIgMCAwIDMuNTgyIDAgOFMzLjU4MiAxNiA4IDE2UzE2IDEyLjQxOCAxNiA4UzEyLjQxOCAwIDggMFoiIGZpbGw9IndoaXRlIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI4cHgiIGZpbGw9IiM5OTQ1RkYiPk48L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K';
+      console.log('Creating marker with image URL:', pfpUrl);
+      img.src = pfpUrl;
       img.alt = citizen.wallet;
-      img.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; object-fit: cover;';
+      img.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
       
       // Add error handling for broken images
       img.onerror = function() {
-        this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiM5OTQ1RkYiLz4KPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeD0iOCIgeT0iOCI+CjxwYXRoIGQ9Ik04IDBDMy41ODIgMCAwIDMuNTgyIDAgOFMzLjU4MiAxNiA4IDE2UzE2IDEyLjQxOCAxNiA4UzEyLjQxOCAwIDggMFoiIGZpbGw9IndoaXRlIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI4cHgiIGZpbGw9IiM5OTQ1RkYiPk48L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K';
+        console.error('Failed to load image:', pfpUrl);
+        this.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+        this.innerHTML = 'N';
       };
       
       markerElement.appendChild(img);
