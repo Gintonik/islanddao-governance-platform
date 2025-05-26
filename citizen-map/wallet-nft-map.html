@@ -872,11 +872,11 @@
         const img = document.createElement('img');
         img.src = pfpUrl;
         img.alt = citizen.wallet;
-        img.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+        img.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); display: block;';
         
         img.onerror = function() {
           const fallback = document.createElement('div');
-          fallback.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+          fallback.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);';
           fallback.textContent = 'N';
           this.parentNode.replaceChild(fallback, this);
         };
@@ -884,7 +884,7 @@
         markerElement.appendChild(img);
       } else {
         const fallback = document.createElement('div');
-        fallback.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+        fallback.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);';
         fallback.textContent = 'N';
         markerElement.appendChild(fallback);
       }
@@ -893,8 +893,8 @@
       const customIcon = L.divIcon({
         className: '',
         html: markerElement,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
       
       // Convert location to proper format - handle both array and numeric values
