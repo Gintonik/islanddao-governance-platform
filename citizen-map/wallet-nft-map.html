@@ -987,23 +987,92 @@
         discord: citizen.discord_handle
       });
       
-      if (citizen.twitter_handle || citizen.telegram_handle || citizen.discord_handle) {
-        socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
-        socialsHtml += '<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Connect:</h4>';
-        socialsHtml += '<div style="display: flex; justify-content: center; gap: 20px;">';
-        
-        if (citizen.twitter_handle) {
-          socialsHtml += `<a href="https://twitter.com/${citizen.twitter_handle.replace('@', '')}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #1DA1F2; border-radius: 20px; transition: background 0.2s;" onmouseover="this.style.background='#1DA1F2'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#1DA1F2'">🐦 X</a>`;
-        }
-        if (citizen.telegram_handle) {
-          socialsHtml += `<a href="https://t.me/${citizen.telegram_handle.replace('@', '')}" target="_blank" style="color: #0088cc; text-decoration: none; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #0088cc; border-radius: 20px; transition: background 0.2s;" onmouseover="this.style.background='#0088cc'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#0088cc'">📱 Telegram</a>`;
-        }
-        if (citizen.discord_handle) {
-          socialsHtml += `<span style="color: #5865F2; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #5865F2; border-radius: 20px;">💬 ${citizen.discord_handle}</span>`;
-        }
-        
-        socialsHtml += '</div></div>';
+      // Always show social media section with icons
+      socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
+      socialsHtml += '<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px; text-align: center;">Connect:</h4>';
+      socialsHtml += '<div style="display: flex; justify-content: center; gap: 15px;">';
+      
+      // X/Twitter icon
+      if (citizen.twitter_handle) {
+        const twitterHandle = citizen.twitter_handle.replace('@', '');
+        socialsHtml += `
+          <a href="https://twitter.com/${twitterHandle}" target="_blank" style="
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #1DA1F2; color: white; text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 18px;"
+            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(29, 161, 242, 0.4)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'"
+            title="Follow on X/Twitter">
+            ✕
+          </a>`;
+      } else {
+        socialsHtml += `
+          <div style="
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #ccc; color: #666;
+            font-size: 18px; opacity: 0.5;"
+            title="No X/Twitter profile">
+            ✕
+          </div>`;
       }
+      
+      // Telegram icon
+      if (citizen.telegram_handle) {
+        const telegramHandle = citizen.telegram_handle.replace('@', '');
+        socialsHtml += `
+          <a href="https://t.me/${telegramHandle}" target="_blank" style="
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #0088cc; color: white; text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 18px;"
+            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0, 136, 204, 0.4)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'"
+            title="Message on Telegram">
+            ✈
+          </a>`;
+      } else {
+        socialsHtml += `
+          <div style="
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #ccc; color: #666;
+            font-size: 18px; opacity: 0.5;"
+            title="No Telegram profile">
+            ✈
+          </div>`;
+      }
+      
+      // Discord icon
+      if (citizen.discord_handle) {
+        socialsHtml += `
+          <div style="
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #5865F2; color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 18px; cursor: pointer;"
+            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(88, 101, 242, 0.4)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'"
+            title="Discord: ${citizen.discord_handle}">
+            🎮
+          </div>`;
+      } else {
+        socialsHtml += `
+          <div style="
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #ccc; color: #666;
+            font-size: 18px; opacity: 0.5;"
+            title="No Discord profile">
+            🎮
+          </div>`;
+      }
+      
+      socialsHtml += '</div></div>';
 
       const infoContent = `
         <div style="text-align: center;">

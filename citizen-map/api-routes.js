@@ -88,14 +88,18 @@ async function saveCitizenPin(data) {
         // Update citizen location, primary NFT and profile image
         await client.query(
           `UPDATE citizens 
-           SET lat = $1, lng = $2, primary_nft = $3, pfp_nft = $4, message = $5
-           WHERE id = $6`,
+           SET lat = $1, lng = $2, primary_nft = $3, pfp_nft = $4, message = $5, 
+               twitter_handle = $6, telegram_handle = $7, discord_handle = $8
+           WHERE id = $9`,
           [
             data.location[0],
             data.location[1],
             data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
             data.pfp || data.primaryNft || data.nfts[0], // Use selected PFP or fall back to primary NFT
             data.message || null,
+            data.twitter || null,
+            data.telegram || null,
+            data.discord || null,
             citizenId
           ]
         );
@@ -110,8 +114,8 @@ async function saveCitizenPin(data) {
       } else {
         // Insert new citizen
         const citizenResult = await client.query(
-          `INSERT INTO citizens (wallet, lat, lng, primary_nft, pfp_nft, message)
-           VALUES ($1, $2, $3, $4, $5, $6)
+          `INSERT INTO citizens (wallet, lat, lng, primary_nft, pfp_nft, message, twitter_handle, telegram_handle, discord_handle)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
            RETURNING id`,
           [
             data.wallet,
@@ -119,7 +123,10 @@ async function saveCitizenPin(data) {
             data.location[1],
             data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
             data.pfp || data.primaryNft || data.nfts[0], // Use selected PFP or fall back to primary NFT
-            data.message || null
+            data.message || null,
+            data.twitter || null,
+            data.telegram || null,
+            data.discord || null
           ]
         );
         
