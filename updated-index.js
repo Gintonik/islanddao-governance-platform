@@ -260,6 +260,8 @@ function startServer() {
               citizenData.pfp_image_url = citizenData.pfpImageUrl;
             }
             
+            console.log('Saving citizen with data:', citizenData);
+            
             const citizenId = await db.saveCitizen(citizenData);
             
             res.writeHead(200, { 'Content-Type': 'application/json' });
