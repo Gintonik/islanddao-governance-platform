@@ -212,6 +212,32 @@ function startServer() {
         const citizens = await db.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
+      // API endpoint to get specific NFT data
+      else if (req.url.startsWith('/api/nft/') && req.method === 'GET') {
+        const mintId = req.url.split('/')[3];
+        if (!mintId) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'NFT mint ID is required' }));
+          return;
+        }
+        
+        try {
+          const query = 'SELECT * FROM nfts WHERE mint_id = $1';
+          const result = await pool.query(query, [mintId]);
+          
+          if (result.rows.length === 0) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'NFT not found' }));
+            return;
+          }
+          
+          sendJsonResponse(res, result.rows[0]);
+        } catch (error) {
+          console.error('Error fetching NFT:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to fetch NFT' }));
+        }
+      }
       // API endpoint to save a citizen pin
       else if (req.url === '/api/save-citizen' && req.method === 'POST') {
         let body = '';
