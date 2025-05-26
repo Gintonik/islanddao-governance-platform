@@ -1060,10 +1060,12 @@
         discord: citizen.discord_handle
       });
       
-      // Check if we have social data from the pin placement
-      const twitterHandle = citizen.twitter_handle || citizen.x_handle;
+      // Get social media data from database
+      const twitterHandle = citizen.twitter_handle;
       const telegramHandle = citizen.telegram_handle;
       const discordHandle = citizen.discord_handle;
+      
+      console.log('Social handles:', { twitterHandle, telegramHandle, discordHandle });
       
       // Always show social media section with icons
       socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
