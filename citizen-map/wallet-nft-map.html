@@ -794,6 +794,15 @@
       position: 'bottomright'
     }).addTo(map);
     
+    // Function to close info panel with animation
+    function closeInfoPanel() {
+      const fixedPanel = document.getElementById('fixedInfoPanel');
+      fixedPanel.classList.remove('show');
+      setTimeout(() => {
+        fixedPanel.style.display = 'none';
+      }, 400);
+    }
+    
     // Format wallet address for display
     function formatWallet(wallet) {
       return wallet.substring(0, 6) + '...' + wallet.substring(wallet.length - 4);
@@ -1510,6 +1519,18 @@
     
     // Theme toggle listener
     document.getElementById('toggleThemeBtn').addEventListener('click', toggleTheme);
+    
+    // Map click handler
+    map.on('click', function(e) {
+      if (isPickingLocation) {
+        selectedCoords = e.latlng;
+        document.getElementById('instructionBox').style.display = 'none';
+        document.getElementById('pinFormOverlay').style.display = 'flex';
+      } else {
+        // Close info panel when clicking on empty map
+        closeInfoPanel();
+      }
+    });
     
     // Initialize by loading all citizens
     loadAllCitizens();
