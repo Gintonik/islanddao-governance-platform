@@ -937,31 +937,61 @@
       const nftCountText = `${nftCount} NFT${nftCount !== 1 ? 's' : ''}`;
       
       // Create panel content - more compact
+      // Get the profile image URL
+      const profileImageUrl = citizen.nftMetadata && citizen.primaryNft && citizen.nftMetadata[citizen.primaryNft] ? 
+        citizen.nftMetadata[citizen.primaryNft].image : '';
+      
+      // Create NFT collection grid
+      let nftCollectionHtml = '';
+      if (citizen.nftMetadata && Object.keys(citizen.nftMetadata).length > 0) {
+        nftCollectionHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
+        nftCollectionHtml += `<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">PERKS Collection (${Object.keys(citizen.nftMetadata).length})</h4>`;
+        nftCollectionHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px;">';
+        
+        Object.values(citizen.nftMetadata).forEach(nft => {
+          nftCollectionHtml += `
+            <div style="position: relative;">
+              <img src="${nft.image}" alt="${nft.name}" 
+                   style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid ${nft.id === citizen.primaryNft ? '#9945FF' : '#ddd'}; transition: transform 0.2s;"
+                   onmouseover="this.style.transform='scale(1.1)'" 
+                   onmouseout="this.style.transform='scale(1)'"
+                   title="${nft.name}">
+              ${nft.id === citizen.primaryNft ? '<div style="position: absolute; top: -5px; right: -5px; background: #9945FF; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px;">★</div>' : ''}
+            </div>
+          `;
+        });
+        
+        nftCollectionHtml += '</div></div>';
+      }
+      
       let socialsHtml = '';
       if (citizen.twitter_handle || citizen.telegram_handle || citizen.discord_handle) {
-        socialsHtml = '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">';
-        socialsHtml += '<h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">Connect:</h4>';
-        socialsHtml += '<div style="display: flex; justify-content: center; gap: 15px;">';
+        socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
+        socialsHtml += '<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Connect:</h4>';
+        socialsHtml += '<div style="display: flex; justify-content: center; gap: 20px;">';
         
         if (citizen.twitter_handle) {
-          socialsHtml += `<a href="https://twitter.com/${citizen.twitter_handle.replace('@', '')}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">🐦 X</a>`;
+          socialsHtml += `<a href="https://twitter.com/${citizen.twitter_handle.replace('@', '')}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #1DA1F2; border-radius: 20px; transition: background 0.2s;" onmouseover="this.style.background='#1DA1F2'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#1DA1F2'">🐦 X</a>`;
         }
         if (citizen.telegram_handle) {
-          socialsHtml += `<a href="https://t.me/${citizen.telegram_handle.replace('@', '')}" target="_blank" style="color: #0088cc; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">📱 Telegram</a>`;
+          socialsHtml += `<a href="https://t.me/${citizen.telegram_handle.replace('@', '')}" target="_blank" style="color: #0088cc; text-decoration: none; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #0088cc; border-radius: 20px; transition: background 0.2s;" onmouseover="this.style.background='#0088cc'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#0088cc'">📱 Telegram</a>`;
         }
         if (citizen.discord_handle) {
-          socialsHtml += `<span style="color: #5865F2; font-size: 14px; display: flex; align-items: center; gap: 5px;">💬 ${citizen.discord_handle}</span>`;
+          socialsHtml += `<span style="color: #5865F2; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #5865F2; border-radius: 20px;">💬 ${citizen.discord_handle}</span>`;
         }
         
         socialsHtml += '</div></div>';
       }
 
       const infoContent = `
-        <button class="btn-close" onclick="document.getElementById('citizenInfoPanel').style.display='none'">×</button>
-        <h3>${citizen.city || 'Citizen'}</h3>
-        <div class="wallet-address">${formatWallet(citizen.wallet)}</div>
-        <span class="nft-badge">${nftCountText}</span>
-        ${citizen.message ? `<p>${citizen.message}</p>` : ''}
+        <div style="text-align: center;">
+          ${profileImageUrl ? `<img src="${profileImageUrl}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #9945FF; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">` : ''}
+          <h3 style="margin: 0 0 10px 0; color: #333; font-size: 20px;">${citizen.city || 'PERKS Citizen'}</h3>
+          <div style="font-family: monospace; color: #666; font-size: 14px; margin-bottom: 10px;">${formatWallet(citizen.wallet)}</div>
+          <span style="background: #9945FF; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${nftCountText}</span>
+          ${citizen.message ? `<p style="margin: 15px 0; color: #555; font-style: italic;">${citizen.message}</p>` : ''}
+        </div>
+        ${nftCollectionHtml}
         ${socialsHtml}
       `;
       
