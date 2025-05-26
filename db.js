@@ -210,6 +210,17 @@ async function getAllCitizens() {
         discord: formattedCitizen.discord_handle
       });
       
+      // Ensure social media data is preserved in the output
+      if (!formattedCitizen.twitter_handle && citizen.twitter_handle) {
+        formattedCitizen.twitter_handle = citizen.twitter_handle;
+      }
+      if (!formattedCitizen.telegram_handle && citizen.telegram_handle) {
+        formattedCitizen.telegram_handle = citizen.telegram_handle;
+      }
+      if (!formattedCitizen.discord_handle && citizen.discord_handle) {
+        formattedCitizen.discord_handle = citizen.discord_handle;
+      }
+      
       // Add NFT metadata
       nftsResult.rows.forEach(nft => {
         formattedCitizen.nftMetadata[nft.mint_id] = {

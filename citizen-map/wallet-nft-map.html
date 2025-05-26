@@ -1020,10 +1020,10 @@
         discord: citizen.discord_handle
       });
       
-      // Simple social media data retrieval with fallbacks
-      const twitterHandle = citizen.twitter_handle || null;
-      const telegramHandle = citizen.telegram_handle || null;
-      const discordHandle = citizen.discord_handle || null;
+      // Get social media data from citizen object
+      const twitterHandle = citizen.twitter_handle;
+      const telegramHandle = citizen.telegram_handle;
+      const discordHandle = citizen.discord_handle;
       
       // Always show social media section with icons
       socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
