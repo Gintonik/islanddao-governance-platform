@@ -1038,8 +1038,8 @@
           throw new Error(data.error);
         }
         
-        // Extract the nfts array from the response
-        walletNfts = data.nfts || [];
+        // The API returns the NFTs directly as an array
+        walletNfts = Array.isArray(data) ? data : [];
         
         if (walletNfts.length === 0) {
           // Show no NFTs message
