@@ -203,6 +203,13 @@ async function getAllCitizens() {
         nftMetadata: {}
       };
       
+      console.log('Formatted citizen with socials:', {
+        wallet: formattedCitizen.wallet,
+        twitter: formattedCitizen.twitter_handle,
+        telegram: formattedCitizen.telegram_handle,
+        discord: formattedCitizen.discord_handle
+      });
+      
       // Add NFT metadata
       nftsResult.rows.forEach(nft => {
         formattedCitizen.nftMetadata[nft.mint_id] = {
