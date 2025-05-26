@@ -791,6 +791,41 @@
   </div>
 
   <script>
+    // Custom notification system
+    function showNotification(message, type = 'info') {
+      // Remove any existing notifications
+      const existingNotification = document.querySelector('.notification');
+      if (existingNotification) {
+        existingNotification.remove();
+      }
+
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      
+      // Add appropriate icon based on type
+      let icon = '📍';
+      if (type === 'success') icon = '✅';
+      if (type === 'info') icon = '🔗';
+      
+      notification.innerHTML = `
+        <span class="notification-icon">${icon}</span>
+        <span>${message}</span>
+      `;
+      
+      // Add to body
+      document.body.appendChild(notification);
+      
+      // Show notification with animation
+      setTimeout(() => notification.classList.add('show'), 100);
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
     // State variables
     let selectedNft = null;
     let selectedLocation = null;
