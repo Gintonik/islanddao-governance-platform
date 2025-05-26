@@ -170,7 +170,8 @@ async function getAllCitizens() {
   try {
     // Get all citizens
     const citizens = await pool.query(`
-      SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.message, c.created_at
+      SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.message, c.created_at,
+             c.twitter_handle, c.telegram_handle, c.discord_handle
       FROM citizens c
       ORDER BY c.created_at DESC
     `);
@@ -196,6 +197,9 @@ async function getAllCitizens() {
         message: citizen.message,
         nfts: nftsResult.rows.map(n => n.mint_id),
         timestamp: citizen.created_at,
+        twitter_handle: citizen.twitter_handle,
+        telegram_handle: citizen.telegram_handle,
+        discord_handle: citizen.discord_handle,
         nftMetadata: {}
       };
       
