@@ -853,27 +853,9 @@
     }
     
     // Create a single citizen marker with NFT profile picture
-    async function createCitizenMarker(citizen) {
-      // Get the PFP URL - try multiple sources
-      let pfpUrl = citizen.pfp_image_url;
-      
-      // If no stored image URL, fetch from NFT data using the pfp_nft ID
-      if (!pfpUrl && citizen.pfp_nft) {
-        try {
-          const response = await fetch(`/api/nft/${citizen.pfp_nft}`);
-          if (response.ok) {
-            const nftData = await response.json();
-            pfpUrl = nftData.image_url;
-          }
-        } catch (error) {
-          console.error('Error fetching NFT image:', error);
-        }
-      }
-      
-      // Fallback to NFT metadata if available
-      if (!pfpUrl && citizen.pfp && citizen.nftMetadata && citizen.nftMetadata[citizen.pfp]) {
-        pfpUrl = citizen.nftMetadata[citizen.pfp].image;
-      }
+    function createCitizenMarker(citizen) {
+      // Get the PFP URL from the stored image URL
+      const pfpUrl = citizen.image_url || citizen.pfp_image_url;
       
       // Create HTML element for the marker
       const markerElement = document.createElement('div');
