@@ -97,9 +97,9 @@ async function saveCitizenPin(data) {
             data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
             data.pfp || data.primaryNft || data.nfts[0], // Use selected PFP or fall back to primary NFT
             data.message || null,
-            data.twitter || null,
-            data.telegram || null,
-            data.discord || null,
+            data.socials?.twitter || data.twitter || null,
+            data.socials?.telegram || data.telegram || null,
+            data.socials?.discord || data.discord || null,
             citizenId
           ]
         );
@@ -124,9 +124,9 @@ async function saveCitizenPin(data) {
             data.primaryNft || data.nfts[0], // Use the first NFT as primary if not specified
             data.pfp || data.primaryNft || data.nfts[0], // Use selected PFP or fall back to primary NFT
             data.message || null,
-            data.twitter || null,
-            data.telegram || null,
-            data.discord || null
+            data.socials?.twitter || data.twitter || null,
+            data.socials?.telegram || data.telegram || null,
+            data.socials?.discord || data.discord || null
           ]
         );
         
