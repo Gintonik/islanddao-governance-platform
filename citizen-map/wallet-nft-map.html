@@ -711,6 +711,16 @@
         <div class="error-message" id="nftError"></div>
       </div>
       
+      <div class="form-group">
+        <label>Social Links (Optional)</label>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="text" id="twitterHandle" class="form-control" placeholder="X/Twitter handle (e.g., @username)" style="font-size: 14px;">
+          <input type="text" id="telegramHandle" class="form-control" placeholder="Telegram username (e.g., @username)" style="font-size: 14px;">
+          <input type="text" id="discordHandle" class="form-control" placeholder="Discord username (e.g., username#1234)" style="font-size: 14px;">
+        </div>
+        <p style="font-size: 12px; color: #999; margin-top: 5px;">Add your social links so others can connect with you!</p>
+      </div>
+      
       <div class="form-actions">
         <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
         <button class="btn btn-submit" id="submitBtn">Add Pin</button>
@@ -927,12 +937,32 @@
       const nftCountText = `${nftCount} NFT${nftCount !== 1 ? 's' : ''}`;
       
       // Create panel content - more compact
+      let socialsHtml = '';
+      if (citizen.twitter_handle || citizen.telegram_handle || citizen.discord_handle) {
+        socialsHtml = '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">';
+        socialsHtml += '<h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">Connect:</h4>';
+        socialsHtml += '<div style="display: flex; justify-content: center; gap: 15px;">';
+        
+        if (citizen.twitter_handle) {
+          socialsHtml += `<a href="https://twitter.com/${citizen.twitter_handle.replace('@', '')}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">🐦 X</a>`;
+        }
+        if (citizen.telegram_handle) {
+          socialsHtml += `<a href="https://t.me/${citizen.telegram_handle.replace('@', '')}" target="_blank" style="color: #0088cc; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">📱 Telegram</a>`;
+        }
+        if (citizen.discord_handle) {
+          socialsHtml += `<span style="color: #5865F2; font-size: 14px; display: flex; align-items: center; gap: 5px;">💬 ${citizen.discord_handle}</span>`;
+        }
+        
+        socialsHtml += '</div></div>';
+      }
+
       const infoContent = `
         <button class="btn-close" onclick="document.getElementById('citizenInfoPanel').style.display='none'">×</button>
         <h3>${citizen.city || 'Citizen'}</h3>
         <div class="wallet-address">${formatWallet(citizen.wallet)}</div>
         <span class="nft-badge">${nftCountText}</span>
         ${citizen.message ? `<p>${citizen.message}</p>` : ''}
+        ${socialsHtml}
       `;
       
       // Don't use popups at all - use our fixed panel instead
@@ -1207,6 +1237,11 @@
       // Get all NFT IDs from the wallet
       const nftIds = walletNfts.map(nft => nft.id);
       
+      // Get social links
+      const twitterHandle = document.getElementById('twitterHandle').value.trim();
+      const telegramHandle = document.getElementById('telegramHandle').value.trim();
+      const discordHandle = document.getElementById('discordHandle').value.trim();
+      
       // Prepare data to send to server
       const data = {
         wallet: walletAddress,
@@ -1215,7 +1250,12 @@
         pfp: selectedNft.id, // Use selected NFT as profile picture
         pfpImageUrl: selectedNft.imageUrl, // Include the NFT image URL
         primaryNft: selectedNft.id, // Also use as primary NFT
-        message: 'PERKS citizen'
+        message: 'PERKS citizen',
+        socials: {
+          twitter: twitterHandle,
+          telegram: telegramHandle,
+          discord: discordHandle
+        }
       };
       
       console.log('Sending data to server:', data);

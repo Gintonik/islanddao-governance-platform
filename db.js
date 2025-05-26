@@ -102,8 +102,9 @@ async function saveCitizen(data) {
       // Update existing citizen
       citizenId = existingResult.rows[0].id;
       await client.query(
-        `UPDATE citizens SET lat = $1, lng = $2, primary_nft = $3, message = $4, pfp_nft = $5, image_url = $6
-         WHERE wallet = $7`,
+        `UPDATE citizens SET lat = $1, lng = $2, primary_nft = $3, message = $4, pfp_nft = $5, image_url = $6, 
+         twitter_handle = $7, telegram_handle = $8, discord_handle = $9
+         WHERE wallet = $10`,
         [
           data.location[0],
           data.location[1],
@@ -111,6 +112,9 @@ async function saveCitizen(data) {
           data.message || null,
           data.pfp || null,
           data.pfpImageUrl || null,
+          data.socials?.twitter || null,
+          data.socials?.telegram || null,
+          data.socials?.discord || null,
           data.wallet
         ]
       );
@@ -120,8 +124,8 @@ async function saveCitizen(data) {
     } else {
       // Insert new citizen
       const citizenResult = await client.query(
-        `INSERT INTO citizens (wallet, lat, lng, primary_nft, message, pfp_nft, image_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO citizens (wallet, lat, lng, primary_nft, message, pfp_nft, image_url, twitter_handle, telegram_handle, discord_handle)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING id`,
         [
           data.wallet,
@@ -130,7 +134,10 @@ async function saveCitizen(data) {
           data.primaryNft,
           data.message || null,
           data.pfp || null,
-          data.pfpImageUrl || null
+          data.pfpImageUrl || null,
+          data.socials?.twitter || null,
+          data.socials?.telegram || null,
+          data.socials?.discord || null
         ]
       );
       citizenId = citizenResult.rows[0].id;
