@@ -789,6 +789,16 @@
     // Start with dark mode by default
     darkTileLayer.addTo(map);
     
+    // Global variables for map functionality
+    let citizens = [];
+    let citizenMarkers = [];
+    let selectedCoords = null;
+    let isPickingLocation = false;
+    let currentFormType = null;
+    let walletNfts = [];
+    let selectedNft = null;
+    let isDark = true; // Start with dark theme
+    
     // Add zoom control to bottom right
     L.control.zoom({
       position: 'bottomright'
