@@ -229,6 +229,11 @@ function startServer() {
               return;
             }
             
+            // Add the pfp image URL to the citizen data
+            if (citizenData.pfpImageUrl) {
+              citizenData.pfp_image_url = citizenData.pfpImageUrl;
+            }
+            
             const citizenId = await db.saveCitizen(citizenData);
             
             res.writeHead(200, { 'Content-Type': 'application/json' });
