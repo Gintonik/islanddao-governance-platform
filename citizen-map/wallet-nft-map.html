@@ -854,28 +854,38 @@
     
     // Create a single citizen marker with NFT profile picture
     function createCitizenMarker(citizen) {
-      // Get the PFP URL from the stored image URL
-      const pfpUrl = citizen.image_url || citizen.pfp_image_url;
+      // Get the PFP URL - use the image URL directly from the stored data
+      let pfpUrl = citizen.image_url;
+      
+      // Debug logging
+      console.log('Citizen data:', citizen);
+      console.log('Image URL:', pfpUrl);
       
       // Create HTML element for the marker
       const markerElement = document.createElement('div');
       markerElement.className = 'citizen-marker';
       
-      // Add the NFT image with error handling
-      const img = document.createElement('img');
-      console.log('Creating marker with image URL:', pfpUrl);
-      img.src = pfpUrl;
-      img.alt = citizen.wallet;
-      img.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
-      
-      // Add error handling for broken images
-      img.onerror = function() {
-        console.error('Failed to load image:', pfpUrl);
-        this.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
-        this.innerHTML = 'N';
-      };
-      
-      markerElement.appendChild(img);
+      // Create the marker element directly with the image
+      if (pfpUrl) {
+        const img = document.createElement('img');
+        img.src = pfpUrl;
+        img.alt = citizen.wallet;
+        img.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+        
+        img.onerror = function() {
+          const fallback = document.createElement('div');
+          fallback.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+          fallback.textContent = 'N';
+          this.parentNode.replaceChild(fallback, this);
+        };
+        
+        markerElement.appendChild(img);
+      } else {
+        const fallback = document.createElement('div');
+        fallback.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; background: #9945FF; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+        fallback.textContent = 'N';
+        markerElement.appendChild(fallback);
+      }
       
       // Create custom icon
       const customIcon = L.divIcon({
