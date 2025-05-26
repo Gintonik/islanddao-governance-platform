@@ -210,6 +210,12 @@ function startServer() {
       // API endpoint to get all citizens for the map
       else if (req.url === '/citizens.json') {
         const citizens = await db.getAllCitizens();
+        console.log('Citizens from DB:', citizens.map(c => ({
+          wallet: c.wallet,
+          twitter: c.twitter_handle,
+          telegram: c.telegram_handle,
+          discord: c.discord_handle
+        })));
         sendJsonResponse(res, citizens);
       }
       // API endpoint to get specific NFT data
