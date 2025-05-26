@@ -981,6 +981,12 @@
       }
       
       let socialsHtml = '';
+      console.log('Citizen social data:', {
+        twitter: citizen.twitter_handle,
+        telegram: citizen.telegram_handle, 
+        discord: citizen.discord_handle
+      });
+      
       if (citizen.twitter_handle || citizen.telegram_handle || citizen.discord_handle) {
         socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
         socialsHtml += '<h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Connect:</h4>';
