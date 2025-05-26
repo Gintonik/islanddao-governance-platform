@@ -854,12 +854,14 @@
     
     // Create a single citizen marker with NFT profile picture
     function createCitizenMarker(citizen) {
-      // Get the PFP URL - use the image URL directly from the stored data
-      let pfpUrl = citizen.image_url;
+      // Get the PFP URL from NFT metadata
+      let pfpUrl = null;
       
-      // Debug logging
-      console.log('Citizen data:', citizen);
-      console.log('Image URL:', pfpUrl);
+      if (citizen.nftMetadata && citizen.primaryNft && citizen.nftMetadata[citizen.primaryNft]) {
+        pfpUrl = citizen.nftMetadata[citizen.primaryNft].image;
+      }
+      
+      console.log('Using image URL:', pfpUrl);
       
       // Create HTML element for the marker
       const markerElement = document.createElement('div');
