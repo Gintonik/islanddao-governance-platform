@@ -1609,10 +1609,15 @@
         // Switch to dark mode
         document.body.style.backgroundColor = '#121212';
         document.body.style.color = '#e0e0e0';
-        document.querySelector('.header').style.backgroundColor = '#1f1f1f';
-        document.querySelector('.header').style.borderBottomColor = '#333';
-        document.querySelector('.header h1').style.color = '#ffffff';
-        document.querySelector('.header p').style.color = '#c9d6de';
+        const header = document.querySelector('.header');
+        if (header) {
+          header.style.backgroundColor = '#1f1f1f';
+          header.style.borderBottomColor = '#333';
+        }
+        const headerTitle = document.querySelector('.header-title h1');
+        if (headerTitle) headerTitle.style.color = '#ffffff';
+        const headerP = document.querySelector('.header-title p');
+        if (headerP) headerP.style.color = '#c9d6de';
         
         // Update pin form styles
         const pinForm = document.querySelector('.pin-form');
@@ -1645,10 +1650,15 @@
         // Switch to light mode
         document.body.style.backgroundColor = '#f5f5f5';
         document.body.style.color = '#333';
-        document.querySelector('.header').style.backgroundColor = '#ffffff';
-        document.querySelector('.header').style.borderBottomColor = '#e0e0e0';
-        document.querySelector('.header h1').style.color = '#3b5bdb';
-        document.querySelector('.header p').style.color = '#666';
+        const header = document.querySelector('.header');
+        if (header) {
+          header.style.backgroundColor = '#ffffff';
+          header.style.borderBottomColor = '#e0e0e0';
+        }
+        const headerTitle = document.querySelector('.header-title h1');
+        if (headerTitle) headerTitle.style.color = '#3b5bdb';
+        const headerP = document.querySelector('.header-title p');
+        if (headerP) headerP.style.color = '#666';
         
         // Update pin form styles
         const pinForm = document.querySelector('.pin-form');
