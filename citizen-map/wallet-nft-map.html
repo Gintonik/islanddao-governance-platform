@@ -1020,10 +1020,10 @@
         discord: citizen.discord_handle
       });
       
-      // Simple social media data retrieval
-      const twitterHandle = citizen.twitter_handle;
-      const telegramHandle = citizen.telegram_handle;
-      const discordHandle = citizen.discord_handle;
+      // Simple social media data retrieval with fallbacks
+      const twitterHandle = citizen.twitter_handle || null;
+      const telegramHandle = citizen.telegram_handle || null;
+      const discordHandle = citizen.discord_handle || null;
       
       // Always show social media section with icons
       socialsHtml = '<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">';
@@ -1060,7 +1060,7 @@
       if (telegramHandle) {
         const cleanTelegramHandle = telegramHandle.replace('@', '');
         socialsHtml += `
-          <div onclick="navigator.clipboard.writeText('@${cleanTelegramHandle}'); alert('Telegram username copied: @${cleanTelegramHandle}'); event.stopPropagation();"
+          <div onclick="try { navigator.clipboard.writeText('@${cleanTelegramHandle}'); alert('Telegram username copied: @${cleanTelegramHandle}'); } catch(e) { alert('Copy failed: @${cleanTelegramHandle}'); } event.stopPropagation();"
                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #0088cc; color: white; cursor: pointer;"
                title="Copy Telegram username: @${cleanTelegramHandle}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -1083,7 +1083,7 @@
       // Discord icon
       if (discordHandle) {
         socialsHtml += `
-          <div onclick="navigator.clipboard.writeText('${discordHandle}'); alert('Discord username copied: ${discordHandle}'); event.stopPropagation();"
+          <div onclick="try { navigator.clipboard.writeText('${discordHandle}'); alert('Discord username copied: ${discordHandle}'); } catch(e) { alert('Copy failed: ${discordHandle}'); } event.stopPropagation();"
                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #5865F2; color: white; cursor: pointer;"
                title="Copy Discord username: ${discordHandle}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
