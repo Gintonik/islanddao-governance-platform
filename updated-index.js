@@ -204,23 +204,57 @@ function startServer() {
       }
       // Handle requests for the citizen-map
       else if (req.url === '/citizen-map') {
-        // Serve a redirect page to the citizen map
-        const redirectHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Redirecting to Citizen Map...</title>
-          <script>
-            window.location.href = 'http://localhost:5001/';
-          </script>
-        </head>
-        <body>
-          <p>Redirecting to Citizen Map...</p>
-          <p>If you are not redirected automatically, <a href="http://localhost:5001/">click here</a></p>
-        </body>
-        </html>`;
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(redirectHTML);
+        // Serve the citizen map HTML directly from this server
+        serveFile(res, path.join(__dirname, 'citizen-map/wallet-nft-map.html'), 'text/html');
+      }
+      // API endpoint to get all citizens for the map
+      else if (req.url === '/citizens.json') {
+        const citizens = await db.getAllCitizens();
+        sendJsonResponse(res, citizens);
+      }
+      // API endpoint to save a citizen pin
+      else if (req.url === '/api/save-citizen' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        
+        req.on('end', async () => {
+          try {
+            const citizenData = JSON.parse(body);
+            
+            if (!citizenData.wallet || !citizenData.location || !citizenData.primaryNft) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Missing required fields' }));
+              return;
+            }
+            
+            const citizenId = await db.saveCitizen(citizenData);
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              success: true, 
+              message: 'Citizen pin added successfully',
+              citizenId 
+            }));
+          } catch (error) {
+            console.error('Error saving citizen data:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+          }
+        });
+      }
+      // API endpoint to clear all citizens
+      else if (req.url === '/api/clear-citizens' && req.method === 'POST') {
+        try {
+          await db.clearAllCitizens();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, message: 'All citizen pins cleared' }));
+        } catch (error) {
+          console.error('Error clearing citizens:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+        }
       }
       // Serve static files from the citizen-map directory
       else if (req.url.startsWith('/citizen-map/')) {
