@@ -751,7 +751,9 @@
       zoom: 2,
       minZoom: 2,
       maxZoom: 18,
-      zoomControl: false
+      zoomControl: false,
+      maxBounds: [[-90, -180], [90, 180]],
+      maxBoundsViscosity: 1.0
     });
     
     // Create tile layers for both dark and light modes
