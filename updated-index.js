@@ -204,8 +204,9 @@ function startServer() {
       }
       // Handle requests for the citizen-map
       else if (req.url === '/citizen-map') {
-        // Redirect to citizen map HTML page
-        serveFile(res, path.join(__dirname, 'citizen-map/index.simple.html'), 'text/html');
+        // Redirect to the citizen map server running on port 5001
+        res.writeHead(302, { 'Location': 'http://localhost:5001/' });
+        res.end();
       }
       // Serve static files from the citizen-map directory
       else if (req.url.startsWith('/citizen-map/')) {
