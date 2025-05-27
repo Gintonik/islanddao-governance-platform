@@ -63,7 +63,23 @@ function startServer() {
       if (req.url === '/' || req.url === '/index.html') {
         const mapPath = path.join(__dirname, 'citizen-map', 'verified-citizen-map.html');
         console.log('Serving map from path:', mapPath);
-        serveFile(res, mapPath, 'text/html');
+        console.log('File exists check:', fs.existsSync(mapPath));
+        
+        // Direct file read and serve to bypass stat check issues
+        fs.readFile(mapPath, 'utf8', (err, content) => {
+          if (err) {
+            console.error('Error reading map file:', err);
+            // Fallback to collection page
+            const collectionPath = path.join(__dirname, 'unified-index.html');
+            serveFile(res, collectionPath, 'text/html');
+          } else {
+            if (!res.headersSent) {
+              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.end(content);
+            }
+          }
+        });
+        return;
       }
       // Serve the original citizen map
       else if (req.url === '/citizen-map') {
