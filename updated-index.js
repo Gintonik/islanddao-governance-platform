@@ -189,9 +189,13 @@ function startServer() {
         req.on('data', chunk => body += chunk.toString());
         req.on('end', () => {
           try {
+            console.log('Received wallet verification request body:', body);
             const { publicKey, message, signature } = JSON.parse(body);
             
+            console.log('Parsed verification data:', { publicKey, message: message?.substring(0, 50), signature: signature?.length });
+            
             if (!publicKey || !message || !signature) {
+              console.log('Missing required fields:', { publicKey: !!publicKey, message: !!message, signature: !!signature });
               res.writeHead(400, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: 'Missing required fields' }));
               return;
@@ -216,6 +220,7 @@ function startServer() {
             }
           } catch (error) {
             console.error('Error verifying wallet:', error);
+            console.error('Raw body that caused error:', body);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ verified: false, error: 'Invalid request format' }));
           }
