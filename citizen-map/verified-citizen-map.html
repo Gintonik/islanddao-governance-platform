@@ -1354,57 +1354,73 @@
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
-                <!-- Polaroid-style PERK Card -->
+                <!-- Pinned Polaroid PERK Card -->
                 ${imageUrl ? `<div style="text-align: center; margin-bottom: 16px;">
                     <div style="
                         position: relative; 
                         display: inline-block; 
                         cursor: pointer;
-                        background: #FAFAFA;
-                        border-radius: 12px;
-                        padding: 16px 16px 12px 16px;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        background: white;
+                        border-radius: 4px;
+                        padding: 12px 12px 20px 12px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                         transition: all 0.2s ease;
-                        width: 160px;
-                        border: 1px solid rgba(0, 0, 0, 0.1);
-                    " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'">
+                        width: 140px;
+                        transform: rotate(-1deg);
+                        border: 1px solid #e0e0e0;
+                    " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile" onmouseover="this.style.transform='rotate(-1deg) translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.2)'" onmouseout="this.style.transform='rotate(-1deg) translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'">
+                        <!-- Pin -->
+                        <div style="
+                            position: absolute;
+                            top: -8px;
+                            right: 20px;
+                            width: 16px;
+                            height: 16px;
+                            background: radial-gradient(circle, #ff4444 0%, #cc3333 100%);
+                            border-radius: 50%;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                            z-index: 10;
+                        "></div>
+                        <!-- Pin shadow on polaroid -->
+                        <div style="
+                            position: absolute;
+                            top: 8px;
+                            right: 28px;
+                            width: 8px;
+                            height: 8px;
+                            background: rgba(0, 0, 0, 0.1);
+                            border-radius: 50%;
+                            z-index: 1;
+                        "></div>
                         <img src="${imageUrl}" alt="Profile Picture" style="
-                            width: 120px; 
-                            height: 120px; 
-                            border-radius: 8px; 
+                            width: 108px; 
+                            height: 108px; 
                             object-fit: contain; 
                             display: block;
-                            margin: 0 auto 12px auto;
-                            background: white;
+                            margin: 0 auto 8px auto;
+                            background: #f9f9f9;
                         ">
                         <div style="
                             color: #333;
-                            font-size: 12px;
-                            font-weight: 600;
+                            font-size: 11px;
+                            font-weight: 500;
                             text-align: center;
                             font-family: 'Inter', sans-serif;
+                            margin-top: 4px;
                         ">
                             ${perkName}
                         </div>
+                        <!-- Visit profile indicator -->
                         <div style="
                             position: absolute;
-                            top: 10px;
-                            right: 10px;
-                            width: 18px;
-                            height: 18px;
-                            background: rgba(33, 232, 163, 0.9);
-                            border-radius: 50%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 9px;
-                            color: white;
-                            font-weight: bold;
-                            pointer-events: none;
-                            border: 2px solid white;
-                        ">
-                            →
-                        </div>
+                            bottom: 6px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            width: 20px;
+                            height: 2px;
+                            background: rgba(33, 232, 163, 0.6);
+                            border-radius: 1px;
+                        "></div>
                     </div>
                 </div>` : ''}
                 
