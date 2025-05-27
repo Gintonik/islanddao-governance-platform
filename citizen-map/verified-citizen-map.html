@@ -755,13 +755,34 @@
             cursor: not-allowed;
         }
 
-        .verified-badge {
-            background: linear-gradient(45deg, #56ab2f 0%, #a8e6cf 100%);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-left: 8px;
+        .wallet-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 120px;
+            margin-top: 4px;
+        }
+
+        .disconnect-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .disconnect-btn:hover {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff4444;
         }
 
         /* Hide scrollbars */
@@ -810,6 +831,9 @@
                 <span id="walletIcon">🔗</span>
                 <span id="walletText">Connect Wallet</span>
             </button>
+            <div id="walletDropdown" class="wallet-dropdown" style="display: none;">
+                <button onclick="disconnectWallet()" class="disconnect-btn">Disconnect</button>
+            </div>
         </div>
     </div>
 
@@ -1036,11 +1060,13 @@
         // Handle wallet connection
         async function handleWalletConnect() {
             if (currentWallet) {
-                // Already connected - show wallet info or disconnect
-                showNotification(`Connected: ${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`, 'success');
+                // Show dropdown for disconnect option
+                const dropdown = document.getElementById('walletDropdown');
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
             } else {
                 // Show wallet selection modal
                 document.getElementById('walletModal').style.display = 'block';
+                populateWalletOptions();
             }
         }
 
@@ -1132,11 +1158,12 @@
             const walletIcon = document.getElementById('walletIcon');
             const walletText = document.getElementById('walletText');
             const addPinBtn = document.getElementById('addPinBtn');
+            const dropdown = document.getElementById('walletDropdown');
 
             if (currentWallet) {
                 walletBtn.classList.add('wallet-connected');
                 walletIcon.textContent = '✅';
-                walletText.innerHTML = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}<span class="verified-badge">Verified</span>`;
+                walletText.innerHTML = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`;
                 
                 addPinBtn.classList.add('enabled');
                 addPinBtn.style.opacity = '1';
@@ -1149,7 +1176,19 @@
                 addPinBtn.classList.remove('enabled');
                 addPinBtn.style.opacity = '0.7';
                 addPinBtn.style.cursor = 'not-allowed';
+                
+                // Hide dropdown when disconnected
+                dropdown.style.display = 'none';
             }
+        }
+
+        // Disconnect wallet function
+        function disconnectWallet() {
+            currentWallet = null;
+            walletNfts = [];
+            updateWalletUI();
+            document.getElementById('walletDropdown').style.display = 'none';
+            showNotification('Wallet disconnected successfully', 'success');
         }
 
         // ===== NFT LOADING =====
