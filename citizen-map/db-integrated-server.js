@@ -272,6 +272,10 @@ function startServer() {
         
         sendJsonResponse(res, formattedNfts);
       }
+      // Serve the verified citizen map
+      else if (req.url === '/verified-map') {
+        serveFile(res, path.join(__dirname, 'verified-citizen-map.html'), 'text/html');
+      }
       // Serve static files
       else {
         // First check if the file exists in the citizen-map directory
