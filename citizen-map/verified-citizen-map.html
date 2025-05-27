@@ -1308,15 +1308,18 @@
             
             // Update panel title to show nickname with enhanced styling
             const nickname = citizen.nickname || 'Anonymous Citizen';
+            panelTitle.style.textAlign = 'center';
             panelTitle.innerHTML = `<span style="
-                font-size: 16px; 
-                font-weight: 700; 
+                font-size: 20px; 
+                font-weight: 800; 
                 background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
                 text-shadow: 0 2px 4px rgba(33, 232, 163, 0.3);
-                letter-spacing: 0.5px;
+                letter-spacing: 0.8px;
+                display: block;
+                text-align: center;
             ">${nickname}</span>`;
             
             const isVerified = citizen.wallet === currentWallet;
