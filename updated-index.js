@@ -236,6 +236,14 @@ function startServer() {
             const data = JSON.parse(body);
             const { wallet_address, original_message, signature } = data;
             
+            console.log('Pin creation form data received:', {
+              nickname: data.nickname,
+              bio: data.bio,
+              twitter: data.twitter_handle,
+              telegram: data.telegram_handle,
+              discord: data.discord_handle
+            });
+            
             // Verify wallet signature
             if (!verifySignature(original_message, signature, wallet_address)) {
               console.log(`⚠️ Unauthorized save attempt from wallet: ${wallet_address}`);
