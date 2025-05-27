@@ -1521,174 +1521,53 @@
                     }
                 });
 
-                // Create simple clusters based on proximity (working version)
-                const clusters = createCitizenClusters(citizens);
-                
-                clusters.forEach(cluster => {
-                    if (cluster.citizens.length === 1) {
-                        // Single citizen - show individual marker
-                        createSingleCitizenMarker(cluster.citizens[0], cluster.lat, cluster.lng);
+                // Simple individual markers - no clustering
+                citizens.forEach(citizen => {
+                    let lat, lng;
+                    if (citizen.lat && citizen.lng) {
+                        lat = parseFloat(citizen.lat);
+                        lng = parseFloat(citizen.lng);
+                    } else if (citizen.location && Array.isArray(citizen.location)) {
+                        lat = parseFloat(citizen.location[0]);
+                        lng = parseFloat(citizen.location[1]);
                     } else {
-                        // Multiple citizens - show cluster with all profile pictures
-                        createClusterMarker(cluster.citizens, cluster.lat, cluster.lng);
+                        return;
                     }
+                    
+                    if (isNaN(lat) || isNaN(lng)) return;
+                    
+                    const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
+                    let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
+                    
+                    if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+                        imageUrl = citizen.nftMetadata[pfpNft].image;
+                    } else if (citizen.pfpImageUrl) {
+                        imageUrl = citizen.pfpImageUrl;
+                    } else if (citizen.image_url) {
+                        imageUrl = citizen.image_url;
+                    }
+
+                    const icon = L.divIcon({
+                        html: `<img src="${imageUrl}" 
+                               style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" 
+                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'">`,
+                        className: 'citizen-marker',
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    });
+
+                    const marker = L.marker([lat, lng], { icon }).addTo(map);
+                    marker.on('click', () => showCitizenPanel(citizen));
                 });
                 
-                console.log(`Loaded ${citizens.length} citizens on the map`);
+                console.log(`Loaded ${citizens.length} citizens individually`);
             } catch (error) {
                 console.error('Error loading citizens:', error);
                 showNotification('Failed to load citizen data', 'error');
             }
         }
 
-        // Simple function to group nearby points
-        function groupNearbyPoints(citizens, tolerance) {
-            const groups = [];
-            const used = new Set();
-            
-            for (let i = 0; i < citizens.length; i++) {
-                if (used.has(i)) continue;
-                
-                const citizen = citizens[i];
-                let lat, lng;
-                
-                if (citizen.lat && citizen.lng) {
-                    lat = parseFloat(citizen.lat);
-                    lng = parseFloat(citizen.lng);
-                } else if (citizen.location && Array.isArray(citizen.location)) {
-                    lat = parseFloat(citizen.location[0]);
-                    lng = parseFloat(citizen.location[1]);
-                } else {
-                    continue;
-                }
-                
-                if (isNaN(lat) || isNaN(lng)) continue;
-                
-                const group = [citizen];
-                used.add(i);
-                
-                // Find other citizens within tolerance
-                for (let j = i + 1; j < citizens.length; j++) {
-                    if (used.has(j)) continue;
-                    
-                    const other = citizens[j];
-                    let otherLat, otherLng;
-                    
-                    if (other.lat && other.lng) {
-                        otherLat = parseFloat(other.lat);
-                        otherLng = parseFloat(other.lng);
-                    } else if (other.location && Array.isArray(other.location)) {
-                        otherLat = parseFloat(other.location[0]);
-                        otherLng = parseFloat(other.location[1]);
-                    } else {
-                        continue;
-                    }
-                    
-                    if (isNaN(otherLat) || isNaN(otherLng)) continue;
-                    
-                    const distance = Math.sqrt(
-                        Math.pow(lat - otherLat, 2) + Math.pow(lng - otherLng, 2)
-                    );
-                    
-                    if (distance < tolerance) {
-                        group.push(other);
-                        used.add(j);
-                    }
-                }
-                
-                groups.push(group);
-            }
-            
-            return groups;
-        }
-
-        // Create clusters of citizens within proximity
-        function createCitizenClusters(citizens) {
-            const clusters = [];
-            const processed = new Set();
-            
-            // Ultra-simple clustering: only cluster at very low zoom levels
-            const zoom = map.getZoom();
-            let clusterDistance;
-            
-            if (zoom >= 8) {
-                // At zoom 8 and above, never cluster - show all individual pins
-                clusterDistance = 0;
-            } else if (zoom >= 5) {
-                // Medium zoom: very minimal clustering
-                clusterDistance = 1.0;
-            } else {
-                // Only cluster at world view
-                clusterDistance = 6.0;
-            }
-            
-            console.log(`Zoom: ${zoom}, Cluster distance: ${clusterDistance} degrees`);
-
-            citizens.forEach((citizen, index) => {
-                if (processed.has(index)) return;
-
-                let lat, lng;
-                if (citizen.lat && citizen.lng) {
-                    lat = parseFloat(citizen.lat);
-                    lng = parseFloat(citizen.lng);
-                } else if (citizen.location && Array.isArray(citizen.location) && citizen.location.length === 2) {
-                    lat = parseFloat(citizen.location[0]);
-                    lng = parseFloat(citizen.location[1]);
-                } else {
-                    return;
-                }
-
-                if (isNaN(lat) || isNaN(lng)) return;
-
-                const cluster = {
-                    lat: lat,
-                    lng: lng,
-                    citizens: [citizen]
-                };
-
-                // Find nearby citizens
-                citizens.forEach((otherCitizen, otherIndex) => {
-                    if (processed.has(otherIndex) || index === otherIndex) return;
-
-                    let otherLat, otherLng;
-                    if (otherCitizen.lat && otherCitizen.lng) {
-                        otherLat = parseFloat(otherCitizen.lat);
-                        otherLng = parseFloat(otherCitizen.lng);
-                    } else if (otherCitizen.location && Array.isArray(otherCitizen.location)) {
-                        otherLat = parseFloat(otherCitizen.location[0]);
-                        otherLng = parseFloat(otherCitizen.location[1]);
-                    } else {
-                        return;
-                    }
-
-                    if (isNaN(otherLat) || isNaN(otherLng)) return;
-
-                    // Calculate distance
-                    const distance = Math.sqrt(
-                        Math.pow(lat - otherLat, 2) + Math.pow(lng - otherLng, 2)
-                    );
-
-                    if (distance <= clusterDistance) {
-                        cluster.citizens.push(otherCitizen);
-                        processed.add(otherIndex);
-                        // Update cluster center to average position
-                        cluster.lat = cluster.citizens.reduce((sum, c) => {
-                            const cLat = c.lat ? parseFloat(c.lat) : parseFloat(c.location[0]);
-                            return sum + cLat;
-                        }, 0) / cluster.citizens.length;
-                        cluster.lng = cluster.citizens.reduce((sum, c) => {
-                            const cLng = c.lng ? parseFloat(c.lng) : parseFloat(c.location[1]);
-                            return sum + cLng;
-                        }, 0) / cluster.citizens.length;
-                    }
-                });
-
-                processed.add(index);
-                clusters.push(cluster);
-            });
-
-            return clusters;
-        }
+        // Removed clustering functions to fix errors
 
         // Create marker for multiple citizens grouped together
         function createMultiCitizenMarker(citizens) {
