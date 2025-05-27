@@ -1190,8 +1190,8 @@
                     nfts: [selectedPrimary]
                 };
 
-                // Submit to verified endpoint on the correct server
-                const response = await fetch('http://localhost:5001/api/save-citizen-verified', {
+                // Submit to verified endpoint
+                const response = await fetch('/api/save-citizen-verified', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
