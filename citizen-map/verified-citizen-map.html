@@ -942,11 +942,20 @@
 
         async function initializeApp() {
             try {
-                initializeMap();
-                setupEventListeners();
-                await loadCitizens();
-                populateWalletOptions();
-                initializeTheme();
+                // Add a small delay to ensure DOM is fully ready
+                setTimeout(async () => {
+                    try {
+                        initializeMap();
+                        setupEventListeners();
+                        await loadCitizens();
+                        populateWalletOptions();
+                        initializeTheme();
+                        console.log('Application initialized successfully');
+                    } catch (initError) {
+                        console.error('Initialization error:', initError);
+                        showNotification('Application failed to load. Please refresh the page.', 'error');
+                    }
+                }, 100);
             } catch (error) {
                 console.error('App initialization failed:', error);
                 showNotification('Application failed to load. Please refresh the page.', 'error');
