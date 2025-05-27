@@ -1353,16 +1353,7 @@
             
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
-            // Random stamp position and rotation
-            const stampPositions = [
-                'top: -10px; right: -10px; transform: rotate(12deg);',
-                'top: -10px; left: -10px; transform: rotate(-8deg);',
-                'bottom: -15px; right: -10px; transform: rotate(18deg);',
-                'bottom: -15px; left: -10px; transform: rotate(-12deg);',
-                'top: 60px; right: -15px; transform: rotate(25deg);',
-                'top: 60px; left: -15px; transform: rotate(-18deg);'
-            ];
-            const randomStampPosition = stampPositions[Math.floor(Math.random() * stampPositions.length)];
+
 
             content.innerHTML = `
                 <!-- Pinned Polaroid PERK Card -->
@@ -1381,27 +1372,14 @@
                         border: 1px solid #e0e0e0;
                     " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile" onmouseover="this.style.transform='rotate(-1deg) translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.2)'" onmouseout="this.style.transform='rotate(-1deg) translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'">
 
-                        <div style="position: relative; display: inline-block; margin: 0 auto 8px auto;">
-                            <img src="${imageUrl}" alt="Profile Picture" style="
-                                width: 150px; 
-                                height: 150px; 
-                                object-fit: contain; 
-                                display: block;
-                                background: #f9f9f9;
-                            ">
-                            <!-- IslandDAO Verification Stamp (Random Position) -->
-                            <img src="/citizen-map/islanddao-stamp.png" alt="Verified" style="
-                                position: absolute;
-                                ${randomStampPosition}
-                                width: 45px;
-                                height: 45px;
-                                opacity: 0.8;
-                                filter: sepia(100%) saturate(400%) hue-rotate(320deg) brightness(0.6) contrast(1.3);
-                                mix-blend-mode: multiply;
-                                pointer-events: none;
-                                z-index: 10;
-                            ">
-                        </div>
+                        <img src="${imageUrl}" alt="Profile Picture" style="
+                            width: 150px; 
+                            height: 150px; 
+                            object-fit: contain; 
+                            display: block;
+                            margin: 0 auto 8px auto;
+                            background: #f9f9f9;
+                        ">
                         <div style="
                             color: #333;
                             font-size: 12px;
