@@ -1304,6 +1304,10 @@
         function showCitizenPanel(citizen) {
             const panel = document.getElementById('citizenPanel');
             const content = document.getElementById('citizenPanelContent');
+            const panelTitle = document.querySelector('.citizen-panel-title');
+            
+            // Update panel title to show nickname instead of "Citizen Profile"
+            panelTitle.textContent = citizen.nickname || 'Anonymous Citizen';
             
             const isVerified = citizen.wallet === currentWallet;
             const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
@@ -1320,39 +1324,32 @@
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
-                <!-- Nickname as Main Title -->
-                <div style="text-align: center; margin-bottom: 12px;">
-                    <h2 style="margin: 0; color: #FAFAFA; font-size: 18px; font-weight: 600;">
-                        ${citizen.nickname || 'Anonymous Citizen'}
-                    </h2>
-                </div>
-                
                 <!-- Bigger PFP -->
                 ${imageUrl ? `<div style="text-align: center; margin-bottom: 12px;">
                     <img src="${imageUrl}" alt="Profile Picture" style="width: 90px; height: 90px; border-radius: 12px; object-fit: cover; border: 2px solid #21E8A3;">
                 </div>` : ''}
                 
-                <!-- Visit Profile Link -->
-                <div style="text-align: center; margin-bottom: 10px;">
+                <!-- Visit Profile Link - Smaller and less intrusive -->
+                <div style="text-align: center; margin-bottom: 12px;">
                     <a href="#" onclick="alert('Citizens Profile feature coming soon!')" style="
-                        color: #21E8A3; 
+                        color: #AFAFAF; 
                         text-decoration: none; 
-                        font-size: 11px; 
-                        font-weight: 500; 
+                        font-size: 9px; 
+                        font-weight: 400; 
                         display: inline-block;
-                        padding: 3px 8px;
-                        border-radius: 4px;
-                        background: rgba(33, 232, 163, 0.1);
-                        border: 1px solid rgba(33, 232, 163, 0.3);
+                        padding: 2px 6px;
+                        border-radius: 3px;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         transition: all 0.2s ease;
-                    " onmouseover="this.style.background='rgba(33, 232, 163, 0.2)'" onmouseout="this.style.background='rgba(33, 232, 163, 0.1)'">
+                    " onmouseover="this.style.color='#21E8A3'; this.style.borderColor='rgba(33, 232, 163, 0.3)'" onmouseout="this.style.color='#AFAFAF'; this.style.borderColor='rgba(255, 255, 255, 0.1)'">
                         Visit Profile →
                     </a>
                 </div>
                 
-                <!-- Address that links to solscan -->
+                <!-- Address that links to solscan - Bigger -->
                 <div style="text-align: center; margin-bottom: 12px;">
-                    <div style="background: #0F0F0F; border: 1px solid rgba(255, 255, 255, 0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Inter', monospace; font-size: 9px; color: #AFAFAF; cursor: pointer; transition: all 0.2s ease; display: inline-block;" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" onmouseover="this.style.borderColor='#21E8A3'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
+                    <div style="background: #0F0F0F; border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 12px; border-radius: 6px; font-family: 'Inter', monospace; font-size: 11px; color: #AFAFAF; cursor: pointer; transition: all 0.2s ease; display: inline-block;" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" onmouseover="this.style.borderColor='#21E8A3'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
                         ${citizen.wallet.substring(0, 6)}...${citizen.wallet.substring(citizen.wallet.length - 4)}
                     </div>
                 </div>
