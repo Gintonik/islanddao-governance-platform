@@ -888,14 +888,20 @@
 
                 // Add citizen markers
                 citizens.forEach(citizen => {
+                    if (!citizen.lat || !citizen.lng) {
+                        console.log('Skipping citizen with missing coordinates:', citizen);
+                        return;
+                    }
+
+                    const imageUrl = citizen.pfpImageUrl || citizen.image_url || 'https://via.placeholder.com/40';
                     const icon = L.divIcon({
-                        html: `<img src="${citizen.pfpImageUrl || citizen.image_url}" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover;">`,
+                        html: `<img src="${imageUrl}" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover;" onerror="this.src='https://via.placeholder.com/40'">`,
                         className: 'citizen-marker',
                         iconSize: [46, 46],
                         iconAnchor: [23, 23]
                     });
 
-                    const marker = L.marker([citizen.lat, citizen.lng], { icon }).addTo(map);
+                    const marker = L.marker([parseFloat(citizen.lat), parseFloat(citizen.lng)], { icon }).addTo(map);
                     
                     // Create popup content
                     const isVerified = citizen.wallet === currentWallet;
@@ -906,6 +912,7 @@
                 console.log(`Loaded ${citizens.length} citizens`);
             } catch (error) {
                 console.error('Error loading citizens:', error);
+                console.log('Citizens data received:', citizens);
                 showNotification('Failed to load citizen data', 'error');
             }
         }
