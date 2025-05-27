@@ -1259,6 +1259,8 @@
             const citizenName = citizen.nickname || 
                                (citizen.nftMetadata && citizen.nftMetadata[pfpNft] ? citizen.nftMetadata[pfpNft].name : null) || 
                                'Anonymous Citizen';
+            
+            const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
                 <div class="citizen-profile">
@@ -1267,7 +1269,7 @@
                         ${citizenName}
                         ${isVerified ? '<span style="color: #56ab2f; font-size: 0.8em;">✓ You</span>' : ''}
                     </div>
-                    ${citizen.bio ? `<div class="citizen-bio">${citizen.bio}</div>` : ''}
+                    ${citizenBio ? `<div class="citizen-bio">${citizenBio}</div>` : ''}
                     
                     <div class="citizen-wallet" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" style="cursor: pointer;">
                         ${citizen.wallet}
