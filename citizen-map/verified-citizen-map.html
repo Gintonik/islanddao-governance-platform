@@ -1570,33 +1570,73 @@
                         item.displayLng = item.originalLng;
                     });
                     
-                    // Adjust positions to prevent overlaps
+                    // Group overlapping citizens and arrange them in a grid
+                    const clusters = [];
+                    const processed = new Set();
+                    
+                    // Find clusters of overlapping citizens
                     for (let i = 0; i < processedCitizens.length; i++) {
+                        if (processed.has(i)) continue;
+                        
+                        const cluster = [i];
+                        processed.add(i);
+                        
                         for (let j = i + 1; j < processedCitizens.length; j++) {
+                            if (processed.has(j)) continue;
+                            
                             const item1 = processedCitizens[i];
                             const item2 = processedCitizens[j];
                             
                             const distance = Math.sqrt(
-                                Math.pow(item1.displayLat - item2.displayLat, 2) + 
-                                Math.pow(item1.displayLng - item2.displayLng, 2)
+                                Math.pow(item1.originalLat - item2.originalLat, 2) + 
+                                Math.pow(item1.originalLng - item2.originalLng, 2)
                             );
                             
                             if (distance < degreeThreshold) {
-                                // Calculate offset direction
-                                const angle = Math.atan2(
-                                    item2.displayLat - item1.displayLat,
-                                    item2.displayLng - item1.displayLng
-                                );
-                                
-                                // Move them apart
-                                const offsetDistance = degreeThreshold * 0.6;
-                                item1.displayLat -= Math.sin(angle) * offsetDistance;
-                                item1.displayLng -= Math.cos(angle) * offsetDistance;
-                                item2.displayLat += Math.sin(angle) * offsetDistance;
-                                item2.displayLng += Math.cos(angle) * offsetDistance;
+                                cluster.push(j);
+                                processed.add(j);
                             }
                         }
+                        
+                        clusters.push(cluster);
                     }
+                    
+                    // Arrange each cluster in a compact grid
+                    clusters.forEach(cluster => {
+                        if (cluster.length === 1) {
+                            // Single citizen, keep at original position
+                            return;
+                        }
+                        
+                        // Calculate center of cluster
+                        let centerLat = 0, centerLng = 0;
+                        cluster.forEach(idx => {
+                            centerLat += processedCitizens[idx].originalLat;
+                            centerLng += processedCitizens[idx].originalLng;
+                        });
+                        centerLat /= cluster.length;
+                        centerLng /= cluster.length;
+                        
+                        // Arrange in grid (2 citizens per row for compactness)
+                        const gridWidth = Math.min(2, cluster.length);
+                        const gridHeight = Math.ceil(cluster.length / gridWidth);
+                        
+                        // Minimal spacing - just enough to prevent overlap
+                        const spacingLat = degreeThreshold * 0.8;
+                        const spacingLng = degreeThreshold * 0.8;
+                        
+                        // Center the grid around the cluster center
+                        const startLat = centerLat - ((gridHeight - 1) * spacingLat) / 2;
+                        const startLng = centerLng - ((gridWidth - 1) * spacingLng) / 2;
+                        
+                        cluster.forEach((idx, position) => {
+                            const row = Math.floor(position / gridWidth);
+                            const col = position % gridWidth;
+                            
+                            processedCitizens[idx].displayLat = startLat + (row * spacingLat);
+                            processedCitizens[idx].displayLng = startLng + (col * spacingLng);
+                        });
+                    });
                 }
 
                 // Create markers with smart positioning
