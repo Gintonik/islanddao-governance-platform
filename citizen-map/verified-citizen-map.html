@@ -812,27 +812,22 @@
         let selectedPrimary = null;
         let isPickingLocation = false;
 
-        // Wallet providers with real icons
+        // Wallet providers with official logos
         const walletProviders = {
             phantom: {
                 name: 'Phantom',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTA4IiBoZWlnaHQ9IjEwOCIgdmlld0JveD0iMCAwIDEwOCAxMDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiByeD0iMjYiIGZpbGw9InVybCgjcGFpbnQwX2xpbmVhcl8xXzcpIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDYuNTA4MSAyMy4yOUM1Mi40NzMzIDIzLjI5IDU3LjQ1MTMgMjguMjY4IDU3LjQ1MTMgMzQuMjMzMlY0MS4zM0w2My45NzE5IDQxLjMzQzY3LjM5NTMgNDEuMzMgNzAuMTcxOSA0NC4xMDY2IDcwLjE3MTkgNDcuNTNWNTguNjI4Qzc0LjI2NDUgNzAuMzEyNSA3My42NTU0IDc5LjQzNDYgNjcuMzk0IDg1LjA5NDJDNjEuNjM3NSA5MC4zMTc3IDUyLjU5NjEgOTAuMzE3NyA0Ni44Mzk2IDg1LjA5NDJDNDEuNTg0NCA4MC4zMTI1IDQwLjY3NTMgNzIuNzQ2NyA0My43MTYxIDY0LjE4ODVMNTEuNTMzNyA0MS4zM0M1MS41MzM3IDM3LjkwNjYgNDguNzU3MSAzNS4xMyA0NS4zMzM3IDM1LjEzSDM1LjkyMjNDMzIuNDk4OSAzNS4xMyAyOS43MjIzIDM3LjkwNjYgMjkuNzIyMyA0MS4zM1Y2Ny44MTk4QzI5LjcyMjMgNzQuNzE5MiAzNS4xNzc1IDgwLjQzOTUgNDEuOTE3MyA4MC43NzQzQzQ1LjkxOSA4MC45NjYgNDkuNzMyIDc5LjU4IDUyLjYwMjIgNzYuOTk0OEM1My45MzE4IDc1Ljc5MTQgNTUuODM1NiA3NS4xOTM5IDU3LjgwNTYgNzUuNDA0MkM2MC4yMTI4IDc1LjY2MTEgNjIuMjEyNSA3Ny40NDEzIDYyLjcyMzEgNzkuODE5N0M2My4xNzE5IDgxLjg5MDMgNjIuNDQ1OCA4NC4wMDE1IDYwLjc4NDQgODUuNDA0MkM1Ni4xMjczIDg5LjU2MjMgNDkuNjU4MyA5MS43NDc3IDQyLjkwMzEgOTEuNzQ3N0MzMy43MTQxIDkxLjc0NzcgMjYuMTg3NSA4NC4yMjExIDI2LjE4NzUgNzQuOTY4NkwyNi4xODc1IDM0LjIzMzJDMjYuMTg3NSAyOC4yNjggMzEuMTY1NCAyMy4yOSAzNy4xMzA2IDIzLjI5SDQ2LjUwODFaIiBmaWxsPSJ3aGl0ZSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJwYWludDBfbGluZWFyXzFfNyIgeDE9IjAiIHkxPSIwIiB4Mj0iMTA4IiB5Mj0iMTA4IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CjxzdG9wIHN0b3AtY29sb3I9IiM1MzRCQjEiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTUxQkY5Ii8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHN2Zz4K',
+                icon: '/citizen-map/phantom-logo.png',
                 detected: () => window.solana && window.solana.isPhantom
             },
             solflare: {
                 name: 'Solflare',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzI0MjQyNCIvPgo8cGF0aCBkPSJNMTQuNSA4LjVMMjMuNSAxNi41SDE0LjVWOC41WiIgZmlsbD0iI0ZDRjNGNCIvPgo8cGF0aCBkPSJNMTQuNSAyMy41VjE2LjVIMjMuNUwxNC41IDIzLjVaIiBmaWxsPSIjRkNGM0Y0Ii8+CjxwYXRoIGQ9Ik0xNC41IDhIMTRWMTZIMTQuNVY4WiIgZmlsbD0iI0ZDRjNGNCIvPgo8L3N2Zz4K',
+                icon: '/citizen-map/solflare-logo.png',
                 detected: () => window.solflare && window.solflare.isSolflare
             },
             backpack: {
                 name: 'Backpack',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzE2MjQzOSIvPgo8cGF0aCBkPSJNMTAgMTJIMjJWMjBIMTBWMTJaIiBmaWxsPSIjRkY2QzM3Ii8+CjxwYXRoIGQ9Ik0xMiA4SDE0VjEySDEyVjhaIiBmaWxsPSIjRkY2QzM3Ii8+CjxwYXRoIGQ9Ik0xOCA4SDIwVjEySDEyVjhaIiBmaWxsPSIjRkY2QzM3Ii8+Cjwvc3ZnPgo=',
+                icon: '/citizen-map/backpack-logo.png',
                 detected: () => window.backpack
-            },
-            coinbase: {
-                name: 'Coinbase Wallet',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzAwNTJGRiIvPgo8cGF0aCBkPSJNMTYgOEM2IDggNCA1IDQgMTZTNiAyNCA0IDI0UzggMTYgMTYgOCIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEzIDEzSDJWMTlIMTNWMTNaIiBmaWxsPSIjMDA1MkZGIi8+Cjwvc3ZnPgo=',
-                detected: () => window.coinbaseSolana
             }
         };
 
@@ -970,9 +965,6 @@
                         break;
                     case 'backpack':
                         provider = window.backpack;
-                        break;
-                    case 'coinbase':
-                        provider = window.coinbaseSolana;
                         break;
                     default:
                         throw new Error('Unsupported wallet');
