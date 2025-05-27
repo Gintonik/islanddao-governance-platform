@@ -1310,7 +1310,7 @@
             const nickname = citizen.nickname || 'Anonymous Citizen';
             panelTitle.style.textAlign = 'center';
             panelTitle.innerHTML = `
-                <div style="text-align: center;">
+                <div style="text-align: left;">
                     <span style="
                         font-size: 20px; 
                         font-weight: 800; 
@@ -1321,7 +1321,6 @@
                         text-shadow: 0 2px 4px rgba(33, 232, 163, 0.3);
                         letter-spacing: 0.8px;
                         display: block;
-                        text-align: center;
                     ">${nickname}</span>
                     <div style="
                         font-size: 10px; 
@@ -1331,6 +1330,7 @@
                         font-family: 'Inter', monospace;
                         cursor: pointer;
                         transition: color 0.2s ease;
+                        text-align: left;
                     " onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" title="View on Solscan" onmouseover="this.style.color='#21E8A3'" onmouseout="this.style.color='#AFAFAF'">
                         ${citizen.wallet.substring(0, 8)}...${citizen.wallet.substring(citizen.wallet.length - 6)}
                     </div>
