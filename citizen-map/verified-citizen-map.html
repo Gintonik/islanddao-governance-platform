@@ -440,12 +440,21 @@
 
         .nft-image-small {
             width: 100%;
-            height: 70px;
+            aspect-ratio: 1;
             object-fit: cover;
         }
 
         .nft-info {
-            display: none;
+            padding: 0.4rem;
+            text-align: center;
+        }
+
+        .nft-name-small {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+            line-height: 1.2;
         }
 
         .nft-card.primary {
@@ -454,21 +463,17 @@
             position: relative;
         }
 
-        .nft-card.primary::after {
-            content: '✓';
-            position: absolute;
-            top: 2px;
-            right: 2px;
+        .nft-card.primary .nft-image-small {
+            border-bottom: 2px solid #56ab2f;
+        }
+
+        .primary-badge {
             background: #56ab2f;
             color: white;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 0.6rem;
+            font-weight: 500;
         }
 
         .pin-form-modal {
