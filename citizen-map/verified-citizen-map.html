@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verified Citizen Map - IslandDAO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -817,7 +820,9 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Global variables
+        'use strict';
+        
+        // ===== GLOBAL STATE =====
         let map;
         let isDarkTheme = true;
         let currentWallet = null;
@@ -826,18 +831,19 @@
         let selectedPfp = null;
         let selectedPrimary = null;
         let isPickingLocation = false;
+        let citizenMarkers = [];
 
-        // Wallet providers with official logos
+        // ===== WALLET CONFIGURATION =====
         const walletProviders = {
             phantom: {
                 name: 'Phantom',
                 icon: '/citizen-map/phantom-logo.png',
-                detected: () => window.solana && window.solana.isPhantom
+                detected: () => window.solana?.isPhantom
             },
             solflare: {
                 name: 'Solflare',
                 icon: '/citizen-map/solflare-logo.png',
-                detected: () => window.solflare && window.solflare.isSolflare
+                detected: () => window.solflare?.isSolflare
             },
             backpack: {
                 name: 'Backpack',
@@ -846,28 +852,37 @@
             }
         };
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeMap();
-            setupEventListeners();
-            loadCitizens();
-            populateWalletOptions();
-            
-            // Initialize theme button text
+        // ===== APPLICATION INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        async function initializeApp() {
+            try {
+                initializeMap();
+                setupEventListeners();
+                await loadCitizens();
+                populateWalletOptions();
+                initializeTheme();
+            } catch (error) {
+                console.error('App initialization failed:', error);
+                showNotification('Application failed to load. Please refresh the page.', 'error');
+            }
+        }
+
+        function initializeTheme() {
             const themeBtn = document.getElementById('themeToggle');
             themeBtn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
-            
-            // Set initial theme attribute
             document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
-        });
+        }
 
-        // Initialize Leaflet map
+        // ===== MAP INITIALIZATION =====
         function initializeMap() {
             map = L.map('map', {
                 center: [20, 0],
                 zoom: 2,
                 minZoom: 2,
-                maxZoom: 18
+                maxZoom: 18,
+                zoomControl: true,
+                preferCanvas: true // Better performance for many markers
             });
 
             updateMapTheme();
@@ -1068,18 +1083,31 @@
             }
         }
 
-        // Load user's NFTs
+        // ===== NFT LOADING =====
         async function loadUserNfts() {
             if (!currentWallet) return;
 
             try {
+                showNotification('Loading your NFTs...', 'info');
                 const response = await fetch(`/api/wallet-nfts?wallet=${currentWallet}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch NFTs: ${response.status}`);
+                }
+                
                 const nfts = await response.json();
-                walletNfts = nfts;
+                walletNfts = Array.isArray(nfts) ? nfts : [];
                 updateNftGrid();
+                
+                if (walletNfts.length === 0) {
+                    showNotification('No PERKS NFTs found in your wallet', 'error');
+                } else {
+                    showNotification(`Found ${walletNfts.length} PERKS NFTs!`, 'success');
+                }
             } catch (error) {
                 console.error('Error loading user NFTs:', error);
-                showNotification('Failed to load your NFTs', 'error');
+                showNotification('Failed to load your NFTs. Please try again.', 'error');
+                walletNfts = [];
             }
         }
 
@@ -1288,7 +1316,10 @@
                         imageUrl = citizen.image_url;
                     }
                     const icon = L.divIcon({
-                        html: `<img src="${imageUrl}" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover;" onerror="this.src='https://via.placeholder.com/40'">`,
+                        html: `<img src="${imageUrl}" 
+                               style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover;" 
+                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz4KPHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxMCIgeT0iMTAiPgo8cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnptMCAxOGMtNC40MSAwLTgtMy41OS04LThzMy41OS04IDgtOCA4IDMuNTkgOCA4LTMuNTkgOC04IDh6bS0yLTZjMCAuNTUuNDUgMSAxIDFzMS0uNDUgMS0xLS40NS0xLTEtMS0xIC40NS0xIDF6bTAtNGMwIC41NS40NSAxIDEgMXMxLS40NSAxLTEtLjQ1LTEtMS0xLTEgLjQ1LTEgMXoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K'"
+                               loading="lazy">`,
                         className: 'citizen-marker',
                         iconSize: [46, 46],
                         iconAnchor: [23, 23]
