@@ -1346,14 +1346,16 @@
 
             const gridStyle = `
                 display: grid; 
-                grid-template-columns: repeat(4, 1fr); 
-                gap: 6px; 
-                max-height: 280px; 
-                overflow-y: auto; 
-                padding: 2px;
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 10px; 
+                margin-top: 4px;
             `;
 
-            const nftCards = citizen.nfts.map(nftId => {
+            // Show only first 6 NFTs for clean display
+            const displayNfts = citizen.nfts.slice(0, 6);
+            const hasMore = citizen.nfts.length > 6;
+
+            const nftCards = displayNfts.map(nftId => {
                 const nft = citizen.nftMetadata[nftId];
                 if (!nft) return '';
 
@@ -1361,39 +1363,49 @@
                 
                 return `
                     <div style="
-                        background: rgba(255, 255, 255, 0.03);
-                        border: 1px solid rgba(153, 69, 255, 0.15);
-                        border-radius: 6px;
+                        background: rgba(255, 255, 255, 0.02);
+                        border: 1px solid rgba(153, 69, 255, 0.1);
+                        border-radius: 8px;
                         overflow: hidden;
                         transition: all 0.2s ease;
                         cursor: pointer;
                         position: relative;
-                        ${isPrimary ? 'border-color: #9945FF; background: rgba(153, 69, 255, 0.08);' : ''}
+                        ${isPrimary ? 'border-color: #9945FF; background: rgba(153, 69, 255, 0.05);' : ''}
                     " onclick="window.open('https://solscan.io/token/${nftId}', '_blank')"
-                       onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='rgba(153, 69, 255, 0.4)'; this.style.boxShadow='0 2px 8px rgba(153, 69, 255, 0.2)'" 
-                       onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='${isPrimary ? '#9945FF' : 'rgba(153, 69, 255, 0.15)'}'; this.style.boxShadow='none'">
+                       onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='rgba(153, 69, 255, 0.3)'; this.style.boxShadow='0 4px 12px rgba(153, 69, 255, 0.15)'" 
+                       onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='${isPrimary ? '#9945FF' : 'rgba(153, 69, 255, 0.1)'}'; this.style.boxShadow='none'">
                         <img src="${nft.image}" alt="${nft.name}" style="
                             width: 100%;
-                            height: 40px;
+                            height: 65px;
                             object-fit: cover;
                         ">
                         <div style="
-                            padding: 3px 4px;
+                            padding: 6px 8px;
                             text-align: center;
-                            font-size: 8px;
+                            font-size: 10px;
                             font-weight: 500;
                             color: var(--text-primary);
-                            line-height: 1.1;
+                            line-height: 1.2;
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
                         ">${nft.name}</div>
-                        ${isPrimary ? '<div style="position: absolute; top: 1px; right: 1px; background: #9945FF; color: white; width: 10px; height: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 6px; font-weight: bold;">✓</div>' : ''}
+                        ${isPrimary ? '<div style="position: absolute; top: 4px; right: 4px; background: #9945FF; color: white; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold;">✓</div>' : ''}
                     </div>
                 `;
             }).join('');
 
-            return `<div style="${gridStyle}">${nftCards}</div>`;
+            const moreIndicator = hasMore ? `
+                <div style="
+                    text-align: center; 
+                    margin-top: 8px; 
+                    color: var(--text-secondary); 
+                    font-size: 11px;
+                    opacity: 0.7;
+                ">+${citizen.nfts.length - 6} more NFTs</div>
+            ` : '';
+
+            return `<div style="${gridStyle}">${nftCards}</div>${moreIndicator}`;
         }
 
         // Create popup content for citizens
