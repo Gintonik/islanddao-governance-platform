@@ -601,11 +601,11 @@ function startServer() {
   });
 
   // Set the port and start the server
-  const PORT = 5000;
+  const PORT = process.env.PORT || 5000;
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
+    console.log(`Server running on port ${PORT}`);
     console.log(`Open your browser to view the PERKS NFT collection grid!`);
-    console.log(`Visit http://localhost:${PORT}/citizen-map to view the Citizen Map`);
+    console.log(`Visit the deployed URL to view the Citizen Map`);
     
     // Set up daily NFT collection updates
     setTimeout(() => {

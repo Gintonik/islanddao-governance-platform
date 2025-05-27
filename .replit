@@ -14,11 +14,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Integrated Server"
+args = "Citizen Map DB Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Citizen Map DB Server"
+args = "Production Server"
 
 [[workflows.workflow]]
 name = "Database Sync"
@@ -30,15 +30,6 @@ task = "shell.exec"
 args = "node db-sync.js"
 
 [[workflows.workflow]]
-name = "Integrated Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node updated-index.js"
-waitForPort = 5000
-
-[[workflows.workflow]]
 name = "Citizen Map DB Server"
 author = "agent"
 
@@ -46,6 +37,15 @@ author = "agent"
 task = "shell.exec"
 args = "node citizen-map/db-integrated-server.js"
 waitForPort = 5001
+
+[[workflows.workflow]]
+name = "Production Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node updated-index.js"
+waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "npm install node-fetch && node index.js"]
