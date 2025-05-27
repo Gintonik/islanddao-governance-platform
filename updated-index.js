@@ -78,6 +78,7 @@ function startServer() {
         const collectionPath = path.join(__dirname, 'unified-index.html');
         console.log('Serving collection from path:', collectionPath);
         serveFile(res, collectionPath, 'text/html');
+        return;
       } 
       // API endpoint for NFT collection data
       else if (req.url === '/api/nfts') {
