@@ -1354,24 +1354,26 @@
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
-                <!-- Clean PERK Card -->
+                <!-- Collection-style PERK Card -->
                 ${imageUrl ? `<div style="text-align: center; margin-bottom: 16px;">
                     <div style="
                         position: relative; 
                         display: inline-block; 
                         cursor: pointer;
-                        background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%);
+                        background: #FAFAFA;
                         border-radius: 12px;
                         padding: 12px;
-                        box-shadow: 0 4px 12px rgba(33, 232, 163, 0.2);
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                         transition: all 0.2s ease;
-                        width: 160px;
-                    " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile">
+                        width: 140px;
+                        border: 1px solid rgba(0, 0, 0, 0.1);
+                    " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'">
                         <div style="
                             background: white;
                             border-radius: 8px;
                             padding: 8px;
                             margin-bottom: 8px;
+                            border: 1px solid rgba(0, 0, 0, 0.05);
                         ">
                             <img src="${imageUrl}" alt="Profile Picture" style="
                                 width: 100px; 
@@ -1383,11 +1385,12 @@
                             ">
                         </div>
                         <div style="
-                            color: white;
-                            font-size: 12px;
+                            color: #333;
+                            font-size: 11px;
                             font-weight: 600;
                             text-align: center;
                             margin-top: 4px;
+                            font-family: 'Inter', sans-serif;
                         ">
                             ${perkName}
                         </div>
@@ -1395,17 +1398,18 @@
                             position: absolute;
                             top: 8px;
                             right: 8px;
-                            width: 16px;
-                            height: 16px;
-                            background: white;
+                            width: 18px;
+                            height: 18px;
+                            background: rgba(33, 232, 163, 0.9);
                             border-radius: 50%;
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            font-size: 8px;
-                            color: #21E8A3;
+                            font-size: 9px;
+                            color: white;
                             font-weight: bold;
                             pointer-events: none;
+                            border: 2px solid white;
                         ">
                             →
                         </div>
