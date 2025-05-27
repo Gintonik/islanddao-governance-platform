@@ -62,6 +62,14 @@ function startServer() {
       // Serve the HTML file for the root route (NFT Grid)
       if (req.url === '/' || req.url === '/index.html') {
         serveFile(res, path.join(__dirname, 'unified-index.html'), 'text/html');
+      }
+      // Serve the original citizen map
+      else if (req.url === '/citizen-map') {
+        serveFile(res, path.join(__dirname, 'citizen-map', 'wallet-nft-map.html'), 'text/html');
+      }
+      // Serve the verified citizen map with wallet connection
+      else if (req.url === '/verified-map') {
+        serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
       } 
       // API endpoint for NFT collection data
       else if (req.url === '/api/nfts') {
