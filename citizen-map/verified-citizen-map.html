@@ -765,6 +765,13 @@
             setupEventListeners();
             loadCitizens();
             populateWalletOptions();
+            
+            // Initialize theme button text
+            const themeBtn = document.getElementById('themeToggle');
+            themeBtn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
+            
+            // Set initial theme attribute
+            document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
         });
 
         // Initialize Leaflet map
