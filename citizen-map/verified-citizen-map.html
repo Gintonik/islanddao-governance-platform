@@ -903,7 +903,17 @@
                         return;
                     }
 
-                    const imageUrl = citizen.pfpImageUrl || citizen.image_url || 'https://via.placeholder.com/40';
+                    // Get the correct NFT image from the database
+                    const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
+                    let imageUrl = 'https://via.placeholder.com/40';
+                    
+                    if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+                        imageUrl = citizen.nftMetadata[pfpNft].image;
+                    } else if (citizen.pfpImageUrl) {
+                        imageUrl = citizen.pfpImageUrl;
+                    } else if (citizen.image_url) {
+                        imageUrl = citizen.image_url;
+                    }
                     const icon = L.divIcon({
                         html: `<img src="${imageUrl}" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover;" onerror="this.src='https://via.placeholder.com/40'">`,
                         className: 'citizen-marker',
