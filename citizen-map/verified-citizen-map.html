@@ -1621,9 +1621,9 @@
                         const gridWidth = Math.min(2, cluster.length);
                         const gridHeight = Math.ceil(cluster.length / gridWidth);
                         
-                        // Minimal spacing - just enough to prevent overlap
-                        const spacingLat = degreeThreshold * 0.8;
-                        const spacingLng = degreeThreshold * 0.8;
+                        // Very tight spacing - keep pins as close as possible
+                        const spacingLat = degreeThreshold * 0.6;
+                        const spacingLng = degreeThreshold * 0.6;
                         
                         // Center the grid around the cluster center
                         const startLat = centerLat - ((gridHeight - 1) * spacingLat) / 2;
