@@ -946,7 +946,13 @@
             }
         }
 
-        // Connect to specific wallet
+        // Generate verification message with timestamp
+        function generateVerificationMessage() {
+            const timestamp = Date.now();
+            return `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
+        }
+
+        // Connect to specific wallet with signature verification
         async function connectWallet(walletType) {
             try {
                 let provider;
@@ -972,12 +978,47 @@
                     throw new Error('Wallet not found');
                 }
 
+                // Step 1: Connect to wallet
                 const response = await provider.connect();
-                currentWallet = response.publicKey.toString();
+                const publicKey = response.publicKey.toString();
+                
+                // Step 2: Request signature verification
+                const verificationMessage = generateVerificationMessage();
+                const encodedMessage = new TextEncoder().encode(verificationMessage);
+                
+                showNotification('Please sign the verification message in your wallet...', 'info');
+                
+                const signature = await provider.signMessage(encodedMessage, 'utf8');
+                
+                // Step 3: Verify signature on server side
+                const verificationResponse = await fetch('/api/verify-wallet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        publicKey: publicKey,
+                        message: verificationMessage,
+                        signature: Array.from(signature.signature)
+                    })
+                });
+                
+                if (!verificationResponse.ok) {
+                    throw new Error('Signature verification failed');
+                }
+                
+                const verificationResult = await verificationResponse.json();
+                if (!verificationResult.verified) {
+                    throw new Error('Invalid signature');
+                }
+                
+                // Step 4: Set verified wallet
+                currentWallet = publicKey;
                 
                 // Update UI
                 updateWalletUI();
                 closeWalletModal();
+                showNotification('Wallet connected and verified successfully!', 'success');
                 
                 // Load user's NFTs
                 await loadUserNfts();

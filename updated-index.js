@@ -183,6 +183,47 @@ function startServer() {
         });
       }
       
+      // New wallet verification endpoint for signature verification
+      else if (req.method === 'POST' && req.url === '/api/verify-wallet') {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', () => {
+          try {
+            const { publicKey, message, signature } = JSON.parse(body);
+            
+            if (!publicKey || !message || !signature) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Missing required fields' }));
+              return;
+            }
+            
+            // Convert signature array back to Uint8Array format for verification
+            const signatureBytes = new Uint8Array(signature);
+            const signatureBase58 = Buffer.from(signatureBytes).toString('base64');
+            
+            const isValid = verifySignature(message, signatureBase58, publicKey);
+            const isAdmin = isAdminWallet(publicKey);
+            
+            if (isValid) {
+              console.log(`✅ Verified wallet connection: ${publicKey}${isAdmin ? ' (ADMIN)' : ''}`);
+              sendJsonResponse(res, { 
+                verified: true, 
+                isAdmin,
+                wallet: publicKey 
+              });
+            } else {
+              console.log(`⚠️ Invalid signature during wallet connection: ${publicKey}`);
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ verified: false, error: 'Invalid signature' }));
+            }
+          } catch (error) {
+            console.error('Error verifying wallet:', error);
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ verified: false, error: 'Invalid request format' }));
+          }
+        });
+      }
+      
       // SECURE API endpoint to save citizen data (requires wallet verification)
       else if (req.method === 'POST' && req.url === '/api/save-citizen-verified') {
         let body = '';
