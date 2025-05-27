@@ -1524,7 +1524,11 @@
                     }
                 });
 
-                // Simple individual markers - clean and reliable
+                // Smart anti-overlap positioning system
+                const processedCitizens = [];
+                const markerSize = 40; // Size of markers in pixels
+                
+                // Process each citizen and calculate their display position
                 citizens.forEach(citizen => {
                     let lat, lng;
                     if (citizen.lat && citizen.lng) {
@@ -1543,31 +1547,104 @@
                     while (lng > 180) lng -= 360;
                     while (lng < -180) lng += 360;
                     
-                    const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-                    let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
-                    
-                    if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                        imageUrl = citizen.nftMetadata[pfpNft].image;
-                    } else if (citizen.pfpImageUrl) {
-                        imageUrl = citizen.pfpImageUrl;
-                    } else if (citizen.image_url) {
-                        imageUrl = citizen.image_url;
-                    }
-
-                    const icon = L.divIcon({
-                        html: `<img src="${imageUrl}" 
-                               style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" 
-                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'">`,
-                        className: 'citizen-marker',
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 20]
+                    processedCitizens.push({
+                        citizen,
+                        originalLat: lat,
+                        originalLng: lng,
+                        displayLat: lat,
+                        displayLng: lng
                     });
-
-                    const marker = L.marker([lat, lng], { icon }).addTo(map);
-                    marker.on('click', () => showCitizenPanel(citizen));
                 });
+
+                // Function to check if positions would overlap at current zoom
+                function calculateNonOverlappingPositions() {
+                    const zoom = map.getZoom();
+                    const pixelThreshold = 50; // Minimum distance in pixels between markers
+                    
+                    // Convert pixel threshold to degrees at current zoom
+                    const degreeThreshold = pixelThreshold / Math.pow(2, zoom) / 256 * 360;
+                    
+                    // Reset all positions to original
+                    processedCitizens.forEach(item => {
+                        item.displayLat = item.originalLat;
+                        item.displayLng = item.originalLng;
+                    });
+                    
+                    // Adjust positions to prevent overlaps
+                    for (let i = 0; i < processedCitizens.length; i++) {
+                        for (let j = i + 1; j < processedCitizens.length; j++) {
+                            const item1 = processedCitizens[i];
+                            const item2 = processedCitizens[j];
+                            
+                            const distance = Math.sqrt(
+                                Math.pow(item1.displayLat - item2.displayLat, 2) + 
+                                Math.pow(item1.displayLng - item2.displayLng, 2)
+                            );
+                            
+                            if (distance < degreeThreshold) {
+                                // Calculate offset direction
+                                const angle = Math.atan2(
+                                    item2.displayLat - item1.displayLat,
+                                    item2.displayLng - item1.displayLng
+                                );
+                                
+                                // Move them apart
+                                const offsetDistance = degreeThreshold * 0.6;
+                                item1.displayLat -= Math.sin(angle) * offsetDistance;
+                                item1.displayLng -= Math.cos(angle) * offsetDistance;
+                                item2.displayLat += Math.sin(angle) * offsetDistance;
+                                item2.displayLng += Math.cos(angle) * offsetDistance;
+                            }
+                        }
+                    }
+                }
+
+                // Create markers with smart positioning
+                function createSmartMarkers() {
+                    // Clear existing markers
+                    map.eachLayer(layer => {
+                        if (layer instanceof L.Marker && layer.options.className !== 'user-location-marker') {
+                            map.removeLayer(layer);
+                        }
+                    });
+                    
+                    calculateNonOverlappingPositions();
+                    
+                    processedCitizens.forEach(item => {
+                        const { citizen, displayLat, displayLng } = item;
+                        
+                        const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
+                        let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
+                        
+                        if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+                            imageUrl = citizen.nftMetadata[pfpNft].image;
+                        } else if (citizen.pfpImageUrl) {
+                            imageUrl = citizen.pfpImageUrl;
+                        } else if (citizen.image_url) {
+                            imageUrl = citizen.image_url;
+                        }
+
+                        const icon = L.divIcon({
+                            html: `<img src="${imageUrl}" 
+                                   style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: all 0.3s ease;" 
+                                   onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'">`,
+                            className: 'citizen-marker',
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 20]
+                        });
+
+                        const marker = L.marker([displayLat, displayLng], { icon }).addTo(map);
+                        marker.on('click', () => showCitizenPanel(citizen));
+                    });
+                }
                 
-                console.log(`Loaded ${citizens.length} citizens individually`);
+                // Initial marker creation
+                createSmartMarkers();
+                
+                // Update positions when zoom changes
+                map.on('zoomend', createSmartMarkers);
+                
+                console.log(`Loaded ${citizens.length} citizens with smart anti-overlap positioning`);
             } catch (error) {
                 console.error('Error loading citizens:', error);
                 showNotification('Failed to load citizen data', 'error');
