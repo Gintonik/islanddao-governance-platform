@@ -831,9 +831,6 @@
                 <span id="walletIcon">🔗</span>
                 <span id="walletText">Connect Wallet</span>
             </button>
-            <div id="walletDropdown" class="wallet-dropdown" style="display: none;">
-                <button onclick="disconnectWallet()" class="disconnect-btn">Disconnect</button>
-            </div>
         </div>
     </div>
 
@@ -1060,9 +1057,10 @@
         // Handle wallet connection
         async function handleWalletConnect() {
             if (currentWallet) {
-                // Show dropdown for disconnect option
-                const dropdown = document.getElementById('walletDropdown');
-                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                // Show confirmation dialog for disconnect
+                if (confirm('Do you want to disconnect your wallet?')) {
+                    disconnectWallet();
+                }
             } else {
                 // Show wallet selection modal
                 document.getElementById('walletModal').style.display = 'block';
@@ -1158,7 +1156,6 @@
             const walletIcon = document.getElementById('walletIcon');
             const walletText = document.getElementById('walletText');
             const addPinBtn = document.getElementById('addPinBtn');
-            const dropdown = document.getElementById('walletDropdown');
 
             if (currentWallet) {
                 walletBtn.classList.add('wallet-connected');
@@ -1176,9 +1173,6 @@
                 addPinBtn.classList.remove('enabled');
                 addPinBtn.style.opacity = '0.7';
                 addPinBtn.style.cursor = 'not-allowed';
-                
-                // Hide dropdown when disconnected
-                dropdown.style.display = 'none';
             }
         }
 
@@ -1190,19 +1184,8 @@
             selectedPfp = null;
             selectedPrimary = null;
             updateWalletUI();
-            document.getElementById('walletDropdown').style.display = 'none';
             showNotification('Wallet disconnected successfully', 'success');
         }
-
-        // Hide dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('walletDropdown');
-            const walletBtn = document.getElementById('walletBtn');
-            
-            if (dropdown && walletBtn && !walletBtn.contains(event.target) && !dropdown.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
 
         // ===== NFT LOADING =====
         async function loadUserNfts() {
