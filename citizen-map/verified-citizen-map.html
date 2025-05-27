@@ -1673,9 +1673,9 @@
             const hiddenCount = Math.max(0, citizens.length - maxVisible);
 
             // Calculate spacing for full-size profile pictures
-            const spacing = 20; // Space between pictures
+            const spacing = 8; // Closer spacing between pictures
             const picSize = 40; // Same size as individual pins
-            const totalWidth = maxVisible === 1 ? picSize : (maxVisible === 2 ? picSize * 2 + spacing : picSize * 2 + spacing * 2);
+            const totalWidth = maxVisible === 1 ? picSize : (maxVisible === 2 ? picSize * 2 + spacing : picSize * 2 + spacing);
             
             let clusterHtml = `<div style="position: relative; width: ${totalWidth}px; height: ${picSize + (maxVisible > 2 ? spacing + picSize : 0)}px;">`;
             
