@@ -4,7 +4,7 @@
 const fetch = require('node-fetch');
 
 // Configuration
-const HELIUS_RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
+const HELIUS_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || '088dfd59-6d2e-4695-a42a-2e0c257c2d00'}`;
 const COLLECTION_ADDRESS = '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8';
 
 /**
