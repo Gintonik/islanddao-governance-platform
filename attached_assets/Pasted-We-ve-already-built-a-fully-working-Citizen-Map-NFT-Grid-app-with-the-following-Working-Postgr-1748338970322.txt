@@ -1,0 +1,65 @@
+We’ve already built a fully working Citizen Map + NFT Grid app with the following:
+
+- Working PostgreSQL database (nfts, citizens, citizen_nfts)
+- Real-time Solana NFT ownership syncing via Helius
+- A fully functional frontend with pin placement, NFT grid, profile updates, and social linking
+- Leaflet map and Three.js globe (DO NOT MODIFY FUNCTIONALITY)
+- Wallet signature verification and admin controls
+
+Your task now is to **modernize the visual design** of the UI **without touching any logic, data, or functionality**.
+
+---
+
+🎯 GOAL: Make the UI look minimal and clean — similar to this V0.dev example:
+https://v0.dev/chat/minimal-product-card-kbQJhLeP3ox
+
+- Flat colors, clean spacing
+- Rounded corners (sm: 8px, lg: 16px)
+- Soft shadows (not harsh)
+- Use neutral backgrounds (dark gray or off-black)
+- Keep padding consistent (e.g. p-3, p-4)
+
+---
+
+🎨 THEME GUIDELINES: Match IslandDAO’s design language
+
+Use this Figma file for brand direction:
+https://www.figma.com/design/X6goiN2s3dtMH4WWBXCHm9/IslandDAO-Logo-Assets?node-id=0-1
+
+Color guidelines (based on brand aesthetic):
+
+- Background: #0F0F0F (deep charcoal)
+- Primary Accent: #21E8A3 (IslandDAO green)
+- Secondary Accent: #1D1D1D (for cards/panels)
+- Text: #FAFAFA for high contrast, #AFAFAF for muted secondary text
+- Button hover: slight glow using #21E8A3 with 0.3 opacity
+
+Typography: Use a clean sans-serif font like `Inter`, `Satoshi`, or `Space Grotesk` — pick one and apply consistently.
+
+---
+
+🎯 COMPONENTS TO UPDATE VISUALLY (BUT NOT FUNCTIONALLY):
+
+- Navbar/header (dark, slim, centered or left-aligned)
+- Map pin modal or popups (clean cards, shadowed, consistent padding)
+- Profile form (aligned inputs, no clutter, light borders)
+- NFT Grid (use the style of minimal product cards — border, image on top, details below)
+- Admin tools (subtle buttons, only visible to verified admin)
+- Tooltips / hover states (light glow or accent border — no harsh outlines)
+- Buttons (flat, rounded, use brand colors for CTA)
+
+---
+
+🛑 DO NOT:
+- Do not change or remove any backend or database code
+- Do not break the map, pin, or wallet interaction logic
+- Do not introduce placeholder data
+- Do not simulate UI — apply actual styles
+- Do not restructure working routes or scripts
+- Do not override user functionality or login logic
+
+---
+
+✅ You are ONLY restyling components and views.
+
+Let me know once all components follow a clean, IslandDAO-aligned style so I can test.
