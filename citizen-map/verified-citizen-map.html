@@ -218,6 +218,41 @@
             background-color: #f8f9fa;
         }
 
+        /* Light theme navigation styling */
+        [data-theme="light"] .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .logo {
+            color: #1a1a1a;
+        }
+
+        [data-theme="light"] .nav-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+
+        [data-theme="light"] .nav-button:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: #21E8A3;
+            color: #21E8A3;
+        }
+
+        /* Light theme controls styling */
+        [data-theme="light"] .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+
+        [data-theme="light"] .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: #21E8A3;
+            color: #21E8A3;
+        }
+
         /* Custom styling for leaflet container overflow */
         .leaflet-container {
             background-color: inherit !important;
@@ -1744,11 +1779,18 @@
             isDarkTheme = !isDarkTheme;
             updateMapTheme();
             
-            // Update body theme attribute for panel styling
+            // Update body theme attribute for all UI styling
             document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
             
+            // Update theme button text
             const themeBtn = document.getElementById('themeToggle');
             themeBtn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
+            
+            // Force map container background update
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.style.backgroundColor = isDarkTheme ? '#0F0F0F' : '#f8f9fa';
+            }
         }
 
         // Close wallet modal
