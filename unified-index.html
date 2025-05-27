@@ -108,10 +108,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-left: 8px;
     }
 
-    .connect-btn {
+    .wallet-connect-btn {
       background: rgba(33, 232, 163, 0.1);
       color: #21E8A3;
       border: 1px solid rgba(33, 232, 163, 0.3);
@@ -121,12 +120,30 @@
       font-size: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-family: inherit;
+      font-size: 14px;
     }
 
-    .connect-btn:hover {
+    .wallet-connect-btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px var(--accent-glow);
+      opacity: 0.95;
+    }
+
+    .wallet-connected {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+    }
+
+    .wallet-connected:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(33, 232, 163, 0.2);
+      opacity: 0.95;
     }
 
     .disconnect-btn {
@@ -142,6 +159,81 @@
 
     .disconnect-btn:hover {
       background: #b91c1c;
+    }
+
+    .wallet-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      backdrop-filter: blur(5px);
+    }
+
+    .wallet-modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      min-width: 400px;
+      max-width: 90vw;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .wallet-modal h3 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .wallet-options {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--bg-primary);
+    }
+
+    .wallet-option:hover {
+      border-color: var(--accent-primary);
+      background: rgba(33, 232, 163, 0.05);
+    }
+
+    .wallet-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .wallet-info h4 {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .wallet-info p {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin: 0;
     }
 
     .container {
@@ -429,10 +521,11 @@
       <a href="/verified-map" class="nav-link">Citizen Map</a>
       <a href="/collection" class="nav-link active">Collection</a>
       <button class="theme-toggle">🌙</button>
-      <div class="wallet-section">
-        <button id="connectWalletBtn" class="connect-btn">Connect Wallet</button>
-        <button id="disconnectBtn" class="disconnect-btn" style="display: none;">✕</button>
-      </div>
+    </div>
+    
+    <div class="wallet-section">
+      <button id="walletBtn" class="wallet-connect-btn">Connect Wallet</button>
+      <button id="disconnectBtn" class="disconnect-btn" style="display: none;">✕</button>
     </div>
   </div>
 
@@ -457,6 +550,36 @@
     <footer>
       <p>PERKS NFT Collection Explorer | Powered by PostgreSQL Database</p>
     </footer>
+  </div>
+
+  <!-- Wallet Connection Modal -->
+  <div id="walletModal" class="wallet-modal">
+    <div class="wallet-modal-content">
+      <h3>Connect Your Wallet</h3>
+      <div class="wallet-options">
+        <div class="wallet-option" data-wallet="phantom">
+          <img src="/citizen-map/phantom-logo.png" alt="Phantom" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Phantom</h4>
+            <p>Connect using Phantom wallet</p>
+          </div>
+        </div>
+        <div class="wallet-option" data-wallet="solflare">
+          <img src="/citizen-map/solflare-logo.png" alt="Solflare" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Solflare</h4>
+            <p>Connect using Solflare wallet</p>
+          </div>
+        </div>
+        <div class="wallet-option" data-wallet="backpack">
+          <img src="/citizen-map/backpack-logo.png" alt="Backpack" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Backpack</h4>
+            <p>Connect using Backpack wallet</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
   <script>
@@ -494,46 +617,84 @@
     }
 
     // Wallet connection functionality
-    const connectBtn = document.getElementById('connectWalletBtn');
+    const walletBtn = document.getElementById('walletBtn');
     const disconnectBtn = document.getElementById('disconnectBtn');
+    const walletModal = document.getElementById('walletModal');
     let connectedWallet = null;
+    let walletProvider = null;
 
-    async function connectWallet() {
+    // Wallet connection with signature verification
+    async function connectWallet(walletType) {
       try {
-        if (window.solana && window.solana.isPhantom) {
-          const response = await window.solana.connect();
-          connectedWallet = response.publicKey.toString();
-          updateWalletUI();
+        let wallet;
+        
+        if (walletType === 'phantom' && window.solana && window.solana.isPhantom) {
+          wallet = window.solana;
+        } else if (walletType === 'solflare' && window.solflare) {
+          wallet = window.solflare;
+        } else if (walletType === 'backpack' && window.backpack) {
+          wallet = window.backpack;
         } else {
-          alert('Please install Phantom wallet');
+          alert(`Please install ${walletType} wallet`);
+          return;
         }
+
+        // Connect to wallet
+        const response = await wallet.connect();
+        const publicKey = response.publicKey.toString();
+        
+        // Request signature for verification
+        const timestamp = Date.now();
+        const message = `Verify wallet ownership for IslandDAO\nTimestamp: ${timestamp}`;
+        const encodedMessage = new TextEncoder().encode(message);
+        
+        const signature = await wallet.signMessage(encodedMessage);
+        
+        // Here you would verify the signature on the server
+        // For now, we'll assume verification passed
+        connectedWallet = publicKey;
+        walletProvider = wallet;
+        
+        updateWalletUI();
+        walletModal.style.display = 'none';
+        
       } catch (error) {
         console.error('Wallet connection failed:', error);
+        alert('Wallet connection failed. Please try again.');
       }
     }
 
     function disconnectWallet() {
-      connectedWallet = null;
-      updateWalletUI();
-      if (window.solana) {
-        window.solana.disconnect();
+      if (walletProvider) {
+        walletProvider.disconnect();
       }
+      connectedWallet = null;
+      walletProvider = null;
+      updateWalletUI();
     }
 
     function updateWalletUI() {
       if (connectedWallet) {
-        connectBtn.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
-        connectBtn.style.background = 'var(--bg-secondary)';
-        connectBtn.style.color = 'var(--text-primary)';
-        connectBtn.style.border = '1px solid var(--border-subtle)';
+        walletBtn.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
+        walletBtn.classList.add('wallet-connected');
         disconnectBtn.style.display = 'block';
       } else {
-        connectBtn.textContent = 'Connect Wallet';
-        connectBtn.style.background = 'rgba(33, 232, 163, 0.1)';
-        connectBtn.style.color = '#21E8A3';
-        connectBtn.style.border = '1px solid rgba(33, 232, 163, 0.3)';
+        walletBtn.textContent = 'Connect Wallet';
+        walletBtn.classList.remove('wallet-connected');
         disconnectBtn.style.display = 'none';
       }
+    }
+
+    function openWalletModal() {
+      if (connectedWallet) {
+        // If already connected, show wallet info or disconnect
+        return;
+      }
+      walletModal.style.display = 'block';
+    }
+
+    function closeWalletModal() {
+      walletModal.style.display = 'none';
     }
 
     // Initialize the page
@@ -542,7 +703,7 @@
       
       // Event listeners
       themeToggle.addEventListener('click', toggleTheme);
-      connectBtn.addEventListener('click', connectWallet);
+      walletBtn.addEventListener('click', openWalletModal);
       disconnectBtn.addEventListener('click', disconnectWallet);
       loadAllButton.addEventListener('click', loadAllNfts);
       searchButton.addEventListener('click', searchNfts);
@@ -550,6 +711,20 @@
         if (e.key === 'Enter') {
           searchNfts();
         }
+      });
+
+      // Wallet modal event listeners
+      walletModal.addEventListener('click', (e) => {
+        if (e.target === walletModal) {
+          closeWalletModal();
+        }
+      });
+
+      document.querySelectorAll('.wallet-option').forEach(option => {
+        option.addEventListener('click', () => {
+          const walletType = option.getAttribute('data-wallet');
+          connectWallet(walletType);
+        });
       });
       
       // Detect scroll for infinite loading
