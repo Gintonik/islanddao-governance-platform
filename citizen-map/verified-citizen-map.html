@@ -1306,15 +1306,27 @@
             const content = document.getElementById('citizenPanelContent');
             const panelTitle = document.querySelector('.citizen-panel-title');
             
-            // Update panel title to show nickname instead of "Citizen Profile"
-            panelTitle.textContent = citizen.nickname || 'Anonymous Citizen';
+            // Update panel title to show nickname with enhanced styling
+            const nickname = citizen.nickname || 'Anonymous Citizen';
+            panelTitle.innerHTML = `<span style="
+                font-size: 16px; 
+                font-weight: 700; 
+                background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                text-shadow: 0 2px 4px rgba(33, 232, 163, 0.3);
+                letter-spacing: 0.5px;
+            ">${nickname}</span>`;
             
             const isVerified = citizen.wallet === currentWallet;
             const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-            let imageUrl = 'https://via.placeholder.com/80';
+            let imageUrl = 'https://via.placeholder.com/120';
+            let perkName = 'PERK NFT';
             
             if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
                 imageUrl = citizen.nftMetadata[pfpNft].image;
+                perkName = citizen.nftMetadata[pfpNft].name || 'PERK NFT';
             }
 
             const citizenName = citizen.nickname || 
@@ -1325,29 +1337,32 @@
 
             content.innerHTML = `
                 <!-- Bigger PFP with Visit Profile overlay -->
-                ${imageUrl ? `<div style="text-align: center; margin-bottom: 12px;">
+                ${imageUrl ? `<div style="text-align: center; margin-bottom: 8px;">
                     <div style="position: relative; display: inline-block; cursor: pointer;" onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile">
-                        <img src="${imageUrl}" alt="Profile Picture" style="width: 90px; height: 90px; border-radius: 12px; object-fit: cover; border: 2px solid #21E8A3;">
+                        <img src="${imageUrl}" alt="Profile Picture" style="width: 110px; height: 110px; border-radius: 16px; object-fit: cover; border: 3px solid #21E8A3; box-shadow: 0 4px 12px rgba(33, 232, 163, 0.3);">
                         <div style="
                             position: absolute;
-                            top: 4px;
-                            right: 4px;
-                            width: 16px;
-                            height: 16px;
-                            background: rgba(33, 232, 163, 0.8);
+                            top: 6px;
+                            right: 6px;
+                            width: 18px;
+                            height: 18px;
+                            background: rgba(33, 232, 163, 0.9);
                             border-radius: 50%;
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            font-size: 8px;
+                            font-size: 9px;
                             color: white;
                             font-weight: bold;
                             transition: all 0.2s ease;
-                            border: 1px solid rgba(255, 255, 255, 0.3);
+                            border: 2px solid rgba(255, 255, 255, 0.8);
                             pointer-events: none;
                         ">
                             →
                         </div>
+                    </div>
+                    <div style="margin-top: 6px; font-size: 10px; color: #AFAFAF; font-weight: 500;">
+                        ${perkName}
                     </div>
                 </div>` : ''}
                 
