@@ -61,7 +61,8 @@ function startServer() {
     try {
       // Serve the Verified Citizen Map as the default landing page
       if (req.url === '/' || req.url === '/index.html') {
-        const mapPath = path.resolve(__dirname, 'citizen-map', 'verified-citizen-map.html');
+        const mapPath = path.join(__dirname, 'citizen-map', 'verified-citizen-map.html');
+        console.log('Serving map from path:', mapPath);
         serveFile(res, mapPath, 'text/html');
       }
       // Serve the original citizen map
