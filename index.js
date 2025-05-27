@@ -331,13 +331,13 @@ function startServer() {
         });
       }
       
-      // ADMIN-ONLY: Clear all pins (requires admin wallet signature)
+      // ADMIN-ONLY: Clear all pins (requires admin wallet signature + double confirmation)
       else if (req.method === 'POST' && req.url === '/admin/clear-pins') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
         req.on('end', async () => {
           try {
-            const { wallet_address, original_message, signature } = JSON.parse(body);
+            const { wallet_address, original_message, signature, confirmation } = JSON.parse(body);
             
             // Verify admin wallet signature
             if (!verifySignature(original_message, signature, wallet_address) || !isAdminWallet(wallet_address)) {
@@ -347,14 +347,27 @@ function startServer() {
               return;
             }
             
+            // Require explicit confirmation to prevent accidental deletion
+            if (confirmation !== 'DELETE_ALL_PINS_CONFIRMED') {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Missing confirmation code. Data protection enabled.' }));
+              return;
+            }
+            
+            // Create backup before deletion
+            const allCitizens = await db.getAllCitizens();
+            console.log(`📦 Backup created: ${allCitizens.length} citizens before deletion`);
+            
             await db.clearAllCitizens();
-            console.log(`✅ Admin cleared all pins`);
+            console.log(`⚠️ Admin cleared all pins (${allCitizens.length} citizens removed)`);
             
             sendJsonResponse(res, { 
               success: true, 
-              message: 'All citizen pins cleared by admin' 
+              message: `All ${allCitizens.length} citizen pins cleared by admin`,
+              backup_count: allCitizens.length
             });
           } catch (error) {
+            console.error('Error in admin clear operation:', error);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Server error' }));
           }

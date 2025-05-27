@@ -950,6 +950,7 @@
                         await loadCitizens();
                         populateWalletOptions();
                         initializeTheme();
+                        startAutoRefresh(); // Start automatic updates
                         console.log('Application initialized successfully');
                     } catch (initError) {
                         console.error('Initialization error:', initError);
@@ -960,6 +961,46 @@
                 console.error('App initialization failed:', error);
                 showNotification('Application failed to load. Please refresh the page.', 'error');
             }
+        }
+
+        // ===== REAL-TIME UPDATES =====
+        let lastUpdateTime = Date.now();
+        let autoRefreshInterval;
+
+        function startAutoRefresh() {
+            // Check for new pins every 10 seconds
+            autoRefreshInterval = setInterval(async () => {
+                try {
+                    await checkForUpdates();
+                } catch (error) {
+                    console.error('Auto-refresh error:', error);
+                }
+            }, 10000);
+        }
+
+        async function checkForUpdates() {
+            try {
+                const response = await fetch('/api/citizens');
+                const citizens = await response.json();
+                
+                // Check if citizen count changed
+                const currentMarkerCount = map._layers ? Object.keys(map._layers).filter(key => 
+                    map._layers[key]._icon && map._layers[key]._icon.classList.contains('citizen-marker')).length : 0;
+                
+                if (citizens.length !== currentMarkerCount) {
+                    console.log('New citizens detected, refreshing map...');
+                    await loadCitizens();
+                }
+            } catch (error) {
+                console.error('Error checking for updates:', error);
+            }
+        }
+
+        function broadcastUpdate() {
+            // Force immediate update check in 2 seconds for smooth UX
+            setTimeout(() => {
+                checkForUpdates();
+            }, 2000);
         }
 
         function initializeTheme() {
@@ -1353,6 +1394,8 @@
                     showNotification('Verified pin created successfully!', 'success');
                     closePinForm();
                     loadCitizens(); // Reload the map
+                    // Trigger refresh for all other users
+                    broadcastUpdate();
                 } else {
                     throw new Error(result.error || 'Failed to create pin');
                 }
