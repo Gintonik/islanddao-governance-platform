@@ -217,7 +217,8 @@ async function getAllCitizens() {
     try {
       // Get all citizens
       const citizens = await client.query(`
-        SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.pfp_nft, c.message, c.created_at
+        SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.pfp_nft, c.message, c.created_at,
+               c.nickname, c.bio, c.twitter_handle, c.telegram_handle, c.discord_handle
         FROM citizens c
         ORDER BY c.created_at DESC
       `);
@@ -241,7 +242,14 @@ async function getAllCitizens() {
           location: [citizen.lat, citizen.lng],
           primaryNft: citizen.primary_nft,
           pfp: citizen.pfp_nft, // Include the profile image NFT
+          pfp_nft: citizen.pfp_nft,
+          primary_nft: citizen.primary_nft,
           message: citizen.message,
+          nickname: citizen.nickname,
+          bio: citizen.bio,
+          twitter_handle: citizen.twitter_handle,
+          telegram_handle: citizen.telegram_handle,
+          discord_handle: citizen.discord_handle,
           nfts: nftsResult.rows.map(n => n.mint_id),
           timestamp: citizen.created_at,
           nftMetadata: {}
