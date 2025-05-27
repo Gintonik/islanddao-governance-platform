@@ -205,6 +205,22 @@
         #map {
             height: 100%;
             width: 100%;
+            background-color: #0F0F0F; /* Dark background for overflow areas */
+        }
+
+        /* Dark theme map styling */
+        [data-theme="dark"] #map {
+            background-color: #0F0F0F;
+        }
+
+        /* Light theme map styling */
+        [data-theme="light"] #map {
+            background-color: #f8f9fa;
+        }
+
+        /* Custom styling for leaflet container overflow */
+        .leaflet-container {
+            background-color: inherit !important;
         }
 
         .controls {
