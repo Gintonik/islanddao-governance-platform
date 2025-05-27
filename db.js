@@ -236,6 +236,7 @@ async function getAllCitizens() {
         wallet: formattedCitizen.wallet,
         nickname: formattedCitizen.nickname,
         bio: formattedCitizen.bio,
+        location: formattedCitizen.location,
         twitter: formattedCitizen.twitter_handle,
         telegram: formattedCitizen.telegram_handle,
         discord: formattedCitizen.discord_handle
