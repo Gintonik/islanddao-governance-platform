@@ -284,6 +284,12 @@ function startServer() {
               }
             };
             
+            console.log('About to save citizen data:', {
+              nickname: citizenData.nickname,
+              bio: citizenData.bio,
+              wallet: citizenData.wallet
+            });
+            
             const citizenId = await db.saveCitizen(citizenData);
             
             console.log(`✅ Verified citizen profile saved for wallet: ${wallet_address}`);
