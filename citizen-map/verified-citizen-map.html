@@ -1099,7 +1099,10 @@
                 minZoom: 2,
                 maxZoom: 18,
                 zoomControl: true,
-                preferCanvas: true // Better performance for many markers
+                preferCanvas: true, // Better performance for many markers
+                worldCopyJump: true, // Enable smooth wrapping to opposite side
+                maxBounds: [[-90, -180], [90, 180]], // Restrict to single world
+                maxBoundsViscosity: 1.0 // Strong boundary enforcement
             });
 
             // Remove zoom event listener to prevent errors
@@ -1535,6 +1538,10 @@
                     }
                     
                     if (isNaN(lat) || isNaN(lng)) return;
+                    
+                    // Normalize longitude to be within -180 to 180 range
+                    while (lng > 180) lng -= 360;
+                    while (lng < -180) lng += 360;
                     
                     const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
                     let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
