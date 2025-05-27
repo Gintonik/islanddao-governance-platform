@@ -1666,17 +1666,22 @@
             marker.on('click', () => showCitizenPanel(citizen));
         }
 
-        // Create cluster marker showing multiple citizens
+        // Create cluster marker showing multiple citizens at full size
         function createClusterMarker(citizens, lat, lng) {
-            const maxVisible = 4; // Show up to 4 profile pictures
+            const maxVisible = Math.min(citizens.length, 4); // Show up to 4 profile pictures
             const visibleCitizens = citizens.slice(0, maxVisible);
             const hiddenCount = Math.max(0, citizens.length - maxVisible);
 
-            let clusterHtml = '<div style="position: relative; width: 60px; height: 60px;">';
+            // Calculate spacing for full-size profile pictures
+            const spacing = 20; // Space between pictures
+            const picSize = 40; // Same size as individual pins
+            const totalWidth = maxVisible === 1 ? picSize : (maxVisible === 2 ? picSize * 2 + spacing : picSize * 2 + spacing * 2);
+            
+            let clusterHtml = `<div style="position: relative; width: ${totalWidth}px; height: ${picSize + (maxVisible > 2 ? spacing + picSize : 0)}px;">`;
             
             visibleCitizens.forEach((citizen, index) => {
                 const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-                let imageUrl = 'https://via.placeholder.com/30';
+                let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
                 
                 if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
                     imageUrl = citizen.nftMetadata[pfpNft].image;
@@ -1686,18 +1691,19 @@
                     imageUrl = citizen.image_url;
                 }
 
+                // Position citizens in a 2x2 grid layout with full size
                 const positions = [
-                    'top: 0px; left: 0px;',      // Top-left
-                    'top: 0px; right: 0px;',     // Top-right
-                    'bottom: 0px; left: 0px;',   // Bottom-left
-                    'bottom: 0px; right: 0px;'   // Bottom-right
+                    `top: 0px; left: 0px;`,                           // Top-left
+                    `top: 0px; left: ${picSize + spacing}px;`,        // Top-right  
+                    `top: ${picSize + spacing}px; left: 0px;`,        // Bottom-left
+                    `top: ${picSize + spacing}px; left: ${picSize + spacing}px;`  // Bottom-right
                 ];
 
                 const posStyle = positions[index] || positions[0];
-                const style = `position: absolute; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #4facfe; object-fit: cover; ${posStyle}`;
+                const style = `position: absolute; width: ${picSize}px; height: ${picSize}px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; ${posStyle} box-shadow: 0 2px 8px rgba(0,0,0,0.3);`;
 
                 clusterHtml += `<img src="${imageUrl}" style="${style}" 
-                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'" loading="lazy">`;
+                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'" loading="lazy">`;
             });
 
             if (hiddenCount > 0) {
