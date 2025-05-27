@@ -1549,15 +1549,20 @@
             const clusters = [];
             const processed = new Set();
             
-            // Dynamic clustering distance based on zoom level
+            // Ultra-simple clustering: only cluster at very low zoom levels
             const zoom = map.getZoom();
             let clusterDistance;
-            if (zoom <= 3) clusterDistance = 10.0;      // World view - cluster across continents
-            else if (zoom <= 5) clusterDistance = 5.0;  // Continental view  
-            else if (zoom <= 7) clusterDistance = 2.0;  // Country view
-            else if (zoom <= 9) clusterDistance = 1.0;  // Regional view
-            else if (zoom <= 11) clusterDistance = 0.5; // City view
-            else clusterDistance = 0.1;                 // Street view - minimal clustering
+            
+            if (zoom >= 8) {
+                // At zoom 8 and above, never cluster - show all individual pins
+                clusterDistance = 0;
+            } else if (zoom >= 5) {
+                // Medium zoom: very minimal clustering
+                clusterDistance = 1.0;
+            } else {
+                // Only cluster at world view
+                clusterDistance = 6.0;
+            }
             
             console.log(`Zoom: ${zoom}, Cluster distance: ${clusterDistance} degrees`);
 
