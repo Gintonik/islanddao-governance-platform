@@ -802,6 +802,7 @@
         <div class="nav-container" style="display: flex; gap: 6px; align-items: center;">
             <a href="/" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Collection</a>
             <a href="/verified-map" style="color: #21E8A3; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; background: rgba(33, 232, 163, 0.1); border: 1px solid rgba(33, 232, 163, 0.3);">Map</a>
+            <button id="themeToggle" class="nav-button" style="color: #AFAFAF; background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 10px; border-radius: 4px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">🌙</button>
         </div>
         
         <div class="wallet-section">
@@ -816,8 +817,6 @@
         <div id="map"></div>
         <div class="controls">
             <button id="addPinBtn" class="control-btn add-pin-btn">Add Your Pin</button>
-            <button id="themeToggle" class="control-btn theme-toggle">🌙 Dark</button>
-            <button id="goToCollection" class="control-btn">View Collection</button>
         </div>
     </div>
 
@@ -944,7 +943,7 @@
 
         function initializeTheme() {
             const themeBtn = document.getElementById('themeToggle');
-            themeBtn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
+            themeBtn.textContent = isDarkTheme ? '☀️' : '🌙';
             document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
         }
 
@@ -990,9 +989,6 @@
             document.getElementById('walletBtn').addEventListener('click', handleWalletConnect);
             document.getElementById('addPinBtn').addEventListener('click', handleAddPin);
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-            document.getElementById('goToCollection').addEventListener('click', () => {
-                window.location.href = '/';
-            });
             document.getElementById('pinForm').addEventListener('submit', handleSubmitPin);
 
             // Map click event for location selection and panel closing
@@ -1782,9 +1778,9 @@
             // Update body theme attribute for all UI styling
             document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
             
-            // Update theme button text
+            // Update theme button symbol
             const themeBtn = document.getElementById('themeToggle');
-            themeBtn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
+            themeBtn.textContent = isDarkTheme ? '☀️' : '🌙';
             
             // Force map container background update
             const mapContainer = document.getElementById('map');
