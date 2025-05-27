@@ -197,6 +197,12 @@ async function getAllCitizens() {
       ORDER BY c.created_at DESC
     `);
     
+    console.log('Raw citizen data from database:', citizens.rows.map(c => ({
+      wallet: c.wallet,
+      nickname: c.nickname,
+      bio: c.bio
+    })));
+    
     const result = [];
     
     // For each citizen, get their NFTs
