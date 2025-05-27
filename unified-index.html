@@ -207,9 +207,27 @@
     
     .nft-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
       margin-bottom: 3rem;
+    }
+
+    @media (max-width: 1200px) {
+      .nft-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .nft-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .nft-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
     
     .nft-card {
