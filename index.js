@@ -50,7 +50,7 @@ const server = http.createServer((req, res) => {
   }
   // Handle requests for the citizen-map page
   else if (req.url.startsWith('/citizen-map')) {
-    res.writeHead(302, { 'Location': 'http://localhost:5001/' });
+    res.writeHead(302, { 'Location': '/verified-map' });
     res.end();
   }
   else {
