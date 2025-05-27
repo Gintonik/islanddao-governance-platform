@@ -234,6 +234,8 @@ function startServer() {
         req.on('end', async () => {
           try {
             const data = JSON.parse(body);
+            console.log('Raw pin creation data received:', data);
+            
             const { wallet_address, original_message, signature } = data;
             
             console.log('Pin creation form data received:', {
