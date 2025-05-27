@@ -61,7 +61,8 @@ function startServer() {
     try {
       // Serve the Verified Citizen Map as the default landing page
       if (req.url === '/' || req.url === '/index.html') {
-        serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
+        const mapPath = path.resolve(__dirname, 'citizen-map', 'verified-citizen-map.html');
+        serveFile(res, mapPath, 'text/html');
       }
       // Serve the original citizen map
       else if (req.url === '/citizen-map') {
@@ -602,26 +603,38 @@ function startServer() {
 
 // Helper function to serve files
 function serveFile(res, filePath, contentType) {
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        if (!res.headersSent) {
-          res.writeHead(404);
-          res.end('File not found');
-        }
-      } else {
-        if (!res.headersSent) {
-          res.writeHead(500);
-          res.end(`Server error: ${err.code}`);
-        }
+  // Check if path exists and is a file (not directory)
+  fs.stat(filePath, (statErr, stats) => {
+    if (statErr) {
+      if (!res.headersSent) {
+        res.writeHead(404);
+        res.end('File not found');
       }
       return;
     }
     
-    if (!res.headersSent) {
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(content);
+    if (stats.isDirectory()) {
+      if (!res.headersSent) {
+        res.writeHead(403);
+        res.end('Cannot serve directory');
+      }
+      return;
     }
+    
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end(`Server error: ${err.code}`);
+        }
+        return;
+      }
+      
+      if (!res.headersSent) {
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(content);
+      }
+    });
   });
 }
 
