@@ -1020,6 +1020,14 @@
                 preferCanvas: true // Better performance for many markers
             });
 
+            // Add zoom event listener for dynamic clustering
+            map.on('zoomend', () => {
+                if (window.citizenData && window.citizenData.length > 0) {
+                    console.log('Zoom changed, refreshing clusters...');
+                    loadCitizens(); // Refresh clusters with new zoom level
+                }
+            });
+
             updateMapTheme();
         }
 
@@ -1458,7 +1466,18 @@
         function createCitizenClusters(citizens) {
             const clusters = [];
             const processed = new Set();
-            const clusterDistance = 0.01; // ~1km at equator
+            
+            // Dynamic clustering distance based on zoom level
+            const zoom = map.getZoom();
+            let clusterDistance;
+            if (zoom <= 3) clusterDistance = 10.0;      // World view - cluster across continents
+            else if (zoom <= 5) clusterDistance = 5.0;  // Continental view  
+            else if (zoom <= 7) clusterDistance = 2.0;  // Country view
+            else if (zoom <= 9) clusterDistance = 1.0;  // Regional view
+            else if (zoom <= 11) clusterDistance = 0.5; // City view
+            else clusterDistance = 0.1;                 // Street view - minimal clustering
+            
+            console.log(`Zoom: ${zoom}, Cluster distance: ${clusterDistance} degrees`);
 
             citizens.forEach((citizen, index) => {
                 if (processed.has(index)) return;

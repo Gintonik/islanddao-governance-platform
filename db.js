@@ -219,7 +219,7 @@ async function getAllCitizens() {
       const formattedCitizen = {
         id: citizen.id,
         wallet: citizen.wallet,
-        location: [citizen.lat, citizen.lng],
+        location: [parseFloat(citizen.lat), parseFloat(citizen.lng)],
         primaryNft: citizen.primary_nft,
         message: citizen.message,
         nickname: citizen.nickname,
