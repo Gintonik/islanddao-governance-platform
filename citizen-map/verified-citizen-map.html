@@ -1228,24 +1228,21 @@
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
-                <div class="citizen-profile">
-                    <img src="${imageUrl}" alt="Profile" class="citizen-avatar">
-                    <div class="citizen-name">
-                        ${citizenName}
-                        ${isVerified ? '<span style="color: #56ab2f; font-size: 0.8em;">✓ You</span>' : ''}
+                <div style="text-align: center;">
+                    ${imageUrl ? `<img src="${imageUrl}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #9945FF; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">` : ''}
+                    <div style="margin: 0 0 10px 0; display: flex; justify-content: center; align-items: center;">
+                        ${citizenName !== 'Anonymous Citizen' ? `<h3 style="margin: 0; color: var(--text-primary); font-size: 20px;">${citizenName}</h3>` : `<img src="citizen-map/islanddao-logo.png" alt="IslandDAO" style="height: 30px; width: auto;">`}
                     </div>
-                    ${citizenBio ? `<div class="citizen-bio">${citizenBio}</div>` : ''}
+                    ${citizenBio && citizenBio !== 'No bio provided yet.' ? `<p style="margin: 10px 0; color: var(--text-secondary); font-style: italic; font-size: 14px;">${citizenBio}</p>` : ''}
                     
-                    <div class="citizen-wallet" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" style="cursor: pointer;">
+                    <div style="background: var(--wallet-bg); padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; font-size: 12px; color: var(--text-primary); cursor: pointer;" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')">
                         ${citizen.wallet}
                     </div>
-                </div>
-
-                ${createSocialLinksPanel(citizen)}
-
-                <div class="citizen-nfts">
-                    <div class="section-title">NFT Collection (${citizen.nfts ? citizen.nfts.length : 0})</div>
-                    <div class="nft-collection">
+                    
+                    ${createSocialLinksPanel(citizen)}
+                    
+                    <div style="border-top: 1px solid var(--panel-border); margin-top: 20px; padding-top: 15px;">
+                        <h4 style="margin: 0 0 15px 0; color: var(--text-primary); font-size: 16px;">NFT Collection (${citizen.nfts ? citizen.nfts.length : 0})</h4>
                         ${createNftGrid(citizen)}
                     </div>
                 </div>
