@@ -5,8 +5,13 @@ const fs = require('fs');
 async function fetchNFTsFromHelius() {
   console.log('Fetching NFTs directly from Helius DAS API...');
   
+  const apiKey = process.env.HELIUS_API_KEY;
+  if (!apiKey) {
+    throw new Error('HELIUS_API_KEY environment variable is required');
+  }
+  
   try {
-    const response = await fetch('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', {
+    const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
