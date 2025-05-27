@@ -1354,39 +1354,67 @@
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
-                <!-- Bigger PFP with Visit Profile overlay -->
-                ${imageUrl ? `<div style="text-align: center; margin-bottom: 8px;">
-                    <div style="position: relative; display: inline-block; cursor: pointer;" onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile">
-                        <img src="${imageUrl}" alt="Profile Picture" style="width: 140px; height: 140px; border-radius: 20px; object-fit: contain; background: rgba(255, 255, 255, 0.1); border: 3px solid #21E8A3; box-shadow: 0 6px 16px rgba(33, 232, 163, 0.3);">
+                <!-- PERK Card with PFP and Name -->
+                ${imageUrl ? `<div style="text-align: center; margin-bottom: 16px;">
+                    <div style="
+                        position: relative; 
+                        display: inline-block; 
+                        cursor: pointer;
+                        background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%);
+                        border-radius: 16px;
+                        padding: 16px;
+                        box-shadow: 0 8px 24px rgba(33, 232, 163, 0.3);
+                        transition: all 0.3s ease;
+                        width: 200px;
+                    " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div style="
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 12px;
+                            padding: 12px;
+                            margin-bottom: 12px;
+                        ">
+                            <img src="${imageUrl}" alt="Profile Picture" style="
+                                width: 120px; 
+                                height: 120px; 
+                                border-radius: 8px; 
+                                object-fit: contain; 
+                                background: rgba(255, 255, 255, 0.9);
+                                display: block;
+                                margin: 0 auto;
+                            ">
+                        </div>
+                        <div style="
+                            color: white;
+                            font-size: 14px;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            text-align: center;
+                            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                        ">
+                            ${perkName}
+                        </div>
                         <div style="
                             position: absolute;
-                            top: 8px;
-                            right: 8px;
-                            width: 22px;
-                            height: 22px;
-                            background: rgba(33, 232, 163, 0.9);
+                            top: 12px;
+                            right: 12px;
+                            width: 20px;
+                            height: 20px;
+                            background: rgba(255, 255, 255, 0.9);
                             border-radius: 50%;
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            font-size: 11px;
-                            color: white;
+                            font-size: 10px;
+                            color: #21E8A3;
                             font-weight: bold;
                             transition: all 0.2s ease;
-                            border: 2px solid rgba(255, 255, 255, 0.8);
                             pointer-events: none;
                         ">
                             →
                         </div>
                     </div>
                 </div>` : ''}
-                
-                <!-- PERK name -->
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <div style="font-size: 12px; color: #21E8A3; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;">
-                        ${perkName}
-                    </div>
-                </div>
                 
                 <!-- Tags: IslandDAO Citizen and Perks Holder -->
                 <div style="text-align: center; margin-bottom: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
