@@ -245,12 +245,14 @@
 
         .citizen-panel {
             position: fixed;
-            top: 80px;
-            right: -350px;
-            width: 330px;
-            height: calc(100vh - 80px);
-            background: white;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            top: 100px;
+            right: -280px;
+            width: 260px;
+            height: auto;
+            max-height: calc(100vh - 120px);
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            box-shadow: -3px 0 15px rgba(0, 0, 0, 0.15);
             transition: right 0.3s ease;
             z-index: 1500;
             overflow-y: auto;
@@ -258,102 +260,127 @@
         }
 
         .citizen-panel.open {
-            right: 0;
+            right: 10px;
         }
 
         .citizen-panel-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e5e5;
-            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid var(--panel-border);
+            background: var(--panel-header-bg);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .citizen-panel-title {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
             margin: 0;
         }
 
         .close-panel {
             background: none;
             border: none;
-            color: #666;
-            font-size: 18px;
+            color: var(--text-secondary);
+            font-size: 16px;
             cursor: pointer;
             padding: 4px;
-            border-radius: 4px;
-            transition: background 0.2s ease;
+            border-radius: 3px;
+            transition: all 0.2s ease;
         }
 
         .close-panel:hover {
-            background: #e9ecef;
+            background: var(--panel-hover);
+            color: var(--text-primary);
         }
 
         .citizen-panel-content {
-            padding: 1.5rem;
+            padding: 1rem;
+        }
+
+        /* Theme Variables */
+        :root {
+            --panel-bg: white;
+            --panel-header-bg: #f8f9fa;
+            --panel-border: #e5e5e5;
+            --panel-hover: #e9ecef;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --wallet-bg: #f8f9fa;
+            --wallet-hover: #e9ecef;
+        }
+
+        [data-theme="dark"] {
+            --panel-bg: #2d3748;
+            --panel-header-bg: #1a202c;
+            --panel-border: #4a5568;
+            --panel-hover: #4a5568;
+            --text-primary: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --wallet-bg: #1a202c;
+            --wallet-hover: #2d3748;
         }
 
         .citizen-profile {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .citizen-avatar {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            margin: 0 auto 1rem;
+            margin: 0 auto 0.75rem;
             object-fit: cover;
-            border: 3px solid #4facfe;
+            border: 2px solid #4facfe;
         }
 
         .citizen-name {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
-            color: #333;
+            color: var(--text-primary);
         }
 
         .citizen-bio {
-            color: #666;
+            color: var(--text-secondary);
             font-style: italic;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            line-height: 1.4;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            line-height: 1.3;
         }
 
         .citizen-wallet {
-            background: #f8f9fa;
-            padding: 0.75rem;
-            border-radius: 6px;
+            background: var(--wallet-bg);
+            padding: 0.5rem;
+            border-radius: 4px;
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             word-break: break-all;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             cursor: pointer;
             transition: background 0.2s ease;
+            color: var(--text-primary);
         }
 
         .citizen-wallet:hover {
-            background: #e9ecef;
+            background: var(--wallet-hover);
         }
 
         .citizen-socials {
             display: flex;
             justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 0.4rem;
+            margin-bottom: 0.75rem;
         }
 
         .social-link {
-            padding: 0.5rem 0.75rem;
-            border-radius: 4px;
+            padding: 0.4rem 0.6rem;
+            border-radius: 3px;
             text-decoration: none;
             color: white;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 500;
             cursor: pointer;
             transition: opacity 0.2s ease;
@@ -376,27 +403,27 @@
         }
 
         .citizen-nfts {
-            border-top: 1px solid #e5e5e5;
-            padding-top: 1rem;
+            border-top: 1px solid var(--panel-border);
+            padding-top: 0.75rem;
         }
 
         .section-title {
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 1rem;
-            color: #333;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
         }
 
         .nft-collection {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
         .nft-card {
-            background: white;
-            border: 1px solid #e5e5e5;
-            border-radius: 6px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
             overflow: hidden;
             transition: border-color 0.2s ease;
             cursor: pointer;
@@ -408,33 +435,33 @@
 
         .nft-card.primary {
             border-color: #56ab2f;
-            background: #f8fff8;
+            background: var(--wallet-bg);
         }
 
         .nft-image-small {
             width: 100%;
-            height: 70px;
+            height: 50px;
             object-fit: cover;
         }
 
         .nft-info {
-            padding: 0.5rem;
+            padding: 0.4rem;
             text-align: center;
         }
 
         .nft-name-small {
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: 500;
-            color: #333;
-            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
         }
 
         .primary-badge {
             background: #56ab2f;
             color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 0.6rem;
             font-weight: 500;
         }
 
@@ -783,7 +810,7 @@
             });
             document.getElementById('pinForm').addEventListener('submit', handleSubmitPin);
 
-            // Map click event for location selection
+            // Map click event for location selection and panel closing
             map.on('click', function(e) {
                 if (isPickingLocation) {
                     selectedLocation = e.latlng;
@@ -791,6 +818,9 @@
                     isPickingLocation = false;
                     document.getElementById('addPinBtn').textContent = 'Add Your Pin';
                     openPinForm();
+                } else {
+                    // Close citizen panel when clicking on map
+                    closeCitizenPanel();
                 }
             });
         }
@@ -1316,6 +1346,9 @@
         function toggleTheme() {
             isDarkTheme = !isDarkTheme;
             updateMapTheme();
+            
+            // Update body theme attribute for panel styling
+            document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
             
             const themeBtn = document.getElementById('themeToggle');
             themeBtn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
