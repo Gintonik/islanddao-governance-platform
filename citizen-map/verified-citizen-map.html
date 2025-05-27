@@ -882,8 +882,24 @@
 
                 // Add citizen markers
                 citizens.forEach(citizen => {
-                    if (!citizen.lat || !citizen.lng) {
+                    // Handle coordinate parsing for both formats
+                    let lat, lng;
+                    
+                    if (citizen.lat && citizen.lng) {
+                        // New format
+                        lat = parseFloat(citizen.lat);
+                        lng = parseFloat(citizen.lng);
+                    } else if (citizen.location && Array.isArray(citizen.location) && citizen.location.length === 2) {
+                        // Legacy format
+                        lat = parseFloat(citizen.location[0]);
+                        lng = parseFloat(citizen.location[1]);
+                    } else {
                         console.log('Skipping citizen with missing coordinates:', citizen);
+                        return;
+                    }
+
+                    if (isNaN(lat) || isNaN(lng)) {
+                        console.log('Skipping citizen with invalid coordinates:', citizen);
                         return;
                     }
 
@@ -895,7 +911,7 @@
                         iconAnchor: [23, 23]
                     });
 
-                    const marker = L.marker([parseFloat(citizen.lat), parseFloat(citizen.lng)], { icon }).addTo(map);
+                    const marker = L.marker([lat, lng], { icon }).addTo(map);
                     
                     // Create popup content
                     const isVerified = citizen.wallet === currentWallet;
