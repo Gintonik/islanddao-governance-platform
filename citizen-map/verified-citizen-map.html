@@ -1370,14 +1370,28 @@
                         border: 1px solid #e0e0e0;
                     " onclick="alert('Citizens Profile feature coming soon!')" title="Visit Profile" onmouseover="this.style.transform='rotate(-1deg) translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.2)'" onmouseout="this.style.transform='rotate(-1deg) translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'">
 
-                        <img src="${imageUrl}" alt="Profile Picture" style="
-                            width: 150px; 
-                            height: 150px; 
-                            object-fit: contain; 
-                            display: block;
-                            margin: 0 auto 8px auto;
-                            background: #f9f9f9;
-                        ">
+                        <div style="position: relative; display: inline-block; margin: 0 auto 8px auto;">
+                            <img src="${imageUrl}" alt="Profile Picture" style="
+                                width: 150px; 
+                                height: 150px; 
+                                object-fit: contain; 
+                                display: block;
+                                background: #f9f9f9;
+                            ">
+                            <!-- IslandDAO Verification Stamp -->
+                            <img src="/citizen-map/islanddao-stamp.png" alt="Verified" style="
+                                position: absolute;
+                                top: 15px;
+                                right: 10px;
+                                width: 40px;
+                                height: 40px;
+                                opacity: 0.7;
+                                transform: rotate(12deg);
+                                filter: sepia(100%) saturate(300%) hue-rotate(320deg) brightness(0.8);
+                                mix-blend-mode: multiply;
+                                pointer-events: none;
+                            ">
+                        </div>
                         <div style="
                             color: #333;
                             font-size: 12px;
