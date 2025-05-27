@@ -67,8 +67,8 @@ const spacingLat = degreeThreshold * 0.6; // Ultra-tight spacing
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Gintonik/SolanaNFTMAP.git
-   cd SolanaNFTMAP
+   git clone https://github.com/Gintonik/Solana-NFT-Citizen-Map.git
+   cd Solana-NFT-Citizen-Map
    ```
 
 2. **Install dependencies**
