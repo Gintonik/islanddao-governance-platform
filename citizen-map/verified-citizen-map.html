@@ -121,8 +121,10 @@
 
         .wallet-modal h3 {
             text-align: center;
-            margin-bottom: 1.5rem;
-            color: #333;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 18px;
         }
 
         .wallet-options {
@@ -133,19 +135,19 @@
         .wallet-option {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
+            transition: all 0.2s ease;
+            background: var(--bg-primary);
         }
 
         .wallet-option:hover {
-            border-color: #4facfe;
-            background: #f8fffe;
-            transform: translateY(-2px);
+            border-color: var(--accent-primary);
+            background: var(--panel-hover);
+            box-shadow: 0 0 0 1px var(--accent-glow);
         }
 
         .wallet-icon {
@@ -160,23 +162,36 @@
 
         .wallet-name {
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
         }
 
         .wallet-status {
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 14px;
+            color: var(--text-secondary);
         }
 
         .close-modal {
             position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 24px;
+            top: 12px;
+            right: 12px;
+            background: var(--panel-hover);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
             cursor: pointer;
-            color: #666;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .close-modal:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
         }
 
         .map-container {
