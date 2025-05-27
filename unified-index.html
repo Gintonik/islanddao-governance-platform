@@ -104,6 +104,46 @@
       border-color: var(--accent-primary);
     }
 
+    .wallet-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 8px;
+    }
+
+    .connect-btn {
+      background: rgba(33, 232, 163, 0.1);
+      color: #21E8A3;
+      border: 1px solid rgba(33, 232, 163, 0.3);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .connect-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .disconnect-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .disconnect-btn:hover {
+      background: #b91c1c;
+    }
+
     .container {
       max-width: 1400px;
       margin: 0 auto;
@@ -208,23 +248,30 @@
     .nft-grid {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      gap: 12px;
-      margin-bottom: 3rem;
+      gap: 15px;
+      margin-bottom: 40px;
+      width: 100%;
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 1400px) {
       .nft-grid {
         grid-template-columns: repeat(6, 1fr);
       }
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
       .nft-grid {
         grid-template-columns: repeat(4, 1fr);
       }
     }
 
     @media (max-width: 600px) {
+      .nft-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 400px) {
       .nft-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -375,7 +422,7 @@
 <body>
   <div class="header">
     <div class="logo-container">
-      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2321E8A3'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%230F0F0F' font-family='Arial' font-size='20' font-weight='bold'%3EI%3C/text%3E%3C/svg%3E" alt="IslandDAO" class="logo">
+      <img src="/citizen-map/islanddao-logo.png" alt="IslandDAO" class="logo">
       <h1 class="title">PERKS Collection</h1>
     </div>
     
@@ -383,6 +430,10 @@
       <a href="/verified-map" class="nav-link">Citizen Map</a>
       <a href="/collection" class="nav-link active">Collection</a>
       <button class="theme-toggle">🌙</button>
+      <div class="wallet-section">
+        <button id="connectWalletBtn" class="connect-btn">Connect Wallet</button>
+        <button id="disconnectBtn" class="disconnect-btn" style="display: none;">✕</button>
+      </div>
     </div>
   </div>
 
@@ -443,12 +494,57 @@
       themeToggle.textContent = '☀️';
     }
 
+    // Wallet connection functionality
+    const connectBtn = document.getElementById('connectWalletBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    let connectedWallet = null;
+
+    async function connectWallet() {
+      try {
+        if (window.solana && window.solana.isPhantom) {
+          const response = await window.solana.connect();
+          connectedWallet = response.publicKey.toString();
+          updateWalletUI();
+        } else {
+          alert('Please install Phantom wallet');
+        }
+      } catch (error) {
+        console.error('Wallet connection failed:', error);
+      }
+    }
+
+    function disconnectWallet() {
+      connectedWallet = null;
+      updateWalletUI();
+      if (window.solana) {
+        window.solana.disconnect();
+      }
+    }
+
+    function updateWalletUI() {
+      if (connectedWallet) {
+        connectBtn.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
+        connectBtn.style.background = 'var(--bg-secondary)';
+        connectBtn.style.color = 'var(--text-primary)';
+        connectBtn.style.border = '1px solid var(--border-subtle)';
+        disconnectBtn.style.display = 'block';
+      } else {
+        connectBtn.textContent = 'Connect Wallet';
+        connectBtn.style.background = 'rgba(33, 232, 163, 0.1)';
+        connectBtn.style.color = '#21E8A3';
+        connectBtn.style.border = '1px solid rgba(33, 232, 163, 0.3)';
+        disconnectBtn.style.display = 'none';
+      }
+    }
+
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
       fetchInitialNfts();
       
       // Event listeners
       themeToggle.addEventListener('click', toggleTheme);
+      connectBtn.addEventListener('click', connectWallet);
+      disconnectBtn.addEventListener('click', disconnectWallet);
       loadAllButton.addEventListener('click', loadAllNfts);
       searchButton.addEventListener('click', searchNfts);
       searchInput.addEventListener('keypress', (e) => {
