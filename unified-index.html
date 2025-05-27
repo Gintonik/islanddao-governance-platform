@@ -147,18 +147,20 @@
       opacity: 0.95;
     }
 
-    .disconnect-btn {
+    .disconnect-wallet-btn {
       background: #dc2626;
       color: white;
       border: none;
-      padding: 6px 8px;
+      padding: 6px 12px;
       border-radius: 4px;
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
+      font-family: inherit;
     }
 
-    .disconnect-btn:hover {
+    .disconnect-wallet-btn:hover {
       background: #b91c1c;
     }
 
@@ -508,6 +510,11 @@
       --text-secondary: #6B7280;
       --border-subtle: rgba(0, 0, 0, 0.1);
       --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    body.light .header {
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
   </style>
 </head>
