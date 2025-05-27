@@ -1229,9 +1229,9 @@
 
                     const marker = L.marker([lat, lng], { icon }).addTo(map);
                     
-                    // Add click event to show citizen panel instead of popup
+                    // Add click event to show popup with citizen info
                     marker.on('click', () => {
-                        showCitizenPanel(citizen);
+                        marker.bindPopup(createPopupContent(citizen, citizen.wallet === currentWallet)).openPopup();
                     });
                 });
 
@@ -1342,6 +1342,49 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // Create popup content for citizens
+        function createPopupContent(citizen, isVerified) {
+            const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
+            let imageUrl = 'https://via.placeholder.com/80';
+            
+            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+                imageUrl = citizen.nftMetadata[pfpNft].image;
+            }
+
+            const citizenName = citizen.nickname || 
+                               (citizen.nftMetadata && citizen.nftMetadata[pfpNft] ? citizen.nftMetadata[pfpNft].name : null) || 
+                               'Anonymous Citizen';
+            
+            return `
+                <div style="text-align: center; padding: 15px; max-width: 280px;">
+                    <img src="${imageUrl}" 
+                         style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; object-fit: cover; border: 3px solid #4facfe;">
+                    
+                    <h4 style="margin: 0 0 8px 0; color: #1a202c; font-weight: 700;">
+                        ${citizenName}
+                        ${isVerified ? '<span style="color: #56ab2f; font-size: 0.8em;">✓ You</span>' : ''}
+                    </h4>
+                    
+                    ${citizen.bio ? `<p style="font-style: italic; color: #4a5568; margin: 8px 0; line-height: 1.4;">${citizen.bio}</p>` : ''}
+                    
+                    ${citizen.message ? `<p style="margin: 10px 0; color: #1a202c;">${citizen.message}</p>` : ''}
+                    
+                    <div style="margin: 12px 0;">
+                        <a href="https://solscan.io/account/${citizen.wallet}" target="_blank" 
+                           style="color: #4facfe; text-decoration: none; font-size: 0.9em; font-family: monospace; background: rgba(79, 172, 254, 0.1); padding: 4px 8px; border-radius: 6px;">
+                            ${citizen.wallet.slice(0, 4)}...${citizen.wallet.slice(-4)}
+                        </a>
+                    </div>
+                    
+                    ${createSocialLinks(citizen)}
+                    
+                    <div style="margin-top: 12px; font-size: 0.8em; color: #666;">
+                        NFTs: ${citizen.nfts ? citizen.nfts.length : 0}
+                    </div>
+                </div>
+            `;
         }
 
         // Create social media links
