@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PERKS NFT Collection Explorer</title>
+  <title>PERKS NFT Collection - IslandDAO</title>
   <style>
+    :root {
+      --bg-primary: #0F0F0F;
+      --bg-secondary: #1A1A1A;
+      --text-primary: #FFFFFF;
+      --text-secondary: #AFAFAF;
+      --accent-primary: #21E8A3;
+      --accent-glow: rgba(33, 232, 163, 0.3);
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -12,42 +23,92 @@
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #121212;
-      color: #f5f5f5;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       line-height: 1.6;
+      min-height: 100vh;
     }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    header {
+
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 2rem;
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
-      border-bottom: 1px solid #333;
-      padding: 15px 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
     }
-    
-    .logo {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #9945FF;
-    }
-    
-    .nav-bar {
+
+    .logo-container {
       display: flex;
       align-items: center;
-      margin: 0 20px;
+      gap: 12px;
+    }
+
+    .logo {
+      height: 32px;
+      width: auto;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
     }
     
-    .nav-item {
-      color: #a0a0a0;
+    .nav-container {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    
+    .nav-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--accent-primary);
+      background: rgba(33, 232, 163, 0.1);
+    }
+
+    .nav-link.active {
+      color: var(--accent-primary);
+      background: rgba(33, 232, 163, 0.1);
+      border: 1px solid rgba(33, 232, 163, 0.3);
+    }
+
+    .theme-toggle {
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
       text-decoration: none;
       padding: 8px 16px;
       margin: 0 5px;
@@ -94,85 +155,118 @@
     }
     
     .search-bar {
-      margin-bottom: 30px;
+      margin-bottom: 2rem;
       display: flex;
-      gap: 10px;
+      gap: 12px;
+      justify-content: center;
     }
     
     .search-input {
       flex: 1;
-      padding: 10px 15px;
-      border-radius: 4px;
-      border: 1px solid #333;
-      background-color: #222;
-      color: #f5f5f5;
-      font-size: 1rem;
+      max-width: 400px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-secondary);
     }
     
     .search-button {
-      padding: 10px 15px;
-      background-color: #9945FF;
-      color: white;
+      padding: 12px 24px;
+      background: var(--accent-primary);
+      color: var(--bg-primary);
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .search-button:hover {
+      background: #1BC491;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
     }
     
     .nft-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 15px;
-      margin-bottom: 40px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
     }
     
     .nft-card {
-      background-color: #1e1e1e;
-      border-radius: 6px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
       overflow: hidden;
-      transition: transform 0.2s;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
     }
     
     .nft-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      border-color: var(--accent-primary);
     }
     
     .nft-image {
       width: 100%;
       aspect-ratio: 1;
       object-fit: cover;
-      background-color: #333;
+      background: var(--bg-primary);
+      transition: transform 0.3s ease;
+    }
+
+    .nft-card:hover .nft-image {
+      transform: scale(1.05);
     }
     
     .nft-info {
-      padding: 10px;
+      padding: 1rem;
     }
     
     .nft-name {
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 5px;
-      color: #9945FF;
+      margin-bottom: 0.5rem;
+      color: var(--accent-primary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     
     .nft-owner {
-      font-size: 0.75rem;
-      color: #aaa;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
       word-break: break-all;
-      margin-bottom: 3px;
+      margin-bottom: 0.25rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     
     .nft-id {
-      font-size: 0.7rem;
-      color: #888;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      opacity: 0.7;
       word-break: break-all;
       white-space: nowrap;
       overflow: hidden;
@@ -181,38 +275,44 @@
     
     .load-more {
       display: block;
-      width: 200px;
-      margin: 0 auto 40px;
-      padding: 12px;
-      background-color: #333;
-      color: white;
+      width: 240px;
+      margin: 0 auto 3rem;
+      padding: 16px 32px;
+      background: var(--accent-primary);
+      color: var(--bg-primary);
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
       text-align: center;
-      font-size: 1rem;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px var(--accent-glow);
     }
     
     .load-more:hover {
-      background-color: #444;
+      background: #1BC491;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
     }
     
     .loading {
       text-align: center;
-      margin: 20px 0;
-      font-size: 1.1rem;
-      color: #aaa;
+      margin: 2rem 0;
+      font-size: 14px;
+      color: var(--text-secondary);
     }
     
     .loading-spinner {
       display: inline-block;
       width: 20px;
       height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+      border: 2px solid var(--border-subtle);
       border-radius: 50%;
-      border-top-color: #9945FF;
+      border-top-color: var(--accent-primary);
       animation: spin 1s linear infinite;
-      margin-right: 10px;
+      margin-right: 12px;
     }
     
     @keyframes spin {
@@ -221,36 +321,54 @@
     
     .message {
       text-align: center;
-      margin: 20px 0;
-      padding: 15px;
-      border-radius: 4px;
-      background-color: #1e1e1e;
+      margin: 2rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
     }
     
     .message.error {
-      background-color: #420011;
-      color: #ff6b81;
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
     }
     
     footer {
       text-align: center;
-      margin-top: 50px;
-      padding-top: 20px;
-      border-top: 1px solid #333;
-      color: #888;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Light theme styles */
+    body.light {
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8F9FA;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6B7280;
+      --border-subtle: rgba(0, 0, 0, 0.1);
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
 <body>
+  <div class="header">
+    <div class="logo-container">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2321E8A3'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%230F0F0F' font-family='Arial' font-size='20' font-weight='bold'%3EI%3C/text%3E%3C/svg%3E" alt="IslandDAO" class="logo">
+      <h1 class="title">PERKS Collection</h1>
+    </div>
+    
+    <div class="nav-container">
+      <a href="/verified-map" class="nav-link">Citizen Map</a>
+      <a href="/collection" class="nav-link active">Collection</a>
+      <button class="theme-toggle">🌙</button>
+    </div>
+  </div>
+
   <div class="container">
-    <header>
-      <div class="logo">PERKS Collection Explorer</div>
-      
-      <div class="nav-bar">
-        <a href="/" class="nav-item active">Collection Grid</a>
-        <a href="/citizen-map" class="nav-item">Citizen Map</a>
-      </div>
-    </header>
     
     <div class="search-bar">
       <input type="text" id="searchInput" class="search-input" placeholder="Search by wallet address...">
@@ -290,11 +408,29 @@
     const searchInput = document.getElementById('searchInput');
     const searchButton = document.getElementById('searchButton');
     
+    // Theme toggle functionality
+    const themeToggle = document.querySelector('.theme-toggle');
+    
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      const isLight = document.body.classList.contains('light');
+      themeToggle.textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.body.classList.add('light');
+      themeToggle.textContent = '☀️';
+    }
+
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
       fetchInitialNfts();
       
       // Event listeners
+      themeToggle.addEventListener('click', toggleTheme);
       loadAllButton.addEventListener('click', loadAllNfts);
       searchButton.addEventListener('click', searchNfts);
       searchInput.addEventListener('keypress', (e) => {
