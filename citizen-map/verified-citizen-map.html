@@ -1306,21 +1306,36 @@
             const content = document.getElementById('citizenPanelContent');
             const panelTitle = document.querySelector('.citizen-panel-title');
             
-            // Update panel title to show nickname with enhanced styling
+            // Update panel title to show nickname with wallet address below
             const nickname = citizen.nickname || 'Anonymous Citizen';
             panelTitle.style.textAlign = 'center';
-            panelTitle.innerHTML = `<span style="
-                font-size: 20px; 
-                font-weight: 800; 
-                background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                text-shadow: 0 2px 4px rgba(33, 232, 163, 0.3);
-                letter-spacing: 0.8px;
-                display: block;
-                text-align: center;
-            ">${nickname}</span>`;
+            panelTitle.innerHTML = `
+                <div style="text-align: center;">
+                    <span style="
+                        font-size: 20px; 
+                        font-weight: 800; 
+                        background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        text-shadow: 0 2px 4px rgba(33, 232, 163, 0.3);
+                        letter-spacing: 0.8px;
+                        display: block;
+                        text-align: center;
+                    ">${nickname}</span>
+                    <div style="
+                        font-size: 10px; 
+                        color: #AFAFAF; 
+                        font-weight: 400; 
+                        margin-top: 4px; 
+                        font-family: 'Inter', monospace;
+                        cursor: pointer;
+                        transition: color 0.2s ease;
+                    " onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" title="View on Solscan" onmouseover="this.style.color='#21E8A3'" onmouseout="this.style.color='#AFAFAF'">
+                        ${citizen.wallet.substring(0, 8)}...${citizen.wallet.substring(citizen.wallet.length - 6)}
+                    </div>
+                </div>
+            `;
             
             const isVerified = citizen.wallet === currentWallet;
             const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
@@ -1367,16 +1382,9 @@
                 </div>` : ''}
                 
                 <!-- PERK name -->
-                <div style="text-align: center; margin-bottom: 8px;">
+                <div style="text-align: center; margin-bottom: 16px;">
                     <div style="font-size: 12px; color: #21E8A3; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;">
                         ${perkName}
-                    </div>
-                </div>
-                
-                <!-- Wallet Address -->
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <div style="cursor: pointer; display: inline-block; font-family: 'Inter', monospace; font-size: 11px; color: #AFAFAF; padding: 2px 0; border-bottom: 1px dotted rgba(175, 175, 175, 0.3); transition: all 0.2s ease;" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" title="View on Solscan" onmouseover="this.style.color='#21E8A3'; this.style.borderColor='#21E8A3'" onmouseout="this.style.color='#AFAFAF'; this.style.borderColor='rgba(175, 175, 175, 0.3)'">
-                        ${citizen.wallet.substring(0, 8)}...${citizen.wallet.substring(citizen.wallet.length - 6)}
                     </div>
                 </div>
                 
