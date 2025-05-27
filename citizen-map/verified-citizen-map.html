@@ -1366,15 +1366,17 @@
                     </div>
                 </div>` : ''}
                 
-                <!-- PERK name and Address in elegant layout -->
-                <div style="text-align: center; margin-bottom: 16px; background: rgba(33, 232, 163, 0.05); border: 1px solid rgba(33, 232, 163, 0.2); border-radius: 12px; padding: 12px;">
-                    <div style="font-size: 11px; color: #21E8A3; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px;">
+                <!-- PERK name -->
+                <div style="text-align: center; margin-bottom: 8px;">
+                    <div style="font-size: 12px; color: #21E8A3; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;">
                         ${perkName}
                     </div>
-                    <div style="cursor: pointer; display: inline-block;" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" title="View on Solscan">
-                        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); padding: 4px 10px; border-radius: 8px; font-family: 'Inter', monospace; font-size: 10px; color: #AFAFAF; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#21E8A3'; this.style.color='#21E8A3'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.2)'; this.style.color='#AFAFAF'">
-                            ${citizen.wallet.substring(0, 8)}...${citizen.wallet.substring(citizen.wallet.length - 6)}
-                        </div>
+                </div>
+                
+                <!-- Wallet Address -->
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="cursor: pointer; display: inline-block; font-family: 'Inter', monospace; font-size: 11px; color: #AFAFAF; padding: 2px 0; border-bottom: 1px dotted rgba(175, 175, 175, 0.3); transition: all 0.2s ease;" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" title="View on Solscan" onmouseover="this.style.color='#21E8A3'; this.style.borderColor='#21E8A3'" onmouseout="this.style.color='#AFAFAF'; this.style.borderColor='rgba(175, 175, 175, 0.3)'">
+                        ${citizen.wallet.substring(0, 8)}...${citizen.wallet.substring(citizen.wallet.length - 6)}
                     </div>
                 </div>
                 
