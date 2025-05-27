@@ -1102,23 +1102,11 @@
                 preferCanvas: true // Better performance for many markers
             });
 
-            // Add zoom event listener for dynamic clustering with animations
+            // Add zoom event listener for instant dynamic clustering
             map.on('zoomend', () => {
                 if (window.citizenData && window.citizenData.length > 0) {
-                    console.log('Zoom changed, refreshing clusters with animations...');
-                    // Add fade out animation to existing markers
-                    citizenMarkers.forEach(marker => {
-                        if (marker._icon) {
-                            marker._icon.style.transition = 'all 0.3s ease-out';
-                            marker._icon.style.opacity = '0';
-                            marker._icon.style.transform = 'scale(0.5)';
-                        }
-                    });
-                    
-                    // Refresh clusters after animation
-                    setTimeout(() => {
-                        loadCitizens();
-                    }, 300);
+                    console.log('Zoom changed, refreshing clusters...');
+                    loadCitizens(); // Instant refresh without delays
                 }
             });
 
@@ -1666,18 +1654,24 @@
             marker.on('click', () => showCitizenPanel(citizen));
         }
 
-        // Create cluster marker showing multiple citizens at full size
+        // Create cluster marker with simple side-by-side layout
         function createClusterMarker(citizens, lat, lng) {
-            const maxVisible = Math.min(citizens.length, 4); // Show up to 4 profile pictures
+            if (citizens.length === 1) {
+                // Just create a regular single marker
+                createSingleMarker(citizens[0], lat, lng);
+                return;
+            }
+
+            const maxVisible = Math.min(citizens.length, 3); // Show up to 3 profile pictures
             const visibleCitizens = citizens.slice(0, maxVisible);
             const hiddenCount = Math.max(0, citizens.length - maxVisible);
-
-            // Calculate spacing for full-size profile pictures
-            const spacing = 8; // Closer spacing between pictures
-            const picSize = 40; // Same size as individual pins
-            const totalWidth = maxVisible === 1 ? picSize : (maxVisible === 2 ? picSize * 2 + spacing : picSize * 2 + spacing);
             
-            let clusterHtml = `<div style="position: relative; width: ${totalWidth}px; height: ${picSize + (maxVisible > 2 ? spacing + picSize : 0)}px;">`;
+            // Simple horizontal layout with slight overlap
+            const picSize = 40;
+            const overlap = 10; // Overlap amount
+            const totalWidth = picSize + (maxVisible - 1) * (picSize - overlap);
+            
+            let clusterHtml = `<div style="position: relative; width: ${totalWidth}px; height: ${picSize}px; display: flex; align-items: center;">`;
             
             visibleCitizens.forEach((citizen, index) => {
                 const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
@@ -1691,19 +1685,12 @@
                     imageUrl = citizen.image_url;
                 }
 
-                // Position citizens in a 2x2 grid layout with full size
-                const positions = [
-                    `top: 0px; left: 0px;`,                           // Top-left
-                    `top: 0px; left: ${picSize + spacing}px;`,        // Top-right  
-                    `top: ${picSize + spacing}px; left: 0px;`,        // Bottom-left
-                    `top: ${picSize + spacing}px; left: ${picSize + spacing}px;`  // Bottom-right
-                ];
-
-                const posStyle = positions[index] || positions[0];
-                const style = `position: absolute; width: ${picSize}px; height: ${picSize}px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; ${posStyle} box-shadow: 0 2px 8px rgba(0,0,0,0.3);`;
-
-                clusterHtml += `<img src="${imageUrl}" style="${style}" 
-                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'" loading="lazy">`;
+                const leftPosition = index * (picSize - overlap);
+                const zIndex = maxVisible - index; // Earlier items appear on top
+                
+                clusterHtml += `<img src="${imageUrl}" 
+                    style="position: absolute; left: ${leftPosition}px; top: 0px; width: ${picSize}px; height: ${picSize}px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: ${zIndex};" 
+                    onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'" loading="lazy">`;
             });
 
             if (hiddenCount > 0) {
