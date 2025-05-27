@@ -277,6 +277,14 @@
             font-weight: 600;
             color: var(--text-primary);
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-logo {
+            height: 20px;
+            width: auto;
         }
 
         .close-panel {
@@ -388,6 +396,9 @@
             font-weight: 500;
             cursor: pointer;
             transition: transform 0.2s ease;
+            background-size: 14px 14px;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .social-link:hover {
@@ -395,15 +406,15 @@
         }
 
         .social-twitter {
-            background: #1da1f2;
+            background: #1da1f2 url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIzLjk1MyA0LjU3YTEwIDEwIDAgMDEtMi44MjUuNzc1IDQuOTU4IDQuOTU4IDAgMDAyLjE2My0yLjcyM2MtLjk1MS41NTUtMi4wMDUuOTU5LTMuMTI3IDEuMTg0YTQuOTIgNC45MiAwIDAwLTguMzg0IDQuNDgyQzEyLjIzNCA4LjY5NSA2LjkwNiA1Ljc2NiAzLjE5NiAyLjMwMWMtLjUzMS44MDYtLjgzNCAxLjk3My0uODM0IDMuMTk0IDAgMS42Ni45NzIgMy4zOSAyLjY5NCA0LjM1NmE0LjM3IDQuMzcgMCAwMS0yLjU2LS43MTJ2LjA2MmE0Ljk2NiA0Ljk2NiAwIDAwMy45OTUgNC44NjloLTEuNzM0YzIuNzEzIDIuMTkzIDYuMzI0IDIuMzE3IDEwLjA3NyAyLjMxN1Y3LjQ0NFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=') center/14px no-repeat;
         }
 
         .social-telegram {
-            background: #0088cc;
+            background: #0088cc url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTExLjk0NCAyMi4xNEMxOC41NTQgMjIuMTQgMjMuODg4IDE2LjgwNiAyMy44ODggMTAuMTk2QzIzLjg4OCAzLjU4NiAxOC41NTQtMS43NDggMTEuOTQ0LTEuNzQ4QzUuMzM0LTEuNzQ4IDAgMy41ODYgMCAxMC4xOTZDMCAxNi44MDYgNS4zMzQgMjIuMTQgMTEuOTQ0IDIyLjE0WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTQuODcgMTEuMkM2Ljg1IDEwLjMgOC4yNCA5LjcgOS4wNCA5LjRDMTMuNTggNy42NyAxNi44IDYuNDcgMTguNzYgNS43N0MxOS44NSA1LjM3IDIwLjU2IDUuMTcgMjAuMDggNi44N0MxOS44IDguMDcgMTguNTMgMTUuNTMgMTcuODYgMTguOTNDMTcuNTQgMjAuNTMgMTYuNzQgMjEuMDMgMTUuOTggMjAuNDNDMTQuNDYgMTkuMjMgMTEuNjQgMTcuMTMgMTAuNDIgMTYuMjNDOS43NCAxNS43MyA5IDE0LjkzIDEwLjMgMTQuMDNDMTMuNzQgMTEuMDMgMTUuOTggOS4xMyAxNi44IDguMzNDMTcuNDIgNy43MyAxNy4yMiA4LjIzIDE2LjYgOC44M0MxMy45OCAxMS4yMyA5LjQgMTQuMDMgNy4xIDEzLjQzQzYuMiAxMy4yMyA1LjUgMTIuNyA0Ljg3IDExLjJaIiBmaWxsPSIjMDA4OGNjIi8+Cjwvc3ZnPgo=') center/14px no-repeat;
         }
 
         .social-discord {
-            background: #7289da;
+            background: #7289da url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIwLjMxNyA0LjM1ODIzYy0uOTMxMi0uNDIxNzEtMS45NDQ1LS42ODM0LTIuOTk5LS43NzI5MS0uMTM0NiAuMjI5MDgtLjI1OTUuNDcyNzUtLjM3NDEuNzI5Mzh2LjAwNzc0Yy0xLjIzMTctLjE5MDQ5LTIuNDYzNS0uMTkwNDktMy42ODc3IDAtLjExNzEtLjI1NjI5LS4yNDcxLS41MDAzMS0uMzc0MS0uNzM3MTItMS4wNTQ1LjA4OTE1LTIuMDY3OC4zNTQ4NS0yLjk5OSAuNzcyOTFDNy42OTE4MyA5LjA2MzU2IDYuNDE4MjMgMTMuNzY4OSA2Ljc1MDI3IDE4LjM0ODdjLjAzMTA5IDQuMDQ5OSA1LjYwNzA5IDQuNjUzNyA4LjA2NDQzIDQuNzM1Ny4zMTY5Ni0uNDQ0Ni42MDQyLTkuMDc2LjkwNzctMS4zOTgzLS4yODY5LS4xNTQ4LS42NDI3LS4zNDU4LS45OTM1LS41NDU0M3YtLjAwNzc0Yy45MDc3LS44Njg3NCAxLjQ5ODYtMi4xNTU3NiAxLjQ5ODYtMy42Mjc5di0uMDA3NzRjLS4wMTU1LTEuNDY0ODctLjU5MDktMi43NTU4OS0xLjQ5ODYtMy42Mjc5eiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==') center/14px no-repeat;
         }
 
         .citizen-nfts {
@@ -1255,19 +1266,19 @@
                 return '';
             }
 
-            let socialHtml = '<div class="citizen-socials">';
+            let socialHtml = '<div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">';
             
             if (citizen.twitter_handle) {
                 const handle = citizen.twitter_handle.replace('@', '');
-                socialHtml += `<a href="https://x.com/${handle}" target="_blank" class="social-link social-twitter">T</a>`;
+                socialHtml += `<a href="https://x.com/${handle}" target="_blank" style="color: #1da1f2; text-decoration: none;">Twitter</a>`;
             }
             
             if (citizen.telegram_handle) {
-                socialHtml += `<span onclick="copyToClipboard('${citizen.telegram_handle}')" class="social-link social-telegram">T</span>`;
+                socialHtml += `<span onclick="copyToClipboard('${citizen.telegram_handle}')" style="color: #0088cc; cursor: pointer;">Telegram</span>`;
             }
             
             if (citizen.discord_handle) {
-                socialHtml += `<span onclick="copyToClipboard('${citizen.discord_handle}')" class="social-link social-discord">D</span>`;
+                socialHtml += `<span onclick="copyToClipboard('${citizen.discord_handle}')" style="color: #7289da; cursor: pointer;">Discord</span>`;
             }
             
             socialHtml += '</div>';
