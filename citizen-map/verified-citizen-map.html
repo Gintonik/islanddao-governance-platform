@@ -1573,9 +1573,9 @@
                         while (otherLng > 180) otherLng -= 360;
                         while (otherLng < -180) otherLng += 360;
 
-                        // Simple distance check (0.1 degrees ≈ 11km)
+                        // Simple distance check (0.15 degrees ≈ 16km)
                         const distance = Math.sqrt(Math.pow(lat - otherLat, 2) + Math.pow(lng - otherLng, 2));
-                        if (distance < 0.1) {
+                        if (distance < 0.15) {
                             cluster.push(otherCitizen);
                             processedCitizens.add(otherIndex);
                         }
