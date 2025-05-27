@@ -59,9 +59,9 @@ function startServer() {
     
     // Route handling
     try {
-      // Serve the HTML file for the root route (NFT Grid)
+      // Serve the Verified Citizen Map as the default landing page
       if (req.url === '/' || req.url === '/index.html') {
-        serveFile(res, path.join(__dirname, 'unified-index.html'), 'text/html');
+        serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
       }
       // Serve the original citizen map
       else if (req.url === '/citizen-map') {
@@ -70,6 +70,10 @@ function startServer() {
       // Serve the verified citizen map with wallet connection
       else if (req.url === '/verified-map') {
         serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
+      }
+      // Serve the NFT collection grid
+      else if (req.url === '/collection' || req.url === '/grid') {
+        serveFile(res, path.join(__dirname, 'unified-index.html'), 'text/html');
       } 
       // API endpoint for NFT collection data
       else if (req.url === '/api/nfts') {
