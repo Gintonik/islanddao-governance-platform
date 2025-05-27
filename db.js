@@ -228,6 +228,8 @@ async function getAllCitizens() {
       
       console.log('Formatted citizen with socials:', {
         wallet: formattedCitizen.wallet,
+        nickname: formattedCitizen.nickname,
+        bio: formattedCitizen.bio,
         twitter: formattedCitizen.twitter_handle,
         telegram: formattedCitizen.telegram_handle,
         discord: formattedCitizen.discord_handle
