@@ -1323,7 +1323,7 @@
                 <!-- Title: Nickname -->
                 <div style="text-align: center; margin-bottom: 10px;">
                     <h2 style="margin: 0; color: #FAFAFA; font-size: 16px; font-weight: 600;">
-                        ${citizenName !== 'Anonymous Citizen' ? citizenName : 'Anonymous Citizen'}
+                        ${citizen.nickname || 'Anonymous Citizen'}
                     </h2>
                 </div>
                 
@@ -1333,12 +1333,12 @@
                 </div>` : ''}
                 
                 <!-- Tags: IslandDAO Citizen and Perks Holder -->
-                <div style="text-align: center; margin-bottom: 8px; display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;">
-                    <div style="background: rgba(33, 232, 163, 0.08); border: 1px solid rgba(33, 232, 163, 0.2); padding: 1px 5px; border-radius: 3px;">
-                        <span style="color: #21E8A3; font-size: 7px; font-weight: 500;">IslandDAO</span>
+                <div style="text-align: center; margin-bottom: 8px; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+                    <div style="background: rgba(33, 232, 163, 0.12); border: 1px solid rgba(33, 232, 163, 0.3); padding: 2px 8px; border-radius: 12px;">
+                        <span style="color: #21E8A3; font-size: 8px; font-weight: 600;">IslandDAO</span>
                     </div>
-                    <div style="background: rgba(33, 232, 163, 0.08); border: 1px solid rgba(33, 232, 163, 0.2); padding: 1px 5px; border-radius: 3px;">
-                        <span style="color: #21E8A3; font-size: 7px; font-weight: 500;">Perks</span>
+                    <div style="background: rgba(33, 232, 163, 0.12); border: 1px solid rgba(33, 232, 163, 0.3); padding: 2px 8px; border-radius: 12px;">
+                        <span style="color: #21E8A3; font-size: 8px; font-weight: 600;">Perks</span>
                     </div>
                 </div>
                 
