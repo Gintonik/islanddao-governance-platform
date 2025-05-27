@@ -1320,25 +1320,26 @@
             const citizenBio = citizen.bio || 'No bio provided yet.';
 
             content.innerHTML = `
-                <!-- Citizens Profile Link as Title -->
+                <!-- Nickname as Main Title -->
                 <div style="text-align: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0; color: #FAFAFA; font-size: 16px; font-weight: 600;">
+                        ${citizen.nickname || 'Anonymous Citizen'}
+                    </h2>
                     <a href="#" onclick="alert('Citizens Profile feature coming soon!')" style="
                         color: #21E8A3; 
                         text-decoration: none; 
-                        font-size: 16px; 
-                        font-weight: 600; 
+                        font-size: 10px; 
+                        font-weight: 500; 
+                        margin-top: 4px; 
                         display: inline-block;
-                        padding: 4px 8px;
-                        border-radius: 6px;
+                        padding: 2px 6px;
+                        border-radius: 4px;
                         background: rgba(33, 232, 163, 0.1);
                         border: 1px solid rgba(33, 232, 163, 0.3);
                         transition: all 0.2s ease;
                     " onmouseover="this.style.background='rgba(33, 232, 163, 0.2)'" onmouseout="this.style.background='rgba(33, 232, 163, 0.1)'">
-                        Citizens Profile →
+                        Visit Profile →
                     </a>
-                    <h3 style="margin: 8px 0 0 0; color: #AFAFAF; font-size: 12px; font-weight: 500;">
-                        ${citizen.nickname || 'Anonymous Citizen'}
-                    </h3>
                 </div>
                 
                 <!-- PFP chosen -->
