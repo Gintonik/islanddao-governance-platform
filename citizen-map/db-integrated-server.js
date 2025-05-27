@@ -149,6 +149,55 @@ function startServer() {
           }
         });
       }
+      // API endpoint to save verified citizen pin (with wallet signature)
+      else if (req.method === 'POST' && req.url === '/api/save-citizen-verified') {
+        let body = '';
+        
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        
+        req.on('end', async () => {
+          try {
+            const data = JSON.parse(body);
+            console.log('Verified citizen data received:', {
+              wallet: data.wallet_address,
+              nickname: data.nickname,
+              bio: data.bio,
+              lat: data.lat,
+              lng: data.lng
+            });
+            
+            // Prepare citizen data for saving
+            const citizenData = {
+              wallet: data.wallet_address,
+              location: [parseFloat(data.lat), parseFloat(data.lng)],
+              primaryNft: data.primary_nft,
+              pfp: data.pfp_nft,
+              nfts: data.nfts || [data.primary_nft],
+              nickname: data.nickname,
+              bio: data.bio,
+              socials: {
+                twitter: data.twitter_handle,
+                telegram: data.telegram_handle,
+                discord: data.discord_handle
+              }
+            };
+            
+            console.log('Saving verified citizen with nickname:', citizenData.nickname, 'and bio:', citizenData.bio);
+            
+            // Save to database
+            const result = await apiRoutes.saveCitizenPin(citizenData);
+            
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result));
+          } catch (error) {
+            console.error('Error saving verified citizen data:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+          }
+        });
+      }
       // API endpoint to clear all citizens
       else if (req.method === 'POST' && req.url === '/api/clear-citizens') {
         try {
