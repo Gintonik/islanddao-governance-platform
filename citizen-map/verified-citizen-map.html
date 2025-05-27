@@ -755,34 +755,23 @@
             cursor: not-allowed;
         }
 
-        .wallet-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            min-width: 120px;
-            margin-top: 4px;
-        }
-
-        .disconnect-btn {
-            width: 100%;
-            padding: 8px 12px;
-            background: none;
-            border: none;
-            color: var(--text-primary);
+        .disconnect-wallet-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            border-radius: 6px;
-            font-size: 12px;
+            margin-right: 8px;
         }
 
-        .disconnect-btn:hover {
-            background: rgba(255, 0, 0, 0.1);
-            color: #ff4444;
+        .disconnect-wallet-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+            transform: translateY(-1px);
         }
 
         /* Hide scrollbars */
@@ -827,6 +816,9 @@
         </div>
         
         <div class="wallet-section">
+            <button id="disconnectBtn" class="disconnect-wallet-btn" style="display: none;" onclick="disconnectWallet()">
+                Disconnect
+            </button>
             <button id="walletBtn" class="wallet-connect-btn">
                 <span id="walletIcon">🔗</span>
                 <span id="walletText">Connect Wallet</span>
@@ -1057,10 +1049,8 @@
         // Handle wallet connection
         async function handleWalletConnect() {
             if (currentWallet) {
-                // Show confirmation dialog for disconnect
-                if (confirm('Do you want to disconnect your wallet?')) {
-                    disconnectWallet();
-                }
+                // Already connected - wallet button is just for display
+                return;
             } else {
                 // Show wallet selection modal
                 document.getElementById('walletModal').style.display = 'block';
@@ -1156,11 +1146,15 @@
             const walletIcon = document.getElementById('walletIcon');
             const walletText = document.getElementById('walletText');
             const addPinBtn = document.getElementById('addPinBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
 
             if (currentWallet) {
                 walletBtn.classList.add('wallet-connected');
                 walletIcon.textContent = '✅';
                 walletText.innerHTML = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`;
+                
+                // Show disconnect button
+                disconnectBtn.style.display = 'block';
                 
                 addPinBtn.classList.add('enabled');
                 addPinBtn.style.opacity = '1';
@@ -1169,6 +1163,9 @@
                 walletBtn.classList.remove('wallet-connected');
                 walletIcon.textContent = '🔗';
                 walletText.textContent = 'Connect Wallet';
+                
+                // Hide disconnect button
+                disconnectBtn.style.display = 'none';
                 
                 addPinBtn.classList.remove('enabled');
                 addPinBtn.style.opacity = '0.7';
