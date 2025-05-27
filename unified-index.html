@@ -518,15 +518,21 @@
       <h1 class="title">PERKS Collection</h1>
     </div>
     
-    <div class="nav-container">
-      <a href="/verified-map" class="nav-link">Citizen Map</a>
-      <a href="/collection" class="nav-link active">Collection</a>
-      <button class="theme-toggle">🌙</button>
-      
-      <div class="wallet-section">
-        <button id="walletBtn" class="wallet-connect-btn">Connect Wallet</button>
-        <button id="disconnectBtn" class="disconnect-btn" style="display: none;">✕</button>
-      </div>
+    <!-- Navigation -->
+    <div class="nav-container" style="display: flex; gap: 6px; align-items: center;">
+      <a href="/verified-map" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Citizen Map</a>
+      <a href="/collection" style="color: #21E8A3; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; background: rgba(33, 232, 163, 0.1); border: 1px solid rgba(33, 232, 163, 0.3);">Collection</a>
+      <button id="themeToggle" class="nav-button" style="color: #AFAFAF; background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 10px; border-radius: 4px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">🌙</button>
+    </div>
+    
+    <div class="wallet-section">
+      <button id="disconnectBtn" class="disconnect-wallet-btn" style="display: none;" onclick="disconnectWallet()">
+        Disconnect
+      </button>
+      <button id="walletBtn" class="wallet-connect-btn">
+        <span id="walletIcon">🔗</span>
+        <span id="walletText">Connect Wallet</span>
+      </button>
     </div>
   </div>
 
@@ -601,7 +607,7 @@
     const searchButton = document.getElementById('searchButton');
     
     // Theme toggle functionality
-    const themeToggle = document.querySelector('.theme-toggle');
+    const themeToggle = document.getElementById('themeToggle');
     
     function toggleTheme() {
       document.body.classList.toggle('light');
@@ -681,12 +687,17 @@
     }
 
     function updateWalletUI() {
+      const walletIcon = document.getElementById('walletIcon');
+      const walletText = document.getElementById('walletText');
+      
       if (connectedWallet) {
-        walletBtn.innerHTML = `<span>🔗</span> <span>${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}</span>`;
+        walletIcon.textContent = '🔗';
+        walletText.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
         walletBtn.classList.add('wallet-connected');
         disconnectBtn.style.display = 'block';
       } else {
-        walletBtn.innerHTML = `<span>🔗</span> <span>Connect Wallet</span>`;
+        walletIcon.textContent = '🔗';
+        walletText.textContent = 'Connect Wallet';
         walletBtn.classList.remove('wallet-connected');
         disconnectBtn.style.display = 'none';
       }
@@ -719,7 +730,7 @@
       fetchInitialNfts();
       
       // Event listeners
-      themeToggle.addEventListener('click', toggleTheme);
+      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
       walletBtn.addEventListener('click', openWalletModal);
       disconnectBtn.addEventListener('click', disconnectWallet);
       loadAllButton.addEventListener('click', loadAllNfts);
