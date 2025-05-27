@@ -263,6 +263,8 @@ function startServer() {
               primaryNft: data.primary_nft || null,
               pfp: data.pfp_nft || null,
               message: data.message || null,
+              nickname: data.nickname || null,
+              bio: data.bio || null,
               nfts: data.nfts || [],
               pfpImageUrl: data.image_url || null,
               socials: {
