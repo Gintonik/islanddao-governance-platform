@@ -89,8 +89,9 @@ async function saveCitizenPin(data) {
         await client.query(
           `UPDATE citizens 
            SET lat = $1, lng = $2, primary_nft = $3, pfp_nft = $4, message = $5, 
-               twitter_handle = $6, telegram_handle = $7, discord_handle = $8
-           WHERE id = $9`,
+               twitter_handle = $6, telegram_handle = $7, discord_handle = $8,
+               nickname = $9, bio = $10
+           WHERE id = $11`,
           [
             data.location[0],
             data.location[1],
@@ -100,6 +101,8 @@ async function saveCitizenPin(data) {
             data.socials?.twitter || data.twitter || null,
             data.socials?.telegram || data.telegram || null,
             data.socials?.discord || data.discord || null,
+            data.nickname || null,
+            data.bio || null,
             citizenId
           ]
         );
@@ -114,8 +117,8 @@ async function saveCitizenPin(data) {
       } else {
         // Insert new citizen
         const citizenResult = await client.query(
-          `INSERT INTO citizens (wallet, lat, lng, primary_nft, pfp_nft, message, twitter_handle, telegram_handle, discord_handle)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          `INSERT INTO citizens (wallet, lat, lng, primary_nft, pfp_nft, message, twitter_handle, telegram_handle, discord_handle, nickname, bio)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
            RETURNING id`,
           [
             data.wallet,
@@ -126,7 +129,9 @@ async function saveCitizenPin(data) {
             data.message || null,
             data.socials?.twitter || data.twitter || null,
             data.socials?.telegram || data.telegram || null,
-            data.socials?.discord || data.discord || null
+            data.socials?.discord || data.discord || null,
+            data.nickname || null,
+            data.bio || null
           ]
         );
         
