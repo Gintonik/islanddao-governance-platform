@@ -1102,13 +1102,10 @@
                 preferCanvas: true // Better performance for many markers
             });
 
-            // Add zoom event listener for instant dynamic clustering
-            map.on('zoomend', () => {
-                if (window.citizenData && window.citizenData.length > 0) {
-                    console.log('Zoom changed, refreshing clusters...');
-                    loadCitizens(); // Instant refresh without delays
-                }
-            });
+            // Remove zoom event listener to prevent errors
+            // map.on('zoomend', () => {
+            //     loadCitizens();
+            // });
 
             updateMapTheme();
         }
@@ -1508,7 +1505,7 @@
             return null;
         }
 
-        // Load and display citizens - simple approach without complex clustering
+        // Load and display citizens
         async function loadCitizens() {
             try {
                 const response = await fetch('/api/citizens');
@@ -1524,25 +1521,20 @@
                     }
                 });
 
-                const zoom = map.getZoom();
+                // Create simple clusters based on proximity (working version)
+                const clusters = createCitizenClusters(citizens);
                 
-                // Simple rule: only group citizens at very low zoom levels
-                if (zoom <= 4) {
-                    // Group citizens that are very close together (same city basically)
-                    const groups = groupNearbyPoints(citizens, 3.0); // 3 degree tolerance
-                    groups.forEach(group => {
-                        if (group.length === 1) {
-                            createSingleCitizenMarker(group[0]);
-                        } else {
-                            createMultiCitizenMarker(group);
-                        }
-                    });
-                    console.log(`Zoom: ${zoom}, Loaded ${citizens.length} citizens in ${groups.length} markers`);
-                } else {
-                    // Show all citizens individually
-                    citizens.forEach(citizen => createSingleCitizenMarker(citizen));
-                    console.log(`Zoom: ${zoom}, Loaded ${citizens.length} citizens individually`);
-                }
+                clusters.forEach(cluster => {
+                    if (cluster.citizens.length === 1) {
+                        // Single citizen - show individual marker
+                        createSingleCitizenMarker(cluster.citizens[0], cluster.lat, cluster.lng);
+                    } else {
+                        // Multiple citizens - show cluster with all profile pictures
+                        createClusterMarker(cluster.citizens, cluster.lat, cluster.lng);
+                    }
+                });
+                
+                console.log(`Loaded ${citizens.length} citizens on the map`);
             } catch (error) {
                 console.error('Error loading citizens:', error);
                 showNotification('Failed to load citizen data', 'error');
@@ -1758,8 +1750,14 @@
             
             // Show panel with all citizens when clicked
             marker.on('click', () => {
-                showMultiCitizenPanel(citizens);
+                showCitizenPanel(citizens[0]); // For now, show first citizen's panel
             });
+        }
+
+        // Simple function to show multiple citizen panel (placeholder)
+        function showMultiCitizenPanel(citizens) {
+            // For now, just show the first citizen's panel
+            showCitizenPanel(citizens[0]);
         }
 
         // Create marker for single citizen
