@@ -70,6 +70,10 @@ function startServer() {
       // Serve the verified citizen map with wallet connection
       else if (req.url === '/verified-map') {
         serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
+      }
+      // Serve the clean IslandDAO styled citizen map
+      else if (req.url === '/verified-citizen-map') {
+        serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
       } 
       // API endpoint for NFT collection data
       else if (req.url === '/api/nfts') {
@@ -493,8 +497,10 @@ function startServer() {
       }
       // Handle any remaining static files or fallback
       else {
-        // Check if it's the verified-map route that was missed
+        // Check if it's the verified-map or verified-citizen-map route that was missed
         if (req.url === '/verified-map') {
+          serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
+        } else if (req.url === '/verified-citizen-map') {
           serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
         } else {
           const filePath = path.join(__dirname, req.url);
