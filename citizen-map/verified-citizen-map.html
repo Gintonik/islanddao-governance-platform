@@ -874,6 +874,9 @@
         async function loadCitizens() {
             try {
                 const response = await fetch('/api/citizens');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const citizens = await response.json();
 
                 // Clear existing markers
