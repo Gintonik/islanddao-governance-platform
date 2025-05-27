@@ -4,7 +4,10 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
+const querystring = require('querystring');
 const db = require('./db');
+const { verifySignature, generateVerificationMessage, isAdminWallet, ADMIN_WALLET } = require('./wallet-auth');
 
 // Initialize the database on startup
 async function initializeApp() {

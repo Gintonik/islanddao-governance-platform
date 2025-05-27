@@ -24,7 +24,7 @@ async function initializeDatabase() {
       )
     `);
     
-    // Create citizens table
+    // Create citizens table with enhanced profile fields
     await client.query(`
       CREATE TABLE IF NOT EXISTS citizens (
         id SERIAL PRIMARY KEY,
@@ -34,8 +34,25 @@ async function initializeDatabase() {
         primary_nft TEXT REFERENCES nfts(mint_id),
         pfp_nft TEXT REFERENCES nfts(mint_id),
         message TEXT,
+        nickname VARCHAR(32),
+        bio VARCHAR(280),
+        twitter_handle VARCHAR(255),
+        telegram_handle VARCHAR(255),
+        discord_handle VARCHAR(255),
+        image_url TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add new columns to existing table if they don't exist
+    await client.query(`
+      ALTER TABLE citizens 
+      ADD COLUMN IF NOT EXISTS nickname VARCHAR(32),
+      ADD COLUMN IF NOT EXISTS bio VARCHAR(280),
+      ADD COLUMN IF NOT EXISTS twitter_handle VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS telegram_handle VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS discord_handle VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS image_url TEXT
     `);
     
     // Create citizen_nfts junction table for many-to-many relationship

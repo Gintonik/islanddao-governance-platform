@@ -1,0 +1,105 @@
+We are expanding the Citizen Map system of our Solana DAO app into a secure, verified, user-driven community platform. You must enhance the current codebase with the following features without breaking existing database logic, frontend components, or daily sync processes.
+
+---
+
+🧱 CURRENT STACK CONTEXT (DO NOT BREAK OR MODIFY STRUCTURE):
+
+- Backend: Node.js + Express
+- Database: PostgreSQL with nfts, citizens, and citizen_nfts tables
+- Blockchain Sync: Helius RPC API + daily-update.js (runs daily)
+- Frontend: Vanilla JS + HTML/CSS with Leaflet.js (2D map), Three.js (3D globe)
+- Already working: NFT grid, pin placement, one-pin-per-wallet, social links, PFP selection
+- Admin wallet: 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+
+You are to extend the app, not refactor it. No mock data. No simulated logic. Use live, verifiable inputs and maintain production-level quality.
+
+---
+
+🔐 1. WALLET VERIFICATION (SIGNATURE-BASED)
+
+Add secure wallet authentication using Solana's wallet adapter.
+
+Frontend:
+- Use either @solana/wallet-adapter or SecuX adapter (https://github.com/SecuX/solana-wallet-adapter) — whichever works cleanly on Replit.
+- After connecting, prompt the user to sign a verification message:
+  "I am verifying ownership of this wallet to use the PERKS Citizen Map. [timestamp or unique nonce]"
+- Include a nonce or timestamp to prevent replay attacks.
+
+Backend:
+- Require the following for all protected actions:
+  - wallet_address
+  - original_message
+  - signature
+- Use @solana/web3.js to verify the signature server-side.
+- Never trust the wallet_address field alone — validate it cryptographically.
+
+---
+
+👤 2. VERIFIED PROFILE CREATION
+
+Allow only verified users to create or update citizen map pins and profiles.
+
+Add new fields (if not present) to the citizens table:
+- nickname (TEXT, max 32 chars)
+- bio (TEXT, max 280 chars)
+
+After a successful signature:
+- Let the user select their PFP NFT (already implemented)
+- Let them submit:
+  - nickname
+  - bio
+  - Socials: X (Twitter), Telegram, Discord
+  - Current pin location
+- Enforce the existing “one pin per wallet” rule
+- Store only verified data — unsigned users cannot submit, update, or overwrite pins
+
+---
+
+🛡️ 3. ADMIN-ONLY FEATURES (HARD-LOCKED WALLET ACCESS)
+
+Enable admin-only actions for one specific wallet:
+Admin Wallet: 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+
+Frontend:
+- After signature verification, check if the wallet address matches the admin wallet.
+- If so, display admin-only controls:
+  - 🧹 Clear All Pins
+  - ❌ Remove Pin by Wallet
+
+Backend:
+- Create two new POST routes:
+  - /admin/clear-pins
+  - /admin/remove-pin
+- Both routes must:
+  - Require wallet_address, signed_message, original_message
+  - Validate the signature
+  - Confirm the address matches the exact admin wallet string
+- Log all admin actions:
+  - “✅ Admin cleared all pins”
+  - “⚠️ Blocked unauthorized admin attempt from wallet: ...”
+
+---
+
+🚫 DO NOT:
+
+- ❌ Do not remove or restructure current frontend grid or map code
+- ❌ Do not expose private API keys, database credentials, or secrets on the frontend
+- ❌ Do not allow unsigned POST requests to modify database content
+- ❌ Do not use dummy wallets or placeholder NFTs
+- ❌ Do not build fake signature flows
+- ❌ Do not use unverified wallet addresses for anything related to pin or profile creation
+- ❌ Do not use custom SVG icon replicas — only use official icons (e.g. Font Awesome, Heroicons) or standard emoji
+
+---
+
+✅ END RESULT:
+
+After you implement this prompt, the following should be true:
+
+- ✅ Users can only place pins or update profiles after verifying wallet ownership with a signed message
+- ✅ Profiles include nickname, bio, socials, and a selected PFP NFT
+- ✅ The admin wallet can clear or remove pins securely after verifying their signature
+- ✅ All actions are protected from forgery, spoofing, or unauthorized access
+- ✅ All existing features remain intact and fully functional
+
+Let me know once wallet auth, verified pin submission, and admin moderation are complete so we can test the full DAO social flow.
