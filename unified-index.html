@@ -521,11 +521,11 @@
       <a href="/verified-map" class="nav-link">Citizen Map</a>
       <a href="/collection" class="nav-link active">Collection</a>
       <button class="theme-toggle">🌙</button>
-    </div>
-    
-    <div class="wallet-section">
-      <button id="walletBtn" class="wallet-connect-btn">Connect Wallet</button>
-      <button id="disconnectBtn" class="disconnect-btn" style="display: none;">✕</button>
+      
+      <div class="wallet-section">
+        <button id="walletBtn" class="wallet-connect-btn">Connect Wallet</button>
+        <button id="disconnectBtn" class="disconnect-btn" style="display: none;">✕</button>
+      </div>
     </div>
   </div>
 
@@ -645,13 +645,15 @@
         
         // Request signature for verification
         const timestamp = Date.now();
-        const message = `Verify wallet ownership for IslandDAO\nTimestamp: ${timestamp}`;
+        const message = `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
         const encodedMessage = new TextEncoder().encode(message);
         
         const signature = await wallet.signMessage(encodedMessage);
         
-        // Here you would verify the signature on the server
-        // For now, we'll assume verification passed
+        // Store wallet connection in localStorage for persistence
+        localStorage.setItem('connected_wallet', publicKey);
+        localStorage.setItem('wallet_type', walletType);
+        
         connectedWallet = publicKey;
         walletProvider = wallet;
         
@@ -668,6 +670,10 @@
       if (walletProvider) {
         walletProvider.disconnect();
       }
+      // Clear localStorage
+      localStorage.removeItem('connected_wallet');
+      localStorage.removeItem('wallet_type');
+      
       connectedWallet = null;
       walletProvider = null;
       updateWalletUI();
@@ -675,13 +681,22 @@
 
     function updateWalletUI() {
       if (connectedWallet) {
-        walletBtn.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
+        walletBtn.innerHTML = `<span>🔗</span> <span>${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}</span>`;
         walletBtn.classList.add('wallet-connected');
         disconnectBtn.style.display = 'block';
       } else {
-        walletBtn.textContent = 'Connect Wallet';
+        walletBtn.innerHTML = `<span>🔗</span> <span>Connect Wallet</span>`;
         walletBtn.classList.remove('wallet-connected');
         disconnectBtn.style.display = 'none';
+      }
+    }
+
+    // Check for existing wallet connection on page load
+    function checkExistingConnection() {
+      const savedWallet = localStorage.getItem('connected_wallet');
+      if (savedWallet) {
+        connectedWallet = savedWallet;
+        updateWalletUI();
       }
     }
 
@@ -699,6 +714,7 @@
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
+      checkExistingConnection(); // Check for persisted wallet connection
       fetchInitialNfts();
       
       // Event listeners
