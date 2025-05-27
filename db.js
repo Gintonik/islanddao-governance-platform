@@ -307,6 +307,38 @@ async function getNftOwnershipMap() {
   }
 }
 
+/**
+ * Remove a specific citizen by wallet address
+ */
+async function removeCitizenByWallet(walletAddress) {
+  const client = await pool.connect();
+  try {
+    // First get the citizen ID
+    const citizenResult = await client.query('SELECT id FROM citizens WHERE wallet = $1', [walletAddress]);
+    
+    if (citizenResult.rows.length === 0) {
+      console.log(`No citizen found with wallet: ${walletAddress}`);
+      return { success: false, message: 'Citizen not found' };
+    }
+    
+    const citizenId = citizenResult.rows[0].id;
+    
+    // Delete from junction table first
+    await client.query('DELETE FROM citizen_nfts WHERE citizen_id = $1', [citizenId]);
+    
+    // Delete the citizen
+    await client.query('DELETE FROM citizens WHERE id = $1', [citizenId]);
+    
+    console.log(`Removed citizen with wallet: ${walletAddress}`);
+    return { success: true, message: 'Citizen removed successfully' };
+  } catch (error) {
+    console.error('Error removing citizen:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   pool,
   initializeDatabase,
@@ -315,5 +347,6 @@ module.exports = {
   saveCitizen,
   getAllCitizens,
   clearAllCitizens,
+  removeCitizenByWallet,
   getNftOwnershipMap
 };

@@ -7,7 +7,7 @@ const path = require('path');
 const url = require('url');
 const querystring = require('querystring');
 const db = require('./db');
-const { verifySignature, generateVerificationMessage, isAdminWallet, ADMIN_WALLET } = require('./wallet-auth');
+const { verifySignature, generateVerificationMessage, isAdminWallet } = require('./wallet-auth');
 
 // Initialize the database on startup
 async function initializeApp() {
@@ -130,6 +130,181 @@ function startServer() {
         
         sendJsonResponse(res, formattedNfts);
       }
+      // ===== SECURE WALLET VERIFICATION ENDPOINTS =====
+      
+      // Generate verification message for wallet signing
+      if (req.method === 'GET' && req.url === '/api/auth/generate-message') {
+        const timestamp = Date.now();
+        const message = generateVerificationMessage(timestamp);
+        sendJsonResponse(res, { message, timestamp });
+      }
+      
+      // Verify wallet signature and return authentication status
+      else if (req.method === 'POST' && req.url === '/api/auth/verify') {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', () => {
+          try {
+            const { wallet_address, original_message, signature } = JSON.parse(body);
+            
+            if (!wallet_address || !original_message || !signature) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Missing required fields' }));
+              return;
+            }
+            
+            const isValid = verifySignature(original_message, signature, wallet_address);
+            const isAdmin = isAdminWallet(wallet_address);
+            
+            if (isValid) {
+              console.log(`✅ Verified wallet: ${wallet_address}${isAdmin ? ' (ADMIN)' : ''}`);
+              sendJsonResponse(res, { 
+                verified: true, 
+                isAdmin,
+                wallet: wallet_address 
+              });
+            } else {
+              console.log(`⚠️ Invalid signature from wallet: ${wallet_address}`);
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Invalid signature' }));
+            }
+          } catch (error) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid JSON' }));
+          }
+        });
+      }
+      
+      // SECURE API endpoint to save citizen data (requires wallet verification)
+      else if (req.method === 'POST' && req.url === '/api/save-citizen-verified') {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', async () => {
+          try {
+            const data = JSON.parse(body);
+            const { wallet_address, original_message, signature } = data;
+            
+            // Verify wallet signature
+            if (!verifySignature(original_message, signature, wallet_address)) {
+              console.log(`⚠️ Unauthorized save attempt from wallet: ${wallet_address}`);
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Invalid wallet signature' }));
+              return;
+            }
+            
+            // Verify timestamp (5 minute window)
+            const timestampMatch = original_message.match(/Timestamp: (\d+)/);
+            if (timestampMatch) {
+              const messageTimestamp = parseInt(timestampMatch[1]);
+              const timeDiff = Math.abs(Date.now() - messageTimestamp);
+              if (timeDiff > 300000) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Message timestamp expired' }));
+                return;
+              }
+            }
+            
+            // Prepare citizen data with enhanced profile fields
+            const citizenData = {
+              wallet: wallet_address,
+              location: [parseFloat(data.lat), parseFloat(data.lng)],
+              primaryNft: data.primary_nft || null,
+              pfp: data.pfp_nft || null,
+              message: data.message || null,
+              nfts: data.nfts || [],
+              pfpImageUrl: data.image_url || null,
+              socials: {
+                twitter: data.twitter_handle || null,
+                telegram: data.telegram_handle || null,
+                discord: data.discord_handle || null
+              }
+            };
+            
+            const citizenId = await db.saveCitizen(citizenData);
+            
+            console.log(`✅ Verified citizen profile saved for wallet: ${wallet_address}`);
+            sendJsonResponse(res, { 
+              success: true, 
+              message: 'Verified citizen profile saved successfully',
+              citizenId 
+            });
+          } catch (error) {
+            console.error('Error saving verified citizen data:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error', details: error.message }));
+          }
+        });
+      }
+      
+      // ADMIN-ONLY: Clear all pins (requires admin wallet signature)
+      else if (req.method === 'POST' && req.url === '/admin/clear-pins') {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', async () => {
+          try {
+            const { wallet_address, original_message, signature } = JSON.parse(body);
+            
+            // Verify admin wallet signature
+            if (!verifySignature(original_message, signature, wallet_address) || !isAdminWallet(wallet_address)) {
+              console.log(`⚠️ Blocked unauthorized admin attempt from wallet: ${wallet_address}`);
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Admin privileges required' }));
+              return;
+            }
+            
+            await db.clearAllCitizens();
+            console.log(`✅ Admin cleared all pins`);
+            
+            sendJsonResponse(res, { 
+              success: true, 
+              message: 'All citizen pins cleared by admin' 
+            });
+          } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error' }));
+          }
+        });
+      }
+      
+      // ADMIN-ONLY: Remove specific pin by wallet (requires admin wallet signature)
+      else if (req.method === 'POST' && req.url === '/admin/remove-pin') {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', async () => {
+          try {
+            const { wallet_address, original_message, signature, target_wallet } = JSON.parse(body);
+            
+            // Verify admin wallet signature
+            if (!verifySignature(original_message, signature, wallet_address) || !isAdminWallet(wallet_address)) {
+              console.log(`⚠️ Blocked unauthorized admin attempt from wallet: ${wallet_address}`);
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Admin privileges required' }));
+              return;
+            }
+            
+            if (!target_wallet) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Target wallet address required' }));
+              return;
+            }
+            
+            // Remove specific citizen by wallet
+            await db.removeCitizenByWallet(target_wallet);
+            console.log(`✅ Admin removed pin for wallet: ${target_wallet}`);
+            
+            sendJsonResponse(res, { 
+              success: true, 
+              message: `Pin removed for wallet: ${target_wallet}` 
+            });
+          } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Server error' }));
+          }
+        });
+      }
+      
+      // ===== LEGACY ENDPOINTS (for backwards compatibility) =====
+      
       // API endpoint to save citizen pin
       else if (req.method === 'POST' && req.url === '/api/save-citizen') {
         let body = '';
