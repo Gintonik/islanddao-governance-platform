@@ -243,6 +243,190 @@
             border-left-color: #ff6b6b;
         }
 
+        .citizen-panel {
+            position: fixed;
+            top: 80px;
+            right: -400px;
+            width: 380px;
+            height: calc(100vh - 80px);
+            background: white;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 1500;
+            overflow-y: auto;
+        }
+
+        .citizen-panel.open {
+            right: 0;
+        }
+
+        .citizen-panel-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .citizen-panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .citizen-panel-content {
+            padding: 1.5rem;
+        }
+
+        .citizen-profile {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .citizen-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            object-fit: cover;
+            border: 3px solid #4facfe;
+        }
+
+        .citizen-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .citizen-bio {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .citizen-wallet {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+
+        .citizen-socials {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-link {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .social-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .social-twitter {
+            background: #1da1f2;
+        }
+
+        .social-telegram {
+            background: #0088cc;
+        }
+
+        .social-discord {
+            background: #7289da;
+        }
+
+        .citizen-nfts {
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 0.5rem;
+        }
+
+        .nft-collection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .nft-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nft-card:hover {
+            border-color: #4facfe;
+            transform: scale(1.05);
+        }
+
+        .nft-card.primary {
+            border-color: #56ab2f;
+            box-shadow: 0 2px 8px rgba(86, 171, 47, 0.3);
+        }
+
+        .nft-image-small {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        .nft-info {
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .nft-name-small {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .primary-badge {
+            background: #56ab2f;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-top: 2px;
+        }
+
         .pin-form-modal {
             display: none;
             position: fixed;
@@ -484,6 +668,17 @@
                     <button type="submit" class="btn btn-primary" id="submitBtn">Create Verified Pin</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Citizen Info Panel -->
+    <div id="citizenPanel" class="citizen-panel">
+        <div class="citizen-panel-header">
+            <div class="citizen-panel-title">Citizen Profile</div>
+            <button class="close-panel" onclick="closeCitizenPanel()">&times;</button>
+        </div>
+        <div class="citizen-panel-content" id="citizenPanelContent">
+            <!-- Content will be dynamically populated -->
         </div>
     </div>
 
@@ -923,10 +1118,10 @@
 
                     const marker = L.marker([lat, lng], { icon }).addTo(map);
                     
-                    // Create popup content
-                    const isVerified = citizen.wallet === currentWallet;
-                    const popupContent = createPopupContent(citizen, isVerified);
-                    marker.bindPopup(popupContent, { maxWidth: 300 });
+                    // Add click event to show citizen panel instead of popup
+                    marker.on('click', () => {
+                        showCitizenPanel(citizen);
+                    });
                 });
 
                 console.log(`Loaded ${citizens.length} citizens`);
@@ -937,34 +1132,103 @@
             }
         }
 
-        // Create popup content for citizens
-        function createPopupContent(citizen, isVerified) {
-            const nftData = citizen.nftMetadata[citizen.primary_nft] || {};
+        // Show citizen panel with full profile and NFT collection
+        function showCitizenPanel(citizen) {
+            const panel = document.getElementById('citizenPanel');
+            const content = document.getElementById('citizenPanelContent');
             
-            return `
-                <div style="text-align: center; padding: 10px;">
-                    <img src="${citizen.pfpImageUrl || citizen.image_url}" 
-                         style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; object-fit: cover;">
-                    
-                    <h4 style="margin: 0 0 5px 0; color: #333;">
-                        ${citizen.nickname || nftData.name || 'Anonymous Citizen'}
+            const isVerified = citizen.wallet === currentWallet;
+            const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
+            let imageUrl = 'https://via.placeholder.com/80';
+            
+            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+                imageUrl = citizen.nftMetadata[pfpNft].image;
+            }
+
+            const citizenName = citizen.nickname || 
+                               (citizen.nftMetadata && citizen.nftMetadata[pfpNft] ? citizen.nftMetadata[pfpNft].name : null) || 
+                               'Anonymous Citizen';
+
+            content.innerHTML = `
+                <div class="citizen-profile">
+                    <img src="${imageUrl}" alt="Profile" class="citizen-avatar">
+                    <div class="citizen-name">
+                        ${citizenName}
                         ${isVerified ? '<span style="color: #56ab2f; font-size: 0.8em;">✓ You</span>' : ''}
-                    </h4>
-                    
-                    ${citizen.bio ? `<p style="font-style: italic; color: #666; margin: 5px 0;">${citizen.bio}</p>` : ''}
-                    
-                    ${citizen.message ? `<p style="margin: 10px 0;">${citizen.message}</p>` : ''}
-                    
-                    <div style="margin-top: 10px;">
-                        <a href="https://solscan.io/account/${citizen.wallet}" target="_blank" 
-                           style="color: #4facfe; text-decoration: none; font-size: 0.9em;">
-                            ${citizen.wallet.slice(0, 4)}...${citizen.wallet.slice(-4)}
-                        </a>
                     </div>
+                    ${citizen.bio ? `<div class="citizen-bio">${citizen.bio}</div>` : ''}
                     
-                    ${createSocialLinks(citizen)}
+                    <div class="citizen-wallet" onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" style="cursor: pointer;">
+                        ${citizen.wallet}
+                    </div>
+                </div>
+
+                ${createSocialLinksPanel(citizen)}
+
+                <div class="citizen-nfts">
+                    <div class="section-title">NFT Collection (${citizen.nfts ? citizen.nfts.length : 0})</div>
+                    <div class="nft-collection">
+                        ${createNftGrid(citizen)}
+                    </div>
                 </div>
             `;
+
+            panel.classList.add('open');
+        }
+
+        // Close citizen panel
+        function closeCitizenPanel() {
+            const panel = document.getElementById('citizenPanel');
+            panel.classList.remove('open');
+        }
+
+        // Create social media links for panel
+        function createSocialLinksPanel(citizen) {
+            if (!citizen.twitter_handle && !citizen.telegram_handle && !citizen.discord_handle) {
+                return '';
+            }
+
+            let socialHtml = '<div class="citizen-socials">';
+            
+            if (citizen.twitter_handle) {
+                const handle = citizen.twitter_handle.replace('@', '');
+                socialHtml += `<a href="https://x.com/${handle}" target="_blank" class="social-link social-twitter">Twitter</a>`;
+            }
+            
+            if (citizen.telegram_handle) {
+                socialHtml += `<span onclick="copyToClipboard('${citizen.telegram_handle}')" class="social-link social-telegram">Telegram</span>`;
+            }
+            
+            if (citizen.discord_handle) {
+                socialHtml += `<span onclick="copyToClipboard('${citizen.discord_handle}')" class="social-link social-discord">Discord</span>`;
+            }
+            
+            socialHtml += '</div>';
+            return socialHtml;
+        }
+
+        // Create NFT grid for citizen panel
+        function createNftGrid(citizen) {
+            if (!citizen.nfts || citizen.nfts.length === 0) {
+                return '<p style="text-align: center; color: #666;">No NFTs found</p>';
+            }
+
+            return citizen.nfts.map(nftId => {
+                const nft = citizen.nftMetadata[nftId];
+                if (!nft) return '';
+
+                const isPrimary = nftId === (citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft);
+                
+                return `
+                    <div class="nft-card ${isPrimary ? 'primary' : ''}" onclick="window.open('https://solscan.io/token/${nftId}', '_blank')">
+                        <img src="${nft.image}" alt="${nft.name}" class="nft-image-small">
+                        <div class="nft-info">
+                            <div class="nft-name-small">${nft.name}</div>
+                            ${isPrimary ? '<div class="primary-badge">Profile</div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Create social media links
