@@ -1184,12 +1184,25 @@
 
         // Disconnect wallet function
         function disconnectWallet() {
+            console.log('Disconnecting wallet...');
             currentWallet = null;
             walletNfts = [];
+            selectedPfp = null;
+            selectedPrimary = null;
             updateWalletUI();
             document.getElementById('walletDropdown').style.display = 'none';
             showNotification('Wallet disconnected successfully', 'success');
         }
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('walletDropdown');
+            const walletBtn = document.getElementById('walletBtn');
+            
+            if (dropdown && walletBtn && !walletBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
 
         // ===== NFT LOADING =====
         async function loadUserNfts() {
