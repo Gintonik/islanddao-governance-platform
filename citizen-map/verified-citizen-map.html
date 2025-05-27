@@ -1229,9 +1229,9 @@
 
                     const marker = L.marker([lat, lng], { icon }).addTo(map);
                     
-                    // Add click event to show popup with citizen info
+                    // Add click event to show citizen panel
                     marker.on('click', () => {
-                        marker.bindPopup(createPopupContent(citizen, citizen.wallet === currentWallet)).openPopup();
+                        showCitizenPanel(citizen);
                     });
                 });
 
