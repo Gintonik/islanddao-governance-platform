@@ -1524,13 +1524,8 @@
                     }
                 });
 
-                // Smart clustering with animated expansion on hover
-                const processedCitizens = new Set();
-                const allMarkers = [];
-
-                citizens.forEach((citizen, index) => {
-                    if (processedCitizens.has(index)) return;
-
+                // Simple individual markers - clean and reliable
+                citizens.forEach(citizen => {
                     let lat, lng;
                     if (citizen.lat && citizen.lng) {
                         lat = parseFloat(citizen.lat);
@@ -1547,144 +1542,7 @@
                     // Normalize longitude to be within -180 to 180 range
                     while (lng > 180) lng -= 360;
                     while (lng < -180) lng += 360;
-
-                    const cluster = [citizen];
-                    const clusterLat = lat;
-                    const clusterLng = lng;
-
-                    // Find nearby citizens for clustering (0.15 degrees ≈ 16km)
-                    citizens.forEach((otherCitizen, otherIndex) => {
-                        if (processedCitizens.has(otherIndex) || index === otherIndex) return;
-
-                        let otherLat, otherLng;
-                        if (otherCitizen.lat && otherCitizen.lng) {
-                            otherLat = parseFloat(otherCitizen.lat);
-                            otherLng = parseFloat(otherCitizen.lng);
-                        } else if (otherCitizen.location && Array.isArray(otherCitizen.location)) {
-                            otherLat = parseFloat(otherCitizen.location[0]);
-                            otherLng = parseFloat(otherCitizen.location[1]);
-                        } else {
-                            return;
-                        }
-                        
-                        if (isNaN(otherLat) || isNaN(otherLng)) return;
-                        
-                        // Normalize longitude
-                        while (otherLng > 180) otherLng -= 360;
-                        while (otherLng < -180) otherLng += 360;
-
-                        const distance = Math.sqrt(Math.pow(lat - otherLat, 2) + Math.pow(lng - otherLng, 2));
-                        if (distance < 0.15) {
-                            cluster.push(otherCitizen);
-                            processedCitizens.add(otherIndex);
-                        }
-                    });
-
-                    processedCitizens.add(index);
                     
-                    if (cluster.length === 1) {
-                        // Single citizen - create individual marker
-                        const citizen = cluster[0];
-                        const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-                        let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
-                        
-                        if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                            imageUrl = citizen.nftMetadata[pfpNft].image;
-                        } else if (citizen.pfpImageUrl) {
-                            imageUrl = citizen.pfpImageUrl;
-                        } else if (citizen.image_url) {
-                            imageUrl = citizen.image_url;
-                        }
-
-                        const icon = L.divIcon({
-                            html: `<img src="${imageUrl}" 
-                                   style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: all 0.3s ease;" 
-                                   onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'">`,
-                            className: 'citizen-marker',
-                            iconSize: [40, 40],
-                            iconAnchor: [20, 20]
-                        });
-
-                        const marker = L.marker([clusterLat, clusterLng], { icon }).addTo(map);
-                        marker.on('click', () => showCitizenPanel(citizen));
-                        allMarkers.push(marker);
-                    } else {
-                        // Multiple citizens - create animated cluster
-                        createAnimatedCluster(cluster, clusterLat, clusterLng, allMarkers);
-                    }
-                });
-                
-                console.log(`Loaded ${citizens.length} citizens with animated clustering`);
-            } catch (error) {
-                console.error('Error loading citizens:', error);
-                showNotification('Failed to load citizen data', 'error');
-            }
-        }
-
-
-
-        // Create animated cluster with hover expansion
-        function createAnimatedCluster(cluster, centerLat, centerLng, allMarkers) {
-            const clusterGroup = L.layerGroup().addTo(map);
-            let expandedMarkers = [];
-            let isExpanded = false;
-            let hoverTimeout;
-
-            // Create main cluster marker
-            const size = Math.min(70, 45 + (cluster.length * 4));
-            let imagesHtml = '';
-            
-            cluster.slice(0, 4).forEach((citizen, idx) => {
-                const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-                let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
-                
-                if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                    imageUrl = citizen.nftMetadata[pfpNft].image;
-                } else if (citizen.pfpImageUrl) {
-                    imageUrl = citizen.pfpImageUrl;
-                } else if (citizen.image_url) {
-                    imageUrl = citizen.image_url;
-                }
-
-                const imageSize = size / 3;
-                const x = (idx % 2) * (imageSize - 5);
-                const y = Math.floor(idx / 2) * (imageSize - 5);
-                
-                imagesHtml += `<img src="${imageUrl}" 
-                               style="position: absolute; left: ${x}px; top: ${y}px; width: ${imageSize}px; height: ${imageSize}px; border-radius: 50%; object-fit: cover; border: 2px solid white;" 
-                               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'">`;
-            });
-
-            const clusterIcon = L.divIcon({
-                html: `<div class="cluster-container" style="position: relative; width: ${size}px; height: ${size}px; background: rgba(79, 172, 254, 0.2); border: 3px solid #4facfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.3s ease; cursor: pointer;">
-                         ${imagesHtml}
-                         <div class="cluster-count" style="position: absolute; bottom: -5px; right: -5px; background: #4facfe; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">${cluster.length}</div>
-                       </div>`,
-                className: 'animated-cluster-marker',
-                iconSize: [size, size],
-                iconAnchor: [size/2, size/2]
-            });
-
-            const mainMarker = L.marker([centerLat, centerLng], { icon: clusterIcon }).addTo(clusterGroup);
-            allMarkers.push(mainMarker);
-
-            // Hover expansion function
-            function expandCluster() {
-                if (isExpanded) return;
-                isExpanded = true;
-
-                // Calculate positions for expanded markers
-                const radius = 60; // Distance from center
-                const angleStep = (2 * Math.PI) / cluster.length;
-
-                cluster.forEach((citizen, idx) => {
-                    const angle = idx * angleStep;
-                    const offsetLat = (radius * Math.cos(angle)) / 111000; // Convert meters to degrees
-                    const offsetLng = (radius * Math.sin(angle)) / (111000 * Math.cos(centerLat * Math.PI / 180));
-                    
-                    const expandedLat = centerLat + offsetLat;
-                    const expandedLng = centerLng + offsetLng;
-
                     const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
                     let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
                     
@@ -1696,99 +1554,29 @@
                         imageUrl = citizen.image_url;
                     }
 
-                    const expandedIcon = L.divIcon({
+                    const icon = L.divIcon({
                         html: `<img src="${imageUrl}" 
-                               style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3); opacity: 0; transform: scale(0.5); transition: all 0.3s ease;" 
+                               style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" 
                                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'">`,
-                        className: 'expanded-citizen-marker',
-                        iconSize: [35, 35],
-                        iconAnchor: [17.5, 17.5]
+                        className: 'citizen-marker',
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
                     });
 
-                    const expandedMarker = L.marker([expandedLat, expandedLng], { icon: expandedIcon }).addTo(clusterGroup);
-                    expandedMarker.on('click', () => showCitizenPanel(citizen));
-                    expandedMarkers.push(expandedMarker);
-
-                    // Animate in after a short delay
-                    setTimeout(() => {
-                        const markerElement = expandedMarker.getElement();
-                        if (markerElement) {
-                            const img = markerElement.querySelector('img');
-                            if (img) {
-                                img.style.opacity = '1';
-                                img.style.transform = 'scale(1)';
-                            }
-                        }
-                    }, idx * 50); // Stagger animation
+                    const marker = L.marker([lat, lng], { icon }).addTo(map);
+                    marker.on('click', () => showCitizenPanel(citizen));
                 });
-
-                // Hide main cluster marker
-                const clusterElement = mainMarker.getElement();
-                if (clusterElement) {
-                    clusterElement.style.opacity = '0.3';
-                    clusterElement.style.transform = 'scale(0.8)';
-                }
+                
+                console.log(`Loaded ${citizens.length} citizens individually`);
+            } catch (error) {
+                console.error('Error loading citizens:', error);
+                showNotification('Failed to load citizen data', 'error');
             }
-
-            // Contract cluster function
-            function contractCluster() {
-                if (!isExpanded) return;
-                isExpanded = false;
-
-                // Animate out expanded markers
-                expandedMarkers.forEach((marker, idx) => {
-                    const markerElement = marker.getElement();
-                    if (markerElement) {
-                        const img = markerElement.querySelector('img');
-                        if (img) {
-                            img.style.opacity = '0';
-                            img.style.transform = 'scale(0.5)';
-                        }
-                    }
-                    
-                    setTimeout(() => {
-                        clusterGroup.removeLayer(marker);
-                    }, 300);
-                });
-
-                expandedMarkers = [];
-
-                // Show main cluster marker
-                const clusterElement = mainMarker.getElement();
-                if (clusterElement) {
-                    clusterElement.style.opacity = '1';
-                    clusterElement.style.transform = 'scale(1)';
-                }
-            }
-
-            // Add hover events
-            mainMarker.on('mouseover', () => {
-                clearTimeout(hoverTimeout);
-                expandCluster();
-            });
-
-            mainMarker.on('mouseout', () => {
-                hoverTimeout = setTimeout(contractCluster, 2000); // Longer delay before contracting
-            });
-
-            // Keep expanded on hover over expanded markers
-            clusterGroup.on('mouseover', () => {
-                clearTimeout(hoverTimeout);
-            });
-
-            clusterGroup.on('mouseout', () => {
-                hoverTimeout = setTimeout(contractCluster, 2000); // Longer delay
-            });
-
-            // Click to toggle expansion
-            mainMarker.on('click', () => {
-                if (isExpanded) {
-                    contractCluster();
-                } else {
-                    expandCluster();
-                }
-            });
         }
+
+
+
+
         function createMultiCitizenMarker(citizens) {
             // Calculate center position
             let totalLat = 0, totalLng = 0;
