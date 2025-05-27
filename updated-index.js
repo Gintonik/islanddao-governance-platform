@@ -75,7 +75,9 @@ function startServer() {
       }
       // Serve the NFT collection grid
       else if (req.url === '/collection' || req.url === '/grid') {
-        serveFile(res, path.join(__dirname, 'unified-index.html'), 'text/html');
+        const collectionPath = path.join(__dirname, 'unified-index.html');
+        console.log('Serving collection from path:', collectionPath);
+        serveFile(res, collectionPath, 'text/html');
       } 
       // API endpoint for NFT collection data
       else if (req.url === '/api/nfts') {
