@@ -491,15 +491,20 @@ function startServer() {
         
         serveFile(res, filePath, contentType);
       }
-      // Serve static files from the root directory
+      // Handle any remaining static files or fallback
       else {
-        const filePath = path.join(__dirname, req.url);
-        
-        // Auto-detect content type based on file extension
-        const extname = path.extname(filePath);
-        const contentType = getContentType(extname);
-        
-        serveFile(res, filePath, contentType);
+        // Check if it's the verified-map route that was missed
+        if (req.url === '/verified-map') {
+          serveFile(res, path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'), 'text/html');
+        } else {
+          const filePath = path.join(__dirname, req.url);
+          
+          // Auto-detect content type based on file extension
+          const extname = path.extname(filePath);
+          const contentType = getContentType(extname);
+          
+          serveFile(res, filePath, contentType);
+        }
       }
     } catch (error) {
       console.error('Error handling request:', error);
@@ -534,17 +539,23 @@ function serveFile(res, filePath, contentType) {
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        res.writeHead(404);
-        res.end('File not found');
+        if (!res.headersSent) {
+          res.writeHead(404);
+          res.end('File not found');
+        }
       } else {
-        res.writeHead(500);
-        res.end(`Server error: ${err.code}`);
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end(`Server error: ${err.code}`);
+        }
       }
       return;
     }
     
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(content);
+    if (!res.headersSent) {
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(content);
+    }
   });
 }
 
