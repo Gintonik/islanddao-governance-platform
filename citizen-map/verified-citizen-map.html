@@ -23,15 +23,14 @@
         .header {
             background: rgba(15, 15, 15, 0.95);
             backdrop-filter: blur(20px);
-            padding: 16px 24px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid var(--border-subtle);
-            box-shadow: var(--shadow-soft);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .logo-container {
@@ -41,30 +40,31 @@
         }
 
         .logo {
-            height: 40px;
+            height: 28px;
             width: auto;
         }
 
         .title {
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: -0.025em;
+            color: #AFAFAF;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0;
         }
 
         .wallet-section {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 8px;
         }
 
         .wallet-connect-btn {
-            background: var(--accent-primary);
-            color: var(--bg-primary);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
+            background: rgba(33, 232, 163, 0.1);
+            color: #21E8A3;
+            border: 1px solid rgba(33, 232, 163, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -697,9 +697,9 @@
         </div>
         
         <!-- Navigation -->
-        <div class="nav-container" style="display: flex; gap: 12px; align-items: center;">
-            <a href="/" style="color: #AFAFAF; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Collection Grid</a>
-            <a href="/verified-map" style="color: #21E8A3; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; background: rgba(33, 232, 163, 0.1); border: 1px solid rgba(33, 232, 163, 0.3);">Citizen Map</a>
+        <div class="nav-container" style="display: flex; gap: 6px; align-items: center;">
+            <a href="/" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Collection</a>
+            <a href="/verified-map" style="color: #21E8A3; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; background: rgba(33, 232, 163, 0.1); border: 1px solid rgba(33, 232, 163, 0.3);">Map</a>
         </div>
         
         <div class="wallet-section">
