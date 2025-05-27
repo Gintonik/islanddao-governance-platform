@@ -309,25 +309,25 @@
 
         /* Theme Variables */
         :root {
-            --panel-bg: white;
-            --panel-header-bg: #f8f9fa;
-            --panel-border: #e5e5e5;
-            --panel-hover: #e9ecef;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --panel-header-bg: rgba(248, 249, 250, 0.9);
+            --panel-border: rgba(229, 229, 229, 0.8);
+            --panel-hover: rgba(233, 236, 239, 0.8);
             --text-primary: #333;
             --text-secondary: #666;
-            --wallet-bg: #f8f9fa;
-            --wallet-hover: #e9ecef;
+            --wallet-bg: rgba(248, 249, 250, 0.8);
+            --wallet-hover: rgba(233, 236, 239, 0.8);
         }
 
         [data-theme="dark"] {
-            --panel-bg: #2d3748;
-            --panel-header-bg: #1a202c;
-            --panel-border: #4a5568;
-            --panel-hover: #4a5568;
+            --panel-bg: rgba(45, 55, 72, 0.95);
+            --panel-header-bg: rgba(26, 32, 44, 0.9);
+            --panel-border: rgba(74, 85, 104, 0.8);
+            --panel-hover: rgba(74, 85, 104, 0.8);
             --text-primary: #e2e8f0;
             --text-secondary: #a0aec0;
-            --wallet-bg: #1a202c;
-            --wallet-hover: #2d3748;
+            --wallet-bg: rgba(26, 32, 44, 0.8);
+            --wallet-hover: rgba(45, 55, 72, 0.8);
         }
 
         .citizen-profile {
@@ -1242,7 +1242,10 @@
                     ${createSocialLinksPanel(citizen)}
                     
                     <div style="border-top: 1px solid var(--panel-border); margin-top: 20px; padding-top: 15px;">
-                        <h4 style="margin: 0 0 15px 0; color: var(--text-primary); font-size: 16px;">NFT Collection (${citizen.nfts ? citizen.nfts.length : 0})</h4>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 16px;">NFT Collection</h4>
+                            <span style="background: #9945FF; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;">${citizen.nfts ? citizen.nfts.length : 0}</span>
+                        </div>
                         ${createNftGrid(citizen)}
                     </div>
                 </div>
@@ -1263,19 +1266,58 @@
                 return '';
             }
 
-            let socialHtml = '<div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">';
+            let socialHtml = '<div style="margin-top: 10px; display: flex; justify-content: center; gap: 8px;">';
             
             if (citizen.twitter_handle) {
                 const handle = citizen.twitter_handle.replace('@', '');
-                socialHtml += `<a href="https://x.com/${handle}" target="_blank" style="color: #1da1f2; text-decoration: none;">Twitter</a>`;
+                socialHtml += `<a href="https://x.com/${handle}" target="_blank" style="
+                    width: 32px; 
+                    height: 32px; 
+                    background: #1da1f2; 
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    text-decoration: none; 
+                    color: white; 
+                    font-weight: bold; 
+                    font-size: 16px;
+                    transition: transform 0.2s ease;
+                " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🐦</a>`;
             }
             
             if (citizen.telegram_handle) {
-                socialHtml += `<span onclick="copyToClipboard('${citizen.telegram_handle}')" style="color: #0088cc; cursor: pointer;">Telegram</span>`;
+                socialHtml += `<span onclick="copyToClipboard('${citizen.telegram_handle}')" style="
+                    width: 32px; 
+                    height: 32px; 
+                    background: #0088cc; 
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    cursor: pointer; 
+                    color: white; 
+                    font-weight: bold; 
+                    font-size: 16px;
+                    transition: transform 0.2s ease;
+                " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✈️</span>`;
             }
             
             if (citizen.discord_handle) {
-                socialHtml += `<span onclick="copyToClipboard('${citizen.discord_handle}')" style="color: #7289da; cursor: pointer;">Discord</span>`;
+                socialHtml += `<span onclick="copyToClipboard('${citizen.discord_handle}')" style="
+                    width: 32px; 
+                    height: 32px; 
+                    background: #5865f2; 
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    cursor: pointer; 
+                    color: white; 
+                    font-weight: bold; 
+                    font-size: 16px;
+                    transition: transform 0.2s ease;
+                " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🎮</span>`;
             }
             
             socialHtml += '</div>';
