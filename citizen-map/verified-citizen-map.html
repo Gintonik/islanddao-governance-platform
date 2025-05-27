@@ -1768,7 +1768,7 @@
             });
 
             mainMarker.on('mouseout', () => {
-                hoverTimeout = setTimeout(contractCluster, 500); // Delay before contracting
+                hoverTimeout = setTimeout(contractCluster, 2000); // Longer delay before contracting
             });
 
             // Keep expanded on hover over expanded markers
@@ -1777,7 +1777,7 @@
             });
 
             clusterGroup.on('mouseout', () => {
-                hoverTimeout = setTimeout(contractCluster, 500);
+                hoverTimeout = setTimeout(contractCluster, 2000); // Longer delay
             });
 
             // Click to toggle expansion
