@@ -208,55 +208,45 @@ function showSmallCard(citizen) {
         rightContainer.style.right = '0px';  // Slide right container into view
     }, 50);
     
-    // Set onclick handlers directly in HTML - no event listeners
-    const expandedCloseBtn = existingCard.querySelector('.close-btn');
-    if (expandedCloseBtn) {
-        expandedCloseBtn.onclick = function(e) {
-            e.stopPropagation();
-            console.log('X button clicked in STATE 3');
-            closeCardCompletely(existingCard);
-        };
-    }
+    // No close buttons - cards close by clicking outside or backdrop
     
-    // Add collapse button instead of using polaroid click
-    const profileSection = existingCard.querySelector('.profile-pfp');
-    if (profileSection && !profileSection.querySelector('.collapse-btn')) {
-        const collapseBtn = document.createElement('button');
-        collapseBtn.className = 'collapse-btn';
-        collapseBtn.innerHTML = '◂';
-        collapseBtn.style.cssText = `
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #21E8A3;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            color: #000;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        `;
-        collapseBtn.onclick = function(e) {
-            e.stopPropagation();
-            console.log('Collapse button clicked in STATE 3');
-            collapseToSmallCard(existingCard);
-        };
-        profileSection.style.position = 'relative';
-        profileSection.appendChild(collapseBtn);
-    }
-    
-    // No backdrop event listeners - using document level handlers instead
+    // Update slider dots for expanded state
+    const sliderDots = existingCard.querySelectorAll('.slider-dot');
+    sliderDots.forEach(dot => {
+        dot.style.background = dot.dataset.state === 'expanded' ? '#21E8A3' : 'rgba(255,255,255,0.3)';
+        dot.classList.toggle('active', dot.dataset.state === 'expanded');
+    });
     
     // Load governance data
     loadGovernanceData(citizen, { querySelector: () => existingCard });
 }
+
+// Global function to handle card state slider
+window.setCardState = function(targetState) {
+    const existingCard = document.getElementById('citizenPanel');
+    if (!existingCard) return;
+    
+    console.log(`Slider clicked: changing to ${targetState} state`);
+    
+    // Update slider dots visual state
+    const sliderDots = existingCard.querySelectorAll('.slider-dot');
+    sliderDots.forEach(dot => {
+        const isActive = dot.dataset.state === targetState;
+        dot.style.background = isActive ? '#21E8A3' : 'rgba(255,255,255,0.3)';
+        dot.classList.toggle('active', isActive);
+    });
+    
+    // Get citizen data from card
+    const citizenData = JSON.parse(existingCard.getAttribute('data-citizen') || '{}');
+    
+    if (targetState === 'expanded' && modalState !== 'expanded') {
+        expandToFullCard(existingCard, citizenData);
+        modalState = 'expanded';
+    } else if (targetState === 'small' && modalState === 'expanded') {
+        collapseToSmallCard(existingCard);
+        modalState = 'small';
+    }
+};
 
 function getProfileHTML(citizen) {
     const profileNftId = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
@@ -274,7 +264,7 @@ function getProfileHTML(citizen) {
     const nftCount = citizen.nfts ? citizen.nfts.length : 0;
     
     return `
-        <div class="profile-card" style="
+        <div class="profile-card" data-citizen='${JSON.stringify(citizen).replace(/'/g, "&#39;")}' style="
             position: fixed;
             top: 150px;
             right: 20px;
@@ -292,25 +282,7 @@ function getProfileHTML(citizen) {
             flex-direction: column;
             gap: 12px;
         ">
-            <button class="close-btn" style="
-                position: absolute;
-                top: 16px;
-                right: 16px;
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                color: #FAFAFA;
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                font-size: 18px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 300;
-                z-index: 10;
-                transition: all 0.2s ease;
-            ">&times;</button>
+
             
             <div style="position: absolute; top: 12px; left: 12px; opacity: 0.8;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -344,26 +316,38 @@ function getProfileHTML(citizen) {
                     font-family: 'Courier New', monospace;
                 ">PERK #${profileNftId || 'XXXX'}</div>
                 
-                <button class="expand-btn" onclick="expandToFullCard(this)" style="
+                
+                <!-- Card State Slider -->
+                <div class="card-slider" style="
                     position: absolute;
-                    top: -8px;
-                    right: -8px;
-                    background: #21E8A3;
-                    border: none;
-                    border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
-                    color: #000;
-                    font-size: 12px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    z-index: 10;
+                    bottom: -12px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0,0,0,0.8);
+                    border-radius: 15px;
+                    padding: 4px;
                     display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                    transition: all 0.2s ease;
-                " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">▸</button>
+                    gap: 4px;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(33, 232, 163, 0.3);
+                ">
+                    <div class="slider-dot active" data-state="small" onclick="setCardState('small')" style="
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        background: #21E8A3;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    "></div>
+                    <div class="slider-dot" data-state="expanded" onclick="setCardState('expanded')" style="
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.3);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    "></div>
+                </div>
             </div>
             
             <!-- Tags -->
