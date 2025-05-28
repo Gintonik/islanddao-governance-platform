@@ -63,6 +63,11 @@ function startServer() {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
+      // API endpoint for citizens (used by verified citizen map)
+      else if (req.url === '/api/citizens') {
+        const citizens = await apiRoutes.getAllCitizens();
+        sendJsonResponse(res, citizens);
+      }
       // Add endpoint for nft-owners.json to support the existing code
       else if (req.url === '/nft-owners.json') {
         try {
