@@ -1,8 +1,38 @@
 // Simple Card Slide Modal - Just slides the original card left
 let modalState = 'closed';
 
-function openEnhancedProfile(citizen) {
+// Global function for map markers to call
+window.openEnhancedProfile = function(citizen) {
     console.log('openEnhancedProfile called with citizen:', citizen);
+    
+    const existingCard = document.querySelector('.profile-card');
+    
+    if (existingCard) {
+        console.log('Found existing card:', existingCard);
+        console.log('Card current width:', existingCard.style.width);
+        console.log('Card current position:', existingCard.style.right);
+        console.log('Modal state:', modalState);
+        
+        // If card is in STATE 2 (small), expand to STATE 3
+        if (modalState === 'closed' && existingCard.classList.contains('open')) {
+            expandToFullCard(existingCard, citizen);
+        }
+        // If card is in STATE 3 (expanded), collapse to STATE 2
+        else if (modalState === 'expanded') {
+            collapseToSmallCard(existingCard);
+        }
+        // If card is closed (STATE 1), open to STATE 2
+        else {
+            showSmallCard(citizen);
+        }
+    } else {
+        // No existing card, create STATE 2 (small card)
+        showSmallCard(citizen);
+    }
+};
+
+function showSmallCard(citizen) {
+    console.log('STATE 1 → STATE 2: Opening small card for citizen:', citizen);
     
     // Find the existing profile panel in the sidebar
     const existingCard = document.getElementById('citizenPanel');
@@ -58,10 +88,10 @@ function openEnhancedProfile(citizen) {
     `;
     
     // Add close button to existing card
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'close-btn';
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
+    const smallCardCloseBtn = document.createElement('button');
+    smallCardCloseBtn.className = 'close-btn';
+    smallCardCloseBtn.innerHTML = '×';
+    smallCardCloseBtn.style.cssText = `
         position: absolute;
         top: 16px;
         right: 16px;
@@ -81,11 +111,11 @@ function openEnhancedProfile(citizen) {
         transition: all 0.2s ease;
     `;
     
-    existingCard.appendChild(closeBtn);
+    existingCard.appendChild(smallCardCloseBtn);
     
     // Event listeners
     // X button always closes completely (STATE 2/3 → STATE 1)
-    closeBtn.addEventListener('click', () => closeCardCompletely(existingCard));
+    smallCardCloseBtn.addEventListener('click', () => closeCardCompletely(existingCard));
     
     // Click outside to close completely
     backdrop.addEventListener('click', (e) => {
@@ -168,9 +198,9 @@ function openEnhancedProfile(citizen) {
     }, 50);
     
     // Re-attach X button event listener for STATE 3
-    const closeBtn = existingCard.querySelector('.profile-close-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
+    const expandedCloseBtn = existingCard.querySelector('.profile-close-btn');
+    if (expandedCloseBtn) {
+        expandedCloseBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log('X button clicked in STATE 3');
             closeCardCompletely(existingCard);
