@@ -7,7 +7,7 @@ const db = require('../db');
 const governanceAPI = require('./governance-api');
 
 // Constants
-const PORT = 5001;
+const PORT = 5000;
 const HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 const GLOBE_HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 
