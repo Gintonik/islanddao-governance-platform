@@ -61,60 +61,41 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
-    // Create unified expanded container behind the card
-    const unifiedContainer = document.createElement('div');
-    unifiedContainer.className = 'unified-profile-container';
-    unifiedContainer.style.cssText = `
-        position: fixed;
-        top: 150px;
-        right: 20px;
-        width: 580px;
-        height: 200px;
-        background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
-        border: 2px solid #21E8A3;
-        border-radius: 20px;
-        box-shadow: 
-            0 0 0 1px rgba(33, 232, 163, 0.2), 
-            0 32px 64px rgba(0, 0, 0, 0.8), 
-            0 16px 32px rgba(0, 0, 0, 0.4);
-        z-index: 999996;
+    // Add extended content area directly to the existing card
+    const extendedContent = document.createElement('div');
+    extendedContent.className = 'extended-content-area';
+    extendedContent.style.cssText = `
+        position: absolute;
+        top: 0;
+        right: -300px;
+        width: 280px;
+        height: 100%;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 14px;
+        text-align: center;
         opacity: 0;
         transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        display: flex;
     `;
     
-    // Right side content area for stats
-    unifiedContainer.innerHTML = `
-        <div style="
-            width: 280px;
-            height: 100%;
-        "></div>
-        <div style="
-            width: 280px;
-            height: 100%;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 14px;
-            text-align: center;
-            border-left: 1px solid rgba(33, 232, 163, 0.2);
-        ">
-            Additional stats and<br>
-            content will appear here
-        </div>
+    extendedContent.innerHTML = `
+        Additional stats and<br>
+        content will appear here
     `;
     
-    document.body.appendChild(unifiedContainer);
+    existingCard.appendChild(extendedContent);
     
-    // Animate backdrop and slide card + show unified container
+    // Animate backdrop and expand the card itself
     setTimeout(() => {
         backdrop.style.opacity = '1';
-        unifiedContainer.style.opacity = '1';
         existingCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        existingCard.style.right = '320px';  // Slide card left
+        existingCard.style.width = '580px';  // Expand card width
+        existingCard.style.right = '20px';   // Keep card in same position
         existingCard.style.zIndex = '999999';
+        extendedContent.style.opacity = '1'; // Show the extended content
     }, 50);
     
     // Load governance data
@@ -283,20 +264,19 @@ function getProfileHTML(citizen) {
 }
 
 function closeExistingCard(card, backdrop) {
-    // Reverse animation - slide card back to original position
-    card.style.right = '20px';
-    backdrop.style.opacity = '0';
-    
-    // Hide unified container
-    const unifiedContainer = document.querySelector('.unified-profile-container');
-    if (unifiedContainer) {
-        unifiedContainer.style.opacity = '0';
+    // Hide extended content and shrink card back to original size
+    const extendedContent = card.querySelector('.extended-content-area');
+    if (extendedContent) {
+        extendedContent.style.opacity = '0';
     }
     
+    card.style.width = '280px';  // Shrink back to original width
+    backdrop.style.opacity = '0';
+    
     setTimeout(() => {
-        // Remove backdrop, unified container, and close button
+        // Remove backdrop, extended content, and close button
         backdrop.remove();
-        if (unifiedContainer) unifiedContainer.remove();
+        if (extendedContent) extendedContent.remove();
         const closeBtn = card.querySelector('.close-btn');
         if (closeBtn) closeBtn.remove();
         
