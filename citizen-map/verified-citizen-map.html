@@ -1830,7 +1830,7 @@
                         });
 
                         const marker = L.marker([displayLat, displayLng], { icon }).addTo(map);
-                        marker.on('click', () => showCitizenPanel(citizen));
+                        marker.on('click', () => openEnhancedProfile(citizen));
                     });
                 }
                 
