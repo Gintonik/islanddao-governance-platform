@@ -61,14 +61,14 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
-    // Create adjacent space that matches the card dimensions
-    const adjacentSpace = document.createElement('div');
-    adjacentSpace.className = 'adjacent-profile-space';
-    adjacentSpace.style.cssText = `
+    // Create unified expanded container behind the card
+    const unifiedContainer = document.createElement('div');
+    unifiedContainer.className = 'unified-profile-container';
+    unifiedContainer.style.cssText = `
         position: fixed;
         top: 150px;
         right: 20px;
-        width: 280px;
+        width: 580px;
         height: 200px;
         background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
         border: 2px solid #21E8A3;
@@ -77,31 +77,41 @@ function openEnhancedProfile(citizen) {
             0 0 0 1px rgba(33, 232, 163, 0.2), 
             0 32px 64px rgba(0, 0, 0, 0.8), 
             0 16px 32px rgba(0, 0, 0, 0.4);
-        padding: 20px;
-        z-index: 999997;
+        z-index: 999996;
         opacity: 0;
         transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        font-size: 14px;
-        text-align: center;
     `;
     
-    adjacentSpace.innerHTML = `
-        <div>
+    // Right side content area for stats
+    unifiedContainer.innerHTML = `
+        <div style="
+            width: 280px;
+            height: 100%;
+        "></div>
+        <div style="
+            width: 280px;
+            height: 100%;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            border-left: 1px solid rgba(33, 232, 163, 0.2);
+        ">
             Additional stats and<br>
             content will appear here
         </div>
     `;
     
-    document.body.appendChild(adjacentSpace);
+    document.body.appendChild(unifiedContainer);
     
-    // Animate backdrop and slide card + show adjacent space
+    // Animate backdrop and slide card + show unified container
     setTimeout(() => {
         backdrop.style.opacity = '1';
-        adjacentSpace.style.opacity = '1';
+        unifiedContainer.style.opacity = '1';
         existingCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         existingCard.style.right = '320px';  // Slide card left
         existingCard.style.zIndex = '999999';
@@ -277,16 +287,16 @@ function closeExistingCard(card, backdrop) {
     card.style.right = '20px';
     backdrop.style.opacity = '0';
     
-    // Hide adjacent space
-    const adjacentSpace = document.querySelector('.adjacent-profile-space');
-    if (adjacentSpace) {
-        adjacentSpace.style.opacity = '0';
+    // Hide unified container
+    const unifiedContainer = document.querySelector('.unified-profile-container');
+    if (unifiedContainer) {
+        unifiedContainer.style.opacity = '0';
     }
     
     setTimeout(() => {
-        // Remove backdrop, adjacent space, and close button
+        // Remove backdrop, unified container, and close button
         backdrop.remove();
-        if (adjacentSpace) adjacentSpace.remove();
+        if (unifiedContainer) unifiedContainer.remove();
         const closeBtn = card.querySelector('.close-btn');
         if (closeBtn) closeBtn.remove();
         
