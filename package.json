@@ -10,7 +10,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@solana/web3.js": "^1.98.2",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.12.0",
     "node-fetch": "^2.7.0",

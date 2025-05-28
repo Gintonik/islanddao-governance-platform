@@ -32,7 +32,7 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node citizen-map/db-integrated-server.js"
-waitForPort = 5000
+waitForPort = 5001
 
 [deployment]
 run = ["sh", "-c", "npm install node-fetch && node index.js"]

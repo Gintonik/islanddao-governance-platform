@@ -4,10 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const apiRoutes = require('./api-routes');
 const db = require('../db');
-const governanceAPI = require('./governance-api');
 
 // Constants
-const PORT = 5000;
+const PORT = 5001;
 const HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 const GLOBE_HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 
@@ -17,10 +16,6 @@ async function initializeApp() {
     // Create tables if they don't exist
     await db.initializeDatabase();
     console.log('Database initialized successfully for Citizen Map');
-    
-    // Initialize governance tables
-    await governanceAPI.initializeGovernanceTables();
-    console.log('Governance tables initialized successfully');
     
     // Start the HTTP server
     startServer();
@@ -49,10 +44,10 @@ function startServer() {
     
     // Route handling
     try {
-      // Serve the NFT collection grid
-      if (req.url === '/collection' || req.url === '/collection-grid') {
-        const collectionPath = path.join(__dirname, '..', 'unified-index.html');
-        serveFile(res, collectionPath, 'text/html');
+      // Redirect to collection grid on main server when requested
+      if (req.url === '/collection-grid') {
+        res.writeHead(302, { 'Location': 'http://localhost:5000/' });
+        res.end();
         return;
       }
       // Serve the HTML file for the root route
@@ -72,43 +67,6 @@ function startServer() {
       else if (req.url === '/api/citizens') {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
-      }
-      // API endpoint for NFT collection data (used by grid)
-      else if (req.url === '/api/nfts') {
-        const client = await db.pool.connect();
-        try {
-          const result = await client.query('SELECT mint_id, name, image_url, owner FROM nfts ORDER BY name');
-          const nfts = result.rows.map(nft => ({
-            id: nft.mint_id,
-            name: nft.name,
-            imageUrl: nft.image_url,
-            owner: nft.owner
-          }));
-          sendJsonResponse(res, nfts);
-        } finally {
-          client.release();
-        }
-      }
-      // API endpoint for NFT ownership data (used by grid)
-      else if (req.url === '/api/nft-owners') {
-        const ownershipMap = await db.getNftOwnershipMap();
-        sendJsonResponse(res, ownershipMap);
-      }
-      // For backwards compatibility - serve the static NFT collection file
-      else if (req.url === '/perks-collection.json') {
-        const client = await db.pool.connect();
-        try {
-          const result = await client.query('SELECT mint_id, name, image_url, owner FROM nfts ORDER BY name');
-          const nfts = result.rows.map(nft => ({
-            id: nft.mint_id,
-            name: nft.name,
-            imageUrl: nft.image_url,
-            owner: nft.owner
-          }));
-          sendJsonResponse(res, nfts);
-        } finally {
-          client.release();
-        }
       }
       // Add endpoint for nft-owners.json to support the existing code
       else if (req.url === '/nft-owners.json') {
@@ -157,36 +115,6 @@ function startServer() {
         
         const result = await apiRoutes.getWalletNfts(wallet);
         sendJsonResponse(res, result);
-      }
-      // API endpoint for governance data
-      else if (req.url.startsWith('/api/governance/')) {
-        const wallet = req.url.split('/api/governance/')[1];
-        
-        if (!wallet) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Wallet address is required' }));
-          return;
-        }
-        
-        try {
-          const governanceData = await governanceAPI.getWalletGovernanceData(wallet);
-          sendJsonResponse(res, governanceData);
-        } catch (error) {
-          console.error('Error fetching governance data:', error);
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Failed to fetch governance data' }));
-        }
-      }
-      // API endpoint to update governance data for all citizens
-      else if (req.method === 'POST' && req.url === '/api/update-governance') {
-        try {
-          const result = await governanceAPI.updateAllGovernanceData();
-          sendJsonResponse(res, result);
-        } catch (error) {
-          console.error('Error updating governance data:', error);
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Failed to update governance data' }));
-        }
       }
       // API endpoint to save citizen pin
       else if (req.method === 'POST' && req.url === '/api/save-citizen') {
