@@ -7,6 +7,9 @@ function openEnhancedProfile(citizen) {
     // Find the existing profile panel in the sidebar
     const existingCard = document.getElementById('citizenPanel');
     console.log('Found existing card:', existingCard);
+    console.log('Card current width:', existingCard.style.width);
+    console.log('Card current position:', existingCard.style.right);
+    console.log('Modal state:', modalState);
     if (!existingCard || !existingCard.classList.contains('open')) {
         console.log('No existing card found or not open, cannot slide');
         return;
@@ -61,33 +64,13 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
-    console.log('Setting up card expansion...');
-    
-    // First, wrap all existing content in a left container
-    const existingContent = existingCard.innerHTML;
-    console.log('Existing content captured');
-    existingCard.innerHTML = '';
-    
-    // Create left side container for original content
-    const leftContainer = document.createElement('div');
-    leftContainer.className = 'left-content-area';
-    leftContainer.style.cssText = `
-        position: relative;
-        float: left;
-        width: 280px;
-        height: 100%;
-        overflow: hidden;
-        padding: 20px;
-        box-sizing: border-box;
-    `;
-    leftContainer.innerHTML = existingContent;
-    
-    // Create right side container for new content
+    // Simply add right content area to the existing card
     const rightContainer = document.createElement('div');
     rightContainer.className = 'right-content-area';
     rightContainer.style.cssText = `
-        position: relative;
-        float: right;
+        position: absolute;
+        top: 0;
+        right: -280px;
         width: 280px;
         height: 100%;
         padding: 20px;
@@ -97,10 +80,10 @@ function openEnhancedProfile(citizen) {
         color: #666;
         font-size: 14px;
         text-align: center;
-        opacity: 0;
-        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        overflow: hidden;
+        background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
+        border-radius: 0 20px 20px 0;
         box-sizing: border-box;
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     `;
     
     rightContainer.innerHTML = `
@@ -108,29 +91,16 @@ function openEnhancedProfile(citizen) {
         content will appear here
     `;
     
-    // Add both containers to the card
-    existingCard.appendChild(leftContainer);
     existingCard.appendChild(rightContainer);
     
-    // Add clearfix div
-    const clearfix = document.createElement('div');
-    clearfix.style.cssText = 'clear: both;';
-    existingCard.appendChild(clearfix);
-    
-    // Hide scrollbars on the main card and ensure it can contain floated elements
-    existingCard.style.overflow = 'hidden';
-    existingCard.style.position = 'relative';
-    
-    console.log('Card structure setup complete');
-    
-    // Animate backdrop and slide + expand the card
+    // Animate backdrop and expand the card
     setTimeout(() => {
         backdrop.style.opacity = '1';
         existingCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         existingCard.style.width = '580px';  // Expand card width
-        existingCard.style.right = '320px';  // Slide card left
+        existingCard.style.right = '20px';   // Keep card in place
         existingCard.style.zIndex = '999999';
-        rightContainer.style.opacity = '1'; // Show the right content area
+        rightContainer.style.right = '0px';  // Slide right container into view
     }, 50);
     
     // Load governance data
@@ -299,32 +269,24 @@ function getProfileHTML(citizen) {
 }
 
 function closeExistingCard(card, backdrop) {
-    // Hide right content and slide card back to original position
+    // Hide right content and shrink card back to original size
     const rightContainer = card.querySelector('.right-content-area');
     if (rightContainer) {
-        rightContainer.style.opacity = '0';
+        rightContainer.style.right = '-280px';  // Slide right container out of view
     }
     
     card.style.width = '280px';  // Shrink back to original width
-    card.style.right = '20px';   // Slide back to original position
     backdrop.style.opacity = '0';
     
     setTimeout(() => {
-        // Restore original content structure
-        const leftContainer = card.querySelector('.left-content-area');
-        if (leftContainer) {
-            const originalContent = leftContainer.innerHTML;
-            card.innerHTML = originalContent;
-        }
-        
-        // Remove backdrop and close button
+        // Remove backdrop, right container, and close button
         backdrop.remove();
+        if (rightContainer) rightContainer.remove();
         const closeBtn = card.querySelector('.close-btn');
         if (closeBtn) closeBtn.remove();
         
         // Reset card styling
         card.style.zIndex = '';
-        card.style.overflow = '';
         modalState = 'closed';
     }, 600);
 }
