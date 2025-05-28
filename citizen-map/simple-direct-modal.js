@@ -120,35 +120,39 @@ window.openEnhancedProfile = function(citizen) {
 };
 
 function updateCardContent(card, citizen) {
-    // Clear any existing close buttons
-    const existingBtns = card.querySelectorAll('.simple-close-btn');
-    existingBtns.forEach(btn => btn.remove());
+    // Remove ALL existing buttons completely
+    const allBtns = card.querySelectorAll('button, .close-btn, .simple-close-btn');
+    allBtns.forEach(btn => btn.remove());
     
-    // Add a simple X button with direct onclick
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'simple-close-btn';
-    closeBtn.innerHTML = '×';
-    closeBtn.setAttribute('onclick', 'closeCard()');
-    closeBtn.style.cssText = `
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        color: #FAFAFA;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        font-size: 18px;
-        cursor: pointer;
-        z-index: 100;
-    `;
-    card.appendChild(closeBtn);
-    
-    // Add onclick to polaroid image for toggling
+    // Remove any existing onclick handlers
     const profileImg = card.querySelector('.profile-pfp img');
+    if (profileImg) {
+        profileImg.removeAttribute('onclick');
+        profileImg.onclick = null;
+    }
+    
+    // Add ONE X button using innerHTML instead of createElement
+    card.insertAdjacentHTML('beforeend', `
+        <button onclick="closeCard()" style="
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #FAFAFA;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 100;
+        ">×</button>
+    `);
+    
+    // Add onclick to polaroid using setAttribute 
     if (profileImg) {
         profileImg.setAttribute('onclick', 'toggleCard()');
         profileImg.style.cursor = 'pointer';
+        console.log('Added click handler to polaroid');
     }
 }
