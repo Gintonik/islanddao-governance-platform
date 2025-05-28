@@ -230,6 +230,7 @@ async function getAllCitizens() {
         twitter_handle: citizen.twitter_handle,
         telegram_handle: citizen.telegram_handle,
         discord_handle: citizen.discord_handle,
+        governance_power: citizen.governance_power || 0,
         nftMetadata: {}
       };
       
@@ -355,6 +356,22 @@ async function removeCitizenByWallet(walletAddress) {
   }
 }
 
+/**
+ * Update governance power for a specific citizen
+ */
+async function updateGovernancePower(walletAddress, governancePower) {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      'UPDATE citizens SET governance_power = $1 WHERE wallet = $2 RETURNING *',
+      [governancePower, walletAddress]
+    );
+    return result.rows[0];
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   pool,
   initializeDatabase,
@@ -364,5 +381,6 @@ module.exports = {
   getAllCitizens,
   clearAllCitizens,
   removeCitizenByWallet,
-  getNftOwnershipMap
+  getNftOwnershipMap,
+  updateGovernancePower
 };
