@@ -4,11 +4,11 @@ let modalState = 'closed';
 function openEnhancedProfile(citizen) {
     console.log('openEnhancedProfile called with citizen:', citizen);
     
-    // Find the existing profile card in the sidebar
-    const existingCard = document.querySelector('.profile-display');
+    // Find the existing profile panel in the sidebar
+    const existingCard = document.getElementById('citizenPanel');
     console.log('Found existing card:', existingCard);
-    if (!existingCard) {
-        console.log('No existing card found, cannot slide');
+    if (!existingCard || !existingCard.classList.contains('open')) {
+        console.log('No existing card found or not open, cannot slide');
         return;
     }
     
