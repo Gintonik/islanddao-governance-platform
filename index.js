@@ -581,6 +581,12 @@ function startServer() {
           res.end(JSON.stringify({ error: 'Server error', details: error.message }));
         }
       }
+      // Handle logo files specifically (for deployment)
+      else if (req.url.includes('logo') && req.url.endsWith('.png')) {
+        const logoFileName = path.basename(req.url);
+        const logoPath = path.join(__dirname, 'citizen-map', logoFileName);
+        serveFile(res, logoPath, 'image/png');
+      }
       // Serve static files from the citizen-map directory
       else if (req.url.startsWith('/citizen-map/')) {
         const filePath = path.join(__dirname, req.url);
