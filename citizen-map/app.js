@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import CitizenPinForm from './components/CitizenPinForm.js';
 import GlobeView from './components/GlobeView.js';
+import CitizenProfile from './components/CitizenProfile.js';
 import { loadCitizens, saveCitizen, clearAllCitizens } from './utils/dataUtils.js';
 
 // Globe view handles the marker icons internally
@@ -37,6 +38,7 @@ function App() {
   const [isPickingLocation, setIsPickingLocation] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [nftOwners, setNftOwners] = useState({});
+  const [selectedCitizen, setSelectedCitizen] = useState(null);
   
   // Load citizens and NFT ownership data on component mount
   useEffect(() => {
@@ -104,6 +106,15 @@ function App() {
     setIsAddingPin(false);
     setIsPickingLocation(false);
     setSelectedLocation(null);
+  };
+
+  // Handle citizen profile viewing
+  const handleCitizenClick = (citizen) => {
+    setSelectedCitizen(citizen);
+  };
+
+  const closeProfile = () => {
+    setSelectedCitizen(null);
   };
   
   return (
@@ -173,8 +184,25 @@ function App() {
             >
             <Popup>
               <PopupContent>
+                {/* Clickable Polaroid Profile Picture */}
+                <PolaroidFrame onClick={() => handleCitizenClick(citizen)}>
+                  <PolaroidImage 
+                    src={hasNftIcon ? citizen.nftMetadata[profileNftId].image : 'https://via.placeholder.com/100?text=Profile'}
+                    alt="Profile"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/100?text=Profile';
+                    }}
+                  />
+                  <PolaroidLabel>{citizen.nickname || 'Anonymous Citizen'}</PolaroidLabel>
+                </PolaroidFrame>
+                
                 <h3>{citizen.nfts.length > 0 ? `PERK NFTs (${citizen.nfts.length})` : 'Citizen'}</h3>
                 <p>Wallet: {citizen.wallet.substring(0, 6)}...{citizen.wallet.substring(citizen.wallet.length - 4)}</p>
+                
+                <ViewProfileButton onClick={() => handleCitizenClick(citizen)}>
+                  View Full Profile
+                </ViewProfileButton>
                 
                 {/* Social links */}
                 <SocialLinks>
@@ -192,26 +220,6 @@ function App() {
                     <SocialLink>Discord: {citizen.socials.discord}</SocialLink>
                   )}
                 </SocialLinks>
-                
-                {/* Show NFT images with names */}
-                <NFTGrid>
-                  {citizen.nfts.map((nftId, nftIndex) => {
-                    const metadata = citizen.nftMetadata && citizen.nftMetadata[nftId];
-                    return (
-                      <NFTItem key={nftIndex}>
-                        <NFTImage 
-                          src={metadata ? metadata.image : ''}
-                          alt={metadata ? metadata.name : 'PERK NFT'}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/150?text=NFT+Image';
-                          }}
-                        />
-                        <NFTLabel>{metadata ? metadata.name : `PERK NFT #${nftIndex+1}`}</NFTLabel>
-                      </NFTItem>
-                    );
-                  })}
-                </NFTGrid>
                 
                 <small>Added: {new Date(citizen.timestamp).toLocaleString()}</small>
               </PopupContent>
@@ -237,7 +245,13 @@ function App() {
         />
       )}
       
-      {/* Remove pop-up message and use cursor styling instead */}
+      {/* Citizen Profile Modal */}
+      {selectedCitizen && (
+        <CitizenProfile 
+          citizen={selectedCitizen} 
+          onClose={closeProfile} 
+        />
+      )}
     </AppContainer>
   );
 }
@@ -382,6 +396,58 @@ const NFTLabel = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   background-color: #333;
+`;
+
+const PolaroidFrame = styled.div`
+  background-color: white;
+  padding: 10px 10px 20px;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+  max-width: 120px;
+  margin-left: auto;
+  margin-right: auto;
+  
+  &:hover {
+    transform: rotate(-2deg) translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  }
+`;
+
+const PolaroidImage = styled.img`
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+`;
+
+const PolaroidLabel = styled.div`
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+`;
+
+const ViewProfileButton = styled.button`
+  background-color: #9945FF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+  margin-bottom: 10px;
+  
+  &:hover {
+    background-color: #8134E0;
+  }
 `;
 
 export default App;
