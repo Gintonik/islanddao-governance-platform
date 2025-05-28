@@ -15,18 +15,23 @@ window.closeCard = function() {
 };
 
 window.toggleCard = function() {
-    console.log('Toggle clicked, current state:', cardState);
+    console.log('Polaroid clicked, current state:', cardState);
     const card = document.getElementById('citizenPanel');
-    if (!card) return;
+    if (!card) {
+        console.log('No card found');
+        return;
+    }
     
     if (cardState === 'small') {
-        // Expand to full width
+        console.log('Expanding from small to full');
         expandCard(card);
         cardState = 'expanded';
     } else if (cardState === 'expanded') {
-        // Collapse to small
+        console.log('Collapsing from full to small');
         collapseCard(card);
         cardState = 'small';
+    } else {
+        console.log('Card not in proper state:', cardState);
     }
 };
 
