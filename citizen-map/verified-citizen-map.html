@@ -870,6 +870,69 @@
             display: none;
         }
 
+        /* Stats Overlay */
+        .stats-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .stats-overlay:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .stats-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .stat-separator {
+            height: 1px;
+            background: var(--border-subtle);
+            margin: 8px 0;
+            opacity: 0.5;
+        }
+
         @media (max-width: 768px) {
             .header {
                 padding: 1rem;
@@ -888,6 +951,26 @@
             .pin-form-content {
                 min-width: 90vw;
                 padding: 1.5rem;
+            }
+
+            .stats-overlay {
+                top: 15px;
+                left: 15px;
+                padding: 12px 16px;
+                min-width: 180px;
+            }
+
+            .stats-title {
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .stat-value {
+                font-size: 13px;
             }
         }
     </style>
@@ -919,6 +1002,21 @@
 
     <div class="map-container">
         <div id="map"></div>
+        
+        <!-- Stats Overlay -->
+        <div class="stats-overlay">
+            <div class="stats-title">Live Stats</div>
+            <div class="stat-item">
+                <span class="stat-label">Citizen Count:</span>
+                <span class="stat-value" id="citizenCount">0</span>
+            </div>
+            <div class="stat-separator"></div>
+            <div class="stat-item">
+                <span class="stat-label">PERKS Represented:</span>
+                <span class="stat-value" id="perksCount">0</span>
+            </div>
+        </div>
+        
         <div class="controls">
             <button id="addPinBtn" class="control-btn add-pin-btn">Add Your Pin</button>
         </div>
@@ -1529,6 +1627,37 @@
             return null;
         }
 
+        // Update live stats with authentic citizen data
+        function updateLiveStats(citizens) {
+            const citizenCount = citizens.length;
+            let totalPerks = 0;
+            
+            // Calculate total PERKS NFTs across all citizens
+            citizens.forEach(citizen => {
+                if (citizen.nfts && Array.isArray(citizen.nfts)) {
+                    totalPerks += citizen.nfts.length;
+                }
+            });
+            
+            // Update the display with smooth counter animation
+            animateCounter('citizenCount', citizenCount);
+            animateCounter('perksCount', totalPerks);
+        }
+
+        // Animate counter values for smooth visual effect
+        function animateCounter(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent) || 0;
+            const increment = Math.ceil((targetValue - currentValue) / 10);
+            
+            if (currentValue < targetValue) {
+                element.textContent = Math.min(currentValue + increment, targetValue);
+                setTimeout(() => animateCounter(elementId, targetValue), 50);
+            } else {
+                element.textContent = targetValue;
+            }
+        }
+
         // Load and display citizens
         async function loadCitizens() {
             try {
@@ -1706,6 +1835,9 @@
                 map.on('zoomend', createSmartMarkers);
                 
                 console.log(`Loaded ${citizens.length} citizens with smart anti-overlap positioning`);
+                
+                // Update live stats with real data
+                updateLiveStats(citizens);
             } catch (error) {
                 console.error('Error loading citizens:', error);
                 showNotification('Failed to load citizen data', 'error');
