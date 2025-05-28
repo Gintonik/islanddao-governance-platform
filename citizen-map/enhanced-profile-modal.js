@@ -65,22 +65,22 @@ function openEnhancedProfile(citizen) {
                 transform: translateX(0);
             }
             100% {
-                width: 800px;
-                height: 600px;
-                top: 50%;
+                width: 900px;
+                height: 200px;
+                top: 150px;
                 left: 50%;
                 right: auto;
-                transform: translateX(-50%) translateY(-50%);
+                transform: translateX(-50%);
             }
         }
         @keyframes slideToSidebar {
             0% {
-                width: 800px;
-                height: 600px;
-                top: 50%;
+                width: 900px;
+                height: 200px;
+                top: 150px;
                 left: 50%;
                 right: auto;
-                transform: translateX(-50%) translateY(-50%);
+                transform: translateX(-50%);
             }
             100% {
                 width: 280px;
