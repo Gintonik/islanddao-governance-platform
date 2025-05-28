@@ -64,7 +64,29 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
-    // Simply add right content area to the existing card
+    // Check if there's already a right container and remove it first
+    const existingRightContainer = existingCard.querySelector('.right-content-area');
+    if (existingRightContainer) {
+        existingRightContainer.remove();
+    }
+    
+    // Preserve the original content container by wrapping it
+    const originalContent = existingCard.innerHTML;
+    existingCard.innerHTML = '';
+    
+    // Create left container for original content
+    const leftContainer = document.createElement('div');
+    leftContainer.className = 'left-content-area';
+    leftContainer.style.cssText = `
+        position: relative;
+        width: 280px;
+        height: 100%;
+        overflow: visible;
+        box-sizing: border-box;
+    `;
+    leftContainer.innerHTML = originalContent;
+    
+    // Create right container for additional content
     const rightContainer = document.createElement('div');
     rightContainer.className = 'right-content-area';
     rightContainer.style.cssText = `
@@ -91,6 +113,8 @@ function openEnhancedProfile(citizen) {
         content will appear here
     `;
     
+    // Add both containers to the card
+    existingCard.appendChild(leftContainer);
     existingCard.appendChild(rightContainer);
     
     // Animate backdrop and expand the card
@@ -279,11 +303,15 @@ function closeExistingCard(card, backdrop) {
     backdrop.style.opacity = '0';
     
     setTimeout(() => {
-        // Remove backdrop, right container, and close button
+        // Restore original content structure
+        const leftContainer = card.querySelector('.left-content-area');
+        if (leftContainer) {
+            const originalContent = leftContainer.innerHTML;
+            card.innerHTML = originalContent;
+        }
+        
+        // Remove backdrop
         backdrop.remove();
-        if (rightContainer) rightContainer.remove();
-        const closeBtn = card.querySelector('.close-btn');
-        if (closeBtn) closeBtn.remove();
         
         // Reset card styling
         card.style.zIndex = '';
