@@ -2259,6 +2259,12 @@
             const themeBtn = document.getElementById('themeToggle');
             themeBtn.textContent = isDarkTheme ? '☀️' : '🌙';
             
+            // Update logo for theme - green in dark mode, black in light mode
+            const logo = document.querySelector('.logo');
+            if (logo) {
+                logo.src = isDarkTheme ? './islanddao-logo.png' : './islanddao-logo-dark.png';
+            }
+            
             // Force map container background update
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
