@@ -53,7 +53,18 @@ function showSmallCard(citizen) {
     console.log('STATE 1 → STATE 2: Opening small card for citizen:', citizen);
     
     // Find the existing profile panel in the sidebar
-    const existingCard = document.getElementById('citizenPanel');
+    let existingCard = document.getElementById('citizenPanel');
+    
+    // If card is hidden, show it and reset styles
+    if (existingCard && existingCard.style.display === 'none') {
+        existingCard.style.display = '';
+        existingCard.style.transform = '';
+        existingCard.style.opacity = '';
+        existingCard.style.width = '';
+        existingCard.style.zIndex = '';
+        existingCard.style.right = '';
+    }
+    
     console.log('Found existing card:', existingCard);
     console.log('Card current width:', existingCard.style.width);
     console.log('Card current position:', existingCard.style.right);
@@ -466,11 +477,17 @@ function closeCardCompletely(card) {
     // Close the card completely - STATE 1
     card.classList.remove('open');
     card.style.transform = 'translateX(100%)';
+    card.style.opacity = '0';
     
     setTimeout(() => {
-        // Remove the card completely
+        // Hide the card but don't remove it - just reset it
         if (card && card.parentNode) {
-            card.remove();
+            card.style.display = 'none';
+            card.style.transform = '';
+            card.style.opacity = '';
+            card.style.width = '';
+            card.style.zIndex = '';
+            card.style.right = '';
         }
         modalState = 'closed';
     }, 600);
