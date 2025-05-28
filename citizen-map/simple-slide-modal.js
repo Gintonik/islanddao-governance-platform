@@ -84,7 +84,15 @@ function openEnhancedProfile(citizen) {
         overflow: visible;
         box-sizing: border-box;
     `;
-    leftContainer.innerHTML = originalContent;
+    
+    // Remove any existing close buttons from original content before adding it
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = originalContent;
+    const existingCloseBtn = tempDiv.querySelector('.close-btn');
+    if (existingCloseBtn) {
+        existingCloseBtn.remove();
+    }
+    leftContainer.innerHTML = tempDiv.innerHTML;
     
     // Create right container for additional content
     const rightContainer = document.createElement('div');
