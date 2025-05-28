@@ -50,93 +50,37 @@ function openEnhancedProfile(citizen) {
             scrollbar-width: none;
         }
         .modal-content {
-            animation: papyrusUnroll 1.2s cubic-bezier(0.19, 1, 0.22, 1);
-            transform-origin: center right;
-            width: 280px;
-            height: 200px;
-            top: 150px;
-            right: 20px;
+            animation: slideFromSidebar 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .modal-content.closing {
-            animation: papyrusRoll 0.8s cubic-bezier(0.55, 0.06, 0.68, 0.19);
+            animation: slideToSidebar 0.5s cubic-bezier(0.55, 0.06, 0.68, 0.19);
         }
-        @keyframes papyrusUnroll {
+        @keyframes slideFromSidebar {
             0% {
                 width: 280px;
                 height: 200px;
                 top: 150px;
                 right: 20px;
                 left: auto;
-                transform: scaleX(0.3);
-                opacity: 1;
-            }
-            30% {
-                width: 450px;
-                height: 300px;
-                top: 120px;
-                right: 20px;
-                left: auto;
-                transform: scaleX(0.7);
-            }
-            60% {
-                width: 650px;
-                height: 450px;
-                top: 80px;
-                right: 20px;
-                left: auto;
-                transform: scaleX(0.9);
-            }
-            80% {
-                width: 800px;
-                height: 600px;
-                top: 50%;
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-50%) scaleX(0.98);
+                transform: translateX(0);
             }
             100% {
                 width: 800px;
                 height: 600px;
                 top: 50%;
-                right: auto;
                 left: 50%;
-                transform: translateX(-50%) translateY(-50%) scaleX(1);
-                opacity: 1;
+                right: auto;
+                transform: translateX(-50%) translateY(-50%);
             }
         }
-        @keyframes papyrusRoll {
+        @keyframes slideToSidebar {
             0% {
                 width: 800px;
                 height: 600px;
                 top: 50%;
-                right: auto;
                 left: 50%;
-                transform: translateX(-50%) translateY(-50%) scaleX(1);
-                opacity: 1;
-            }
-            20% {
-                width: 800px;
-                height: 600px;
-                top: 50%;
                 right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-50%) scaleX(0.98);
-            }
-            40% {
-                width: 650px;
-                height: 450px;
-                top: 80px;
-                right: 20px;
-                left: auto;
-                transform: scaleX(0.9);
-            }
-            70% {
-                width: 450px;
-                height: 300px;
-                top: 120px;
-                right: 20px;
-                left: auto;
-                transform: scaleX(0.7);
+                transform: translateX(-50%) translateY(-50%);
             }
             100% {
                 width: 280px;
@@ -144,8 +88,7 @@ function openEnhancedProfile(citizen) {
                 top: 150px;
                 right: 20px;
                 left: auto;
-                transform: scaleX(0.3);
-                opacity: 0.8;
+                transform: translateX(0);
             }
         }
         @keyframes modalFadeIn {
@@ -245,9 +188,12 @@ function getProfileModalHTML(citizen) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
             z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         ">
             <div class="modal-content" style="
                 background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
