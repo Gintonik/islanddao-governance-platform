@@ -50,39 +50,84 @@ function openEnhancedProfile(citizen) {
             scrollbar-width: none;
         }
         .modal-content {
-            animation: cardGrowTransform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            transform-origin: ${startRect ? `${startRect.left + startRect.width/2}px ${startRect.top + startRect.height/2}px` : 'center'};
+            animation: cardExpandFromSidebar 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: fixed;
         }
-        @keyframes cardGrowTransform {
+        .modal-content.closing {
+            animation: cardShrinkToSidebar 0.6s cubic-bezier(0.55, 0.06, 0.68, 0.19);
+        }
+        @keyframes cardExpandFromSidebar {
             0% {
-                ${startRect ? `
-                    width: ${startRect.width}px;
-                    height: ${startRect.height}px;
-                    top: ${startRect.top}px;
-                    left: ${startRect.left}px;
-                ` : `
-                    width: 280px;
-                    height: 180px;
-                    top: 50%;
-                    left: 20px;
-                `}
+                width: 280px;
+                height: 200px;
+                top: 150px;
+                right: 20px;
+                left: auto;
                 transform: scale(1);
                 border-radius: 16px;
                 opacity: 0.9;
             }
-            50% {
-                border-radius: 18px;
+            30% {
+                border-radius: 17px;
                 opacity: 0.95;
-                transform: scale(1.1);
+                transform: scale(1.05);
+            }
+            70% {
+                width: 600px;
+                height: 450px;
+                top: 50%;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scale(1.02);
+                border-radius: 19px;
             }
             100% {
                 width: 800px;
                 height: 600px;
                 top: 50%;
+                right: auto;
                 left: 50%;
                 transform: translateX(-50%) translateY(-50%) scale(1);
                 border-radius: 20px;
                 opacity: 1;
+            }
+        }
+        @keyframes cardShrinkToSidebar {
+            0% {
+                width: 800px;
+                height: 600px;
+                top: 50%;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scale(1);
+                border-radius: 20px;
+                opacity: 1;
+            }
+            30% {
+                width: 600px;
+                height: 450px;
+                transform: translateX(-50%) translateY(-50%) scale(1.02);
+                border-radius: 19px;
+            }
+            70% {
+                width: 350px;
+                height: 250px;
+                top: 150px;
+                right: 20px;
+                left: auto;
+                transform: scale(1.05);
+                border-radius: 17px;
+                opacity: 0.95;
+            }
+            100% {
+                width: 280px;
+                height: 200px;
+                top: 150px;
+                right: 20px;
+                left: auto;
+                transform: scale(1);
+                border-radius: 16px;
+                opacity: 0.7;
             }
         }
         @keyframes modalFadeIn {
@@ -616,19 +661,23 @@ function switchProfileTab(tabName, modal) {
 function closeProfileModal(modal) {
     const content = modal.querySelector('.modal-content');
     
-    // Cool exit animation
+    // Smooth reverse animation back to sidebar position
+    content.classList.add('closing');
     modal.style.opacity = '0';
-    content.style.transform = 'scale(0.8) translateY(30px)';
     
     setTimeout(() => {
         modal.remove();
-        if (modalState === 'closed') {
-            // Also close the sidebar if X button was clicked
-            const sidebar = document.getElementById('citizenPanel');
-            if (sidebar) {
-                sidebar.classList.remove('open');
-            }
-        }
         modalState = 'closed';
-    }, 400);
+        
+        // Show sidebar again with smooth transition
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.style.display = 'block';
+            sidebar.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            setTimeout(() => {
+                sidebar.style.transform = 'translateX(0)';
+                sidebar.style.opacity = '1';
+            }, 100);
+        }
+    }, 600); // Match the shrink animation duration
 }
