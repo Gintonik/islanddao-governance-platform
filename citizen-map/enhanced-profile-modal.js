@@ -18,7 +18,7 @@ function openEnhancedProfile(citizen) {
     
     modal.innerHTML = getProfileModalHTML(citizen);
     
-    // Add CSS for seamless scrolling
+    // Add CSS for seamless scrolling and smooth animations
     const style = document.createElement('style');
     style.textContent = `
         .tab-content::-webkit-scrollbar {
@@ -27,6 +27,19 @@ function openEnhancedProfile(citizen) {
         .tab-content {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+        .enhanced-profile-modal {
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.3) translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
     `;
     document.head.appendChild(style);
@@ -54,13 +67,28 @@ function openEnhancedProfile(citizen) {
     document.body.appendChild(modal);
     modalState = 'modal';
     
-    // Cool entrance animation
+    // Get sidebar card position for smooth transformation
+    const sidebarCard = document.querySelector('#citizenPanel .profile-info');
+    let startPosition = { x: 300, y: 200 }; // Default position
+    
+    if (sidebarCard) {
+        const rect = sidebarCard.getBoundingClientRect();
+        startPosition = { x: rect.left, y: rect.top };
+    }
+    
+    // Start modal from sidebar card position
+    const content = modal.querySelector('.modal-content');
+    content.style.transformOrigin = `${startPosition.x}px ${startPosition.y}px`;
+    content.style.transform = 'scale(0.3) translateY(50px)';
+    
+    // Cool entrance animation that expands from sidebar card
     requestAnimationFrame(() => {
         modal.style.opacity = '1';
         modal.style.visibility = 'visible';
         
-        const content = modal.querySelector('.modal-content');
-        content.style.transform = 'scale(1) translateY(0)';
+        setTimeout(() => {
+            content.style.transform = 'scale(1) translateY(0)';
+        }, 50);
     });
     
     // Load governance data
@@ -303,13 +331,13 @@ function getProfileModalHTML(citizen) {
                 </div>
                 
                 <div class="tab-content" style="
-                    padding: 0;
+                    padding: 32px;
                     max-height: 55vh;
-                    overflow-y: auto;
+                    overflow-y: scroll;
                     background: #0F0F0F;
                     scrollbar-width: none;
                     -ms-overflow-style: none;
-                " onscroll='this.style.setProperty(\"--webkit-scrollbar\", \"none\")'>
+                ">
                     <div class="tab-panel active" id="overview">
                         <div class="stats-grid">
                             <div class="stat-card">
