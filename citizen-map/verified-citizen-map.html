@@ -2247,26 +2247,20 @@
             content.innerHTML = `
                 <!-- Fixed Header (Stays visible) -->
                 <div style="position: relative;">
-                    <!-- Prominent Flip Indicator -->
-                    <div style="text-align: center; margin: 8px 0;">
-                        <div class="flip-indicator" onclick="flipCard()" title="Click to flip for stats" style="
-                            display: inline-flex; 
-                            align-items: center; 
-                            justify-content: center; 
-                            background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%); 
-                            color: white; 
-                            border-radius: 20px; 
-                            padding: 6px 16px; 
-                            font-size: 11px; 
-                            font-weight: 600; 
+                    <!-- Subtle Flip Indicator -->
+                    <div style="text-align: center; margin: 4px 0;">
+                        <span class="flip-indicator" onclick="flipCard()" title="Click anywhere to view blockchain stats" style="
+                            color: #21E8A3; 
+                            font-size: 10px; 
+                            font-weight: 500; 
                             cursor: pointer; 
-                            transition: all 0.3s ease;
-                            box-shadow: 0 2px 8px rgba(33, 232, 163, 0.3);
-                            letter-spacing: 0.5px;
-                        " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(33, 232, 163, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(33, 232, 163, 0.3)'">
-                            <span style="margin-right: 6px;">⟲</span>
-                            <span>FLIP FOR STATS</span>
-                        </div>
+                            text-decoration: underline;
+                            text-decoration-style: dotted;
+                            opacity: 0.8;
+                            transition: all 0.2s ease;
+                        " onmouseover="this.style.opacity='1'; this.style.color='#4FACFE'" onmouseout="this.style.opacity='0.8'; this.style.color='#21E8A3'">
+                            Click to view stats
+                        </span>
                     </div>
                 </div>
                 
