@@ -1127,12 +1127,24 @@
                     subdomains: 'abcd',
                     maxZoom: 19
                 }).addTo(map);
+                
+                // Set dark background for map container
+                const mapContainer = document.getElementById('map');
+                if (mapContainer) {
+                    mapContainer.style.backgroundColor = '#0F0F0F';
+                }
             } else {
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                     subdomains: 'abcd',
                     maxZoom: 19
                 }).addTo(map);
+                
+                // Set light background for map container to fix zoom out borders
+                const mapContainer = document.getElementById('map');
+                if (mapContainer) {
+                    mapContainer.style.backgroundColor = '#ffffff';
+                }
             }
         }
 
@@ -2265,10 +2277,10 @@
                 logo.src = isDarkTheme ? './islanddao-logo.png' : './islanddao-logo-dark.png';
             }
             
-            // Force map container background update
+            // Force map container background update to fix zoom out borders
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
-                mapContainer.style.backgroundColor = isDarkTheme ? '#0F0F0F' : '#f8f9fa';
+                mapContainer.style.backgroundColor = isDarkTheme ? '#0F0F0F' : '#ffffff';
             }
         }
 
