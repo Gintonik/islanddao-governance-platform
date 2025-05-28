@@ -167,6 +167,26 @@ function openEnhancedProfile(citizen) {
         rightContainer.style.right = '0px';  // Slide right container into view
     }, 50);
     
+    // Re-attach X button event listener for STATE 3
+    const closeBtn = existingCard.querySelector('.profile-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('X button clicked in STATE 3');
+            closeCardCompletely(existingCard);
+        });
+    }
+    
+    // Re-attach polaroid click for STATE 3 → STATE 2
+    const profileImg = existingCard.querySelector('.profile-pfp img');
+    if (profileImg) {
+        profileImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('Polaroid clicked in STATE 3');
+            collapseToSmallCard(existingCard);
+        });
+    }
+    
     // Load governance data
     loadGovernanceData(citizen, { querySelector: () => existingCard });
 }
