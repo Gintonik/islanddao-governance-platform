@@ -61,21 +61,24 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
+    console.log('Setting up card expansion...');
+    
     // First, wrap all existing content in a left container
     const existingContent = existingCard.innerHTML;
+    console.log('Existing content captured');
     existingCard.innerHTML = '';
     
     // Create left side container for original content
     const leftContainer = document.createElement('div');
     leftContainer.className = 'left-content-area';
     leftContainer.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
+        position: relative;
+        float: left;
         width: 280px;
         height: 100%;
         overflow: hidden;
-        padding: 0;
+        padding: 20px;
+        box-sizing: border-box;
     `;
     leftContainer.innerHTML = existingContent;
     
@@ -83,9 +86,8 @@ function openEnhancedProfile(citizen) {
     const rightContainer = document.createElement('div');
     rightContainer.className = 'right-content-area';
     rightContainer.style.cssText = `
-        position: absolute;
-        top: 0;
-        right: 0;
+        position: relative;
+        float: right;
         width: 280px;
         height: 100%;
         padding: 20px;
@@ -98,6 +100,7 @@ function openEnhancedProfile(citizen) {
         opacity: 0;
         transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         overflow: hidden;
+        box-sizing: border-box;
     `;
     
     rightContainer.innerHTML = `
@@ -109,8 +112,16 @@ function openEnhancedProfile(citizen) {
     existingCard.appendChild(leftContainer);
     existingCard.appendChild(rightContainer);
     
-    // Hide scrollbars on the main card
+    // Add clearfix div
+    const clearfix = document.createElement('div');
+    clearfix.style.cssText = 'clear: both;';
+    existingCard.appendChild(clearfix);
+    
+    // Hide scrollbars on the main card and ensure it can contain floated elements
     existingCard.style.overflow = 'hidden';
+    existingCard.style.position = 'relative';
+    
+    console.log('Card structure setup complete');
     
     // Animate backdrop and slide + expand the card
     setTimeout(() => {
