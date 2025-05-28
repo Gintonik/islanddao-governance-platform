@@ -2459,6 +2459,7 @@
         window.addEventListener('click', function(e) {
             const walletModal = document.getElementById('walletModal');
             const pinModal = document.getElementById('pinFormModal');
+            const citizenPanel = document.getElementById('citizenPanel');
             
             if (e.target === walletModal) {
                 closeWalletModal();
@@ -2466,6 +2467,31 @@
             
             if (e.target === pinModal) {
                 closePinForm();
+            }
+            
+            // Close citizen panel when clicking outside
+            if (citizenPanel && citizenPanel.classList.contains('open')) {
+                // Check if click is outside the panel and not on a marker
+                const isClickOnPanel = citizenPanel.contains(e.target);
+                const isClickOnMarker = e.target.closest('.citizen-marker') || e.target.closest('.multi-citizen-marker');
+                const isClickOnBackdrop = e.target.classList.contains('profile-backdrop');
+                
+                if (!isClickOnPanel && !isClickOnMarker && !isClickOnBackdrop) {
+                    // Close panel completely (return to pins only)
+                    citizenPanel.classList.remove('open');
+                    citizenPanel.style.transform = 'translateX(100%)';
+                    
+                    // Remove any backdrop if it exists
+                    const backdrop = document.querySelector('.profile-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    
+                    // Reset modal state
+                    if (window.modalState) {
+                        window.modalState = 'closed';
+                    }
+                }
             }
         });
     </script>
