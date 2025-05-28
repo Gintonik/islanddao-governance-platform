@@ -150,8 +150,7 @@ function getProfileModalHTML(citizen) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(16px);
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -199,7 +198,11 @@ function getProfileModalHTML(citizen) {
                     gap: 20px;
                     border-bottom: 1px solid rgba(33, 232, 163, 0.2);
                     backdrop-filter: blur(8px);
+                    position: relative;
                 ">
+                    <div style="position: absolute; top: 20px; left: 20px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSAzTDE2IDhIMjJWMTZIMTZMMjEgMjFMMTMuMDkgMTUuNzRMMTIgMjJMMTAuOTEgMTUuNzRMMyAyMUw4IDE2SDJWOEM0IDYgOCAzIDEyIDJaIiBmaWxsPSIjMjFFOEEzIi8+Cjwvc3ZnPgo=" alt="IslandDAO" style="width: 24px; height: 24px;">
+                    </div>
                     <div class="profile-image-container" style="position: relative;">
                         <img src="${profileImage}" alt="Profile" style="
                             width: 100px;
@@ -211,8 +214,7 @@ function getProfileModalHTML(citizen) {
                         ">
                     </div>
                     <div class="profile-info" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSAzTDE2IDhIMjJWMTZIMTZMMjEgMjFMMTMuMDkgMTUuNzRMMTIgMjJMMTAuOTEgMTUuNzRMMyAyMUw4IDE2SDJWOEM0IDYgOCAzIDEyIDJaIiBmaWxsPSIjMjFFOEEzIi8+Cjwvc3ZnPgo=" alt="IslandDAO" style="width: 20px; height: 20px;">
+                        <div style="margin-bottom: 8px;">
                             <span style="
                                 font-size: 24px;
                                 font-weight: 700;
@@ -235,7 +237,7 @@ function getProfileModalHTML(citizen) {
                             font-size: 13px;
                             color: #AFAFAF;
                             margin-bottom: 4px;
-                        ">📍 ${parseFloat(citizen.location[0]).toFixed(4)}, ${parseFloat(citizen.location[1]).toFixed(4)}</div>
+                        ">🌍 Location on Map</div>
                         ${citizen.message ? `<div style="
                             font-size: 13px;
                             line-height: 1.4;
@@ -332,19 +334,19 @@ function getProfileModalHTML(citizen) {
                     scrollbar-width: none;
                     -ms-overflow-style: none;
                 ">
-                    <div class="tab-panel active" id="overview">
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-number">${nftCount}</div>
-                                <div class="stat-label">PERKS NFTs</div>
+                    <div class="tab-panel active" id="overview" style="display: block;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <div style="background: #1A1A1A; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(33, 232, 163, 0.2);">
+                                <div style="font-size: 28px; font-weight: 700; color: #21E8A3; margin-bottom: 4px;">${nftCount}</div>
+                                <div style="font-size: 14px; color: #AFAFAF; font-weight: 500;">PERKS NFTs</div>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">ISLAND Tokens</div>
+                            <div style="background: #1A1A1A; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(33, 232, 163, 0.2);">
+                                <div style="font-size: 28px; font-weight: 700; color: #21E8A3; margin-bottom: 4px;">0</div>
+                                <div style="font-size: 14px; color: #AFAFAF; font-weight: 500;">ISLAND Tokens</div>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-number">Member</div>
-                                <div class="stat-label">DAO Status</div>
+                            <div style="background: #1A1A1A; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(33, 232, 163, 0.2);">
+                                <div style="font-size: 28px; font-weight: 700; color: #21E8A3; margin-bottom: 4px;">Member</div>
+                                <div style="font-size: 14px; color: #AFAFAF; font-weight: 500;">DAO Status</div>
                             </div>
                         </div>
                         
@@ -373,18 +375,18 @@ function getProfileModalHTML(citizen) {
                         </div>
                     </div>
                     
-                    <div class="tab-panel" id="collection">
-                        <div class="section">
-                            <h3>PERKS Collection (${nftCount} NFTs)</h3>
-                            <div class="nft-grid">
+                    <div class="tab-panel" id="collection" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <h3 style="color: #FAFAFA; margin-bottom: 16px; font-size: 20px; font-weight: 600;">PERKS Collection (${nftCount} NFTs)</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px;">
                                 ${getNFTGridHTML(citizen)}
                             </div>
                         </div>
                     </div>
                     
-                    <div class="tab-panel" id="dao">
-                        <div class="section">
-                            <h3>$ISLAND Token Governance Power</h3>
+                    <div class="tab-panel" id="dao" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <h3 style="color: #FAFAFA; margin-bottom: 16px; font-size: 20px; font-weight: 600;">$ISLAND Token Governance Power</h3>
                             <div style="background: var(--secondary-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); margin-bottom: 30px;">
                                 <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
                                     <div style="font-size: 32px;">🏛️</div>
@@ -430,9 +432,9 @@ function getProfileModalHTML(citizen) {
                         </div>
                     </div>
                     
-                    <div class="tab-panel" id="achievements">
-                        <div class="section">
-                            <h3>Achievements & Recognition</h3>
+                    <div class="tab-panel" id="achievements" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <h3 style="color: #FAFAFA; margin-bottom: 16px; font-size: 20px; font-weight: 600;">Achievements & Recognition</h3>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                                 <div style="background: var(--secondary-bg); border: 2px dashed var(--border-color); border-radius: 12px; padding: 30px 20px; text-align: center;">
                                     <div style="font-size: 48px; margin-bottom: 16px;">🏆</div>
@@ -465,9 +467,9 @@ function getProfileModalHTML(citizen) {
                         </div>
                     </div>
                     
-                    <div class="tab-panel" id="social">
-                        <div class="section">
-                            <h3>Social Connections</h3>
+                    <div class="tab-panel" id="social" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <h3 style="color: #FAFAFA; margin-bottom: 16px; font-size: 20px; font-weight: 600;">Social Connections</h3>
                             <div style="text-align: center; padding: 40px 20px;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">🔗</div>
                                 <h4 style="color: var(--text-color); margin-bottom: 12px;">Connect Your Socials</h4>
@@ -563,9 +565,15 @@ function switchProfileTab(tabName, modal) {
     activeBtn.style.border = '1px solid rgba(33, 232, 163, 0.3)';
     activeBtn.style.transform = 'scale(1.02)';
     
-    // Update tab panels
-    modal.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-    modal.querySelector(`#${tabName}`).classList.add('active');
+    // Update tab panels - hide all, then show selected
+    modal.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+    
+    const activePanel = modal.querySelector(`#${tabName}`);
+    if (activePanel) {
+        activePanel.style.display = 'block';
+    }
 }
 
 function closeProfileModal(modal) {
