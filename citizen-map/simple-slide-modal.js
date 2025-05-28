@@ -210,30 +210,43 @@ function showSmallCard(citizen) {
     
     // No close buttons - cards close by clicking outside or backdrop
     
-    // Update slider dots for expanded state
-    const sliderDots = existingCard.querySelectorAll('.slider-dot');
-    sliderDots.forEach(dot => {
-        dot.style.background = dot.dataset.state === 'expanded' ? '#21E8A3' : 'rgba(255,255,255,0.3)';
-        dot.classList.toggle('active', dot.dataset.state === 'expanded');
+    // Update navigation buttons for expanded state
+    const navBtns = existingCard.querySelectorAll('.nav-btn');
+    navBtns.forEach(btn => {
+        if (btn.dataset.state === 'expanded') {
+            btn.style.background = '#21E8A3';
+            btn.style.color = '#000';
+            btn.classList.add('active');
+        } else {
+            btn.style.background = 'rgba(255,255,255,0.15)';
+            btn.style.color = 'rgba(255,255,255,0.8)';
+            btn.classList.remove('active');
+        }
     });
     
     // Load governance data
     loadGovernanceData(citizen, { querySelector: () => existingCard });
 }
 
-// Global function to handle card state slider
+// Global function to handle card state navigation
 window.setCardState = function(targetState) {
     const existingCard = document.getElementById('citizenPanel');
     if (!existingCard) return;
     
-    console.log(`Slider clicked: changing to ${targetState} state`);
+    console.log(`Navigation clicked: changing to ${targetState} state`);
     
-    // Update slider dots visual state
-    const sliderDots = existingCard.querySelectorAll('.slider-dot');
-    sliderDots.forEach(dot => {
-        const isActive = dot.dataset.state === targetState;
-        dot.style.background = isActive ? '#21E8A3' : 'rgba(255,255,255,0.3)';
-        dot.classList.toggle('active', isActive);
+    // Update navigation buttons visual state
+    const navBtns = existingCard.querySelectorAll('.nav-btn');
+    navBtns.forEach(btn => {
+        if (btn.dataset.state === targetState) {
+            btn.style.background = '#21E8A3';
+            btn.style.color = '#000';
+            btn.classList.add('active');
+        } else {
+            btn.style.background = 'rgba(255,255,255,0.15)';
+            btn.style.color = 'rgba(255,255,255,0.8)';
+            btn.classList.remove('active');
+        }
     });
     
     // Get citizen data from card
@@ -317,36 +330,49 @@ function getProfileHTML(citizen) {
                 ">PERK #${profileNftId || 'XXXX'}</div>
                 
                 
-                <!-- Card State Slider -->
-                <div class="card-slider" style="
+                <!-- Navigation Controls -->
+                <div class="card-nav" style="
                     position: absolute;
-                    bottom: -12px;
+                    bottom: -15px;
                     left: 50%;
                     transform: translateX(-50%);
-                    background: rgba(0,0,0,0.8);
-                    border-radius: 15px;
-                    padding: 4px;
+                    background: rgba(0,0,0,0.9);
+                    border-radius: 20px;
+                    padding: 6px 12px;
                     display: flex;
-                    gap: 4px;
+                    gap: 8px;
+                    align-items: center;
                     backdrop-filter: blur(10px);
-                    border: 1px solid rgba(33, 232, 163, 0.3);
+                    border: 1px solid rgba(33, 232, 163, 0.4);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 ">
-                    <div class="slider-dot active" data-state="small" onclick="setCardState('small')" style="
-                        width: 8px;
-                        height: 8px;
-                        border-radius: 50%;
+                    <span style="color: rgba(255,255,255,0.7); font-size: 10px; font-weight: 500;">VIEW</span>
+                    <div class="nav-btn active" data-state="small" onclick="setCardState('small')" style="
+                        padding: 4px 8px;
+                        border-radius: 12px;
                         background: #21E8A3;
+                        color: #000;
+                        font-size: 9px;
+                        font-weight: 600;
                         cursor: pointer;
                         transition: all 0.2s ease;
-                    "></div>
-                    <div class="slider-dot" data-state="expanded" onclick="setCardState('expanded')" style="
-                        width: 8px;
-                        height: 8px;
-                        border-radius: 50%;
-                        background: rgba(255,255,255,0.3);
+                        border: none;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    ">CARD</div>
+                    <div class="nav-btn" data-state="expanded" onclick="setCardState('expanded')" style="
+                        padding: 4px 8px;
+                        border-radius: 12px;
+                        background: rgba(255,255,255,0.15);
+                        color: rgba(255,255,255,0.8);
+                        font-size: 9px;
+                        font-weight: 600;
                         cursor: pointer;
                         transition: all 0.2s ease;
-                    "></div>
+                        border: none;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    ">FULL</div>
                 </div>
             </div>
             
