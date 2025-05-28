@@ -50,84 +50,98 @@ function openEnhancedProfile(citizen) {
             scrollbar-width: none;
         }
         .modal-content {
-            animation: cardExpandFromSidebar 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            position: fixed;
+            animation: unrollFromRight 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-origin: right center;
         }
         .modal-content.closing {
-            animation: cardShrinkToSidebar 0.6s cubic-bezier(0.55, 0.06, 0.68, 0.19);
+            animation: rollBackToRight 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
-        @keyframes cardExpandFromSidebar {
+        @keyframes unrollFromRight {
             0% {
                 width: 280px;
                 height: 200px;
                 top: 150px;
                 right: 20px;
-                left: auto;
-                transform: scale(1);
+                transform: scaleX(1) scaleY(1);
                 border-radius: 16px;
-                opacity: 0.9;
-            }
-            30% {
-                border-radius: 17px;
-                opacity: 0.95;
-                transform: scale(1.05);
-            }
-            70% {
-                width: 600px;
-                height: 450px;
-                top: 50%;
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-50%) scale(1.02);
-                border-radius: 19px;
-            }
-            100% {
-                width: 800px;
-                height: 600px;
-                top: 50%;
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-50%) scale(1);
-                border-radius: 20px;
                 opacity: 1;
             }
-        }
-        @keyframes cardShrinkToSidebar {
-            0% {
-                width: 800px;
-                height: 600px;
-                top: 50%;
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-50%) scale(1);
-                border-radius: 20px;
-                opacity: 1;
-            }
-            30% {
-                width: 600px;
-                height: 450px;
-                transform: translateX(-50%) translateY(-50%) scale(1.02);
-                border-radius: 19px;
-            }
-            70% {
+            25% {
                 width: 350px;
-                height: 250px;
-                top: 150px;
+                height: 300px;
+                top: 120px;
                 right: 20px;
-                left: auto;
-                transform: scale(1.05);
-                border-radius: 17px;
-                opacity: 0.95;
+                transform: scaleX(1.1) scaleY(1.2);
+                border-radius: 18px;
+            }
+            50% {
+                width: 500px;
+                height: 400px;
+                top: 100px;
+                right: 20px;
+                transform: scaleX(1.4) scaleY(1.5);
+                border-radius: 20px;
+            }
+            75% {
+                width: 700px;
+                height: 500px;
+                top: 80px;
+                right: 20px;
+                transform: scaleX(1.8) scaleY(1.8);
+                border-radius: 22px;
+            }
+            100% {
+                width: 800px;
+                height: 600px;
+                top: 50%;
+                right: 20px;
+                transform: translateY(-50%) scaleX(2) scaleY(2);
+                border-radius: 24px;
+                opacity: 1;
+            }
+        }
+        @keyframes rollBackToRight {
+            0% {
+                width: 800px;
+                height: 600px;
+                top: 50%;
+                right: 20px;
+                transform: translateY(-50%) scaleX(2) scaleY(2);
+                border-radius: 24px;
+                opacity: 1;
+            }
+            25% {
+                width: 700px;
+                height: 500px;
+                top: 80px;
+                right: 20px;
+                transform: scaleX(1.8) scaleY(1.8);
+                border-radius: 22px;
+            }
+            50% {
+                width: 500px;
+                height: 400px;
+                top: 100px;
+                right: 20px;
+                transform: scaleX(1.4) scaleY(1.5);
+                border-radius: 20px;
+            }
+            75% {
+                width: 350px;
+                height: 300px;
+                top: 120px;
+                right: 20px;
+                transform: scaleX(1.1) scaleY(1.2);
+                border-radius: 18px;
             }
             100% {
                 width: 280px;
                 height: 200px;
                 top: 150px;
                 right: 20px;
-                left: auto;
-                transform: scale(1);
+                transform: scaleX(1) scaleY(1);
                 border-radius: 16px;
-                opacity: 0.7;
+                opacity: 0.8;
             }
         }
         @keyframes modalFadeIn {
