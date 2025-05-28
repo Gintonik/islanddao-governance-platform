@@ -10,8 +10,8 @@ const fetch = require('node-fetch');
 // Realms governance contract for $ISLAND token
 const GOVERNANCE_CONTRACT = 'Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a';
 
-// RPC endpoint (same as used for NFTs)
-const RPC_ENDPOINT = 'https://mainnet.helius-rpc.com/?api-key=c71c7ccf-4d68-4018-90c8-7375d1f9e78f';
+// RPC endpoint using environment variable
+const RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
 
 /**
  * Fetch governance power for a specific wallet address
