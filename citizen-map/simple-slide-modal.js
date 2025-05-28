@@ -1,10 +1,22 @@
 // Simple Card Slide Modal - Just slides the original card left
 let modalState = 'closed';
 
-// Simple X button functionality - attach to document
+// Escape key to close cards
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const card = document.querySelector('.profile-card.open');
+        if (card) {
+            console.log('Escape key pressed - closing card');
+            closeCardCompletely(card);
+        }
+    }
+});
+
+// Simple click handlers
 document.addEventListener('click', function(e) {
-    // Handle X button clicks
+    // X button clicks
     if (e.target.classList.contains('close-btn') || e.target.innerHTML === '×') {
+        e.preventDefault();
         e.stopPropagation();
         console.log('X button clicked - closing card');
         const card = document.querySelector('.profile-card.open');
@@ -14,22 +26,23 @@ document.addEventListener('click', function(e) {
         return;
     }
     
-    // Handle outside clicks
-    const card = document.querySelector('.profile-card.open');
-    const backdrop = document.querySelector('.profile-backdrop');
-    
-    // Don't close if clicking on map markers or map elements or the card itself
-    if (e.target.classList.contains('citizen-marker') || 
-        e.target.closest('.citizen-marker') ||
-        e.target.closest('.leaflet-marker-icon') ||
-        e.target.closest('.profile-card')) {
+    // Backdrop clicks
+    if (e.target.classList.contains('profile-backdrop')) {
+        console.log('Clicked on backdrop - closing card');
+        const card = document.querySelector('.profile-card.open');
+        if (card) {
+            closeCardCompletely(card);
+        }
         return;
     }
     
-    // Close if clicking outside
-    if (card) {
-        console.log('Clicked outside card - closing');
-        closeCardCompletely(card);
+    // Map clicks (when no backdrop)
+    if (e.target.id === 'map' || e.target.classList.contains('leaflet-container')) {
+        const card = document.querySelector('.profile-card.open');
+        if (card) {
+            console.log('Clicked on map - closing card');
+            closeCardCompletely(card);
+        }
     }
 });
 
@@ -163,16 +176,7 @@ function showSmallCard(citizen) {
         closeCardCompletely(existingCard);
     });
     
-    // Click outside to close completely - add event listener immediately
-    setTimeout(() => {
-        backdrop.addEventListener('click', (e) => {
-            console.log('Backdrop clicked, target:', e.target);
-            if (e.target === backdrop) {
-                console.log('Clicked outside card - closing completely');
-                closeCardCompletely(existingCard);
-            }
-        });
-    }, 100);
+    // No backdrop event listeners - using document level handlers instead
     
     document.body.appendChild(backdrop);
     
@@ -263,19 +267,7 @@ function showSmallCard(citizen) {
         });
     }
     
-    // Re-attach backdrop click for STATE 3 - use setTimeout to ensure DOM is ready
-    setTimeout(() => {
-        const currentBackdrop = document.querySelector('.profile-backdrop');
-        if (currentBackdrop) {
-            currentBackdrop.addEventListener('click', (e) => {
-                console.log('Expanded backdrop clicked, target:', e.target);
-                if (e.target === currentBackdrop) {
-                    console.log('Clicked outside expanded card - closing completely');
-                    closeCardCompletely(existingCard);
-                }
-            });
-        }
-    }, 100);
+    // No backdrop event listeners - using document level handlers instead
     
     // Load governance data
     loadGovernanceData(citizen, { querySelector: () => existingCard });
@@ -481,30 +473,19 @@ function collapseToSmallCard(card) {
 function closeCardCompletely(card) {
     console.log('STATE 2/3 → STATE 1: Closing card completely');
     
-    const backdrop = document.querySelector('.profile-backdrop');
-    
     // Remove backdrop immediately
+    const backdrop = document.querySelector('.profile-backdrop');
     if (backdrop) {
         backdrop.remove();
     }
     
-    // Close the card completely - STATE 1
-    card.classList.remove('open');
-    card.style.transform = 'translateX(100%)';
-    card.style.opacity = '0';
-    
-    setTimeout(() => {
-        // Hide the card but don't remove it - just reset it
-        if (card && card.parentNode) {
-            card.style.display = 'none';
-            card.style.transform = '';
-            card.style.opacity = '';
-            card.style.width = '';
-            card.style.zIndex = '';
-            card.style.right = '';
-        }
+    // Simple immediate close - no animation complications
+    if (card) {
+        card.classList.remove('open');
+        card.style.cssText = 'display: none;'; // Reset all styles
         modalState = 'closed';
-    }, 600);
+        console.log('Card closed immediately');
+    }
 }
 
 function closeExistingCard(card, backdrop) {
