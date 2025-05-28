@@ -177,12 +177,9 @@ function showSmallCard(citizen) {
         width: 280px;
         height: 100%;
         padding: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        font-size: 14px;
-        text-align: center;
+        display: block;
+        overflow-y: auto;
+        color: #fff;
         background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
         border-radius: 0 20px 20px 0;
         box-sizing: border-box;
