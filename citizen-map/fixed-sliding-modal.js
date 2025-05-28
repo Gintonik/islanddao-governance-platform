@@ -1,4 +1,4 @@
-// Simple Sliding Profile Modal - Just moves the card left to reveal space
+// Fixed Sliding Profile Modal - Keeps original card vertical and clean
 let modalState = 'closed';
 
 function openEnhancedProfile(citizen) {
@@ -30,27 +30,24 @@ function openEnhancedProfile(citizen) {
     modal.innerHTML = getProfileHTML(citizen);
     
     // Event listeners
-    modal.querySelector('.modal-overlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeModal(modal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal);
     });
     
     modal.querySelector('.close-btn').addEventListener('click', () => closeModal(modal));
-    modal.querySelector('.modal-content').addEventListener('click', (e) => e.stopPropagation());
     
     document.body.appendChild(modal);
     modalState = 'modal';
     
-    // Show modal with slide animation
+    // Show modal and trigger slide animation
     setTimeout(() => {
         modal.style.opacity = '1';
         modal.style.visibility = 'visible';
         
-        // Trigger slide animation
-        const content = modal.querySelector('.modal-content');
-        content.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        content.style.right = '100px';
-        content.style.width = '700px';
-        content.style.height = '200px';
+        // Slide the container left to reveal space
+        const container = modal.querySelector('.profile-container');
+        container.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        container.style.right = '440px';
     }, 50);
     
     // Load governance data
@@ -73,20 +70,16 @@ function getProfileHTML(citizen) {
     const nftCount = citizen.nfts ? citizen.nfts.length : 0;
     
     return `
-        <div class="modal-overlay" style="
+        <div class="profile-container" style="
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(12px);
-            z-index: 999999;
+            top: 150px;
+            right: 20px;
+            width: 700px;
+            height: 200px;
+            transform: translateX(0);
         ">
-            <div class="modal-content" style="
-                position: fixed;
-                top: 150px;
-                right: 20px;
+            <!-- Original Profile Card -->
+            <div class="profile-card" style="
                 width: 280px;
                 height: 200px;
                 background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
@@ -101,6 +94,7 @@ function getProfileHTML(citizen) {
                 display: flex;
                 flex-direction: column;
                 gap: 12px;
+                position: relative;
             ">
                 <button class="close-btn" style="
                     position: absolute;
@@ -225,50 +219,15 @@ function getProfileHTML(citizen) {
                         <div style="width: 12px; height: 12px; background: #666; border-radius: 2px;"></div>
                     </div>
                 </div>
-                
-                <!-- Revealed Space Section -->
-                <div class="stats-section" style="
-                    position: absolute;
-                    top: 0;
-                    left: 280px;
-                    width: 420px;
-                    height: 200px;
-                    background: transparent;
-                    padding: 20px;
-                    opacity: 0;
-                    transition: all 0.6s ease 0.3s;
-                    pointer-events: none;
-                ">
-                    <div style="color: #21E8A3; font-size: 18px; font-weight: 700; margin-bottom: 16px;">DAO STATS</div>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; height: 100%;">
-                        <div style="background: rgba(33, 232, 163, 0.1); border: 1px solid rgba(33, 232, 163, 0.3); border-radius: 8px; padding: 12px; text-align: center;">
-                            <div style="font-size: 20px; font-weight: 700; color: #21E8A3;" class="island-tokens">0</div>
-                            <div style="font-size: 10px; color: #AFAFAF;">ISLAND</div>
-                        </div>
-                        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; text-align: center;">
-                            <div style="font-size: 20px; font-weight: 700; color: #FAFAFA;">${nftCount}</div>
-                            <div style="font-size: 10px; color: #AFAFAF;">NFTs</div>
-                        </div>
-                        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; text-align: center;">
-                            <div style="font-size: 14px; font-weight: 700; color: #21E8A3;">Active</div>
-                            <div style="font-size: 10px; color: #AFAFAF;">Status</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     `;
 }
 
 function closeModal(modal) {
-    const content = modal.querySelector('.modal-content');
-    const stats = modal.querySelector('.stats-section');
-    
     // Reverse animation
-    if (stats) stats.style.opacity = '0';
-    content.style.right = '20px';
-    content.style.width = '280px';
-    content.style.height = '200px';
+    const container = modal.querySelector('.profile-container');
+    container.style.right = '20px';
     modal.style.opacity = '0';
     
     setTimeout(() => {
@@ -293,16 +252,7 @@ async function loadGovernanceData(citizen, modal) {
         const response = await fetch(`/api/governance/${walletAddress}`);
         if (response.ok) {
             const governanceData = await response.json();
-            const islandStat = modal.querySelector('.island-tokens');
-            if (islandStat) {
-                islandStat.textContent = governanceData.island_token_balance || 0;
-            }
-            
-            // Show stats after delay
-            setTimeout(() => {
-                const stats = modal.querySelector('.stats-section');
-                if (stats) stats.style.opacity = '1';
-            }, 300);
+            // Can add stats later if needed
         }
     } catch (error) {
         console.error('Error loading governance data:', error);
