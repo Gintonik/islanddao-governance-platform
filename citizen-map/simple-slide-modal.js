@@ -2,14 +2,17 @@
 let modalState = 'closed';
 
 function openEnhancedProfile(citizen) {
-    // Close sidebar
+    // Hide the existing sidebar profile card completely
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
-        sidebar.style.transition = 'all 0.3s ease';
-        sidebar.style.transform = 'translateX(-100%)';
-        sidebar.style.opacity = '0';
-        setTimeout(() => sidebar.style.display = 'none', 300);
+        sidebar.style.display = 'none';
     }
+    
+    // Also hide any existing profile cards
+    const existingCards = document.querySelectorAll('.profile-display');
+    existingCards.forEach(card => {
+        card.style.display = 'none';
+    });
     
     const modal = document.createElement('div');
     modal.className = 'enhanced-profile-modal';
