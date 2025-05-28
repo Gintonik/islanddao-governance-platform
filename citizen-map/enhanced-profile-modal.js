@@ -1,4 +1,4 @@
-// Enhanced Citizen Profile Modal System
+// Enhanced Citizen Profile Modal System - Unrolling Animation v2.0
 let modalState = 'closed'; // 'closed', 'sidebar', 'modal'
 
 function openEnhancedProfile(citizen) {
