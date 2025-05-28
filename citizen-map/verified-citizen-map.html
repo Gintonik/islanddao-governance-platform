@@ -2469,23 +2469,22 @@
                 closePinForm();
             }
             
-            // Close citizen panel when clicking outside
+            // Close citizen panel when clicking outside (only when NOT in expanded modal state)
             if (citizenPanel && citizenPanel.classList.contains('open')) {
+                // Don't interfere if we're in expanded modal state
+                const backdrop = document.querySelector('.profile-backdrop');
+                if (backdrop) {
+                    return; // Let the backdrop handle the clicks
+                }
+                
                 // Check if click is outside the panel and not on a marker
                 const isClickOnPanel = citizenPanel.contains(e.target);
                 const isClickOnMarker = e.target.closest('.citizen-marker') || e.target.closest('.multi-citizen-marker');
-                const isClickOnBackdrop = e.target.classList.contains('profile-backdrop');
                 
-                if (!isClickOnPanel && !isClickOnMarker && !isClickOnBackdrop) {
+                if (!isClickOnPanel && !isClickOnMarker) {
                     // Close panel completely (return to pins only)
                     citizenPanel.classList.remove('open');
                     citizenPanel.style.transform = 'translateX(100%)';
-                    
-                    // Remove any backdrop if it exists
-                    const backdrop = document.querySelector('.profile-backdrop');
-                    if (backdrop) {
-                        backdrop.remove();
-                    }
                     
                     // Reset modal state
                     if (window.modalState) {
