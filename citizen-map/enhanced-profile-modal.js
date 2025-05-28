@@ -222,16 +222,14 @@ function getProfileModalHTML(citizen) {
     
     return `
         <div class="modal-overlay" style="
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 999999;
         ">
             <div class="modal-content" style="
                 background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
@@ -244,6 +242,11 @@ function getProfileModalHTML(citizen) {
                     0 16px 32px rgba(0, 0, 0, 0.4);
                 display: flex;
                 flex-direction: column;
+                position: fixed;
+                width: 280px;
+                height: 200px;
+                top: 150px;
+                right: 20px;
             ">
                 <button class="close-btn" style="
                     position: absolute;
