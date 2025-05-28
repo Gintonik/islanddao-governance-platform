@@ -44,10 +44,10 @@ function startServer() {
     
     // Route handling
     try {
-      // Redirect to collection grid on main server when requested
-      if (req.url === '/collection-grid') {
-        res.writeHead(302, { 'Location': 'http://localhost:5000/' });
-        res.end();
+      // Serve the NFT collection grid
+      if (req.url === '/collection' || req.url === '/collection-grid') {
+        const collectionPath = path.join(__dirname, '..', 'unified-index.html');
+        serveFile(res, collectionPath, 'text/html');
         return;
       }
       // Serve the HTML file for the root route
@@ -67,6 +67,43 @@ function startServer() {
       else if (req.url === '/api/citizens') {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
+      }
+      // API endpoint for NFT collection data (used by grid)
+      else if (req.url === '/api/nfts') {
+        const client = await db.pool.connect();
+        try {
+          const result = await client.query('SELECT mint_id, name, image_url, owner FROM nfts ORDER BY name');
+          const nfts = result.rows.map(nft => ({
+            id: nft.mint_id,
+            name: nft.name,
+            imageUrl: nft.image_url,
+            owner: nft.owner
+          }));
+          sendJsonResponse(res, nfts);
+        } finally {
+          client.release();
+        }
+      }
+      // API endpoint for NFT ownership data (used by grid)
+      else if (req.url === '/api/nft-owners') {
+        const ownershipMap = await db.getNftOwnershipMap();
+        sendJsonResponse(res, ownershipMap);
+      }
+      // For backwards compatibility - serve the static NFT collection file
+      else if (req.url === '/perks-collection.json') {
+        const client = await db.pool.connect();
+        try {
+          const result = await client.query('SELECT mint_id, name, image_url, owner FROM nfts ORDER BY name');
+          const nfts = result.rows.map(nft => ({
+            id: nft.mint_id,
+            name: nft.name,
+            imageUrl: nft.image_url,
+            owner: nft.owner
+          }));
+          sendJsonResponse(res, nfts);
+        } finally {
+          client.release();
+        }
       }
       // Add endpoint for nft-owners.json to support the existing code
       else if (req.url === '/nft-owners.json') {
