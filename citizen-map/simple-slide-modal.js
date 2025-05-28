@@ -115,11 +115,16 @@ function showSmallCard(citizen) {
     
     // Event listeners
     // X button always closes completely (STATE 2/3 → STATE 1)
-    smallCardCloseBtn.addEventListener('click', () => closeCardCompletely(existingCard));
+    smallCardCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('X button clicked in STATE 2');
+        closeCardCompletely(existingCard);
+    });
     
     // Click outside to close completely
     backdrop.addEventListener('click', (e) => {
         if (e.target === backdrop) {
+            console.log('Clicked outside card');
             closeCardCompletely(existingCard);
         }
     });
@@ -198,13 +203,15 @@ function showSmallCard(citizen) {
     }, 50);
     
     // Re-attach X button event listener for STATE 3
-    const expandedCloseBtn = existingCard.querySelector('.profile-close-btn');
+    const expandedCloseBtn = existingCard.querySelector('.close-btn');
     if (expandedCloseBtn) {
         expandedCloseBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log('X button clicked in STATE 3');
             closeCardCompletely(existingCard);
         });
+    } else {
+        console.log('No X button found in expanded card');
     }
     
     // Re-attach polaroid click for STATE 3 → STATE 2
@@ -214,6 +221,17 @@ function showSmallCard(citizen) {
             e.stopPropagation();
             console.log('Polaroid clicked in STATE 3');
             collapseToSmallCard(existingCard);
+        });
+    }
+    
+    // Re-attach backdrop click for STATE 3
+    const currentBackdrop = document.querySelector('.profile-backdrop');
+    if (currentBackdrop) {
+        currentBackdrop.addEventListener('click', (e) => {
+            if (e.target === currentBackdrop) {
+                console.log('Clicked outside expanded card');
+                closeCardCompletely(existingCard);
+            }
         });
     }
     
