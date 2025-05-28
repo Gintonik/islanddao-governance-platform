@@ -984,12 +984,7 @@
     <div class="header">
         <div class="logo-container">
             <img src="./islanddao-logo.png" alt="IslandDAO" class="logo">
-            <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                <h1 class="title">Verified Citizen Map</h1>
-                <div class="header-stats" style="font-size: 10px; color: var(--text-secondary); opacity: 0.8; margin-top: -2px; font-weight: 400;">
-                    <span id="headerCitizenCount">0</span> Citizens • <span id="headerPerksCount">0</span> PERKS
-                </div>
-            </div>
+            <h1 class="title">Verified Citizen Map</h1>
         </div>
         
         <!-- Navigation -->
@@ -1012,7 +1007,20 @@
 
     <div class="map-container">
         <div id="map"></div>
-
+        
+        <!-- Stats Overlay -->
+        <div class="stats-overlay">
+            <div class="stats-title">Live Stats</div>
+            <div class="stat-item">
+                <span class="stat-label">Citizen Count:</span>
+                <span class="stat-value" id="citizenCount">0</span>
+            </div>
+            <div class="stat-separator"></div>
+            <div class="stat-item">
+                <span class="stat-label">PERKS Represented:</span>
+                <span class="stat-value" id="perksCount">0</span>
+            </div>
+        </div>
         
         <div class="controls">
             <button id="addPinBtn" class="control-btn add-pin-btn">Add Your Pin</button>
