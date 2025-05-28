@@ -870,57 +870,56 @@
             display: none;
         }
 
-        /* 3D Full Panel Card Flip Animation */
-        .citizen-panel-card-container {
-            perspective: 1200px;
+        /* 3D Card Flip Animation */
+        .citizen-card-container {
+            perspective: 1000px;
             width: 100%;
-            height: 100%;
+            height: 400px;
             position: relative;
         }
 
-        .citizen-panel-card {
+        .citizen-card {
             position: relative;
             width: 100%;
             height: 100%;
-            transition: transform 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-style: preserve-3d;
             cursor: pointer;
         }
 
-        .citizen-panel-card.flipped {
+        .citizen-card.flipped {
             transform: rotateY(180deg);
         }
 
-        .citizen-panel-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(33, 232, 163, 0.15);
+        .citizen-card:hover {
+            transform: translateY(-2px);
         }
 
-        .citizen-panel-card.flipped:hover {
-            transform: rotateY(180deg) translateY(-3px);
-            box-shadow: 0 8px 25px rgba(33, 232, 163, 0.15);
+        .citizen-card.flipped:hover {
+            transform: rotateY(180deg) translateY(-2px);
         }
 
-        .panel-card-face {
+        .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
             border-radius: 8px;
-            box-sizing: border-box;
-            padding: 20px;
+            overflow: hidden;
         }
 
-        .panel-card-front {
+        .card-front {
             background: transparent;
-            overflow-y: auto;
         }
 
-        .panel-card-back {
+        .card-back {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             transform: rotateY(180deg);
-            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .flip-indicator {
@@ -2236,13 +2235,13 @@
 
 
             content.innerHTML = `
-                <!-- Pinned Polaroid PERK Card -->
+                <!-- Flippable Polaroid PERK Card -->
                 ${imageUrl ? `<div style="text-align: center; margin-bottom: 16px;">
                     <div class="citizen-card-container" style="height: 200px; perspective: 1000px;">
                         <div class="citizen-card" id="citizenCard" onclick="flipCard()" style="width: 182px; height: 200px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 0 auto; cursor: pointer;">
                             
                             <!-- Flip Indicator -->
-                            <div class="flip-indicator" title="Click to flip" style="position: absolute; top: 5px; right: 5px; background: rgba(33, 232, 163, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10; pointer-events: none; transition: all 0.3s ease;">⟲</div>
+                            <div class="flip-indicator" title="Click anywhere to flip" style="position: absolute; top: 5px; right: 5px; background: rgba(33, 232, 163, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10; pointer-events: none; transition: all 0.3s ease;">⟲</div>
                             
                             <!-- Front Face (Original Polaroid) -->
                             <div class="card-face card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden;">
@@ -2257,7 +2256,8 @@
                                     width: 162px;
                                     transform: rotate(-1deg);
                                     border: 1px solid #e0e0e0;
-                                ">
+                                " title="Click to view stats">
+
                                     <img src="${imageUrl}" alt="Profile Picture" style="
                                         width: 140px; 
                                         height: 140px; 
@@ -2276,6 +2276,7 @@
                                     ">
                                         ${perkName}
                                     </div>
+                                    <!-- Visit profile indicator -->
                                     <div style="
                                         position: absolute;
                                         bottom: 6px;
@@ -2373,11 +2374,11 @@
             if (card.classList.contains('flipped')) {
                 card.classList.remove('flipped');
                 flipIndicator.innerHTML = '⟲';
-                flipIndicator.title = 'Click to flip';
+                flipIndicator.title = 'View Stats';
             } else {
                 card.classList.add('flipped');
                 flipIndicator.innerHTML = '↶';
-                flipIndicator.title = 'Click to flip back';
+                flipIndicator.title = 'View Profile';
             }
         }
 
