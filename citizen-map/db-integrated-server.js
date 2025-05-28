@@ -6,7 +6,7 @@ const apiRoutes = require('./api-routes');
 const db = require('../db');
 
 // Constants
-const PORT = 5001;
+const PORT = 5000;
 const HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 const GLOBE_HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 
