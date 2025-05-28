@@ -891,6 +891,14 @@
             transform: rotateY(180deg);
         }
 
+        .citizen-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .citizen-card.flipped:hover {
+            transform: rotateY(180deg) translateY(-2px);
+        }
+
         .card-face {
             position: absolute;
             width: 100%;
@@ -2230,17 +2238,16 @@
                 <!-- Flippable Polaroid PERK Card -->
                 ${imageUrl ? `<div style="text-align: center; margin-bottom: 16px;">
                     <div class="citizen-card-container" style="height: 200px; perspective: 1000px;">
-                        <div class="citizen-card" id="citizenCard" style="width: 182px; height: 200px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 0 auto;">
+                        <div class="citizen-card" id="citizenCard" onclick="flipCard()" style="width: 182px; height: 200px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 0 auto; cursor: pointer;">
                             
                             <!-- Flip Indicator -->
-                            <div class="flip-indicator" onclick="flipCard()" title="View Stats" style="position: absolute; top: 5px; right: 5px; background: rgba(33, 232, 163, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10; cursor: pointer; transition: all 0.3s ease;">⟲</div>
+                            <div class="flip-indicator" title="Click anywhere to flip" style="position: absolute; top: 5px; right: 5px; background: rgba(33, 232, 163, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10; pointer-events: none; transition: all 0.3s ease;">⟲</div>
                             
                             <!-- Front Face (Original Polaroid) -->
                             <div class="card-face card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden;">
                                 <div style="
                                     position: relative; 
                                     display: inline-block; 
-                                    cursor: pointer;
                                     background: white;
                                     border-radius: 4px;
                                     padding: 10px 10px 20px 10px;
@@ -2249,7 +2256,7 @@
                                     width: 162px;
                                     transform: rotate(-1deg);
                                     border: 1px solid #e0e0e0;
-                                " title="Click flip icon to view stats" onmouseover="this.style.transform='rotate(-1deg) translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 0, 0, 0.2)'" onmouseout="this.style.transform='rotate(-1deg) translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.15)'">
+                                " title="Click to view stats">
 
                                     <img src="${imageUrl}" alt="Profile Picture" style="
                                         width: 140px; 
