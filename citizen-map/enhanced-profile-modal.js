@@ -1,4 +1,6 @@
 // Enhanced Citizen Profile Modal System
+let modalState = 'closed'; // 'closed', 'sidebar', 'modal'
+
 function openEnhancedProfile(citizen) {
     const modal = document.createElement('div');
     modal.className = 'enhanced-profile-modal';
@@ -16,17 +18,41 @@ function openEnhancedProfile(citizen) {
     
     modal.innerHTML = getProfileModalHTML(citizen);
     
-    // Add event listeners
-    modal.querySelector('.modal-overlay').addEventListener('click', () => closeProfileModal(modal));
-    modal.querySelector('.close-btn').addEventListener('click', () => closeProfileModal(modal));
+    // Add CSS for seamless scrolling
+    const style = document.createElement('style');
+    style.textContent = `
+        .tab-content::-webkit-scrollbar {
+            display: none;
+        }
+        .tab-content {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Smart close behavior: modal -> sidebar -> closed
+    modal.querySelector('.modal-overlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            modalState = 'sidebar';
+            closeProfileModal(modal);
+        }
+    });
+    
+    modal.querySelector('.close-btn').addEventListener('click', () => {
+        modalState = 'closed';
+        closeProfileModal(modal);
+    });
+    
     modal.querySelector('.modal-content').addEventListener('click', (e) => e.stopPropagation());
     
-    // Tab functionality
+    // Tab functionality with smooth transitions
     modal.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchProfileTab(btn.dataset.tab, modal));
     });
     
     document.body.appendChild(modal);
+    modalState = 'modal';
     
     // Cool entrance animation
     requestAnimationFrame(() => {
@@ -101,45 +127,189 @@ function getProfileModalHTML(citizen) {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
         ">
             <div class="modal-content" style="
-                background: var(--card-bg);
-                border-radius: 20px;
+                background: #0F0F0F;
+                border-radius: 24px;
                 width: 100%;
-                max-width: 850px;
-                max-height: 90vh;
+                max-width: 900px;
+                max-height: 85vh;
                 overflow: hidden;
                 position: relative;
-                border: 1px solid var(--border-color);
-                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 10px 20px rgba(0, 0, 0, 0.3);
+                border: 2px solid #21E8A3;
+                box-shadow: 0 0 0 1px rgba(33, 232, 163, 0.2), 0 32px 64px rgba(0, 0, 0, 0.8), 0 16px 32px rgba(0, 0, 0, 0.4);
                 transform: scale(0.8) translateY(30px);
                 transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             ">
-                <button class="close-btn">&times;</button>
+                <button class="close-btn" style="
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: #FAFAFA;
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    font-size: 20px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    z-index: 10;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 300;
+                ">&times;</button>
                 
-                <div class="profile-header">
-                    <div class="profile-image-container">
-                        <img src="${profileImage}" alt="Profile" class="profile-image">
-                        <div class="citizen-badge">PERKS Citizen</div>
+                <div class="profile-header" style="
+                    padding: 32px;
+                    background: linear-gradient(135deg, #21E8A3 0%, #4facfe 100%);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    gap: 24px;
+                    border-bottom: 1px solid rgba(33, 232, 163, 0.3);
+                ">
+                    <div class="profile-image-container" style="position: relative;">
+                        <img src="${profileImage}" alt="Profile" style="
+                            width: 120px;
+                            height: 120px;
+                            border-radius: 20px;
+                            object-fit: cover;
+                            border: 4px solid rgba(255, 255, 255, 0.3);
+                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+                        ">
+                        <div style="
+                            position: absolute;
+                            bottom: -8px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background: rgba(0, 0, 0, 0.9);
+                            color: white;
+                            padding: 6px 14px;
+                            border-radius: 16px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            border: 2px solid #21E8A3;
+                            letter-spacing: 0.5px;
+                        ">PERKS CITIZEN</div>
                     </div>
-                    <div class="profile-info">
-                        <h2>${citizen.nickname || 'Anonymous Citizen'}</h2>
-                        <div class="wallet-address">${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
-                        <div class="location">📍 ${parseFloat(citizen.location[0]).toFixed(4)}, ${parseFloat(citizen.location[1]).toFixed(4)}</div>
-                        ${citizen.message ? `<div class="bio">${citizen.message}</div>` : ''}
+                    <div class="profile-info" style="flex: 1;">
+                        <h2 style="
+                            margin: 0 0 12px 0;
+                            font-size: 28px;
+                            font-weight: 700;
+                            color: white;
+                            font-family: 'Inter', sans-serif;
+                        ">${citizen.nickname || 'Anonymous Citizen'}</h2>
+                        <div style="
+                            font-family: 'Courier New', monospace;
+                            background: rgba(255, 255, 255, 0.2);
+                            padding: 8px 14px;
+                            border-radius: 12px;
+                            font-size: 13px;
+                            margin-bottom: 12px;
+                            display: inline-block;
+                            backdrop-filter: blur(4px);
+                        ">${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
+                        <div style="
+                            font-size: 14px;
+                            opacity: 0.9;
+                            margin-bottom: 8px;
+                            color: rgba(255, 255, 255, 0.9);
+                        ">📍 ${parseFloat(citizen.location[0]).toFixed(4)}, ${parseFloat(citizen.location[1]).toFixed(4)}</div>
+                        ${citizen.message ? `<div style="
+                            font-size: 14px;
+                            line-height: 1.5;
+                            opacity: 0.9;
+                            max-width: 400px;
+                            color: rgba(255, 255, 255, 0.9);
+                        ">${citizen.message}</div>` : ''}
                     </div>
                 </div>
                 
-                <div class="profile-tabs">
-                    <button class="tab-btn active" data-tab="overview">Overview</button>
-                    <button class="tab-btn" data-tab="collection">PERKS Collection</button>
-                    <button class="tab-btn" data-tab="dao">DAO Stats</button>
-                    <button class="tab-btn" data-tab="achievements">Achievements</button>
-                    <button class="tab-btn" data-tab="social">Social</button>
+                <div class="profile-tabs" style="
+                    display: flex;
+                    background: #1A1A1A;
+                    border-bottom: 1px solid rgba(33, 232, 163, 0.2);
+                ">
+                    <button class="tab-btn active" data-tab="overview" style="
+                        flex: 1;
+                        padding: 18px 20px;
+                        background: none;
+                        border: none;
+                        color: #21E8A3;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border-bottom: 3px solid #21E8A3;
+                        background: rgba(33, 232, 163, 0.1);
+                        font-family: 'Inter', sans-serif;
+                    ">Overview</button>
+                    <button class="tab-btn" data-tab="collection" style="
+                        flex: 1;
+                        padding: 18px 20px;
+                        background: none;
+                        border: none;
+                        color: #AFAFAF;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border-bottom: 3px solid transparent;
+                        font-family: 'Inter', sans-serif;
+                    ">PERKS Collection</button>
+                    <button class="tab-btn" data-tab="dao" style="
+                        flex: 1;
+                        padding: 18px 20px;
+                        background: none;
+                        border: none;
+                        color: #AFAFAF;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border-bottom: 3px solid transparent;
+                        font-family: 'Inter', sans-serif;
+                    ">DAO Stats</button>
+                    <button class="tab-btn" data-tab="achievements" style="
+                        flex: 1;
+                        padding: 18px 20px;
+                        background: none;
+                        border: none;
+                        color: #AFAFAF;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border-bottom: 3px solid transparent;
+                        font-family: 'Inter', sans-serif;
+                    ">Achievements</button>
+                    <button class="tab-btn" data-tab="social" style="
+                        flex: 1;
+                        padding: 18px 20px;
+                        background: none;
+                        border: none;
+                        color: #AFAFAF;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border-bottom: 3px solid transparent;
+                        font-family: 'Inter', sans-serif;
+                    ">Social</button>
                 </div>
                 
-                <div class="tab-content">
+                <div class="tab-content" style="
+                    padding: 0;
+                    max-height: 55vh;
+                    overflow-y: auto;
+                    background: #0F0F0F;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                " onscroll='this.style.setProperty(\"--webkit-scrollbar\", \"none\")'>
                     <div class="tab-panel active" id="overview">
                         <div class="stats-grid">
                             <div class="stat-card">
@@ -357,9 +527,17 @@ function getNFTGridHTML(citizen) {
 }
 
 function switchProfileTab(tabName, modal) {
-    // Update tab buttons
-    modal.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    modal.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    // Update tab buttons with new styling
+    modal.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.style.color = '#AFAFAF';
+        btn.style.borderBottom = '3px solid transparent';
+        btn.style.background = 'none';
+    });
+    
+    const activeBtn = modal.querySelector(`[data-tab="${tabName}"]`);
+    activeBtn.style.color = '#21E8A3';
+    activeBtn.style.borderBottom = '3px solid #21E8A3';
+    activeBtn.style.background = 'rgba(33, 232, 163, 0.1)';
     
     // Update tab panels
     modal.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
@@ -373,5 +551,15 @@ function closeProfileModal(modal) {
     modal.style.opacity = '0';
     content.style.transform = 'scale(0.8) translateY(30px)';
     
-    setTimeout(() => modal.remove(), 400);
+    setTimeout(() => {
+        modal.remove();
+        if (modalState === 'closed') {
+            // Also close the sidebar if X button was clicked
+            const sidebar = document.getElementById('citizenPanel');
+            if (sidebar) {
+                sidebar.classList.remove('open');
+            }
+        }
+        modalState = 'closed';
+    }, 400);
 }
