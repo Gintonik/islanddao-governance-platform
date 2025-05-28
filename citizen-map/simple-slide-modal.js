@@ -104,13 +104,17 @@ function showSmallCard(citizen) {
         transition: all 0.4s ease;
     `;
     
+    // Remove any existing X buttons first
+    const existingCloseButtons = existingCard.querySelectorAll('.close-btn');
+    existingCloseButtons.forEach(btn => btn.remove());
+    
     // Add close button to existing card with direct onclick
     const smallCardCloseBtn = document.createElement('button');
     smallCardCloseBtn.className = 'close-btn';
     smallCardCloseBtn.innerHTML = '×';
     smallCardCloseBtn.onclick = function(e) {
         e.stopPropagation();
-        console.log('X button clicked in STATE 2');
+        console.log('X button clicked - closing card');
         closeCard();
     };
     smallCardCloseBtn.style.cssText = `
