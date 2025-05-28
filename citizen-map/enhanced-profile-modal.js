@@ -82,7 +82,7 @@ function getProfileModalHTML(citizen) {
                     <div class="profile-info">
                         <h2>${citizen.nickname || 'Anonymous Citizen'}</h2>
                         <div class="wallet-address">${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
-                        <div class="location">📍 ${citizen.location[0].toFixed(4)}, ${citizen.location[1].toFixed(4)}</div>
+                        <div class="location">📍 ${parseFloat(citizen.location[0]).toFixed(4)}, ${parseFloat(citizen.location[1]).toFixed(4)}</div>
                         ${citizen.message ? `<div class="bio">${citizen.message}</div>` : ''}
                     </div>
                 </div>
@@ -121,7 +121,7 @@ function getProfileModalHTML(citizen) {
                                 </div>
                                 <div style="margin-bottom: 16px;">
                                     <strong style="color: var(--text-color);">Location:</strong>
-                                    <div style="color: var(--secondary-text); margin-top: 4px;">📍 ${citizen.location[0].toFixed(6)}, ${citizen.location[1].toFixed(6)}</div>
+                                    <div style="color: var(--secondary-text); margin-top: 4px;">📍 ${parseFloat(citizen.location[0]).toFixed(6)}, ${parseFloat(citizen.location[1]).toFixed(6)}</div>
                                 </div>
                                 ${citizen.message ? `
                                     <div style="margin-bottom: 16px;">
