@@ -50,97 +50,101 @@ function openEnhancedProfile(citizen) {
             scrollbar-width: none;
         }
         .modal-content {
-            animation: unrollFromRight 0.9s cubic-bezier(0.23, 1, 0.32, 1);
-            transform-origin: right center;
+            animation: papyrusUnroll 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            transform-origin: center right;
+            width: 280px;
+            height: 200px;
+            top: 150px;
+            right: 20px;
         }
         .modal-content.closing {
-            animation: rollBackToRight 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: papyrusRoll 0.8s cubic-bezier(0.55, 0.06, 0.68, 0.19);
         }
-        @keyframes unrollFromRight {
+        @keyframes papyrusUnroll {
             0% {
                 width: 280px;
                 height: 200px;
                 top: 150px;
                 right: 20px;
-                transform: scaleX(1) scaleY(1);
-                border-radius: 16px;
+                left: auto;
+                transform: scaleX(0.3);
                 opacity: 1;
             }
-            25% {
-                width: 350px;
+            30% {
+                width: 450px;
                 height: 300px;
                 top: 120px;
                 right: 20px;
-                transform: scaleX(1.1) scaleY(1.2);
-                border-radius: 18px;
+                left: auto;
+                transform: scaleX(0.7);
             }
-            50% {
-                width: 500px;
-                height: 400px;
-                top: 100px;
-                right: 20px;
-                transform: scaleX(1.4) scaleY(1.5);
-                border-radius: 20px;
-            }
-            75% {
-                width: 700px;
-                height: 500px;
+            60% {
+                width: 650px;
+                height: 450px;
                 top: 80px;
                 right: 20px;
-                transform: scaleX(1.8) scaleY(1.8);
-                border-radius: 22px;
+                left: auto;
+                transform: scaleX(0.9);
+            }
+            80% {
+                width: 800px;
+                height: 600px;
+                top: 50%;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scaleX(0.98);
             }
             100% {
                 width: 800px;
                 height: 600px;
                 top: 50%;
-                right: 20px;
-                transform: translateY(-50%) scaleX(2) scaleY(2);
-                border-radius: 24px;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scaleX(1);
                 opacity: 1;
             }
         }
-        @keyframes rollBackToRight {
+        @keyframes papyrusRoll {
             0% {
                 width: 800px;
                 height: 600px;
                 top: 50%;
-                right: 20px;
-                transform: translateY(-50%) scaleX(2) scaleY(2);
-                border-radius: 24px;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scaleX(1);
                 opacity: 1;
             }
-            25% {
-                width: 700px;
-                height: 500px;
+            20% {
+                width: 800px;
+                height: 600px;
+                top: 50%;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scaleX(0.98);
+            }
+            40% {
+                width: 650px;
+                height: 450px;
                 top: 80px;
                 right: 20px;
-                transform: scaleX(1.8) scaleY(1.8);
-                border-radius: 22px;
+                left: auto;
+                transform: scaleX(0.9);
             }
-            50% {
-                width: 500px;
-                height: 400px;
-                top: 100px;
-                right: 20px;
-                transform: scaleX(1.4) scaleY(1.5);
-                border-radius: 20px;
-            }
-            75% {
-                width: 350px;
+            70% {
+                width: 450px;
                 height: 300px;
                 top: 120px;
                 right: 20px;
-                transform: scaleX(1.1) scaleY(1.2);
-                border-radius: 18px;
+                left: auto;
+                transform: scaleX(0.7);
             }
             100% {
                 width: 280px;
                 height: 200px;
                 top: 150px;
                 right: 20px;
-                transform: scaleX(1) scaleY(1);
-                border-radius: 16px;
+                left: auto;
+                transform: scaleX(0.3);
                 opacity: 0.8;
             }
         }
