@@ -208,26 +208,48 @@ function showSmallCard(citizen) {
         rightContainer.style.right = '0px';  // Slide right container into view
     }, 50);
     
-    // Re-attach X button event listener for STATE 3
+    // Set onclick handlers directly in HTML - no event listeners
     const expandedCloseBtn = existingCard.querySelector('.close-btn');
     if (expandedCloseBtn) {
-        expandedCloseBtn.addEventListener('click', (e) => {
+        expandedCloseBtn.onclick = function(e) {
             e.stopPropagation();
             console.log('X button clicked in STATE 3');
             closeCardCompletely(existingCard);
-        });
-    } else {
-        console.log('No X button found in expanded card');
+        };
     }
     
-    // Re-attach polaroid click for STATE 3 → STATE 2 using onclick
-    const profileImg = existingCard.querySelector('.profile-pfp img');
-    if (profileImg) {
-        profileImg.onclick = function(e) {
+    // Add collapse button instead of using polaroid click
+    const profileSection = existingCard.querySelector('.profile-pfp');
+    if (profileSection && !profileSection.querySelector('.collapse-btn')) {
+        const collapseBtn = document.createElement('button');
+        collapseBtn.className = 'collapse-btn';
+        collapseBtn.innerHTML = '◂';
+        collapseBtn.style.cssText = `
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #21E8A3;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: #000;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        `;
+        collapseBtn.onclick = function(e) {
             e.stopPropagation();
-            console.log('Polaroid clicked in STATE 3');
+            console.log('Collapse button clicked in STATE 3');
             collapseToSmallCard(existingCard);
         };
+        profileSection.style.position = 'relative';
+        profileSection.appendChild(collapseBtn);
     }
     
     // No backdrop event listeners - using document level handlers instead
@@ -296,8 +318,8 @@ function getProfileHTML(citizen) {
                 </svg>
             </div>
             
-            <!-- Polaroid Style Profile -->
-            <div style="
+            <!-- Polaroid Style Profile with Expand Button -->
+            <div class="profile-pfp" style="
                 background: white;
                 padding: 8px;
                 border-radius: 12px;
@@ -305,6 +327,7 @@ function getProfileHTML(citizen) {
                 margin: 0 auto;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                 transform: rotate(-2deg);
+                position: relative;
             ">
                 <img src="${profileImage}" alt="Profile" style="
                     width: 80px;
@@ -320,6 +343,27 @@ function getProfileHTML(citizen) {
                     margin-top: 4px;
                     font-family: 'Courier New', monospace;
                 ">PERK #${profileNftId || 'XXXX'}</div>
+                
+                <button class="expand-btn" onclick="expandToFullCard(this)" style="
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    background: #21E8A3;
+                    border: none;
+                    border-radius: 50%;
+                    width: 24px;
+                    height: 24px;
+                    color: #000;
+                    font-size: 12px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    z-index: 10;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">▸</button>
             </div>
             
             <!-- Tags -->
