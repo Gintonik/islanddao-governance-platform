@@ -2247,8 +2247,27 @@
             content.innerHTML = `
                 <!-- Fixed Header (Stays visible) -->
                 <div style="position: relative;">
-                    <!-- Flip Indicator -->
-                    <div class="flip-indicator" onclick="flipCard()" title="Click to view stats" style="position: absolute; top: 5px; right: 5px; background: rgba(33, 232, 163, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10; cursor: pointer; transition: all 0.3s ease;">⟲</div>
+                    <!-- Prominent Flip Indicator -->
+                    <div style="text-align: center; margin: 8px 0;">
+                        <div class="flip-indicator" onclick="flipCard()" title="Click to flip for stats" style="
+                            display: inline-flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            background: linear-gradient(135deg, #21E8A3 0%, #4FACFE 100%); 
+                            color: white; 
+                            border-radius: 20px; 
+                            padding: 6px 16px; 
+                            font-size: 11px; 
+                            font-weight: 600; 
+                            cursor: pointer; 
+                            transition: all 0.3s ease;
+                            box-shadow: 0 2px 8px rgba(33, 232, 163, 0.3);
+                            letter-spacing: 0.5px;
+                        " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(33, 232, 163, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(33, 232, 163, 0.3)'">
+                            <span style="margin-right: 6px;">⟲</span>
+                            <span>FLIP FOR STATS</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Flippable Content Area -->
