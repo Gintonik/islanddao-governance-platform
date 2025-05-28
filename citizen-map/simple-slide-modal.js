@@ -1,19 +1,33 @@
 // Simple Card Slide Modal - Just slides the original card left
 let modalState = 'closed';
 
-// Global click handler to close cards when clicking outside
+// Simple X button functionality - attach to document
 document.addEventListener('click', function(e) {
-    const card = document.querySelector('.profile-card.open');
-    const backdrop = document.querySelector('.profile-backdrop');
-    
-    // Don't close if clicking on map markers or map elements
-    if (e.target.classList.contains('citizen-marker') || 
-        e.target.closest('.citizen-marker') ||
-        e.target.closest('.leaflet-marker-icon')) {
+    // Handle X button clicks
+    if (e.target.classList.contains('close-btn') || e.target.innerHTML === '×') {
+        e.stopPropagation();
+        console.log('X button clicked - closing card');
+        const card = document.querySelector('.profile-card.open');
+        if (card) {
+            closeCardCompletely(card);
+        }
         return;
     }
     
-    if (card && !card.contains(e.target)) {
+    // Handle outside clicks
+    const card = document.querySelector('.profile-card.open');
+    const backdrop = document.querySelector('.profile-backdrop');
+    
+    // Don't close if clicking on map markers or map elements or the card itself
+    if (e.target.classList.contains('citizen-marker') || 
+        e.target.closest('.citizen-marker') ||
+        e.target.closest('.leaflet-marker-icon') ||
+        e.target.closest('.profile-card')) {
+        return;
+    }
+    
+    // Close if clicking outside
+    if (card) {
         console.log('Clicked outside card - closing');
         closeCardCompletely(card);
     }
