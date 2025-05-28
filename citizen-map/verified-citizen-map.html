@@ -907,8 +907,8 @@
             height: 100%;
             backface-visibility: hidden;
             border-radius: 8px;
-            overflow-y: auto;
-            padding: 20px;
+            overflow: hidden;
+            padding: 0;
             box-sizing: border-box;
         }
 
@@ -920,8 +920,8 @@
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             transform: rotateY(180deg);
-            display: flex;
-            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
         }
 
         .flip-indicator {
@@ -2245,6 +2245,7 @@
                         
                         <!-- Front Face (Original Profile) -->
                         <div class="panel-card-face panel-card-front">
+                            <div style="padding: 20px; height: 100%; overflow-y: auto;">
                             <!-- Pinned Polaroid PERK Card -->
                             ${imageUrl ? `<div style="text-align: center; margin-bottom: 16px;">
                                 <div style="
@@ -2323,6 +2324,7 @@
                         ${createNftGrid(citizen)}
                     </div>
                 </div>` : ''}
+                            </div>
                         </div>
                         
                         <!-- Back Face (Stats & Governance Dashboard) -->
