@@ -2,13 +2,13 @@
  * Realms Governance Power Fetcher using SPL Governance SDK
  * 
  * Fetches authentic governance power (deposited $ISLAND tokens) for wallet addresses
- * from the IslandDAO realm using the official Solana SPL Governance SDK.
+ * from the IslandDAO realm using the official SPL Governance SDK.
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { getTokenOwnerRecordsByOwner, getTokenOwnerRecord } = require('@solana/spl-governance');
+const { getTokenOwnerRecordForRealm, getRealm } = require('@solana/spl-governance');
 
-// IslandDAO realm configuration
+// IslandDAO realm configuration from https://app.realms.today/dao/IslandDAO
 const ISLAND_DAO_REALM = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
 
@@ -24,29 +24,33 @@ async function fetchGovernancePower(walletAddress) {
     try {
         const walletPubkey = new PublicKey(walletAddress);
         
-        // Get all token owner records for this wallet in the IslandDAO realm
-        const tokenOwnerRecords = await getTokenOwnerRecordsByOwner(
+        // First, get the realm data to find the governing token mint
+        const realmData = await getRealm(connection, ISLAND_DAO_REALM);
+        const governingTokenMint = realmData.account.communityMint;
+        
+        // Get the token owner record for this wallet
+        const tokenOwnerRecord = await getTokenOwnerRecordForRealm(
             connection,
             GOVERNANCE_PROGRAM_ID,
             ISLAND_DAO_REALM,
+            governingTokenMint,
             walletPubkey
         );
         
-        let totalGovernancePower = 0;
-        
-        // Sum up governance power from all token owner records
-        for (const record of tokenOwnerRecords) {
-            if (record.account.governingTokenDepositAmount) {
-                // Convert from lamports to tokens (assuming 6 decimals for $ISLAND)
-                const governancePower = record.account.governingTokenDepositAmount.toNumber() / Math.pow(10, 6);
-                totalGovernancePower += governancePower;
-            }
+        if (!tokenOwnerRecord || !tokenOwnerRecord.account.governingTokenDepositAmount) {
+            return 0;
         }
         
-        return totalGovernancePower;
+        // Convert from lamports to tokens (6 decimals for $ISLAND)
+        const governancePowerLamports = tokenOwnerRecord.account.governingTokenDepositAmount.toNumber();
+        const governancePower = governancePowerLamports / Math.pow(10, 6);
+        
+        return governancePower;
         
     } catch (error) {
-        if (error.message.includes('AccountNotFound') || error.message.includes('No token owner records')) {
+        if (error.message.includes('Account does not exist') || 
+            error.message.includes('Invalid account owner') ||
+            error.message.includes('AccountNotFound')) {
             // No governance tokens deposited for this wallet
             return 0;
         }
