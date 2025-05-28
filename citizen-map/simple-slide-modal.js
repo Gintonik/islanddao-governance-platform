@@ -2,58 +2,75 @@
 let modalState = 'closed';
 
 function openEnhancedProfile(citizen) {
-    // Hide the existing sidebar profile card completely
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-        sidebar.style.display = 'none';
+    console.log('openEnhancedProfile called with citizen:', citizen);
+    
+    // Find the existing profile card in the sidebar
+    const existingCard = document.querySelector('.profile-display');
+    console.log('Found existing card:', existingCard);
+    if (!existingCard) {
+        console.log('No existing card found, cannot slide');
+        return;
     }
     
-    // Also hide any existing profile cards
-    const existingCards = document.querySelectorAll('.profile-display');
-    existingCards.forEach(card => {
-        card.style.display = 'none';
-    });
+    modalState = 'modal';
     
-    const modal = document.createElement('div');
-    modal.className = 'enhanced-profile-modal';
-    modal.style.cssText = `
+    // Add backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'profile-backdrop';
+    backdrop.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 999999;
+        z-index: 999998;
         background: rgba(0, 0, 0, 0.3);
         opacity: 0;
-        visibility: hidden;
         transition: all 0.4s ease;
     `;
     
-    modal.innerHTML = getProfileHTML(citizen);
+    // Add close button to existing card
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #FAFAFA;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 300;
+        z-index: 10;
+        transition: all 0.2s ease;
+    `;
+    
+    existingCard.appendChild(closeBtn);
     
     // Event listeners
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal(modal);
-    });
+    backdrop.addEventListener('click', () => closeExistingCard(existingCard, backdrop));
+    closeBtn.addEventListener('click', () => closeExistingCard(existingCard, backdrop));
     
-    modal.querySelector('.close-btn').addEventListener('click', () => closeModal(modal));
+    document.body.appendChild(backdrop);
     
-    document.body.appendChild(modal);
-    modalState = 'modal';
-    
-    // Show modal and trigger slide animation
+    // Animate backdrop and slide card
     setTimeout(() => {
-        modal.style.opacity = '1';
-        modal.style.visibility = 'visible';
-        
-        // Slide the card left
-        const card = modal.querySelector('.profile-card');
-        card.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        card.style.right = '300px';
+        backdrop.style.opacity = '1';
+        existingCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        existingCard.style.right = '300px';
+        existingCard.style.zIndex = '999999';
     }, 50);
     
     // Load governance data
-    loadGovernanceData(citizen, modal);
+    loadGovernanceData(citizen, { querySelector: () => existingCard });
 }
 
 function getProfileHTML(citizen) {
@@ -217,25 +234,20 @@ function getProfileHTML(citizen) {
     `;
 }
 
-function closeModal(modal) {
-    // Reverse animation
-    const card = modal.querySelector('.profile-card');
+function closeExistingCard(card, backdrop) {
+    // Reverse animation - slide card back to original position
     card.style.right = '20px';
-    modal.style.opacity = '0';
+    backdrop.style.opacity = '0';
     
     setTimeout(() => {
-        modal.remove();
-        modalState = 'closed';
+        // Remove backdrop and close button
+        backdrop.remove();
+        const closeBtn = card.querySelector('.close-btn');
+        if (closeBtn) closeBtn.remove();
         
-        // Show sidebar
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.style.display = 'block';
-            setTimeout(() => {
-                sidebar.style.transform = 'translateX(0)';
-                sidebar.style.opacity = '1';
-            }, 100);
-        }
+        // Reset card z-index
+        card.style.zIndex = '';
+        modalState = 'closed';
     }, 600);
 }
 
