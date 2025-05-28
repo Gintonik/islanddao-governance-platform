@@ -297,7 +297,16 @@
 
         /* Light theme map styling */
         [data-theme="light"] #map {
-            background-color: #f8f9fa;
+            background-color: #ffffff;
+        }
+
+        /* Fix Leaflet container backgrounds for proper theme switching */
+        [data-theme="light"] .leaflet-container {
+            background-color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .leaflet-container {
+            background-color: #0F0F0F !important;
         }
 
         /* Light theme navigation styling */
