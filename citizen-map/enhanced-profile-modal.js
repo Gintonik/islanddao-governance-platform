@@ -2,6 +2,25 @@
 let modalState = 'closed'; // 'closed', 'sidebar', 'modal'
 
 function openEnhancedProfile(citizen) {
+    // Get the sidebar card position for smooth animation
+    const currentSidebarCard = document.querySelector('.citizen-card');
+    const sidebar = document.getElementById('sidebar');
+    let startRect = null;
+    
+    if (currentSidebarCard) {
+        startRect = currentSidebarCard.getBoundingClientRect();
+    }
+    
+    // Close sidebar with smooth transition
+    if (sidebar) {
+        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        sidebar.style.transform = 'translateX(-100%)';
+        sidebar.style.opacity = '0';
+        setTimeout(() => {
+            sidebar.style.display = 'none';
+        }, 300);
+    }
+    
     const modal = document.createElement('div');
     modal.className = 'enhanced-profile-modal';
     modal.style.cssText = `
@@ -11,14 +30,16 @@ function openEnhancedProfile(citizen) {
         right: 0;
         bottom: 0;
         z-index: 999999;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
         opacity: 0;
         visibility: hidden;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     `;
     
-    modal.innerHTML = getProfileModalHTML(citizen);
+    modal.innerHTML = getProfileModalHTML(citizen, startRect);
     
-    // Add CSS for seamless scrolling and smooth animations
+    // Add enhanced CSS for card transformation animation
     const style = document.createElement('style');
     style.textContent = `
         .tab-content::-webkit-scrollbar {
@@ -28,17 +49,48 @@ function openEnhancedProfile(citizen) {
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        .enhanced-profile-modal {
-            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        .modal-content {
+            animation: cardGrowTransform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-origin: ${startRect ? `${startRect.left + startRect.width/2}px ${startRect.top + startRect.height/2}px` : 'center'};
         }
-        @keyframes modalSlideIn {
+        @keyframes cardGrowTransform {
+            0% {
+                ${startRect ? `
+                    width: ${startRect.width}px;
+                    height: ${startRect.height}px;
+                    top: ${startRect.top}px;
+                    left: ${startRect.left}px;
+                ` : `
+                    width: 280px;
+                    height: 180px;
+                    top: 50%;
+                    left: 20px;
+                `}
+                transform: scale(1);
+                border-radius: 16px;
+                opacity: 0.9;
+            }
+            50% {
+                border-radius: 18px;
+                opacity: 0.95;
+                transform: scale(1.1);
+            }
+            100% {
+                width: 800px;
+                height: 600px;
+                top: 50%;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%) scale(1);
+                border-radius: 20px;
+                opacity: 1;
+            }
+        }
+        @keyframes modalFadeIn {
             from {
                 opacity: 0;
-                transform: scale(0.3) translateY(50px);
             }
             to {
                 opacity: 1;
-                transform: scale(1) translateY(0);
             }
         }
     `;
@@ -67,29 +119,11 @@ function openEnhancedProfile(citizen) {
     document.body.appendChild(modal);
     modalState = 'modal';
     
-    // Get sidebar card position for smooth transformation
-    const sidebarCard = document.querySelector('#citizenPanel .profile-info');
-    let startPosition = { x: 300, y: 200 }; // Default position
-    
-    if (sidebarCard) {
-        const rect = sidebarCard.getBoundingClientRect();
-        startPosition = { x: rect.left, y: rect.top };
-    }
-    
-    // Start modal from sidebar card position
-    const content = modal.querySelector('.modal-content');
-    content.style.transformOrigin = `${startPosition.x}px ${startPosition.y}px`;
-    content.style.transform = 'scale(0.3) translateY(50px)';
-    
-    // Cool entrance animation that expands from sidebar card
-    requestAnimationFrame(() => {
+    // Smooth entrance animation - modal appears after sidebar closes
+    setTimeout(() => {
         modal.style.opacity = '1';
         modal.style.visibility = 'visible';
-        
-        setTimeout(() => {
-            content.style.transform = 'scale(1) translateY(0)';
-        }, 50);
-    });
+    }, 200);
     
     // Load governance data
     loadGovernanceData(citizen, modal);
@@ -190,18 +224,21 @@ function getProfileModalHTML(citizen) {
                 ">&times;</button>
                 
                 <div class="profile-header" style="
-                    padding: 24px 32px;
-                    background: rgba(15, 15, 15, 0.95);
+                    padding: 32px 40px;
+                    background: linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(26, 26, 26, 0.95) 100%);
                     color: #FAFAFA;
                     display: flex;
                     align-items: center;
-                    gap: 20px;
-                    border-bottom: 1px solid rgba(33, 232, 163, 0.2);
-                    backdrop-filter: blur(8px);
+                    gap: 24px;
+                    border-bottom: 1px solid rgba(33, 232, 163, 0.3);
+                    backdrop-filter: blur(12px);
                     position: relative;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
                 ">
-                    <div style="position: absolute; top: 20px; left: 20px;">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSAzTDE2IDhIMjJWMTZIMTZMMjEgMjFMMTMuMDkgMTUuNzRMMTIgMjJMMTAuOTEgMTUuNzRMMyAyMUw4IDE2SDJWOEM0IDYgOCAzIDEyIDJaIiBmaWxsPSIjMjFFOEEzIi8+Cjwvc3ZnPgo=" alt="IslandDAO" style="width: 24px; height: 24px;">
+                    <div style="position: absolute; top: 24px; left: 24px; opacity: 0.8;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L13.09 8.26L21 3L16 8H22V16H16L21 21L13.09 15.74L12 22L10.91 15.74L3 21L8 16H2V8H8L3 3L10.91 8.26L12 2Z" fill="#21E8A3"/>
+                        </svg>
                     </div>
                     <div class="profile-image-container" style="position: relative;">
                         <img src="${profileImage}" alt="Profile" style="
