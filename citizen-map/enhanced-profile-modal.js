@@ -150,8 +150,8 @@ function getProfileModalHTML(citizen) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(16px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -191,142 +191,136 @@ function getProfileModalHTML(citizen) {
                 ">&times;</button>
                 
                 <div class="profile-header" style="
-                    padding: 32px;
-                    background: linear-gradient(135deg, #21E8A3 0%, #4facfe 100%);
-                    color: white;
+                    padding: 24px 32px;
+                    background: rgba(15, 15, 15, 0.95);
+                    color: #FAFAFA;
                     display: flex;
                     align-items: center;
-                    gap: 24px;
-                    border-bottom: 1px solid rgba(33, 232, 163, 0.3);
+                    gap: 20px;
+                    border-bottom: 1px solid rgba(33, 232, 163, 0.2);
+                    backdrop-filter: blur(8px);
                 ">
                     <div class="profile-image-container" style="position: relative;">
                         <img src="${profileImage}" alt="Profile" style="
-                            width: 120px;
-                            height: 120px;
-                            border-radius: 20px;
-                            object-fit: cover;
-                            border: 4px solid rgba(255, 255, 255, 0.3);
-                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-                        ">
-                        <div style="
-                            position: absolute;
-                            bottom: -8px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            background: rgba(0, 0, 0, 0.9);
-                            color: white;
-                            padding: 6px 14px;
+                            width: 100px;
+                            height: 100px;
                             border-radius: 16px;
-                            font-size: 11px;
-                            font-weight: 600;
+                            object-fit: cover;
                             border: 2px solid #21E8A3;
-                            letter-spacing: 0.5px;
-                        ">PERKS CITIZEN</div>
+                            box-shadow: 0 4px 16px rgba(33, 232, 163, 0.3);
+                        ">
                     </div>
                     <div class="profile-info" style="flex: 1;">
-                        <h2 style="
-                            margin: 0 0 12px 0;
-                            font-size: 28px;
-                            font-weight: 700;
-                            color: white;
-                            font-family: 'Inter', sans-serif;
-                        ">${citizen.nickname || 'Anonymous Citizen'}</h2>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSAzTDE2IDhIMjJWMTZIMTZMMjEgMjFMMTMuMDkgMTUuNzRMMTIgMjJMMTAuOTEgMTUuNzRMMyAyMUw4IDE2SDJWOEM0IDYgOCAzIDEyIDJaIiBmaWxsPSIjMjFFOEEzIi8+Cjwvc3ZnPgo=" alt="IslandDAO" style="width: 20px; height: 20px;">
+                            <span style="
+                                font-size: 24px;
+                                font-weight: 700;
+                                color: #FAFAFA;
+                                font-family: 'Inter', sans-serif;
+                            ">${citizen.nickname || 'Anonymous Citizen'}</span>
+                        </div>
                         <div style="
                             font-family: 'Courier New', monospace;
-                            background: rgba(255, 255, 255, 0.2);
-                            padding: 8px 14px;
-                            border-radius: 12px;
-                            font-size: 13px;
-                            margin-bottom: 12px;
+                            background: rgba(33, 232, 163, 0.1);
+                            border: 1px solid rgba(33, 232, 163, 0.3);
+                            padding: 6px 12px;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            margin-bottom: 8px;
                             display: inline-block;
-                            backdrop-filter: blur(4px);
+                            color: #21E8A3;
                         ">${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
                         <div style="
-                            font-size: 14px;
-                            opacity: 0.9;
-                            margin-bottom: 8px;
-                            color: rgba(255, 255, 255, 0.9);
+                            font-size: 13px;
+                            color: #AFAFAF;
+                            margin-bottom: 4px;
                         ">📍 ${parseFloat(citizen.location[0]).toFixed(4)}, ${parseFloat(citizen.location[1]).toFixed(4)}</div>
                         ${citizen.message ? `<div style="
-                            font-size: 14px;
-                            line-height: 1.5;
-                            opacity: 0.9;
+                            font-size: 13px;
+                            line-height: 1.4;
+                            color: #AFAFAF;
                             max-width: 400px;
-                            color: rgba(255, 255, 255, 0.9);
                         ">${citizen.message}</div>` : ''}
                     </div>
                 </div>
                 
                 <div class="profile-tabs" style="
                     display: flex;
-                    background: #1A1A1A;
-                    border-bottom: 1px solid rgba(33, 232, 163, 0.2);
+                    background: rgba(26, 26, 26, 0.8);
+                    backdrop-filter: blur(8px);
+                    padding: 8px;
+                    gap: 4px;
                 ">
                     <button class="tab-btn active" data-tab="overview" style="
                         flex: 1;
-                        padding: 18px 20px;
-                        background: none;
-                        border: none;
+                        padding: 12px 16px;
+                        background: rgba(33, 232, 163, 0.15);
+                        border: 1px solid rgba(33, 232, 163, 0.3);
                         color: #21E8A3;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 600;
                         cursor: pointer;
-                        transition: all 0.2s ease;
-                        border-bottom: 3px solid #21E8A3;
-                        background: rgba(33, 232, 163, 0.1);
+                        transition: all 0.3s ease;
+                        border-radius: 12px;
                         font-family: 'Inter', sans-serif;
+                        letter-spacing: 0.3px;
                     ">Overview</button>
                     <button class="tab-btn" data-tab="collection" style="
                         flex: 1;
-                        padding: 18px 20px;
-                        background: none;
-                        border: none;
+                        padding: 12px 16px;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         color: #AFAFAF;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 600;
                         cursor: pointer;
-                        transition: all 0.2s ease;
-                        border-bottom: 3px solid transparent;
+                        transition: all 0.3s ease;
+                        border-radius: 12px;
                         font-family: 'Inter', sans-serif;
-                    ">PERKS Collection</button>
+                        letter-spacing: 0.3px;
+                    ">Collection</button>
                     <button class="tab-btn" data-tab="dao" style="
                         flex: 1;
-                        padding: 18px 20px;
-                        background: none;
-                        border: none;
+                        padding: 12px 16px;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         color: #AFAFAF;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 600;
                         cursor: pointer;
-                        transition: all 0.2s ease;
-                        border-bottom: 3px solid transparent;
+                        transition: all 0.3s ease;
+                        border-radius: 12px;
                         font-family: 'Inter', sans-serif;
-                    ">DAO Stats</button>
+                        letter-spacing: 0.3px;
+                    ">DAO</button>
                     <button class="tab-btn" data-tab="achievements" style="
                         flex: 1;
-                        padding: 18px 20px;
-                        background: none;
-                        border: none;
+                        padding: 12px 16px;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         color: #AFAFAF;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 600;
                         cursor: pointer;
-                        transition: all 0.2s ease;
-                        border-bottom: 3px solid transparent;
+                        transition: all 0.3s ease;
+                        border-radius: 12px;
                         font-family: 'Inter', sans-serif;
-                    ">Achievements</button>
+                        letter-spacing: 0.3px;
+                    ">Awards</button>
                     <button class="tab-btn" data-tab="social" style="
                         flex: 1;
-                        padding: 18px 20px;
-                        background: none;
-                        border: none;
+                        padding: 12px 16px;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                         color: #AFAFAF;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-weight: 600;
                         cursor: pointer;
-                        transition: all 0.2s ease;
-                        border-bottom: 3px solid transparent;
+                        transition: all 0.3s ease;
+                        border-radius: 12px;
                         font-family: 'Inter', sans-serif;
+                        letter-spacing: 0.3px;
                     ">Social</button>
                 </div>
                 
@@ -555,17 +549,19 @@ function getNFTGridHTML(citizen) {
 }
 
 function switchProfileTab(tabName, modal) {
-    // Update tab buttons with new styling
+    // Update tab buttons with new rounded styling
     modal.querySelectorAll('.tab-btn').forEach(btn => {
         btn.style.color = '#AFAFAF';
-        btn.style.borderBottom = '3px solid transparent';
-        btn.style.background = 'none';
+        btn.style.background = 'rgba(255, 255, 255, 0.05)';
+        btn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        btn.style.transform = 'scale(1)';
     });
     
     const activeBtn = modal.querySelector(`[data-tab="${tabName}"]`);
     activeBtn.style.color = '#21E8A3';
-    activeBtn.style.borderBottom = '3px solid #21E8A3';
-    activeBtn.style.background = 'rgba(33, 232, 163, 0.1)';
+    activeBtn.style.background = 'rgba(33, 232, 163, 0.15)';
+    activeBtn.style.border = '1px solid rgba(33, 232, 163, 0.3)';
+    activeBtn.style.transform = 'scale(1.02)';
     
     // Update tab panels
     modal.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
