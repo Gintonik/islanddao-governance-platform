@@ -2247,22 +2247,31 @@
             content.innerHTML = `
                 <!-- Fixed Header (Stays visible) -->
                 <div style="position: relative;">
-                    <!-- Subtle Flip Indicator -->
-                    <div style="text-align: center; margin: 4px 0;">
-                        <span class="flip-indicator" onclick="flipCard()" title="Click anywhere to view blockchain stats" style="
-                            color: #21E8A3; 
-                            font-size: 10px; 
-                            font-weight: 500; 
-                            cursor: pointer; 
-                            text-decoration: underline;
-                            text-decoration-style: dotted;
-                            opacity: 0.8;
-                            transition: all 0.2s ease;
-                        " onmouseover="this.style.opacity='1'; this.style.color='#4FACFE'" onmouseout="this.style.opacity='0.8'; this.style.color='#21E8A3'">
-                            Click to view stats
-                        </span>
+                    <!-- Rotating IslandDAO Logo Flip Indicator -->
+                    <div style="text-align: center; margin: 6px 0;">
+                        <img class="flip-indicator" onclick="flipCard()" 
+                             src="/citizen-map/islanddao-logo-white.png" 
+                             title="Click to flip for blockchain stats" 
+                             style="
+                                width: 16px; 
+                                height: 16px; 
+                                cursor: pointer; 
+                                opacity: 0.7;
+                                transition: all 0.3s ease;
+                                animation: gentle-rotate 4s linear infinite;
+                                filter: brightness(1.2);
+                             " 
+                             onmouseover="this.style.opacity='1'; this.style.transform='scale(1.1)'" 
+                             onmouseout="this.style.opacity='0.7'; this.style.transform='scale(1)'">
                     </div>
                 </div>
+                
+                <style>
+                    @keyframes gentle-rotate {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                </style>
                 
                 <!-- Flippable Content Area -->
                 <div class="citizen-card-container" style="perspective: 1000px; min-height: 580px; max-height: 750px;">
