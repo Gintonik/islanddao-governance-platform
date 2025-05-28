@@ -8,8 +8,8 @@ const { getRealm } = require('@solana/spl-governance');
 const ISLAND_DAO_REALM = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
 
-// Use public RPC to avoid rate limits
-const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+// Use Helius RPC for reliable access
+const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 
 async function debugRealmStructure() {
     try {
