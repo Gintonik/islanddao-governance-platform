@@ -283,14 +283,26 @@ function startServer() {
       }
       // Serve static files
       else {
-        // First check if the file exists in the citizen-map directory
-        const requestedPath = path.join(__dirname, req.url);
-        
-        // Auto-detect content type based on file extension
-        const extname = path.extname(requestedPath);
-        const contentType = getContentType(extname);
-        
-        serveFile(res, requestedPath, contentType);
+        // Handle logo files specifically
+        if (req.url.includes('logo') && req.url.endsWith('.png')) {
+          const logoFileName = path.basename(req.url);
+          const logoPath = path.join(__dirname, logoFileName);
+          serveFile(res, logoPath, 'image/png');
+        }
+        // Handle other citizen-map assets
+        else if (req.url.includes('citizen-map/') || req.url.includes('.png') || req.url.includes('.js') || req.url.includes('.css')) {
+          const requestedPath = path.join(__dirname, req.url.replace('/citizen-map/', ''));
+          const extname = path.extname(requestedPath);
+          const contentType = getContentType(extname);
+          serveFile(res, requestedPath, contentType);
+        }
+        // Default file serving
+        else {
+          const requestedPath = path.join(__dirname, req.url);
+          const extname = path.extname(requestedPath);
+          const contentType = getContentType(extname);
+          serveFile(res, requestedPath, contentType);
+        }
       }
     } catch (error) {
       console.error('Error handling request:', error);
