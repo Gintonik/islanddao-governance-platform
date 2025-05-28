@@ -257,10 +257,6 @@ function getProfileModalHTML(citizen) {
                 display: flex;
                 flex-direction: column;
                 position: fixed;
-                width: 280px;
-                height: 200px;
-                top: 150px;
-                right: 20px;
             ">
                 <button class="close-btn" style="
                     position: absolute;
