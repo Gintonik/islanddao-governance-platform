@@ -10,8 +10,14 @@ function openEnhancedProfile(citizen) {
     console.log('Card current width:', existingCard.style.width);
     console.log('Card current position:', existingCard.style.right);
     console.log('Modal state:', modalState);
-    if (!existingCard || !existingCard.classList.contains('open')) {
-        console.log('No existing card found or not open, cannot slide');
+    if (!existingCard) {
+        console.log('No existing card found, cannot slide');
+        return;
+    }
+    
+    // If card doesn't have 'open' class but modal state is expanded, allow collapse
+    if (!existingCard.classList.contains('open') && modalState !== 'expanded') {
+        console.log('No open card found and not in expanded state, cannot slide');
         return;
     }
     
