@@ -875,15 +875,20 @@
             position: absolute;
             bottom: 20px;
             left: 20px;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
+            background: rgba(15, 15, 15, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             padding: 16px 20px;
-            box-shadow: var(--shadow-soft);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px);
             z-index: 1000;
             min-width: 200px;
             transition: all 0.3s ease;
+        }
+
+        [data-theme="light"] .stats-overlay {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(0, 0, 0, 0.15);
         }
 
         .stats-overlay:hover {
@@ -892,12 +897,12 @@
         }
 
         .stats-title {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 12px;
             text-align: center;
-            opacity: 0.9;
+            opacity: 0.95;
         }
 
         .stat-item {
@@ -913,13 +918,13 @@
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 14px;
             color: var(--text-secondary);
             font-weight: 500;
         }
 
         .stat-value {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--accent-primary);
             min-width: 40px;
@@ -961,16 +966,16 @@
             }
 
             .stats-title {
-                font-size: 13px;
+                font-size: 15px;
                 margin-bottom: 10px;
             }
 
             .stat-label {
-                font-size: 11px;
+                font-size: 13px;
             }
 
             .stat-value {
-                font-size: 13px;
+                font-size: 15px;
             }
         }
     </style>
