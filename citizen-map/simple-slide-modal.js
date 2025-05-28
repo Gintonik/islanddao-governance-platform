@@ -15,7 +15,15 @@ function openEnhancedProfile(citizen) {
         return;
     }
     
-    modalState = 'modal';
+    // Handle different states based on current modal state
+    if (modalState === 'expanded') {
+        // If already expanded, go back to small card
+        console.log('Going back to small card');
+        collapseToSmallCard(existingCard);
+        return;
+    }
+    
+    modalState = 'expanded';
     
     // Add backdrop
     const backdrop = document.createElement('div');
@@ -59,8 +67,14 @@ function openEnhancedProfile(citizen) {
     existingCard.appendChild(closeBtn);
     
     // Event listeners
-    backdrop.addEventListener('click', () => closeExistingCard(existingCard, backdrop));
     closeBtn.addEventListener('click', () => closeExistingCard(existingCard, backdrop));
+    
+    // Click outside to close completely
+    backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+            closeCardCompletely(existingCard);
+        }
+    });
     
     document.body.appendChild(backdrop);
     
@@ -298,6 +312,78 @@ function getProfileHTML(citizen) {
             </div>
         </div>
     `;
+}
+
+function collapseToSmallCard(card) {
+    // Hide right content and shrink card back to original size
+    const rightContainer = card.querySelector('.right-content-area');
+    const backdrop = document.querySelector('.profile-backdrop');
+    
+    if (rightContainer) {
+        rightContainer.style.right = '-280px';  // Slide right container out of view
+    }
+    
+    card.style.width = '280px';  // Shrink back to original width
+    if (backdrop) {
+        backdrop.style.opacity = '0';
+    }
+    
+    setTimeout(() => {
+        // Restore original content structure
+        const leftContainer = card.querySelector('.left-content-area');
+        if (leftContainer) {
+            const originalContent = leftContainer.innerHTML;
+            card.innerHTML = originalContent;
+        }
+        
+        // Remove backdrop
+        if (backdrop) {
+            backdrop.remove();
+        }
+        
+        // Reset card styling but keep it open
+        card.style.zIndex = '';
+        modalState = 'closed';  // Back to small card state
+    }, 600);
+}
+
+function closeCardCompletely(card) {
+    const backdrop = document.querySelector('.profile-backdrop');
+    const rightContainer = card.querySelector('.right-content-area');
+    
+    // First collapse the expanded view if it exists
+    if (rightContainer) {
+        rightContainer.style.right = '-280px';
+        card.style.width = '280px';
+    }
+    
+    if (backdrop) {
+        backdrop.style.opacity = '0';
+    }
+    
+    // Close the card completely
+    card.classList.remove('open');
+    card.style.transform = 'translateX(100%)';
+    
+    setTimeout(() => {
+        // Restore original content structure if needed
+        const leftContainer = card.querySelector('.left-content-area');
+        if (leftContainer) {
+            const originalContent = leftContainer.innerHTML;
+            card.innerHTML = originalContent;
+        }
+        
+        // Remove backdrop
+        if (backdrop) {
+            backdrop.remove();
+        }
+        
+        // Reset card styling completely
+        card.style.zIndex = '';
+        card.style.width = '';
+        card.style.transform = '';
+        modalState = 'closed';
+    }, 600);
 }
 
 function closeExistingCard(card, backdrop) {
