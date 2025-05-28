@@ -2,6 +2,18 @@
 function openEnhancedProfile(citizen) {
     const modal = document.createElement('div');
     modal.className = 'enhanced-profile-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    `;
+    
     modal.innerHTML = getProfileModalHTML(citizen);
     
     // Add event listeners
@@ -15,7 +27,15 @@ function openEnhancedProfile(citizen) {
     });
     
     document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('active'), 10);
+    
+    // Cool entrance animation
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        
+        const content = modal.querySelector('.modal-content');
+        content.style.transform = 'scale(1) translateY(0)';
+    });
     
     // Load governance data
     loadGovernanceData(citizen, modal);
@@ -70,8 +90,32 @@ function getProfileModalHTML(citizen) {
     const nftCount = citizen.nfts ? citizen.nfts.length : 0;
     
     return `
-        <div class="modal-overlay">
-            <div class="modal-content">
+        <div class="modal-overlay" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        ">
+            <div class="modal-content" style="
+                background: var(--card-bg);
+                border-radius: 20px;
+                width: 100%;
+                max-width: 850px;
+                max-height: 90vh;
+                overflow: hidden;
+                position: relative;
+                border: 1px solid var(--border-color);
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 10px 20px rgba(0, 0, 0, 0.3);
+                transform: scale(0.8) translateY(30px);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            ">
                 <button class="close-btn">&times;</button>
                 
                 <div class="profile-header">
@@ -323,6 +367,11 @@ function switchProfileTab(tabName, modal) {
 }
 
 function closeProfileModal(modal) {
-    modal.classList.remove('active');
-    setTimeout(() => modal.remove(), 300);
+    const content = modal.querySelector('.modal-content');
+    
+    // Cool exit animation
+    modal.style.opacity = '0';
+    content.style.transform = 'scale(0.8) translateY(30px)';
+    
+    setTimeout(() => modal.remove(), 400);
 }
