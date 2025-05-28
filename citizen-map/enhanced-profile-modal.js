@@ -164,11 +164,9 @@ function openEnhancedProfile(citizen) {
     document.body.appendChild(modal);
     modalState = 'modal';
     
-    // Smooth entrance animation - modal appears after sidebar closes
-    setTimeout(() => {
-        modal.style.opacity = '1';
-        modal.style.visibility = 'visible';
-    }, 200);
+    // Start modal immediately visible with the card animation
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
     
     // Load governance data
     loadGovernanceData(citizen, modal);
@@ -236,17 +234,16 @@ function getProfileModalHTML(citizen) {
             padding: 24px;
         ">
             <div class="modal-content" style="
-                background: #0F0F0F;
-                border-radius: 24px;
-                width: 100%;
-                max-width: 900px;
-                max-height: 85vh;
+                background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
+                border-radius: 20px;
                 overflow: hidden;
-                position: relative;
                 border: 2px solid #21E8A3;
-                box-shadow: 0 0 0 1px rgba(33, 232, 163, 0.2), 0 32px 64px rgba(0, 0, 0, 0.8), 0 16px 32px rgba(0, 0, 0, 0.4);
-                transform: scale(0.8) translateY(30px);
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 
+                    0 0 0 1px rgba(33, 232, 163, 0.2), 
+                    0 32px 64px rgba(0, 0, 0, 0.8), 
+                    0 16px 32px rgba(0, 0, 0, 0.4);
+                display: flex;
+                flex-direction: column;
             ">
                 <button class="close-btn" style="
                     position: absolute;
