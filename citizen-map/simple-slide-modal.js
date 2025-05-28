@@ -10,29 +10,36 @@ function openEnhancedProfile(citizen) {
     console.log('Card current width:', existingCard.style.width);
     console.log('Card current position:', existingCard.style.right);
     console.log('Modal state:', modalState);
+    
     if (!existingCard) {
         console.log('No existing card found, cannot slide');
         return;
     }
     
-    // Check if card is actually open (either has 'open' class or has been styled as open)
-    const cardIsOpen = existingCard.classList.contains('open') || 
-                      existingCard.style.width === '280px' || 
-                      modalState === 'expanded';
+    // STATE LOGIC:
+    // STATE 1 (CLOSED): Card not visible, no 'open' class
+    // STATE 2 (SMALL): Card visible with 'open' class, 280px width
+    // STATE 3 (EXPANDED): Card visible with backdrop, 580px width
     
-    if (!cardIsOpen) {
-        console.log('No open card found, cannot slide');
+    const isCardOpen = existingCard.classList.contains('open');
+    const currentWidth = existingCard.style.width;
+    
+    // If card is not open (STATE 1), this function shouldn't be called
+    // The polaroid click should only work in STATE 2 or STATE 3
+    if (!isCardOpen) {
+        console.log('Card is not open, polaroid click ignored');
         return;
     }
     
-    // Handle different states based on current modal state
-    if (modalState === 'expanded') {
-        // If already expanded, go back to small card
-        console.log('Going back to small card');
+    // STATE 3 → STATE 2: If expanded, collapse to small card
+    if (modalState === 'expanded' || currentWidth === '580px') {
+        console.log('STATE 3 → STATE 2: Collapsing to small card');
         collapseToSmallCard(existingCard);
         return;
     }
     
+    // STATE 2 → STATE 3: If small card, expand to full
+    console.log('STATE 2 → STATE 3: Expanding to full card');
     modalState = 'expanded';
     
     // Add backdrop
@@ -77,7 +84,8 @@ function openEnhancedProfile(citizen) {
     existingCard.appendChild(closeBtn);
     
     // Event listeners
-    closeBtn.addEventListener('click', () => closeExistingCard(existingCard, backdrop));
+    // X button always closes completely (STATE 2/3 → STATE 1)
+    closeBtn.addEventListener('click', () => closeCardCompletely(existingCard));
     
     // Click outside to close completely
     backdrop.addEventListener('click', (e) => {
@@ -325,6 +333,8 @@ function getProfileHTML(citizen) {
 }
 
 function collapseToSmallCard(card) {
+    console.log('STATE 3 → STATE 2: Collapsing to small card');
+    
     // Hide right content and shrink card back to original size
     const rightContainer = card.querySelector('.right-content-area');
     const backdrop = document.querySelector('.profile-backdrop');
@@ -351,13 +361,16 @@ function collapseToSmallCard(card) {
             backdrop.remove();
         }
         
-        // Reset card styling but keep it open
+        // Reset card styling but KEEP it in STATE 2 (small card open)
         card.style.zIndex = '';
-        modalState = 'closed';  // Back to small card state
+        card.classList.add('open');  // Ensure it stays open
+        modalState = 'closed';  // Modal state back to normal, but card stays open
     }, 600);
 }
 
 function closeCardCompletely(card) {
+    console.log('STATE 2/3 → STATE 1: Closing card completely');
+    
     const backdrop = document.querySelector('.profile-backdrop');
     const rightContainer = card.querySelector('.right-content-area');
     
@@ -371,7 +384,7 @@ function closeCardCompletely(card) {
         backdrop.style.opacity = '0';
     }
     
-    // Close the card completely
+    // Close the card completely - STATE 1
     card.classList.remove('open');
     card.style.transform = 'translateX(100%)';
     
@@ -388,7 +401,7 @@ function closeCardCompletely(card) {
             backdrop.remove();
         }
         
-        // Reset card styling completely
+        // Reset card styling completely - back to STATE 1
         card.style.zIndex = '';
         card.style.width = '';
         card.style.transform = '';
