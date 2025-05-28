@@ -190,8 +190,47 @@ function showSmallCard(citizen) {
     `;
     
     rightContainer.innerHTML = `
-        Additional stats and<br>
-        content will appear here
+        <div class="citizen-details">
+            <h3 style="color: #21E8A3; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                ${citizen.nickname || 'Anonymous Citizen'}
+            </h3>
+            
+            <div class="stats-grid" style="display: grid; gap: 15px; margin-bottom: 20px;">
+                <div class="stat-item" style="background: rgba(33, 232, 163, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(33, 232, 163, 0.3);">
+                    <div style="color: #21E8A3; font-size: 24px; font-weight: 700; margin-bottom: 4px;">
+                        ${citizen.nfts ? citizen.nfts.length : 0}
+                    </div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                        NFTs Owned
+                    </div>
+                </div>
+                
+                <div class="stat-item" style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="color: #fff; font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                        ${(citizen.wallet_address || citizen.wallet || '').substring(0, 8)}...
+                    </div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                        Wallet Address
+                    </div>
+                </div>
+            </div>
+            
+            ${citizen.twitter_handle ? `
+                <div class="social-links" style="margin-bottom: 20px;">
+                    <h4 style="color: rgba(255,255,255,0.8); margin: 0 0 10px 0; font-size: 14px;">Social</h4>
+                    <div style="background: rgba(29, 161, 242, 0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(29, 161, 242, 0.3);">
+                        <span style="color: #1DA1F2; font-size: 12px;">🐦 ${citizen.twitter_handle}</span>
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="nft-preview">
+                <h4 style="color: rgba(255,255,255,0.8); margin: 0 0 10px 0; font-size: 14px;">NFT Collection</h4>
+                <div class="nft-mini-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                    ${generateMiniNftGrid(citizen)}
+                </div>
+            </div>
+        </div>
     `;
     
     // Add both containers to the card
@@ -260,6 +299,35 @@ window.setCardState = function(targetState) {
         modalState = 'small';
     }
 };
+
+// Function to generate mini NFT grid for right panel
+function generateMiniNftGrid(citizen) {
+    if (!citizen.nfts || citizen.nfts.length === 0) {
+        return '<div style="color: rgba(255,255,255,0.5); text-align: center; padding: 20px; font-size: 12px;">No NFTs found</div>';
+    }
+    
+    return citizen.nfts.slice(0, 6).map(nftId => {
+        const nftData = citizen.nftMetadata && citizen.nftMetadata[nftId] 
+            ? citizen.nftMetadata[nftId] 
+            : { name: `PERK #${nftId.substring(0, 4)}`, image: 'https://via.placeholder.com/60x60?text=NFT' };
+            
+        return `
+            <div class="mini-nft" style="
+                aspect-ratio: 1;
+                border-radius: 6px;
+                overflow: hidden;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(33, 232, 163, 0.2);
+            ">
+                <img src="${nftData.image}" alt="${nftData.name}" style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                " onerror="this.src='https://via.placeholder.com/60x60?text=NFT'">
+            </div>
+        `;
+    }).join('');
+}
 
 function getProfileHTML(citizen) {
     const profileNftId = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
