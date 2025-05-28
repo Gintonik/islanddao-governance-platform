@@ -61,11 +61,49 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
-    // Animate backdrop and slide card
+    // Create adjacent space that matches the card dimensions
+    const adjacentSpace = document.createElement('div');
+    adjacentSpace.className = 'adjacent-profile-space';
+    adjacentSpace.style.cssText = `
+        position: fixed;
+        top: 150px;
+        right: 20px;
+        width: 280px;
+        height: 200px;
+        background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
+        border: 2px solid #21E8A3;
+        border-radius: 20px;
+        box-shadow: 
+            0 0 0 1px rgba(33, 232, 163, 0.2), 
+            0 32px 64px rgba(0, 0, 0, 0.8), 
+            0 16px 32px rgba(0, 0, 0, 0.4);
+        padding: 20px;
+        z-index: 999997;
+        opacity: 0;
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 14px;
+        text-align: center;
+    `;
+    
+    adjacentSpace.innerHTML = `
+        <div>
+            Additional stats and<br>
+            content will appear here
+        </div>
+    `;
+    
+    document.body.appendChild(adjacentSpace);
+    
+    // Animate backdrop and slide card + show adjacent space
     setTimeout(() => {
         backdrop.style.opacity = '1';
+        adjacentSpace.style.opacity = '1';
         existingCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        existingCard.style.right = '300px';
+        existingCard.style.right = '320px';  // Slide card left
         existingCard.style.zIndex = '999999';
     }, 50);
     
@@ -239,9 +277,16 @@ function closeExistingCard(card, backdrop) {
     card.style.right = '20px';
     backdrop.style.opacity = '0';
     
+    // Hide adjacent space
+    const adjacentSpace = document.querySelector('.adjacent-profile-space');
+    if (adjacentSpace) {
+        adjacentSpace.style.opacity = '0';
+    }
+    
     setTimeout(() => {
-        // Remove backdrop and close button
+        // Remove backdrop, adjacent space, and close button
         backdrop.remove();
+        if (adjacentSpace) adjacentSpace.remove();
         const closeBtn = card.querySelector('.close-btn');
         if (closeBtn) closeBtn.remove();
         
