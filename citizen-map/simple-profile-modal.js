@@ -50,22 +50,22 @@ function openEnhancedProfile(citizen) {
                 transform: translateX(0);
             }
             100% {
-                width: 900px;
+                width: 750px;
                 height: 200px;
                 top: 150px;
-                left: 50%;
-                right: auto;
-                transform: translateX(-50%);
+                right: 20px;
+                left: auto;
+                transform: translateX(-470px);
             }
         }
         @keyframes slideToSidebar {
             0% {
-                width: 900px;
+                width: 750px;
                 height: 200px;
                 top: 150px;
-                left: 50%;
-                right: auto;
-                transform: translateX(-50%);
+                right: 20px;
+                left: auto;
+                transform: translateX(-470px);
             }
             100% {
                 width: 280px;
@@ -144,9 +144,9 @@ function getSimpleProfileHTML(citizen) {
                 display: flex;
                 flex-direction: row;
                 position: fixed;
-                align-items: center;
-                padding: 24px;
-                gap: 24px;
+                align-items: stretch;
+                padding: 0;
+                gap: 0;
             ">
                 <button class="close-btn" style="
                     position: absolute;
@@ -168,78 +168,129 @@ function getSimpleProfileHTML(citizen) {
                     transition: all 0.2s ease;
                 ">&times;</button>
                 
-                <div style="position: absolute; top: 20px; left: 20px; opacity: 0.8;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L13.09 8.26L21 3L16 8H22V16H16L21 21L13.09 15.74L12 22L10.91 15.74L3 21L8 16H2V8H8L3 3L10.91 8.26L12 2Z" fill="#21E8A3"/>
-                    </svg>
-                </div>
-                
-                <div class="profile-section" style="display: flex; align-items: center; gap: 20px;">
-                    <img src="${profileImage}" alt="Profile" style="
-                        width: 80px;
-                        height: 80px;
-                        border-radius: 16px;
-                        object-fit: cover;
-                        border: 2px solid #21E8A3;
-                        box-shadow: 0 4px 16px rgba(33, 232, 163, 0.3);
+                <!-- Keep Original Profile Card (moves left, content unchanged) -->
+                <div style="
+                    width: 280px;
+                    height: 200px;
+                    background: linear-gradient(145deg, #0F0F0F 0%, #1A1A1A 100%);
+                    border-radius: 20px;
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    position: relative;
+                ">
+                    <div style="position: absolute; top: 12px; left: 12px; opacity: 0.8;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L13.09 8.26L21 3L16 8H22V16H16L21 21L13.09 15.74L12 22L10.91 15.74L3 21L8 16H2V8H8L3 3L10.91 8.26L12 2Z" fill="#21E8A3"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Polaroid Style Profile -->
+                    <div style="
+                        background: white;
+                        padding: 8px;
+                        border-radius: 12px;
+                        width: fit-content;
+                        margin: 0 auto;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                        transform: rotate(-2deg);
                     ">
-                    <div>
+                        <img src="${profileImage}" alt="Profile" style="
+                            width: 80px;
+                            height: 80px;
+                            border-radius: 8px;
+                            object-fit: cover;
+                            display: block;
+                        ">
                         <div style="
-                            font-size: 20px;
-                            font-weight: 700;
-                            color: #FAFAFA;
-                            margin-bottom: 6px;
-                        ">${citizen.nickname || 'Anonymous Citizen'}</div>
-                        <div style="
+                            text-align: center;
+                            font-size: 10px;
+                            color: #333;
+                            margin-top: 4px;
                             font-family: 'Courier New', monospace;
-                            background: rgba(33, 232, 163, 0.1);
-                            border: 1px solid rgba(33, 232, 163, 0.3);
-                            padding: 4px 8px;
-                            border-radius: 6px;
-                            font-size: 11px;
-                            margin-bottom: 6px;
-                            display: inline-block;
+                        ">PERK #${profileNftId || 'XXXX'}</div>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                        <span style="
+                            background: rgba(33, 232, 163, 0.15);
                             color: #21E8A3;
-                        ">${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}</div>
-                        <div style="font-size: 12px; color: #AFAFAF;">🌍 Location on Map</div>
+                            padding: 4px 8px;
+                            border-radius: 12px;
+                            font-size: 10px;
+                            font-weight: 600;
+                            border: 1px solid rgba(33, 232, 163, 0.3);
+                        ">ISLAND DAO</span>
+                        <span style="
+                            background: rgba(33, 232, 163, 0.15);
+                            color: #21E8A3;
+                            padding: 4px 8px;
+                            border-radius: 12px;
+                            font-size: 10px;
+                            font-weight: 600;
+                            border: 1px solid rgba(33, 232, 163, 0.3);
+                        ">PERKS</span>
+                    </div>
+                    
+                    <!-- Social Links -->
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <div style="
+                            width: 24px;
+                            height: 24px;
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                        ">🐦</div>
+                        <div style="
+                            width: 24px;
+                            height: 24px;
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                        ">🌐</div>
+                        <div style="
+                            width: 24px;
+                            height: 24px;
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                        ">💬</div>
+                    </div>
+                    
+                    <!-- Collection Preview -->
+                    <div style="
+                        text-align: center;
+                        font-size: 11px;
+                        color: #AFAFAF;
+                        border-top: 1px solid rgba(255, 255, 255, 0.1);
+                        padding-top: 8px;
+                    ">
+                        PERKS Collection (${nftCount})
+                        <div style="display: flex; gap: 4px; justify-content: center; margin-top: 4px;">
+                            <div style="width: 12px; height: 12px; background: #21E8A3; border-radius: 2px;"></div>
+                            <div style="width: 12px; height: 12px; background: #888; border-radius: 2px;"></div>
+                            <div style="width: 12px; height: 12px; background: #666; border-radius: 2px;"></div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="stats-section" style="display: flex; gap: 16px; margin-left: auto;">
-                    <div style="
-                        background: #1A1A1A;
-                        padding: 16px 20px;
-                        border-radius: 12px;
-                        text-align: center;
-                        border: 1px solid rgba(33, 232, 163, 0.2);
-                        min-width: 80px;
-                    ">
-                        <div style="font-size: 24px; font-weight: 700; color: #21E8A3; margin-bottom: 4px;">${nftCount}</div>
-                        <div style="font-size: 11px; color: #AFAFAF; font-weight: 500;">PERKS NFTs</div>
-                    </div>
-                    <div style="
-                        background: #1A1A1A;
-                        padding: 16px 20px;
-                        border-radius: 12px;
-                        text-align: center;
-                        border: 1px solid rgba(33, 232, 163, 0.2);
-                        min-width: 80px;
-                    ">
-                        <div style="font-size: 24px; font-weight: 700; color: #21E8A3; margin-bottom: 4px;" class="island-tokens">0</div>
-                        <div style="font-size: 11px; color: #AFAFAF; font-weight: 500;">ISLAND</div>
-                    </div>
-                    <div style="
-                        background: #1A1A1A;
-                        padding: 16px 20px;
-                        border-radius: 12px;
-                        text-align: center;
-                        border: 1px solid rgba(33, 232, 163, 0.2);
-                        min-width: 80px;
-                    ">
-                        <div style="font-size: 16px; font-weight: 700; color: #21E8A3; margin-bottom: 4px;">Member</div>
-                        <div style="font-size: 11px; color: #AFAFAF; font-weight: 500;">Status</div>
-                    </div>
-                </div>
+                <!-- Empty revealed space (right side) -->
+                <div style="
+                    width: 470px;
+                    height: 200px;
+                    background: transparent;
+                "></div>
             </div>
         </div>
     `;
