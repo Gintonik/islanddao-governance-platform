@@ -161,7 +161,25 @@ function addCloseButton(card) {
 }
 
 function addPolaroidHandler(card) {
-    const profileImg = card.querySelector('.profile-pfp img');
+    // Try multiple selectors to find the profile image
+    const selectors = [
+        '.profile-pfp img',
+        '.citizen-pfp img', 
+        'img[alt*="profile"]',
+        'img[alt*="Profile"]',
+        '.profile-image',
+        'img'
+    ];
+    
+    let profileImg = null;
+    for (const selector of selectors) {
+        profileImg = card.querySelector(selector);
+        if (profileImg) {
+            console.log(`Found profile image with selector: ${selector}`);
+            break;
+        }
+    }
+    
     if (profileImg) {
         console.log('Adding click handler to profile image');
         profileImg.style.cursor = 'pointer';
@@ -172,6 +190,7 @@ function addPolaroidHandler(card) {
             toggleCardSize();
         };
     } else {
-        console.log('WARNING: Profile image not found');
+        console.log('WARNING: No profile image found with any selector');
+        console.log('Card innerHTML:', card.innerHTML.substring(0, 200));
     }
 }
