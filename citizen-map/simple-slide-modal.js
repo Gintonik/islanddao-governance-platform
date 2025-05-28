@@ -1,50 +1,14 @@
 // Simple Card Slide Modal - Just slides the original card left
 let modalState = 'closed';
 
-// Escape key to close cards
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const card = document.querySelector('.profile-card.open');
-        if (card) {
-            console.log('Escape key pressed - closing card');
-            closeCardCompletely(card);
-        }
+// Global close function that can be called directly
+window.closeCard = function() {
+    console.log('X button clicked - closing card');
+    const card = document.querySelector('.profile-card.open');
+    if (card) {
+        closeCardCompletely(card);
     }
-});
-
-// Simple click handlers
-document.addEventListener('click', function(e) {
-    // X button clicks
-    if (e.target.classList.contains('close-btn') || e.target.innerHTML === '×') {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('X button clicked - closing card');
-        const card = document.querySelector('.profile-card.open');
-        if (card) {
-            closeCardCompletely(card);
-        }
-        return;
-    }
-    
-    // Backdrop clicks
-    if (e.target.classList.contains('profile-backdrop')) {
-        console.log('Clicked on backdrop - closing card');
-        const card = document.querySelector('.profile-card.open');
-        if (card) {
-            closeCardCompletely(card);
-        }
-        return;
-    }
-    
-    // Map clicks (when no backdrop)
-    if (e.target.id === 'map' || e.target.classList.contains('leaflet-container')) {
-        const card = document.querySelector('.profile-card.open');
-        if (card) {
-            console.log('Clicked on map - closing card');
-            closeCardCompletely(card);
-        }
-    }
-});
+};
 
 // Global function for map markers to call
 window.openEnhancedProfile = function(citizen) {
@@ -110,12 +74,9 @@ function showSmallCard(citizen) {
     const isCardOpen = existingCard.classList.contains('open');
     const currentWidth = existingCard.style.width;
     
-    // If card is not open (STATE 1), this function shouldn't be called
-    // The polaroid click should only work in STATE 2 or STATE 3
-    if (!isCardOpen) {
-        console.log('Card is not open, polaroid click ignored');
-        return;
-    }
+    // Set the card to open state and update modal state
+    existingCard.classList.add('open');
+    modalState = 'small';
     
     // STATE 3 → STATE 2: If expanded, collapse to small card
     if (modalState === 'expanded' || currentWidth === '580px') {
@@ -143,10 +104,15 @@ function showSmallCard(citizen) {
         transition: all 0.4s ease;
     `;
     
-    // Add close button to existing card
+    // Add close button to existing card with direct onclick
     const smallCardCloseBtn = document.createElement('button');
     smallCardCloseBtn.className = 'close-btn';
     smallCardCloseBtn.innerHTML = '×';
+    smallCardCloseBtn.onclick = function(e) {
+        e.stopPropagation();
+        console.log('X button clicked in STATE 2');
+        closeCard();
+    };
     smallCardCloseBtn.style.cssText = `
         position: absolute;
         top: 16px;
@@ -168,13 +134,6 @@ function showSmallCard(citizen) {
     `;
     
     existingCard.appendChild(smallCardCloseBtn);
-    
-    // Event listeners - X button always closes completely (STATE 2/3 → STATE 1)
-    smallCardCloseBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        console.log('X button clicked in STATE 2');
-        closeCardCompletely(existingCard);
-    });
     
     // No backdrop event listeners - using document level handlers instead
     
@@ -257,14 +216,14 @@ function showSmallCard(citizen) {
         console.log('No X button found in expanded card');
     }
     
-    // Re-attach polaroid click for STATE 3 → STATE 2
+    // Re-attach polaroid click for STATE 3 → STATE 2 using onclick
     const profileImg = existingCard.querySelector('.profile-pfp img');
     if (profileImg) {
-        profileImg.addEventListener('click', (e) => {
+        profileImg.onclick = function(e) {
             e.stopPropagation();
             console.log('Polaroid clicked in STATE 3');
             collapseToSmallCard(existingCard);
-        });
+        };
     }
     
     // No backdrop event listeners - using document level handlers instead
