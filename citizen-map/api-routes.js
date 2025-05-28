@@ -232,13 +232,13 @@ async function getAllCitizens() {
       
       // For each citizen, get their NFTs
       for (const citizen of citizens.rows) {
-        // Get related NFTs
+        // Get ALL NFTs owned by this wallet address
         const nftsResult = await client.query(`
           SELECT n.*
           FROM nfts n
-          JOIN citizen_nfts cn ON n.mint_id = cn.nft_id
-          WHERE cn.citizen_id = $1
-        `, [citizen.id]);
+          WHERE n.owner = $1
+          ORDER BY n.name
+        `, [citizen.wallet]);
         
         // Format for app consumption
         const formattedCitizen = {
