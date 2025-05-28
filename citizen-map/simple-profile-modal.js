@@ -50,22 +50,22 @@ function openEnhancedProfile(citizen) {
                 transform: translateX(0);
             }
             100% {
-                width: 750px;
+                width: 800px;
                 height: 200px;
                 top: 150px;
-                right: 20px;
+                right: 300px;
                 left: auto;
-                transform: translateX(-470px);
+                transform: translateX(0);
             }
         }
         @keyframes slideToSidebar {
             0% {
-                width: 750px;
+                width: 800px;
                 height: 200px;
                 top: 150px;
-                right: 20px;
+                right: 300px;
                 left: auto;
-                transform: translateX(-470px);
+                transform: translateX(0);
             }
             100% {
                 width: 280px;
@@ -287,7 +287,7 @@ function getSimpleProfileHTML(citizen) {
                 
                 <!-- Empty revealed space (right side) -->
                 <div style="
-                    width: 470px;
+                    width: 520px;
                     height: 200px;
                     background: transparent;
                 "></div>
