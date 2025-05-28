@@ -7,20 +7,21 @@
 
 const fetch = require('node-fetch');
 
-// Realms governance contract for $ISLAND token
-const GOVERNANCE_CONTRACT = 'Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a';
+// $ISLAND token mint address
+const ISLAND_TOKEN_MINT = 'Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a';
 
 // RPC endpoint using environment variable
 const RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
 
 /**
- * Fetch governance power for a specific wallet address
+ * Fetch governance power for a specific wallet address from Realms
  * @param {string} walletAddress - The wallet address to check
  * @returns {Promise<number>} - Governance power (deposited $ISLAND tokens)
  */
 async function fetchGovernancePower(walletAddress) {
     try {
-        // Get token accounts for the wallet
+        // Query governance program accounts for this wallet
+        // Governance tokens are stored in program-derived accounts (PDAs)
         const response = await fetch(RPC_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -29,14 +30,25 @@ async function fetchGovernancePower(walletAddress) {
             body: JSON.stringify({
                 jsonrpc: '2.0',
                 id: 1,
-                method: 'getTokenAccountsByOwner',
+                method: 'getProgramAccounts',
                 params: [
-                    walletAddress,
+                    'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw', // Solana Governance Program ID
                     {
-                        mint: GOVERNANCE_CONTRACT
-                    },
-                    {
-                        encoding: 'jsonParsed'
+                        encoding: 'jsonParsed',
+                        filters: [
+                            {
+                                memcmp: {
+                                    offset: 8, // Skip discriminator
+                                    bytes: ISLAND_TOKEN_MINT // Filter by governance token mint
+                                }
+                            },
+                            {
+                                memcmp: {
+                                    offset: 40, // Offset for governance_token_owner field
+                                    bytes: walletAddress // Filter by wallet address
+                                }
+                            }
+                        ]
                     }
                 ]
             })
@@ -54,14 +66,21 @@ async function fetchGovernancePower(walletAddress) {
             return 0;
         }
 
-        // Sum up all token balances (governance power)
+        // Sum up governance power from all token owner records
         let totalGovernancePower = 0;
         
-        if (data.result && data.result.value) {
-            for (const account of data.result.value) {
-                const balance = account.account.data.parsed.info.tokenAmount.uiAmount;
-                if (balance) {
-                    totalGovernancePower += balance;
+        if (data.result && data.result.length > 0) {
+            for (const account of data.result) {
+                try {
+                    // Parse the governance token owner record
+                    if (account.account.data.parsed) {
+                        const governingTokenDepositAmount = account.account.data.parsed.info.governingTokenDepositAmount;
+                        if (governingTokenDepositAmount) {
+                            totalGovernancePower += parseFloat(governingTokenDepositAmount) / Math.pow(10, 6); // Adjust for decimals
+                        }
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing governance account:', parseError);
                 }
             }
         }
