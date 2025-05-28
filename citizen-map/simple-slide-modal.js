@@ -121,13 +121,16 @@ function showSmallCard(citizen) {
         closeCardCompletely(existingCard);
     });
     
-    // Click outside to close completely
-    backdrop.addEventListener('click', (e) => {
-        if (e.target === backdrop) {
-            console.log('Clicked outside card');
-            closeCardCompletely(existingCard);
-        }
-    });
+    // Click outside to close completely - add event listener immediately
+    setTimeout(() => {
+        backdrop.addEventListener('click', (e) => {
+            console.log('Backdrop clicked, target:', e.target);
+            if (e.target === backdrop) {
+                console.log('Clicked outside card - closing completely');
+                closeCardCompletely(existingCard);
+            }
+        });
+    }, 100);
     
     document.body.appendChild(backdrop);
     
@@ -152,14 +155,8 @@ function showSmallCard(citizen) {
         box-sizing: border-box;
     `;
     
-    // Remove any existing close buttons from original content before adding it
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = originalContent;
-    const existingCloseBtn = tempDiv.querySelector('.close-btn');
-    if (existingCloseBtn) {
-        existingCloseBtn.remove();
-    }
-    leftContainer.innerHTML = tempDiv.innerHTML;
+    // Keep the original content including the X button
+    leftContainer.innerHTML = originalContent;
     
     // Create right container for additional content
     const rightContainer = document.createElement('div');
@@ -224,16 +221,19 @@ function showSmallCard(citizen) {
         });
     }
     
-    // Re-attach backdrop click for STATE 3
-    const currentBackdrop = document.querySelector('.profile-backdrop');
-    if (currentBackdrop) {
-        currentBackdrop.addEventListener('click', (e) => {
-            if (e.target === currentBackdrop) {
-                console.log('Clicked outside expanded card');
-                closeCardCompletely(existingCard);
-            }
-        });
-    }
+    // Re-attach backdrop click for STATE 3 - use setTimeout to ensure DOM is ready
+    setTimeout(() => {
+        const currentBackdrop = document.querySelector('.profile-backdrop');
+        if (currentBackdrop) {
+            currentBackdrop.addEventListener('click', (e) => {
+                console.log('Expanded backdrop clicked, target:', e.target);
+                if (e.target === currentBackdrop) {
+                    console.log('Clicked outside expanded card - closing completely');
+                    closeCardCompletely(existingCard);
+                }
+            });
+        }
+    }, 100);
     
     // Load governance data
     loadGovernanceData(citizen, { querySelector: () => existingCard });
