@@ -5,7 +5,7 @@
  */
 
 const db = require('./db');
-const { fetchMultipleGovernancePower } = require('./governance-power');
+const { fetchMultipleGovernancePower } = require('./realms-governance');
 
 async function syncGovernancePowerForAllCitizens() {
     try {
