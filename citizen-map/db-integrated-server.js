@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const apiRoutes = require('./api-routes');
 const db = require('../db');
+const governanceAPI = require('./governance-api');
 
 // Constants
 const PORT = 5001;
@@ -16,6 +17,10 @@ async function initializeApp() {
     // Create tables if they don't exist
     await db.initializeDatabase();
     console.log('Database initialized successfully for Citizen Map');
+    
+    // Initialize governance tables
+    await governanceAPI.initializeGovernanceTables();
+    console.log('Governance tables initialized successfully');
     
     // Start the HTTP server
     startServer();
@@ -152,6 +157,36 @@ function startServer() {
         
         const result = await apiRoutes.getWalletNfts(wallet);
         sendJsonResponse(res, result);
+      }
+      // API endpoint for governance data
+      else if (req.url.startsWith('/api/governance/')) {
+        const wallet = req.url.split('/api/governance/')[1];
+        
+        if (!wallet) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Wallet address is required' }));
+          return;
+        }
+        
+        try {
+          const governanceData = await governanceAPI.getWalletGovernanceData(wallet);
+          sendJsonResponse(res, governanceData);
+        } catch (error) {
+          console.error('Error fetching governance data:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to fetch governance data' }));
+        }
+      }
+      // API endpoint to update governance data for all citizens
+      else if (req.method === 'POST' && req.url === '/api/update-governance') {
+        try {
+          const result = await governanceAPI.updateAllGovernanceData();
+          sendJsonResponse(res, result);
+        } catch (error) {
+          console.error('Error updating governance data:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to update governance data' }));
+        }
       }
       // API endpoint to save citizen pin
       else if (req.method === 'POST' && req.url === '/api/save-citizen') {
