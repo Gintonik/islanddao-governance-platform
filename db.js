@@ -52,7 +52,8 @@ async function initializeDatabase() {
       ADD COLUMN IF NOT EXISTS twitter_handle VARCHAR(255),
       ADD COLUMN IF NOT EXISTS telegram_handle VARCHAR(255),
       ADD COLUMN IF NOT EXISTS discord_handle VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS image_url TEXT
+      ADD COLUMN IF NOT EXISTS image_url TEXT,
+      ADD COLUMN IF NOT EXISTS governance_power DECIMAL(20, 6) DEFAULT 0
     `);
     
     // Create citizen_nfts junction table for many-to-many relationship
