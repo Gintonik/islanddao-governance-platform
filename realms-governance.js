@@ -12,8 +12,8 @@ const { getTokenOwnerRecordForRealm, getRealm } = require('@solana/spl-governanc
 const ISLAND_DAO_REALM = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
 
-// Initialize connection with Helius RPC
-const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`, 'confirmed');
+// Initialize connection with public Solana RPC for governance queries
+const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
 
 /**
  * Fetch governance power for a specific wallet address from IslandDAO realm

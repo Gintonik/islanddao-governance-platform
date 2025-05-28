@@ -1,0 +1,44 @@
+We need to fetch the governance power of each wallet address in our PostgreSQL `citizens` table, based on their $ISLAND token holdings in the IslandDAO Realms DAO.
+
+🧱 CONTEXT (Do not modify the rest of the app):
+- DAO URL: https://app.realms.today/dao/IslandDAO
+- Governance Token: $ISLAND (Mint: Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a)
+- RPC Endpoint: https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00
+- Our database contains a list of wallet addresses in the `citizens` table
+- We want to show each citizen’s governance power on the dashboard (read-only)
+
+---
+
+🎯 OBJECTIVE:
+
+Write a script that:
+1. Iterates over each wallet address in the `citizens` table
+2. Uses the [Realms SDK](https://docs.realms.today/sdk) or direct on-chain queries
+3. For each wallet, fetches its current **governance power in IslandDAO** — based on the $ISLAND tokens deposited for governance in the Realms program
+4. Stores that number in a new `governance_power` field in the citizens table (or in a new table if needed)
+5. Can be triggered manually or set as a daily job
+
+---
+
+🛠️ TECHNICAL GUIDELINES:
+
+- Use `getTokenOwnerRecord` or relevant method from Realms SDK to get voting power per wallet
+- DAO programId and RealmId can be derived from https://app.realms.today/dao/IslandDAO or ask via RPC
+- You can optionally cache Realm data (RealmId, ProgramId, etc.) once and reuse it
+- Don’t fetch token balances from wallet directly — we only care about voting power **actually deposited in governance**, not just holdings
+
+---
+
+🔐 SECURITY / RELIABILITY:
+- Use the provided Helius RPC endpoint (https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00)
+- Handle RPC rate limits, empty responses, and malformed data gracefully
+- Use connection pooling for database writes
+
+---
+
+✅ END GOAL:
+- For every citizen in the map and profile dashboard, display how much voting power (in $ISLAND) they hold in the IslandDAO DAO on Realms
+- Data should be fetched live or updated daily
+- Nothing should break the current frontend/map/grid functionality
+
+Let me know once the governance power sync is done so I can connect it to the profile UI.
