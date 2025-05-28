@@ -1,6 +1,24 @@
 // Simple Card Slide Modal - Just slides the original card left
 let modalState = 'closed';
 
+// Global click handler to close cards when clicking outside
+document.addEventListener('click', function(e) {
+    const card = document.querySelector('.profile-card.open');
+    const backdrop = document.querySelector('.profile-backdrop');
+    
+    // Don't close if clicking on map markers or map elements
+    if (e.target.classList.contains('citizen-marker') || 
+        e.target.closest('.citizen-marker') ||
+        e.target.closest('.leaflet-marker-icon')) {
+        return;
+    }
+    
+    if (card && !card.contains(e.target)) {
+        console.log('Clicked outside card - closing');
+        closeCardCompletely(card);
+    }
+});
+
 // Global function for map markers to call
 window.openEnhancedProfile = function(citizen) {
     console.log('openEnhancedProfile called with citizen:', citizen);
@@ -113,8 +131,7 @@ function showSmallCard(citizen) {
     
     existingCard.appendChild(smallCardCloseBtn);
     
-    // Event listeners
-    // X button always closes completely (STATE 2/3 → STATE 1)
+    // Event listeners - X button always closes completely (STATE 2/3 → STATE 1)
     smallCardCloseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         console.log('X button clicked in STATE 2');
@@ -440,16 +457,10 @@ function closeCardCompletely(card) {
     console.log('STATE 2/3 → STATE 1: Closing card completely');
     
     const backdrop = document.querySelector('.profile-backdrop');
-    const rightContainer = card.querySelector('.right-content-area');
     
-    // First collapse the expanded view if it exists
-    if (rightContainer) {
-        rightContainer.style.right = '-280px';
-        card.style.width = '280px';
-    }
-    
+    // Remove backdrop immediately
     if (backdrop) {
-        backdrop.style.opacity = '0';
+        backdrop.remove();
     }
     
     // Close the card completely - STATE 1
@@ -457,22 +468,10 @@ function closeCardCompletely(card) {
     card.style.transform = 'translateX(100%)';
     
     setTimeout(() => {
-        // Restore original content structure if needed
-        const leftContainer = card.querySelector('.left-content-area');
-        if (leftContainer) {
-            const originalContent = leftContainer.innerHTML;
-            card.innerHTML = originalContent;
+        // Remove the card completely
+        if (card && card.parentNode) {
+            card.remove();
         }
-        
-        // Remove backdrop
-        if (backdrop) {
-            backdrop.remove();
-        }
-        
-        // Reset card styling completely - back to STATE 1
-        card.style.zIndex = '';
-        card.style.width = '';
-        card.style.transform = '';
         modalState = 'closed';
     }, 600);
 }
