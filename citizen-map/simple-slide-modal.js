@@ -61,13 +61,31 @@ function openEnhancedProfile(citizen) {
     
     document.body.appendChild(backdrop);
     
-    // Add extended content area directly to the existing card
-    const extendedContent = document.createElement('div');
-    extendedContent.className = 'extended-content-area';
-    extendedContent.style.cssText = `
+    // First, wrap all existing content in a left container
+    const existingContent = existingCard.innerHTML;
+    existingCard.innerHTML = '';
+    
+    // Create left side container for original content
+    const leftContainer = document.createElement('div');
+    leftContainer.className = 'left-content-area';
+    leftContainer.style.cssText = `
         position: absolute;
         top: 0;
-        right: -300px;
+        left: 0;
+        width: 280px;
+        height: 100%;
+        overflow: hidden;
+        padding: 0;
+    `;
+    leftContainer.innerHTML = existingContent;
+    
+    // Create right side container for new content
+    const rightContainer = document.createElement('div');
+    rightContainer.className = 'right-content-area';
+    rightContainer.style.cssText = `
+        position: absolute;
+        top: 0;
+        right: 0;
         width: 280px;
         height: 100%;
         padding: 20px;
@@ -79,23 +97,29 @@ function openEnhancedProfile(citizen) {
         text-align: center;
         opacity: 0;
         transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        overflow: hidden;
     `;
     
-    extendedContent.innerHTML = `
+    rightContainer.innerHTML = `
         Additional stats and<br>
         content will appear here
     `;
     
-    existingCard.appendChild(extendedContent);
+    // Add both containers to the card
+    existingCard.appendChild(leftContainer);
+    existingCard.appendChild(rightContainer);
     
-    // Animate backdrop and expand the card itself
+    // Hide scrollbars on the main card
+    existingCard.style.overflow = 'hidden';
+    
+    // Animate backdrop and slide + expand the card
     setTimeout(() => {
         backdrop.style.opacity = '1';
         existingCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         existingCard.style.width = '580px';  // Expand card width
-        existingCard.style.right = '20px';   // Keep card in same position
+        existingCard.style.right = '320px';  // Slide card left
         existingCard.style.zIndex = '999999';
-        extendedContent.style.opacity = '1'; // Show the extended content
+        rightContainer.style.opacity = '1'; // Show the right content area
     }, 50);
     
     // Load governance data
@@ -264,24 +288,32 @@ function getProfileHTML(citizen) {
 }
 
 function closeExistingCard(card, backdrop) {
-    // Hide extended content and shrink card back to original size
-    const extendedContent = card.querySelector('.extended-content-area');
-    if (extendedContent) {
-        extendedContent.style.opacity = '0';
+    // Hide right content and slide card back to original position
+    const rightContainer = card.querySelector('.right-content-area');
+    if (rightContainer) {
+        rightContainer.style.opacity = '0';
     }
     
     card.style.width = '280px';  // Shrink back to original width
+    card.style.right = '20px';   // Slide back to original position
     backdrop.style.opacity = '0';
     
     setTimeout(() => {
-        // Remove backdrop, extended content, and close button
+        // Restore original content structure
+        const leftContainer = card.querySelector('.left-content-area');
+        if (leftContainer) {
+            const originalContent = leftContainer.innerHTML;
+            card.innerHTML = originalContent;
+        }
+        
+        // Remove backdrop and close button
         backdrop.remove();
-        if (extendedContent) extendedContent.remove();
         const closeBtn = card.querySelector('.close-btn');
         if (closeBtn) closeBtn.remove();
         
-        // Reset card z-index
+        // Reset card styling
         card.style.zIndex = '';
+        card.style.overflow = '';
         modalState = 'closed';
     }, 600);
 }
