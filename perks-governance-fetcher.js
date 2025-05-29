@@ -29,7 +29,7 @@ async function getIslandTokenBalance(walletAddress) {
         
         console.log(`🔍 Fetching ISLAND balance for: ${walletAddress}`);
         
-        // Get token accounts for the ISLAND token mint
+        // Get token accounts for specific SPL token
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
             publicKey,
             { mint: tokenMintPublicKey }
@@ -37,11 +37,8 @@ async function getIslandTokenBalance(walletAddress) {
         
         // Extract balance from token account
         let tokenBalance = 0;
-        
         if (tokenAccounts.value.length > 0) {
-            // Get the UI amount (human-readable with decimals)
-            const uiAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount;
-            tokenBalance = uiAmount || 0;
+            tokenBalance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
             
             if (tokenBalance > 0) {
                 console.log(`✅ Found ${tokenBalance.toLocaleString()} $ISLAND tokens`);
