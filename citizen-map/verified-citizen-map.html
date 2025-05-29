@@ -29,14 +29,14 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0F0F0F;
+            background: var(--bg-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            color: #FAFAFA;
+            color: var(--text-primary);
         }
 
         .header {
-            background: rgba(15, 15, 15, 0.95);
+            background: var(--panel-bg);
             backdrop-filter: blur(20px);
             padding: 12px 20px;
             display: flex;
@@ -45,7 +45,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--panel-border);
         }
 
         .logo-container {
@@ -60,7 +60,7 @@
         }
 
         .title {
-            color: #AFAFAF;
+            color: var(--text-secondary);
             font-size: 12px;
             font-weight: 500;
             letter-spacing: 0;
@@ -554,6 +554,22 @@
             --panel-border: rgba(255, 255, 255, 0.08);
             --panel-hover: rgba(255, 255, 255, 0.05);
             --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.25);
+            --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --accent-primary: #21E8A3;
+            --accent-glow: rgba(33, 232, 163, 0.2);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-subtle: rgba(0, 0, 0, 0.1);
+            --panel-bg: rgba(248, 249, 250, 0.95);
+            --panel-border: rgba(0, 0, 0, 0.08);
+            --panel-hover: rgba(0, 0, 0, 0.05);
+            --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.08);
+            --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
 
         body {
