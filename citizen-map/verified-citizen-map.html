@@ -1679,8 +1679,8 @@
                     throw new Error(`Failed to fetch NFTs: ${response.status}`);
                 }
                 
-                const nfts = await response.json();
-                walletNfts = Array.isArray(nfts) ? nfts : [];
+                const result = await response.json();
+                walletNfts = result.nfts || result || [];
                 updateNftGrid();
                 
                 if (walletNfts.length === 0) {
