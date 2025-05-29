@@ -12,7 +12,7 @@ const HELIUS_RPC_URL = "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-46
 
 // ISLAND token configuration for IslandDAO governance
 const ISLAND_TOKEN_CONFIG = {
-    tokenMintAddress: "1119wEfde85KtGxVVW8BRjQrG8fLmN4WhdAEAaWcvWy", // $ISLAND token mint
+    tokenMintAddress: "Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a", // $ISLAND token mint
     decimals: 6,
     minGovernanceThreshold: 1 // Minimum tokens required for governance participation
 };
