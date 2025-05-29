@@ -1,0 +1,53 @@
+You need to understand how to fetch governance balance holdings for a Solana-based token-gated application. Here's the complete process:
+
+Context
+This is a FactBrah DAO application that uses FACT tokens for governance participation. Users must hold a minimum threshold of FACT tokens to be eligible for various features.
+
+Key Components
+1. Server-Side Token Balance Fetching (server/solana.ts)
+// Uses Helius RPC endpoint for reliable Solana connection
+const HELIUS_RPC_URL = "https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY";
+const connection = new Connection(HELIUS_RPC_URL, 'confirmed');
+// Fetches SPL token balance for governance
+export async function getSolanaBalance(walletAddress: string): Promise<SolanaBalance> {
+  const publicKey = new PublicKey(walletAddress);
+  const tokenMintAddress = "8MSxM9UWtWBr3KesukjigkXoJewi73J8XSEpjYvXNdAo"; // FACT token
+  const tokenMintPublicKey = new PublicKey(tokenMintAddress);
+  
+  // Get token accounts for specific SPL token
+  const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+    publicKey,
+    { mint: tokenMintPublicKey }
+  );
+  
+  // Extract balance from token account
+  let tokenBalance = 0;
+  if (tokenAccounts.value.length > 0) {
+    tokenBalance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
+  }
+  
+  return {
+    amount: tokenBalance,
+    isEligible: tokenBalance >= threshold
+  };
+}
+2. Client-Side Integration
+The client uses a WalletContext to manage Solana wallet connections
+Balance checks happen on login and periodically for eligibility verification
+The GovernancePage component embeds a Realms DAO interface for actual governance participation
+3. Governance Flow
+User connects wallet via Phantom or other Solana wallet
+Server fetches their FACT token balance using getParsedTokenAccountsByOwner
+System checks if balance meets minimum threshold (typically 1000 FACT tokens)
+Eligible users can access governance features through embedded Realms interface
+Balance is periodically rechecked and user status updated accordingly
+4. Key Technical Details
+Uses getParsedTokenAccountsByOwner instead of getBalance because we're checking SPL tokens, not SOL
+The uiAmount field provides the human-readable token amount with decimals
+Token mint address identifies the specific SPL token (FACT token in this case)
+Helius RPC provides better reliability than default Solana RPC endpoints
+5. Error Handling
+Graceful fallback to 0 balance if wallet doesn't exist or has no token accounts
+Console logging for debugging connection and balance fetch issues
+Test mode support for development using token mint address as eligible wallet
+This process ensures users have the required token holdings before participating in DAO governance decisions.
