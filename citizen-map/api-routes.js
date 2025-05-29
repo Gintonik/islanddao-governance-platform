@@ -5,6 +5,7 @@
  */
 
 const db = require('../db');
+const governanceSync = require('../sync-governance-power');
 
 /**
  * Get NFTs owned by a specific wallet address
@@ -220,10 +221,10 @@ async function getAllCitizens() {
     const client = await db.pool.connect();
     
     try {
-      // Get all citizens
+      // Get all citizens including governance power
       const citizens = await client.query(`
         SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.pfp_nft, c.message, c.created_at,
-               c.nickname, c.bio, c.twitter_handle, c.telegram_handle, c.discord_handle
+               c.nickname, c.bio, c.twitter_handle, c.telegram_handle, c.discord_handle, c.governance_power
         FROM citizens c
         ORDER BY c.created_at DESC
       `);
@@ -255,6 +256,7 @@ async function getAllCitizens() {
           twitter_handle: citizen.twitter_handle,
           telegram_handle: citizen.telegram_handle,
           discord_handle: citizen.discord_handle,
+          governance_power: citizen.governance_power || 0,
           nfts: nftsResult.rows.map(n => n.mint_id),
           timestamp: citizen.created_at,
           nftMetadata: {}
@@ -284,9 +286,38 @@ async function getAllCitizens() {
   }
 }
 
+/**
+ * Sync governance power for all citizens
+ */
+async function syncGovernancePower() {
+  try {
+    console.log('🔄 Starting governance power sync...');
+    const result = await governanceSync.syncAllGovernancePower();
+    return result;
+  } catch (error) {
+    console.error('Error syncing governance power:', error);
+    return { error: error.message };
+  }
+}
+
+/**
+ * Get governance statistics for the realm
+ */
+async function getGovernanceStats() {
+  try {
+    const stats = await governanceSync.getGovernanceStatistics();
+    return { success: true, stats };
+  } catch (error) {
+    console.error('Error getting governance stats:', error);
+    return { error: error.message };
+  }
+}
+
 module.exports = {
   getWalletNfts,
   saveCitizenPin,
   getAllCitizens,
-  clearAllCitizens
+  clearAllCitizens,
+  syncGovernancePower,
+  getGovernanceStats
 };

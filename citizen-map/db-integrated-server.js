@@ -73,6 +73,16 @@ function startServer() {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
+      // API endpoint to sync governance power
+      else if (req.url === '/api/sync-governance' && req.method === 'POST') {
+        const result = await apiRoutes.syncGovernancePower();
+        sendJsonResponse(res, result);
+      }
+      // API endpoint for governance statistics
+      else if (req.url === '/api/governance-stats') {
+        const result = await apiRoutes.getGovernanceStats();
+        sendJsonResponse(res, result);
+      }
       // API endpoint for all NFTs (used by collection grid)
       else if (req.url === '/api/nfts') {
         try {
