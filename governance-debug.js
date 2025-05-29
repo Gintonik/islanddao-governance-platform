@@ -21,7 +21,7 @@ const ISLAND_DAO_CONFIG = {
     realmsProgram: "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw"
 };
 
-const RPC_URL = process.env.RPC_URL || "https://api.mainnet-beta.solana.com";
+const RPC_URL = "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00";
 
 async function debugGovernanceStructure() {
     try {

@@ -18,8 +18,8 @@ const ISLAND_DAO_CONFIG = {
     councilMint: null
 };
 
-// RPC Configuration - using public endpoint
-const RPC_URL = process.env.RPC_URL || "https://api.mainnet-beta.solana.com";
+// RPC Configuration - using Helius enhanced endpoint
+const RPC_URL = "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00";
 
 /**
  * Initialize Solana Agent Kit for governance queries
