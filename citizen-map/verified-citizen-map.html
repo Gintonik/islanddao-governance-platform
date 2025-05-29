@@ -813,6 +813,19 @@
             cursor: pointer;
             transition: all 0.3s ease;
             overflow: hidden;
+            background: var(--panel-bg);
+        }
+
+        .nft-item .nft-name {
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: #FAFAFA !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-theme="light"] .nft-item .nft-name {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #333333 !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
         }
 
         .nft-item:hover {
