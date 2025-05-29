@@ -12,7 +12,9 @@ const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNj
 const ISLAND_TOKEN_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 const ISLAND_TOKEN_DECIMALS = 6;
 
-const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
+// Use environment variable for Helius API key
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '088dfd59-6d2e-4695-a42a-2e0c257c2d00';
+const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`, 'confirmed');
 
 /**
  * Get authentic governance power using Token Owner Record
