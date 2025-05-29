@@ -1,78 +1,128 @@
 /**
- * Search for the exact governance power value in all governance accounts
- * Looking for 8849081.676143 $ISLAND tokens
+ * Search for the exact governance value 12,625.580931 ISLAND
+ * in the known governance account
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
 
-const ISLAND_DAO_REALM = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
-const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
-const TARGET_AMOUNT = 8849081.676143;
-
 const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 
-async function searchExactValue() {
+const KNOWN_GOVERNANCE_ACCOUNT = 'FfaFsewkm3BFQi8pH1xYSoRyLpAMk62iTqYJQZVy6n88';
+const EXACT_AMOUNT = 12625.580931;
+
+async function searchExactGovernanceValue() {
     try {
-        console.log('🔍 Searching for exact governance power value...');
-        console.log(`Target amount: ${TARGET_AMOUNT} $ISLAND`);
-        console.log('');
+        console.log(`Searching for exact value: ${EXACT_AMOUNT} ISLAND`);
         
-        // Get all governance accounts
-        const governanceAccounts = await connection.getProgramAccounts(GOVERNANCE_PROGRAM_ID, {
-            filters: [
-                {
-                    memcmp: {
-                        offset: 1,
-                        bytes: ISLAND_DAO_REALM.toBase58()
-                    }
+        const accountPubkey = new PublicKey(KNOWN_GOVERNANCE_ACCOUNT);
+        const accountInfo = await connection.getAccountInfo(accountPubkey);
+        
+        if (!accountInfo || !accountInfo.data) {
+            console.log('Account not found');
+            return null;
+        }
+        
+        const data = accountInfo.data;
+        console.log(`Data length: ${data.length} bytes`);
+        
+        // Convert to lamports with 6 decimals
+        const exactLamports = Math.round(EXACT_AMOUNT * Math.pow(10, 6));
+        console.log(`Looking for: ${exactLamports} lamports`);
+        
+        // Search every possible position
+        let found = false;
+        
+        for (let offset = 0; offset <= data.length - 8; offset++) {
+            try {
+                // Try little endian u64
+                const valueLe = data.readBigUInt64LE(offset);
+                const lamportsLe = Number(valueLe);
+                
+                if (lamportsLe === exactLamports) {
+                    console.log(`🎯 FOUND EXACT MATCH (LE) at offset ${offset}: ${lamportsLe} lamports = ${(lamportsLe / Math.pow(10, 6))} ISLAND`);
+                    found = true;
                 }
-            ]
-        });
+                
+                // Try big endian u64
+                const valueBe = data.readBigUInt64BE(offset);
+                const lamportsBe = Number(valueBe);
+                
+                if (lamportsBe === exactLamports) {
+                    console.log(`🎯 FOUND EXACT MATCH (BE) at offset ${offset}: ${lamportsBe} lamports = ${(lamportsBe / Math.pow(10, 6))} ISLAND`);
+                    found = true;
+                }
+                
+                // Also check if it's close (within 1 lamport due to rounding)
+                if (Math.abs(lamportsLe - exactLamports) <= 1 && lamportsLe > 1000000) {
+                    console.log(`Close match (LE) at offset ${offset}: ${lamportsLe} lamports = ${(lamportsLe / Math.pow(10, 6))} ISLAND`);
+                }
+                
+                if (Math.abs(lamportsBe - exactLamports) <= 1 && lamportsBe > 1000000) {
+                    console.log(`Close match (BE) at offset ${offset}: ${lamportsBe} lamports = ${(lamportsBe / Math.pow(10, 6))} ISLAND`);
+                }
+                
+            } catch (error) {
+                continue;
+            }
+        }
         
-        console.log(`Searching through ${governanceAccounts.length} governance accounts...`);
-        
-        for (const account of governanceAccounts) {
-            const data = account.account.data;
+        if (!found) {
+            console.log('❌ Exact value not found');
             
-            // Search through all 8-byte positions for the target amount
-            for (let offset = 0; offset <= data.length - 8; offset++) {
-                try {
-                    const amount = data.readBigUInt64LE(offset);
-                    const tokens = Number(amount) / Math.pow(10, 6);
-                    
-                    // Check if this matches our target (within small tolerance)
-                    if (Math.abs(tokens - TARGET_AMOUNT) < 0.001) {
-                        console.log(`\n🎯 EXACT MATCH FOUND!`);
-                        console.log(`   Account: ${account.pubkey.toBase58()}`);
-                        console.log(`   Amount: ${tokens} $ISLAND`);
-                        console.log(`   Offset: ${offset} bytes`);
-                        console.log(`   Raw value: ${amount.toString()}`);
+            // Let's also try with different decimal precision
+            console.log('\nTrying different decimal precisions...');
+            
+            for (let decimals = 0; decimals <= 9; decimals++) {
+                const testLamports = Math.round(EXACT_AMOUNT * Math.pow(10, decimals));
+                
+                for (let offset = 0; offset <= data.length - 8; offset++) {
+                    try {
+                        const valueLe = Number(data.readBigUInt64LE(offset));
                         
-                        // Try to find wallet address in this account
-                        console.log('\n🔍 Looking for wallet address in this account...');
-                        for (let walletOffset = 0; walletOffset <= data.length - 32; walletOffset += 8) {
-                            try {
-                                const walletBytes = data.slice(walletOffset, walletOffset + 32);
-                                const walletPubkey = new PublicKey(walletBytes);
-                                console.log(`   Possible wallet at offset ${walletOffset}: ${walletPubkey.toBase58()}`);
-                            } catch (e) {
-                                // Continue searching
-                            }
+                        if (valueLe === testLamports) {
+                            console.log(`Found with ${decimals} decimals at offset ${offset}: ${testLamports} = ${(testLamports / Math.pow(10, decimals))} ISLAND`);
                         }
                         
-                        return { account: account.pubkey, tokens, offset };
+                    } catch (error) {
+                        continue;
                     }
-                } catch (e) {
-                    // Continue searching
                 }
             }
         }
         
-        console.log('\n❌ Exact value not found in governance accounts');
+        // Show all significant values in the account
+        console.log('\nAll significant values found:');
+        for (let offset = 0; offset <= data.length - 8; offset++) {
+            try {
+                const value = Number(data.readBigUInt64LE(offset));
+                const tokenAmount = value / Math.pow(10, 6);
+                
+                if (tokenAmount > 100 && tokenAmount < 100000) {
+                    console.log(`Offset ${offset}: ${tokenAmount.toLocaleString()} ISLAND`);
+                }
+            } catch (error) {
+                continue;
+            }
+        }
+        
+        return found;
         
     } catch (error) {
-        console.error('❌ Error searching for exact value:', error.message);
+        console.error('Error searching for exact value:', error.message);
+        return false;
     }
 }
 
-searchExactValue();
+if (require.main === module) {
+    searchExactGovernanceValue()
+        .then((found) => {
+            console.log(found ? '✅ Search completed' : '❌ Value not found');
+            process.exit(0);
+        })
+        .catch(error => {
+            console.error('Search failed:', error.message);
+            process.exit(1);
+        });
+}
+
+module.exports = { searchExactGovernanceValue };
