@@ -849,6 +849,16 @@
             box-shadow: var(--shadow-soft) !important;
         }
 
+        .polaroid-text {
+            color: #FAFAFA !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+        }
+
+        [data-theme="light"] .polaroid-text {
+            color: #333333 !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+
         .form-buttons {
             display: flex;
             gap: 1rem;
@@ -2381,14 +2391,12 @@
                                         margin: 0 auto 8px auto;
                                         background: var(--bg-secondary);
                                     ">
-                                    <div style="
-                                        color: #333333 !important;
+                                    <div class="polaroid-text" style="
                                         font-size: 12px;
                                         font-weight: 700;
                                         text-align: center;
                                         font-family: 'Inter', sans-serif;
                                         margin-top: 4px;
-                                        background: rgba(255, 255, 255, 0.9);
                                         padding: 2px 4px;
                                         border-radius: 3px;
                                     ">
