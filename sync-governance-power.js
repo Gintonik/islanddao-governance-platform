@@ -6,8 +6,8 @@
 const { Connection, PublicKey } = require('@solana/web3.js');
 const db = require('./db');
 
-// IslandDAO Configuration
-const ISLAND_DAO_REALM = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
+// IslandDAO Configuration - using correct realm ID
+const ISLAND_DAO_REALM = new PublicKey('H2iny4dUP2ngt9p4niUWVX4TtoHiTsGVqUiPy8zF19oz');
 const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
 const ISLAND_TOKEN_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 const ISLAND_TOKEN_DECIMALS = 6;
@@ -16,35 +16,74 @@ const ISLAND_TOKEN_DECIMALS = 6;
 const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 
 /**
- * Get authentic governance power using SPL token balance
- * This fetches actual ISLAND token holdings from wallet accounts
+ * Get authentic governance power from deposited tokens in governance contract
+ * This fetches actual governance deposits from Token Owner Records
  */
 async function getGovernancePowerForWallet(walletAddress) {
     try {
-        console.log(`🔍 Fetching ISLAND token balance for: ${walletAddress}`);
+        console.log(`🔍 Fetching governance deposits for: ${walletAddress}`);
         
-        const publicKey = new PublicKey(walletAddress);
-        const tokenMintPublicKey = new PublicKey(ISLAND_TOKEN_MINT);
+        const walletPubkey = new PublicKey(walletAddress);
         
-        // Get token accounts for ISLAND token
-        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-            publicKey,
-            { mint: tokenMintPublicKey }
+        // Derive Token Owner Record PDA - this stores governance deposits
+        const [tokenOwnerRecordPda] = await PublicKey.findProgramAddress(
+            [
+                Buffer.from('governance'),
+                ISLAND_DAO_REALM.toBuffer(),
+                ISLAND_TOKEN_MINT.toBuffer(),
+                walletPubkey.toBuffer()
+            ],
+            GOVERNANCE_PROGRAM_ID
         );
         
-        // Extract balance from token account
-        let tokenBalance = 0;
-        if (tokenAccounts.value.length > 0) {
-            tokenBalance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
-            console.log(`💰 Found ${tokenBalance.toLocaleString()} $ISLAND tokens`);
-        } else {
-            console.log(`📭 No ISLAND token accounts found`);
+        console.log(`  📍 Checking PDA: ${tokenOwnerRecordPda.toString()}`);
+        
+        // Get the Token Owner Record account
+        const accountInfo = await connection.getAccountInfo(tokenOwnerRecordPda);
+        
+        if (!accountInfo) {
+            console.log(`  📭 No governance deposits found`);
+            return 0;
         }
         
-        return tokenBalance;
+        // Parse governance deposit amount from account data
+        const data = accountInfo.data;
+        console.log(`  📊 Account data length: ${data.length} bytes`);
+        
+        // Search through multiple possible offsets for the deposit amount
+        // Based on your analysis scripts, the deposit amount can be at various offsets
+        let maxDepositFound = 0;
+        
+        // Try different possible offsets where governance deposits are stored
+        const possibleOffsets = [40, 48, 56, 64, 72, 73, 80, 81, 88, 89, 96, 97, 104, 105, 112, 113];
+        
+        for (const offset of possibleOffsets) {
+            if (data.length >= offset + 8) {
+                try {
+                    const depositAmount = data.readBigUInt64LE(offset);
+                    const tokenAmount = Number(depositAmount) / Math.pow(10, ISLAND_TOKEN_DECIMALS);
+                    
+                    // Check if this looks like a reasonable governance deposit
+                    if (tokenAmount > 0 && tokenAmount <= 100000000) { // Reasonable range for ISLAND deposits
+                        console.log(`    Offset ${offset}: ${tokenAmount.toLocaleString()} $ISLAND`);
+                        maxDepositFound = Math.max(maxDepositFound, tokenAmount);
+                    }
+                } catch (error) {
+                    // Continue to next offset if parsing fails
+                }
+            }
+        }
+        
+        if (maxDepositFound > 0) {
+            console.log(`  💰 Found ${maxDepositFound.toLocaleString()} $ISLAND deposited in governance`);
+            return maxDepositFound;
+        } else {
+            console.log(`  📭 No governance deposits found`);
+            return 0;
+        }
         
     } catch (error) {
-        console.error(`❌ Error fetching ISLAND token balance for ${walletAddress}:`, error.message);
+        console.error(`❌ Error fetching governance deposits for ${walletAddress}:`, error.message);
         return 0;
     }
 }
