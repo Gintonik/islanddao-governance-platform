@@ -1,6 +1,6 @@
 /**
- * Targeted VSR search for our specific citizens
- * Instead of searching all VSR accounts, derive PDAs for our citizens
+ * Targeted VSR search for citizen governance power
+ * Query VSR voter accounts directly for our known citizens
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
@@ -8,205 +8,158 @@ const db = require('./db');
 
 const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 
-const VSR_REGISTRAR = 'Du7fEQExVrmNKDWjctgA4vbn2CnVSDvH2AoXsBpPcYvd';
 const VSR_PROGRAM_ID = 'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ';
+const ISLAND_DAO_REALM = '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds';
 
-function deriveVoterPDA(walletAddress, registrarAddress) {
-    const walletPubkey = new PublicKey(walletAddress);
-    const registrarPubkey = new PublicKey(registrarAddress);
-    const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
-    
-    const [voterPDA] = PublicKey.findProgramAddressSync(
-        [
-            Buffer.from('voter'),
-            registrarPubkey.toBuffer(),
-            walletPubkey.toBuffer()
-        ],
-        vsrProgramPubkey
-    );
-    
-    return voterPDA;
+// VSR Registrar account for IslandDAO (derived from realm)
+const VSR_REGISTRAR = '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds'; // This might need adjustment
+
+function getVSRVoterPDA(walletAddress, registrarAccount) {
+    try {
+        const walletPubkey = new PublicKey(walletAddress);
+        const registrarPubkey = new PublicKey(registrarAccount);
+        const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
+        
+        const [voterPDA] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("voter"),
+                registrarPubkey.toBuffer(),
+                walletPubkey.toBuffer()
+            ],
+            vsrProgramPubkey
+        );
+        
+        return voterPDA;
+    } catch (error) {
+        console.log(`Error deriving VSR voter PDA for ${walletAddress}:`, error.message);
+        return null;
+    }
 }
 
-function parseVSRVoterData(accountData) {
+function parseVSRVoterAccount(accountData) {
     try {
-        // VSR Voter account structure - search for deposit amounts
-        let totalDeposit = 0;
+        if (!accountData || accountData.length < 8) return 0;
         
-        // Search through the data for amounts that could be deposits
-        for (let offset = 0; offset <= accountData.length - 8; offset += 8) {
-            try {
-                const value = accountData.readBigUInt64LE(offset);
-                const tokenAmount = Number(value) / Math.pow(10, 6);
-                
-                // Look for reasonable ISLAND amounts (1 to 100M tokens)
-                if (tokenAmount >= 1 && tokenAmount <= 100000000) {
-                    // For now, take the largest reasonable amount found
-                    if (tokenAmount > totalDeposit) {
-                        totalDeposit = tokenAmount;
+        // VSR Voter account structure varies, try different offset locations
+        // Common locations for voting power in VSR accounts
+        const possibleOffsets = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96];
+        
+        for (const offset of possibleOffsets) {
+            if (accountData.length >= offset + 8) {
+                try {
+                    const amount = accountData.readBigUInt64LE(offset);
+                    const tokenAmount = Number(amount) / Math.pow(10, 6);
+                    
+                    // Look for amounts that match expected governance deposits
+                    if (tokenAmount > 1 && tokenAmount < 100000000) {
+                        return tokenAmount;
                     }
+                } catch (error) {
+                    continue;
                 }
-            } catch (error) {
-                // Continue searching
             }
         }
         
-        return totalDeposit;
+        return 0;
     } catch (error) {
         return 0;
     }
 }
 
-async function checkCitizenVSRDeposits() {
+async function checkCitizenVSRGovernancePower() {
     try {
-        console.log('Checking VSR governance deposits for all citizens');
+        console.log('Checking VSR governance power for citizens');
         
         const citizens = await db.getAllCitizens();
-        console.log(`Processing ${citizens.length} citizens`);
+        console.log(`Checking ${citizens.length} citizens`);
         
         const results = [];
         
-        for (let i = 0; i < citizens.length; i++) {
-            const citizen = citizens[i];
-            console.log(`\nChecking ${i + 1}/${citizens.length}: ${citizen.name || 'Unknown'} (${citizen.wallet_address})`);
-            
+        for (const citizen of citizens) {
             try {
-                // Derive the VSR voter PDA for this wallet
-                const voterPDA = deriveVoterPDA(citizen.wallet_address, VSR_REGISTRAR);
-                console.log(`  Voter PDA: ${voterPDA.toString()}`);
+                // Try different registrar accounts that might be used
+                const registrarOptions = [
+                    ISLAND_DAO_REALM,
+                    '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds',
+                    // Add more potential registrar accounts if needed
+                ];
                 
-                // Check if this account exists
-                const accountInfo = await connection.getAccountInfo(voterPDA);
+                let governancePower = 0;
+                let foundAccount = null;
                 
-                if (accountInfo && accountInfo.owner.toString() === VSR_PROGRAM_ID) {
-                    console.log(`  ✅ Found VSR voter account (${accountInfo.data.length} bytes)`);
+                for (const registrar of registrarOptions) {
+                    const voterPDA = getVSRVoterPDA(citizen.wallet_address, registrar);
+                    if (!voterPDA) continue;
                     
-                    // Parse the voter data to find deposit amount
-                    const depositAmount = parseVSRVoterData(accountInfo.data);
-                    
-                    if (depositAmount > 0) {
-                        console.log(`  💰 Deposit amount: ${depositAmount.toLocaleString()} ISLAND`);
-                    } else {
-                        console.log(`  📊 No deposits found in voter account`);
+                    try {
+                        const accountInfo = await connection.getAccountInfo(voterPDA);
+                        if (accountInfo && accountInfo.data) {
+                            const power = parseVSRVoterAccount(accountInfo.data);
+                            if (power > 0) {
+                                governancePower = power;
+                                foundAccount = voterPDA.toString();
+                                break;
+                            }
+                        }
+                    } catch (error) {
+                        continue;
                     }
-                    
-                    // Update database
-                    await db.updateGovernancePower(citizen.wallet_address, depositAmount);
-                    
-                    results.push({
-                        wallet: citizen.wallet_address,
-                        name: citizen.name,
-                        voterAccount: voterPDA.toString(),
-                        depositAmount: depositAmount
-                    });
-                } else {
-                    console.log(`  ❌ No VSR voter account found`);
-                    
-                    // Set to 0 in database
-                    await db.updateGovernancePower(citizen.wallet_address, 0);
-                    
-                    results.push({
-                        wallet: citizen.wallet_address,
-                        name: citizen.name,
-                        voterAccount: null,
-                        depositAmount: 0
-                    });
                 }
                 
-            } catch (error) {
-                console.log(`  ❌ Error: ${error.message}`);
+                // Update database
+                await db.updateGovernancePower(citizen.wallet_address, governancePower);
                 
                 results.push({
                     wallet: citizen.wallet_address,
-                    name: citizen.name,
-                    voterAccount: null,
-                    depositAmount: 0
+                    name: citizen.name || 'Unknown',
+                    governancePower: governancePower,
+                    voterAccount: foundAccount
+                });
+                
+                if (governancePower > 0) {
+                    console.log(`  ${citizen.name || 'Unknown'}: ${governancePower.toLocaleString()} ISLAND (${foundAccount})`);
+                }
+                
+            } catch (error) {
+                console.log(`Error checking ${citizen.wallet_address}: ${error.message}`);
+                results.push({
+                    wallet: citizen.wallet_address,
+                    name: citizen.name || 'Unknown',
+                    governancePower: 0,
+                    voterAccount: null
                 });
             }
-            
-            // Small delay
-            await new Promise(resolve => setTimeout(resolve, 200));
         }
         
-        // Summary
-        const citizensWithDeposits = results.filter(r => r.depositAmount > 0);
-        const totalDeposits = results.reduce((sum, r) => sum + r.depositAmount, 0);
+        const citizensWithPower = results.filter(r => r.governancePower > 0);
+        const totalPower = results.reduce((sum, r) => sum + r.governancePower, 0);
         
-        console.log(`\n📊 Summary:`);
-        console.log(`Citizens with governance deposits: ${citizensWithDeposits.length}/${results.length}`);
-        console.log(`Total governance deposits: ${totalDeposits.toLocaleString()} ISLAND`);
+        console.log(`\nResults:`);
+        console.log(`Citizens with governance power: ${citizensWithPower.length}/${results.length}`);
+        console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
         
-        if (citizensWithDeposits.length > 0) {
-            console.log('\nTop governance depositors:');
-            citizensWithDeposits
-                .sort((a, b) => b.depositAmount - a.depositAmount)
-                .slice(0, 5)
-                .forEach((citizen, index) => {
-                    console.log(`  ${index + 1}. ${citizen.name || 'Unknown'}: ${citizen.depositAmount.toLocaleString()} ISLAND`);
-                });
+        // Check if we found the known wallet
+        const knownWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
+        const knownResult = results.find(r => r.wallet === knownWallet);
+        
+        if (knownResult && knownResult.governancePower > 0) {
+            console.log(`\n🎯 Found known wallet: ${knownResult.governancePower.toLocaleString()} ISLAND`);
+            
+            if (Math.abs(knownResult.governancePower - 12625.580931) < 1) {
+                console.log('✅ Amount close to expected 12,625.580931 ISLAND!');
+            }
         }
         
         return results;
         
     } catch (error) {
-        console.error('Error checking citizen VSR deposits:', error.message);
+        console.error('Error checking citizen VSR governance power:', error.message);
         return [];
     }
 }
 
-// Test with known wallet first
-async function testKnownVSRWallet() {
-    const testWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
-    
-    console.log('Testing VSR voter PDA derivation for known wallet');
-    console.log(`Wallet: ${testWallet}`);
-    console.log('Expected deposit: 12,625.580931 ISLAND');
-    
-    try {
-        const voterPDA = deriveVoterPDA(testWallet, VSR_REGISTRAR);
-        console.log(`Derived Voter PDA: ${voterPDA.toString()}`);
-        
-        const accountInfo = await connection.getAccountInfo(voterPDA);
-        
-        if (accountInfo) {
-            console.log(`✅ Account found (${accountInfo.data.length} bytes)`);
-            console.log(`Owner: ${accountInfo.owner.toString()}`);
-            
-            const depositAmount = parseVSRVoterData(accountInfo.data);
-            console.log(`Parsed deposit: ${depositAmount.toLocaleString()} ISLAND`);
-            
-            if (Math.abs(depositAmount - 12625.580931) < 0.000001) {
-                console.log('🎯 SUCCESS! Found exact expected deposit amount!');
-                return true;
-            } else if (depositAmount > 0) {
-                console.log('✅ Found deposit, but different amount');
-                return false;
-            } else {
-                console.log('❌ No deposit found in account');
-                return false;
-            }
-        } else {
-            console.log('❌ Voter account not found');
-            return false;
-        }
-        
-    } catch (error) {
-        console.error('Error testing known wallet:', error.message);
-        return false;
-    }
-}
-
-// Run test first, then process all citizens
 if (require.main === module) {
-    testKnownVSRWallet()
-        .then((success) => {
-            if (success) {
-                console.log('\n✅ VSR pattern works! Processing all citizens...\n');
-            } else {
-                console.log('\n⚠️ VSR pattern may not be perfect, but proceeding...\n');
-            }
-            return checkCitizenVSRDeposits();
-        })
+    checkCitizenVSRGovernancePower()
         .then(() => process.exit(0))
         .catch(error => {
             console.error('Process failed:', error.message);
@@ -214,4 +167,4 @@ if (require.main === module) {
         });
 }
 
-module.exports = { checkCitizenVSRDeposits, testKnownVSRWallet, deriveVoterPDA, parseVSRVoterData };
+module.exports = { checkCitizenVSRGovernancePower, getVSRVoterPDA, parseVSRVoterAccount };

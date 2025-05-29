@@ -8,157 +8,153 @@ const db = require('./db');
 
 const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 
-// The governance-controlled token account that receives deposits
 const GOVERNANCE_TOKEN_ACCOUNT = 'AErp8UYUay7uBE9i6ULtSDgQP5d3W66n9RJH5QpUG3Uh';
+const GOVERNANCE_PROGRAM_ID = 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw';
+const ISLAND_DAO_REALM = '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds';
 const ISLAND_TOKEN_MINT = 'Ds52CDgqdWbTWsua1hgT3AusSy4FNx2Ezge1br3jQ14a';
 
 async function analyzeGovernanceTokenAccount() {
     try {
         console.log('Analyzing governance token account structure');
-        console.log(`Account: ${GOVERNANCE_TOKEN_ACCOUNT}`);
-        console.log('');
-
-        // Get the token account info
+        
         const tokenAccountPubkey = new PublicKey(GOVERNANCE_TOKEN_ACCOUNT);
-        const accountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey);
+        const programPubkey = new PublicKey(GOVERNANCE_PROGRAM_ID);
+        const realmPubkey = new PublicKey(ISLAND_DAO_REALM);
+        const mintPubkey = new PublicKey(ISLAND_TOKEN_MINT);
         
-        if (accountInfo.value && accountInfo.value.data.parsed) {
-            const parsedData = accountInfo.value.data.parsed.info;
-            
-            console.log('Governance Token Account Details:');
-            console.log(`  Owner: ${parsedData.owner}`);
-            console.log(`  Mint: ${parsedData.mint}`);
-            console.log(`  Token Amount: ${parsedData.tokenAmount.uiAmountString} ISLAND`);
-            console.log(`  Raw Amount: ${parsedData.tokenAmount.amount}`);
-            console.log(`  Decimals: ${parsedData.tokenAmount.decimals}`);
-            
-            // This tells us the total amount deposited in governance
-            const totalDeposited = parseFloat(parsedData.tokenAmount.uiAmountString);
-            console.log(`\nTotal ISLAND tokens in governance: ${totalDeposited.toLocaleString()}`);
+        // Get the token account info
+        const tokenAccountInfo = await connection.getParsedAccountInfo(tokenAccountPubkey);
+        if (tokenAccountInfo.value) {
+            console.log('Token Account Info:');
+            console.log('Owner:', tokenAccountInfo.value.owner.toString());
+            if (tokenAccountInfo.value.data.parsed) {
+                console.log('Balance:', tokenAccountInfo.value.data.parsed.info.tokenAmount.uiAmountString, 'ISLAND');
+            }
+            console.log('');
         }
-
-        // Now we need to find how individual deposits are tracked
-        // Let's look for Token Owner Records that reference this account
-        console.log('\nSearching for Token Owner Records...');
         
-        const governanceProgramId = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
-        const realmId = new PublicKey('1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds');
-        const communityMint = new PublicKey(ISLAND_TOKEN_MINT);
+        // Find all Token Owner Records for this realm
+        console.log('Searching for Token Owner Records...');
         
-        // Get all Token Owner Records for IslandDAO realm
-        const torAccounts = await connection.getProgramAccounts(governanceProgramId, {
-            filters: [
-                {
-                    memcmp: {
-                        offset: 1, // realm reference
-                        bytes: realmId.toBase58()
-                    }
-                },
-                {
-                    memcmp: {
-                        offset: 33, // governing token mint
-                        bytes: communityMint.toBase58()
-                    }
-                }
-            ]
+        // Search specifically for accounts that have the realm in their data
+        const allGovernanceAccounts = await connection.getProgramAccounts(programPubkey, {
+            dataSlice: { offset: 0, length: 0 } // Get just the account keys first
         });
-
-        console.log(`Found ${torAccounts.length} Token Owner Records`);
-
-        if (torAccounts.length > 0) {
-            console.log('\nAnalyzing Token Owner Records:');
+        
+        console.log(`Found ${allGovernanceAccounts.length} total governance accounts`);
+        
+        // Now fetch account data for accounts that might be Token Owner Records
+        const batchSize = 10;
+        const tokenOwnerRecords = [];
+        
+        for (let i = 0; i < allGovernanceAccounts.length; i += batchSize) {
+            const batch = allGovernanceAccounts.slice(i, i + batchSize);
             
-            const deposits = [];
-            
-            for (const tor of torAccounts) {
-                try {
-                    const data = tor.account.data;
+            try {
+                const accountInfos = await connection.getMultipleAccountsInfo(
+                    batch.map(acc => acc.pubkey)
+                );
+                
+                for (let j = 0; j < accountInfos.length; j++) {
+                    const accountInfo = accountInfos[j];
+                    if (!accountInfo || !accountInfo.data) continue;
                     
-                    // Parse Token Owner Record
-                    const accountType = data.readUInt8(0);
-                    if (accountType === 2) { // TokenOwnerRecord
-                        const governingTokenOwner = new PublicKey(data.subarray(65, 97));
-                        const depositAmount = data.readBigUInt64LE(97);
-                        const tokenAmount = Number(depositAmount) / Math.pow(10, 6);
-                        
-                        if (tokenAmount > 0) {
-                            deposits.push({
-                                wallet: governingTokenOwner.toString(),
-                                depositAmount: tokenAmount,
-                                torAccount: tor.pubkey.toString()
-                            });
+                    const data = accountInfo.data;
+                    
+                    // Check if this is a Token Owner Record (account type 2)
+                    if (data.length >= 105 && data.readUInt8(0) === 2) {
+                        try {
+                            // Check if it references our realm (offset 1-32)
+                            const realmInData = new PublicKey(data.subarray(1, 33));
+                            if (!realmInData.equals(realmPubkey)) continue;
                             
-                            console.log(`  ${governingTokenOwner.toString()}: ${tokenAmount.toLocaleString()} ISLAND`);
+                            // Check if it's for ISLAND token (offset 33-64)
+                            const govMint = new PublicKey(data.subarray(33, 65));
+                            if (!govMint.equals(mintPubkey)) continue;
+                            
+                            // Extract wallet and deposit amount
+                            const wallet = new PublicKey(data.subarray(65, 97));
+                            const depositLamports = data.readBigUInt64LE(97);
+                            const depositAmount = Number(depositLamports) / Math.pow(10, 6);
+                            
+                            if (depositAmount > 0) {
+                                tokenOwnerRecords.push({
+                                    account: batch[j].pubkey.toString(),
+                                    wallet: wallet.toString(),
+                                    depositAmount: depositAmount
+                                });
+                            }
+                        } catch (error) {
+                            // Continue with next account
                         }
                     }
-                } catch (error) {
-                    console.log(`  Error parsing TOR: ${error.message}`);
                 }
+            } catch (error) {
+                console.log(`Error processing batch ${i}: ${error.message}`);
             }
             
-            if (deposits.length > 0) {
-                const totalFromRecords = deposits.reduce((sum, d) => sum + d.depositAmount, 0);
-                console.log(`\nTotal from individual records: ${totalFromRecords.toLocaleString()} ISLAND`);
-                
-                // Check if any of our citizens have deposits
-                console.log('\nChecking our citizens for governance deposits...');
-                
-                const citizens = await db.getAllCitizens();
-                const citizenDeposits = [];
-                
-                for (const citizen of citizens) {
-                    const deposit = deposits.find(d => d.wallet === citizen.wallet_address);
-                    if (deposit) {
-                        citizenDeposits.push({
-                            name: citizen.name,
-                            wallet: citizen.wallet_address,
-                            depositAmount: deposit.depositAmount
-                        });
-                        
-                        console.log(`  ${citizen.name || 'Unknown'}: ${deposit.depositAmount.toLocaleString()} ISLAND`);
-                    }
-                }
-                
-                console.log(`\nFound ${citizenDeposits.length} citizens with governance deposits out of ${citizens.length} total citizens`);
-                
-                return {
-                    totalDeposited: deposits.reduce((sum, d) => sum + d.depositAmount, 0),
-                    allDeposits: deposits,
-                    citizenDeposits: citizenDeposits
-                };
+            // Progress indicator
+            if (i % 100 === 0) {
+                console.log(`Processed ${i}/${allGovernanceAccounts.length} accounts...`);
             }
         }
         
-        return null;
+        tokenOwnerRecords.sort((a, b) => b.depositAmount - a.depositAmount);
+        
+        console.log(`\nFound ${tokenOwnerRecords.length} Token Owner Records with deposits`);
+        
+        if (tokenOwnerRecords.length > 0) {
+            console.log('\nTop governance depositors:');
+            tokenOwnerRecords.slice(0, 15).forEach((record, index) => {
+                console.log(`  ${index + 1}. ${record.wallet}: ${record.depositAmount.toLocaleString()} ISLAND`);
+            });
+            
+            // Check for known wallet
+            const knownWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
+            const knownRecord = tokenOwnerRecords.find(r => r.wallet === knownWallet);
+            
+            if (knownRecord) {
+                console.log(`\n🎯 Found known wallet: ${knownRecord.depositAmount.toLocaleString()} ISLAND`);
+                
+                if (Math.abs(knownRecord.depositAmount - 12625.580931) < 0.000001) {
+                    console.log('✅ Amount matches expected 12,625.580931 ISLAND!');
+                } else {
+                    console.log(`Expected: 12,625.580931, Found: ${knownRecord.depositAmount}`);
+                }
+            } else {
+                console.log(`\n❌ Known wallet ${knownWallet} not found in governance records`);
+            }
+            
+            const totalDeposits = tokenOwnerRecords.reduce((sum, r) => sum + r.depositAmount, 0);
+            console.log(`\nTotal governance deposits: ${totalDeposits.toLocaleString()} ISLAND`);
+        }
+        
+        return tokenOwnerRecords;
         
     } catch (error) {
         console.error('Error analyzing governance token account:', error.message);
-        return null;
+        return [];
     }
 }
 
-/**
- * Sync governance deposits for all citizens using Token Owner Records
- */
 async function syncGovernanceDepositsFromTOR() {
     try {
-        console.log('Syncing governance deposits for all citizens from Token Owner Records');
+        const deposits = await analyzeGovernanceTokenAccount();
         
-        const analysis = await analyzeGovernanceTokenAccount();
-        
-        if (!analysis || !analysis.allDeposits) {
-            console.log('No governance deposits found');
+        if (deposits.length === 0) {
+            console.log('No governance deposits found to sync');
             return [];
         }
         
         const citizens = await db.getAllCitizens();
+        console.log(`\nSyncing governance deposits for ${citizens.length} citizens`);
+        
         const results = [];
         
         for (const citizen of citizens) {
-            const deposit = analysis.allDeposits.find(d => d.wallet === citizen.wallet_address);
+            const deposit = deposits.find(d => d.wallet === citizen.wallet_address);
             const depositAmount = deposit ? deposit.depositAmount : 0;
             
-            // Update database with authentic governance deposit
             await db.updateGovernancePower(citizen.wallet_address, depositAmount);
             
             results.push({
@@ -168,33 +164,32 @@ async function syncGovernanceDepositsFromTOR() {
             });
             
             if (depositAmount > 0) {
-                console.log(`Updated ${citizen.name || 'Unknown'}: ${depositAmount.toLocaleString()} ISLAND`);
+                console.log(`  ${citizen.name || 'Unknown'}: ${depositAmount.toLocaleString()} ISLAND`);
             }
         }
         
-        const totalWithDeposits = results.filter(r => r.depositAmount > 0).length;
-        console.log(`\nSynced governance deposits for ${totalWithDeposits} citizens`);
+        const citizensWithDeposits = results.filter(r => r.depositAmount > 0);
+        const totalCitizenDeposits = results.reduce((sum, r) => sum + r.depositAmount, 0);
+        
+        console.log(`\nSync complete:`);
+        console.log(`Citizens with governance deposits: ${citizensWithDeposits.length}/${results.length}`);
+        console.log(`Total citizen governance power: ${totalCitizenDeposits.toLocaleString()} ISLAND`);
         
         return results;
         
     } catch (error) {
-        console.error('Error syncing governance deposits:', error.message);
+        console.error('Error syncing governance deposits from TOR:', error.message);
         return [];
     }
 }
 
-// Export functions
-module.exports = {
-    analyzeGovernanceTokenAccount,
-    syncGovernanceDepositsFromTOR
-};
-
-// Run analysis if executed directly
 if (require.main === module) {
-    analyzeGovernanceTokenAccount().then(() => {
-        process.exit(0);
-    }).catch(error => {
-        console.error('Analysis failed:', error.message);
-        process.exit(1);
-    });
+    syncGovernanceDepositsFromTOR()
+        .then(() => process.exit(0))
+        .catch(error => {
+            console.error('Process failed:', error.message);
+            process.exit(1);
+        });
 }
+
+module.exports = { analyzeGovernanceTokenAccount, syncGovernanceDepositsFromTOR };
