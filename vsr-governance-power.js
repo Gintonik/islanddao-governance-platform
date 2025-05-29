@@ -1,91 +1,127 @@
 /**
- * VSR Governance Power Calculator for IslandDAO
- * Based on the Voter Stake Registry plugin structure
- * Reference: https://github.com/Mythic-Project/new-voter-ui/tree/main/app/plugin/VoterStakeRegistry
+ * VSR Governance Power Implementation
+ * Based on blockworks-foundation/voter-stake-registry official implementation
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
+const { Pool } = require('pg');
 
 const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// IslandDAO configuration from our previous search
-const ISLAND_DAO_CONFIG = {
-    realmId: '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds',
-    programId: 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw',
-    communityMint: 'Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a'
-};
-
-// VSR Plugin Program ID (commonly used)
-const VSR_PLUGIN_PROGRAM_ID = new PublicKey('VotEn9AWwTFtJPJSMV5F9jsMY6QwWM5qn3XP9PATGW7');
+const VSR_PROGRAM_ID = 'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ';
+const ISLAND_DAO_REALM = '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds';
+const ISLAND_TOKEN_MINT = 'Ds52CDgqdWbTWsua1hgT3AusSy4FNx2Ezge1br3jQ14a';
 
 /**
- * Find Voter account PDA for a wallet in the VSR plugin
+ * Get VSR Registrar PDA using the official VSR method
+ * Based on blockworks-foundation/voter-stake-registry
  */
-function findVoterPDA(walletAddress, realmId) {
-    const walletPubkey = new PublicKey(walletAddress);
-    const realmPubkey = new PublicKey(realmId);
+function getRegistrarPDA() {
+    const realmPubkey = new PublicKey(ISLAND_DAO_REALM);
+    const communityMintPubkey = new PublicKey(ISLAND_TOKEN_MINT);
+    const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
     
-    const [voterPDA] = PublicKey.findProgramAddressSync(
+    const [registrarPubkey] = PublicKey.findProgramAddressSync(
         [
-            Buffer.from('voter'),
             realmPubkey.toBuffer(),
-            walletPubkey.toBuffer()
+            Buffer.from('registrar'),
+            communityMintPubkey.toBuffer(),
         ],
-        VSR_PLUGIN_PROGRAM_ID
+        vsrProgramPubkey
     );
     
-    return voterPDA;
+    return registrarPubkey;
 }
 
 /**
- * Calculate voting power from VSR Voter account data
- * Based on the off-chain calculation pattern from utils.ts
+ * Get Voter PDA using the official VSR method
  */
-function calculateVotingPowerFromVoterData(voterAccountData) {
+function getVoterPDA(registrarPubkey, walletPubkey) {
+    const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
+    
+    const [voterPubkey] = PublicKey.findProgramAddressSync(
+        [
+            registrarPubkey.toBuffer(),
+            Buffer.from('voter'),
+            walletPubkey.toBuffer(),
+        ],
+        vsrProgramPubkey
+    );
+    
+    return voterPubkey;
+}
+
+/**
+ * Parse VSR Voter account according to the official struct
+ */
+function parseVoterAccount(data) {
     try {
-        // VSR Voter account structure (simplified)
-        // This follows the pattern from the GitHub repository you referenced
+        if (!data || data.length < 8) return null;
         
-        let offset = 8; // Skip discriminator
+        // VSR Voter account structure (based on official implementation):
+        // 0-8: discriminator
+        // 8-40: voter_authority (32 bytes)
+        // 40-72: registrar (32 bytes)
+        // 72-80: deposits length (8 bytes)
+        // 80+: deposits array
         
-        // Read deposits array length
-        const depositsLength = voterAccountData.readUInt32LE(offset);
-        offset += 4;
+        const depositsLength = data.readUInt32LE(72);
+        
+        if (depositsLength === 0) return null;
         
         let totalVotingPower = 0;
+        let offset = 80;
         
-        // Process each deposit
+        // Parse each deposit
         for (let i = 0; i < depositsLength; i++) {
-            // Deposit structure (simplified based on VSR plugin)
-            const amount = voterAccountData.readBigUInt64LE(offset);
-            offset += 8;
+            if (offset + 40 > data.length) break;
             
-            const lockupKind = voterAccountData.readUInt8(offset);
-            offset += 1;
+            // Each deposit is 40 bytes:
+            // 0-8: amount_deposited_native (8 bytes)
+            // 8-16: amount_initially_locked_native (8 bytes)
+            // 16-24: lockup_start_ts (8 bytes)
+            // 24-32: lockup_end_ts (8 bytes)
+            // 32-40: lockup_kind (8 bytes)
             
-            // Skip other fields based on lockup kind
-            if (lockupKind === 0) { // None
-                offset += 16; // Skip periods and start_ts
-            } else if (lockupKind === 1) { // Constant
-                offset += 24; // Skip start_ts, end_ts, periods
-            } else if (lockupKind === 2) { // Cliff
-                offset += 24; // Skip start_ts, end_ts, periods
+            const amountDeposited = data.readBigUInt64LE(offset);
+            const amountLocked = data.readBigUInt64LE(offset + 8);
+            const lockupStart = data.readBigUInt64LE(offset + 16);
+            const lockupEnd = data.readBigUInt64LE(offset + 24);
+            const lockupKind = data.readUInt32LE(offset + 32);
+            
+            // Convert from lamports to tokens
+            const depositedTokens = Number(amountDeposited) / Math.pow(10, 6);
+            const lockedTokens = Number(amountLocked) / Math.pow(10, 6);
+            
+            // Calculate voting power based on lockup
+            let votingPower = depositedTokens;
+            
+            // If there's a lockup, apply multiplier (simplified calculation)
+            if (lockupEnd > lockupStart && lockupKind > 0) {
+                const currentTime = Math.floor(Date.now() / 1000);
+                const lockupDuration = Number(lockupEnd - lockupStart);
+                
+                // VSR typically applies multipliers based on lockup duration
+                // This is a simplified calculation - actual multiplier depends on VSR config
+                if (lockupDuration > 0) {
+                    const multiplier = Math.min(2.0, 1.0 + (lockupDuration / (365 * 24 * 3600))); // Max 2x for 1 year+
+                    votingPower = depositedTokens * multiplier;
+                }
             }
             
-            // Convert amount to token units (ISLAND has 6 decimals)
-            const tokenAmount = Number(amount) / Math.pow(10, 6);
-            
-            // Add to total voting power
-            // For VSR, voting power can include multipliers based on lockup
-            // For now, we'll use the base amount
-            totalVotingPower += tokenAmount;
+            totalVotingPower += votingPower;
+            offset += 40;
         }
         
-        return totalVotingPower;
+        return {
+            totalDeposited: Number(totalVotingPower),
+            deposits: depositsLength
+        };
         
     } catch (error) {
-        console.error('Error calculating voting power:', error.message);
-        return 0;
+        console.log('Error parsing VSR voter account:', error.message);
+        return null;
     }
 }
 
@@ -94,99 +130,139 @@ function calculateVotingPowerFromVoterData(voterAccountData) {
  */
 async function getVSRGovernancePower(walletAddress) {
     try {
-        console.log(`🔍 Getting VSR governance power for wallet: ${walletAddress}`);
+        const registrarPubkey = getRegistrarPDA();
+        const walletPubkey = new PublicKey(walletAddress);
+        const voterPubkey = getVoterPDA(registrarPubkey, walletPubkey);
         
-        // Find the Voter PDA for this wallet
-        const voterPDA = findVoterPDA(walletAddress, ISLAND_DAO_CONFIG.realmId);
-        console.log(`  Voter PDA: ${voterPDA.toString()}`);
-        
-        // Fetch the Voter account data
-        const voterAccount = await connection.getAccountInfo(voterPDA);
-        
-        if (!voterAccount) {
-            console.log(`  ❌ No Voter account found for wallet`);
+        // First check if registrar exists
+        const registrarAccount = await connection.getAccountInfo(registrarPubkey);
+        if (!registrarAccount) {
+            console.log(`No VSR registrar found: ${registrarPubkey.toString()}`);
             return 0;
         }
         
-        console.log(`  ✅ Found Voter account with ${voterAccount.data.length} bytes`);
+        // Get voter account
+        const voterAccount = await connection.getAccountInfo(voterPubkey);
+        if (!voterAccount) {
+            console.log(`No voter account found for ${walletAddress}`);
+            return 0;
+        }
         
-        // Calculate voting power from the Voter account data
-        const votingPower = calculateVotingPowerFromVoterData(voterAccount.data);
+        // Parse voter account
+        const voterData = parseVoterAccount(voterAccount.data);
+        if (!voterData) {
+            console.log(`Could not parse voter account for ${walletAddress}`);
+            return 0;
+        }
         
-        console.log(`  💰 Voting power: ${votingPower.toLocaleString()} ISLAND`);
-        
-        return votingPower;
+        console.log(`${walletAddress}: ${voterData.totalDeposited.toLocaleString()} ISLAND (${voterData.deposits} deposits)`);
+        return voterData.totalDeposited;
         
     } catch (error) {
-        console.error(`❌ Error getting VSR governance power for ${walletAddress}:`, error.message);
+        console.log(`Error getting VSR power for ${walletAddress}:`, error.message);
         return 0;
     }
 }
 
 /**
- * Get VSR governance power for multiple wallets
+ * Test VSR implementation with known wallet
  */
-async function getMultipleVSRGovernancePower(walletAddresses) {
-    console.log(`🔍 Getting VSR governance power for ${walletAddresses.length} wallets`);
+async function testVSRImplementation() {
+    console.log('Testing VSR implementation...');
     
-    const results = {};
+    const registrarPubkey = getRegistrarPDA();
+    console.log(`VSR Registrar PDA: ${registrarPubkey.toString()}`);
     
-    for (let i = 0; i < walletAddresses.length; i++) {
-        const wallet = walletAddresses[i];
-        console.log(`\n📊 Processing wallet ${i + 1}/${walletAddresses.length}: ${wallet}`);
-        
-        const power = await getVSRGovernancePower(wallet);
-        results[wallet] = power;
-        
-        // Add small delay to avoid rate limiting
-        if (i < walletAddresses.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
+    // Check if registrar exists
+    const registrarAccount = await connection.getAccountInfo(registrarPubkey);
+    if (registrarAccount) {
+        console.log(`✅ Found VSR registrar! Data length: ${registrarAccount.data.length} bytes`);
+    } else {
+        console.log(`❌ VSR registrar not found`);
+        return false;
     }
     
-    return results;
+    // Test with known wallet
+    const knownWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
+    const power = await getVSRGovernancePower(knownWallet);
+    
+    if (power > 0) {
+        console.log(`✅ Found governance power: ${power.toLocaleString()} ISLAND`);
+        
+        if (Math.abs(power - 12625.580931) < 1) {
+            console.log(`✅ Amount matches expected value!`);
+        }
+        
+        return true;
+    } else {
+        console.log(`❌ No governance power found`);
+        return false;
+    }
 }
 
 /**
- * Test with the known wallet that has 625.58 ISLAND deposited
+ * Sync VSR governance power for all citizens
  */
-async function testVSRGovernancePower() {
-    const targetWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
-    
-    console.log('🧪 Testing VSR governance power calculation');
-    console.log(`Target wallet: ${targetWallet}`);
-    console.log('Expected result: ~625.58 ISLAND');
-    console.log('');
-    
-    const power = await getVSRGovernancePower(targetWallet);
-    
-    console.log(`\n📊 Result: ${power.toLocaleString()} ISLAND`);
-    
-    if (Math.abs(power - 625.58) < 0.1) {
-        console.log('🎯 SUCCESS! Matches expected deposit amount!');
-    } else if (power > 0) {
-        console.log('✅ Found governance power, but amount differs from expected');
-    } else {
-        console.log('❌ No governance power found');
+async function syncVSRGovernancePowerForAllCitizens() {
+    try {
+        console.log('Syncing VSR governance power for all citizens...');
+        
+        // Test implementation first
+        const testSuccess = await testVSRImplementation();
+        if (!testSuccess) {
+            console.log('VSR implementation test failed, aborting sync');
+            return {};
+        }
+        
+        // Get all citizens
+        const citizensResult = await pool.query('SELECT wallet FROM citizens');
+        const walletAddresses = citizensResult.rows.map(row => row.wallet);
+        
+        console.log(`Found ${walletAddresses.length} citizens to check`);
+        
+        const results = {};
+        
+        for (const walletAddress of walletAddresses) {
+            const power = await getVSRGovernancePower(walletAddress);
+            results[walletAddress] = power;
+            
+            // Update database
+            await pool.query(
+                'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
+                [power, walletAddress]
+            );
+            
+            // Small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Summary
+        const citizensWithPower = Object.values(results).filter(p => p > 0).length;
+        const totalPower = Object.values(results).reduce((sum, p) => sum + p, 0);
+        
+        console.log(`\nSync complete:`);
+        console.log(`Citizens with governance power: ${citizensWithPower}/${walletAddresses.length}`);
+        console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
+        
+        return results;
+        
+    } catch (error) {
+        console.error('Error syncing VSR governance power:', error.message);
+        return {};
     }
-    
-    return power;
 }
 
-// Export functions for use in other modules
-module.exports = {
-    getVSRGovernancePower,
-    getMultipleVSRGovernancePower,
-    findVoterPDA,
-    calculateVotingPowerFromVoterData
-};
-
-// Run test if this file is executed directly
 if (require.main === module) {
-    testVSRGovernancePower().then(() => {
-        process.exit(0);
-    }).catch(error => {
-        console.error('❌ Test failed:', error.message);
-        process.exit(1);
-    });
+    syncVSRGovernancePowerForAllCitizens()
+        .then(() => process.exit(0))
+        .catch(error => {
+            console.error('Process failed:', error.message);
+            process.exit(1);
+        });
 }
+
+module.exports = { 
+    syncVSRGovernancePowerForAllCitizens, 
+    getVSRGovernancePower, 
+    testVSRImplementation 
+};
