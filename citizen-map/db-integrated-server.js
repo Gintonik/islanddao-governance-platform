@@ -9,6 +9,7 @@ const db = require('../db');
 const PORT = 5000;
 const HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 const GLOBE_HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
+const COLLECTION_HTML_FILE = path.join(__dirname, '..', 'unified-index.html');
 
 // Initialize the database on startup
 async function initializeApp() {
@@ -50,9 +51,9 @@ function startServer() {
         res.end();
         return;
       }
-      // Handle collection route - serve the main HTML file
+      // Handle collection route - serve the NFT collection grid
       else if (req.url === '/collection' || req.url === '/collection.html') {
-        serveFile(res, HTML_FILE, 'text/html');
+        serveFile(res, COLLECTION_HTML_FILE, 'text/html');
       }
       // Serve the HTML file for the root route
       else if (req.url === '/' || req.url === '/index.html') {
