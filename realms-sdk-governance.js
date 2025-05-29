@@ -1,6 +1,6 @@
 /**
- * Realms SDK Governance Implementation
- * Based on how the Realms frontend actually fetches VSR data
+ * Realms SDK Governance Commands
+ * Test withdraw/deposit governance token functions to understand authentic values
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
@@ -9,322 +9,234 @@ const { Pool } = require('pg');
 const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-const VSR_PROGRAM_ID = 'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ';
-const ISLAND_DAO_REALM = '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds';
+// IslandDAO governance parameters
+const ISLAND_DAO_GOVERNANCE = {
+    pubkey: 'F9V4Lwo49aUe8fFujMbU6uhdFyDRqKY54WpzdpncUSk9',
+    authority: '6Vjsy1KabnHtSuHZcXuuCQFWoBML9JscSy3L4NGjqmhM',
+    owner: 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw',
+    communityMint: 'Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a'
+};
+
+const KNOWN_WALLET = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
 
 /**
- * Find VSR Registrar using the same method as Realms frontend
+ * Calculate Token Owner Record PDA (Program Derived Address)
+ * This is where governance deposits are stored in standard SPL Governance
  */
-async function findVSRRegistrar() {
+function getTokenOwnerRecordPDA(realmPubkey, governingTokenMint, governingTokenOwner) {
     try {
-        console.log('Finding VSR registrar for IslandDAO...');
+        const governanceProgramId = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
         
-        const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
-        const realmPubkey = new PublicKey(ISLAND_DAO_REALM);
-        
-        // Realms uses this PDA derivation for VSR registrar
-        const [registrarPDA] = PublicKey.findProgramAddressSync(
+        const [pda] = PublicKey.findProgramAddressSync(
             [
-                Buffer.from('registrar'),
+                Buffer.from('governance'),
                 realmPubkey.toBuffer(),
-                Buffer.from('ISLAND'),  // This might be the voting mint symbol
+                governingTokenMint.toBuffer(),
+                governingTokenOwner.toBuffer()
             ],
-            vsrProgramPubkey
+            governanceProgramId
         );
         
-        console.log(`Checking registrar PDA: ${registrarPDA.toString()}`);
-        
-        const registrarAccount = await connection.getAccountInfo(registrarPDA);
-        
-        if (registrarAccount) {
-            console.log('✅ Found VSR registrar!');
-            console.log(`Data length: ${registrarAccount.data.length} bytes`);
-            return registrarPDA;
-        }
-        
-        // Alternative derivation - try with voting mint
-        const ISLAND_TOKEN_MINT = 'Ds52CDgqdWbTWsua1hgT3AusSy4FNx2Ezge1br3jQ14a';
-        const mintPubkey = new PublicKey(ISLAND_TOKEN_MINT);
-        
-        const [registrarPDA2] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from('registrar'),
-                realmPubkey.toBuffer(),
-                mintPubkey.toBuffer(),
-            ],
-            vsrProgramPubkey
-        );
-        
-        console.log(`Checking alternative registrar PDA: ${registrarPDA2.toString()}`);
-        
-        const registrarAccount2 = await connection.getAccountInfo(registrarPDA2);
-        
-        if (registrarAccount2) {
-            console.log('✅ Found VSR registrar (alternative derivation)!');
-            console.log(`Data length: ${registrarAccount2.data.length} bytes`);
-            return registrarPDA2;
-        }
-        
-        // Search VSR accounts for registrar
-        console.log('Searching VSR program accounts...');
-        
-        const vsrAccounts = await connection.getProgramAccounts(vsrProgramPubkey, {
-            dataSlice: { offset: 0, length: 100 },
-            filters: [
-                {
-                    dataSize: 200  // Registrars are typically around this size
-                }
-            ]
-        });
-        
-        console.log(`Found ${vsrAccounts.length} potential registrar accounts`);
-        
-        for (const account of vsrAccounts.slice(0, 5)) {
-            const data = account.account.data;
-            
-            // Check if this references the IslandDAO realm
-            for (let i = 0; i <= data.length - 32; i++) {
-                try {
-                    const pubkey = new PublicKey(data.subarray(i, i + 32));
-                    if (pubkey.equals(realmPubkey)) {
-                        console.log(`Found realm reference in: ${account.pubkey.toString()}`);
-                        return account.pubkey;
-                    }
-                } catch (error) {
-                    continue;
-                }
-            }
-        }
-        
-        return null;
-        
+        return pda;
     } catch (error) {
-        console.error('Error finding VSR registrar:', error.message);
+        console.error('Error calculating Token Owner Record PDA:', error.message);
         return null;
     }
 }
 
 /**
- * Get voter weight record for a wallet using VSR
+ * Get Token Owner Record for a specific wallet
  */
-async function getVoterWeightRecord(walletAddress, registrarPubkey) {
+async function getTokenOwnerRecord(walletAddress) {
     try {
+        console.log(`Getting Token Owner Record for: ${walletAddress}`);
+        
+        const realmPubkey = new PublicKey(ISLAND_DAO_GOVERNANCE.pubkey);
+        const communityMint = new PublicKey(ISLAND_DAO_GOVERNANCE.communityMint);
         const walletPubkey = new PublicKey(walletAddress);
-        const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
         
-        // VSR voter weight record PDA
-        const [voterWeightPDA] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from('voter-weight-record'),
-                registrarPubkey.toBuffer(),
-                walletPubkey.toBuffer(),
-            ],
-            vsrProgramPubkey
-        );
+        const tokenOwnerRecordPDA = getTokenOwnerRecordPDA(realmPubkey, communityMint, walletPubkey);
         
-        const voterWeightAccount = await connection.getAccountInfo(voterWeightPDA);
-        
-        if (voterWeightAccount && voterWeightAccount.data) {
-            console.log(`Found voter weight record for ${walletAddress}`);
-            
-            // Parse voter weight record - the weight is typically stored as u64 at offset 8
-            if (voterWeightAccount.data.length >= 16) {
-                const weight = voterWeightAccount.data.readBigUInt64LE(8);
-                const weightAmount = Number(weight) / Math.pow(10, 6);
-                return weightAmount;
-            }
+        if (!tokenOwnerRecordPDA) {
+            console.log('Could not calculate Token Owner Record PDA');
+            return null;
         }
         
-        return 0;
-    } catch (error) {
-        console.log(`Error getting voter weight for ${walletAddress}:`, error.message);
-        return 0;
-    }
-}
-
-/**
- * Get voter record (deposit record) for a wallet
- */
-async function getVoterRecord(walletAddress, registrarPubkey) {
-    try {
-        const walletPubkey = new PublicKey(walletAddress);
-        const vsrProgramPubkey = new PublicKey(VSR_PROGRAM_ID);
+        console.log(`Token Owner Record PDA: ${tokenOwnerRecordPDA.toString()}`);
         
-        // VSR voter PDA
-        const [voterPDA] = PublicKey.findProgramAddressSync(
-            [
-                Buffer.from('voter'),
-                registrarPubkey.toBuffer(),
-                walletPubkey.toBuffer(),
-            ],
-            vsrProgramPubkey
-        );
+        const accountInfo = await connection.getAccountInfo(tokenOwnerRecordPDA);
         
-        const voterAccount = await connection.getAccountInfo(voterPDA);
-        
-        if (voterAccount && voterAccount.data) {
-            console.log(`Found voter record for ${walletAddress}: ${voterPDA.toString()}`);
-            console.log(`Data length: ${voterAccount.data.length} bytes`);
-            
-            // Try different offsets to find the deposit amount
-            const offsets = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96];
-            
-            for (const offset of offsets) {
-                if (voterAccount.data.length >= offset + 8) {
-                    try {
-                        const amount = voterAccount.data.readBigUInt64LE(offset);
-                        const tokenAmount = Number(amount) / Math.pow(10, 6);
-                        
-                        if (tokenAmount > 1000 && tokenAmount < 50000) {
-                            console.log(`  Potential deposit at offset ${offset}: ${tokenAmount.toLocaleString()} ISLAND`);
-                            
-                            if (Math.abs(tokenAmount - 12625.580931) < 1) {
-                                console.log(`  🎯 FOUND MATCHING AMOUNT!`);
-                                return tokenAmount;
-                            }
-                        }
-                    } catch (error) {
-                        continue;
-                    }
-                }
-            }
-            
-            // Show all reasonable values found
-            console.log('  All potential values:');
-            for (let offset = 0; offset < voterAccount.data.length - 8; offset += 8) {
-                try {
-                    const amount = voterAccount.data.readBigUInt64LE(offset);
-                    const tokenAmount = Number(amount) / Math.pow(10, 6);
-                    
-                    if (tokenAmount > 0.1 && tokenAmount < 1000000) {
-                        console.log(`    Offset ${offset}: ${tokenAmount.toLocaleString()}`);
-                    }
-                } catch (error) {
-                    continue;
-                }
-            }
+        if (!accountInfo || !accountInfo.data) {
+            console.log('Token Owner Record not found or no data');
+            return null;
         }
         
-        return 0;
-    } catch (error) {
-        console.log(`Error getting voter record for ${walletAddress}:`, error.message);
-        return 0;
-    }
-}
-
-/**
- * Get governance power using Realms VSR method
- */
-async function getGovernancePowerVSR(walletAddress) {
-    try {
-        // First find the registrar
-        const registrarPubkey = await findVSRRegistrar();
+        console.log(`Token Owner Record data length: ${accountInfo.data.length} bytes`);
+        console.log(`Token Owner Record owner: ${accountInfo.owner.toString()}`);
         
-        if (!registrarPubkey) {
-            console.log('Could not find VSR registrar');
-            return 0;
+        // Parse Token Owner Record structure
+        const data = accountInfo.data;
+        
+        if (data.length >= 105) {
+            // Standard Token Owner Record structure:
+            // - Account type (1 byte)
+            // - Realm (32 bytes) 
+            // - Governing Token Mint (32 bytes)
+            // - Governing Token Owner (32 bytes)
+            // - Governing Token Deposit Amount (8 bytes)
+            
+            const accountType = data.readUInt8(0);
+            const depositAmount = data.readBigUInt64LE(97);
+            const tokenAmount = Number(depositAmount) / Math.pow(10, 6);
+            
+            console.log(`Account type: ${accountType}`);
+            console.log(`Governing token deposit amount: ${tokenAmount.toLocaleString()} ISLAND`);
+            
+            return {
+                address: tokenOwnerRecordPDA.toString(),
+                accountType: accountType,
+                depositAmount: tokenAmount,
+                rawData: data
+            };
         }
         
-        console.log(`Using registrar: ${registrarPubkey.toString()}`);
-        
-        // Try voter weight record first
-        let power = await getVoterWeightRecord(walletAddress, registrarPubkey);
-        if (power > 0) return power;
-        
-        // Try voter record
-        power = await getVoterRecord(walletAddress, registrarPubkey);
-        if (power > 0) return power;
-        
-        return 0;
+        return null;
         
     } catch (error) {
-        console.error(`Error getting VSR governance power for ${walletAddress}:`, error.message);
-        return 0;
+        console.error('Error getting Token Owner Record:', error.message);
+        return null;
     }
 }
 
 /**
- * Test with known wallet
+ * Simulate withdraw governance tokens instruction to see current values
  */
-async function testVSRGovernance() {
-    const knownWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
-    console.log(`Testing VSR governance with known wallet: ${knownWallet}`);
-    
-    const power = await getGovernancePowerVSR(knownWallet);
-    
-    console.log(`Result: ${power.toLocaleString()} ISLAND`);
-    
-    if (power > 0) {
-        console.log('✅ VSR governance query successful!');
-        
-        if (Math.abs(power - 12625.580931) < 1) {
-            console.log('✅ Amount matches expected value!');
-        }
-        
-        return true;
-    } else {
-        console.log('❌ No VSR governance power found');
-        return false;
-    }
-}
-
-/**
- * Sync VSR governance power for all citizens
- */
-async function syncVSRGovernanceForCitizens() {
+async function simulateWithdrawGovernanceTokens(walletAddress, amount = 1) {
     try {
-        console.log('Syncing VSR governance power for citizens...');
+        console.log(`Simulating withdraw governance tokens for: ${walletAddress}`);
+        console.log(`Amount: ${amount} ISLAND`);
         
-        // Test first
-        const testSuccess = await testVSRGovernance();
-        if (!testSuccess) {
-            console.log('VSR test failed, aborting sync');
-            return {};
+        // Get the Token Owner Record first
+        const tokenOwnerRecord = await getTokenOwnerRecord(walletAddress);
+        
+        if (!tokenOwnerRecord) {
+            console.log('No Token Owner Record found - wallet may not have governance deposits');
+            return null;
         }
+        
+        console.log('Current governance state:');
+        console.log(`  Deposited amount: ${tokenOwnerRecord.depositAmount.toLocaleString()} ISLAND`);
+        console.log(`  Available to withdraw: ${Math.min(tokenOwnerRecord.depositAmount, amount)} ISLAND`);
+        
+        // Check if the amount matches our expected value
+        if (Math.abs(tokenOwnerRecord.depositAmount - 12625.580931) < 1) {
+            console.log('🎯 Token Owner Record matches expected governance power!');
+        }
+        
+        return tokenOwnerRecord;
+        
+    } catch (error) {
+        console.error('Error simulating withdraw governance tokens:', error.message);
+        return null;
+    }
+}
+
+/**
+ * Get governance deposits for all citizens using Token Owner Records
+ */
+async function getGovernanceDepositsForAllCitizens() {
+    try {
+        console.log('Getting governance deposits for all citizens using Token Owner Records...');
         
         // Get all citizens
         const citizensResult = await pool.query('SELECT wallet FROM citizens');
         const walletAddresses = citizensResult.rows.map(row => row.wallet);
         
-        console.log(`Found ${walletAddresses.length} citizens`);
+        console.log(`Checking ${walletAddresses.length} citizens for governance deposits`);
         
         const results = {};
         
         for (const walletAddress of walletAddresses) {
-            const power = await getGovernancePowerVSR(walletAddress);
-            results[walletAddress] = power;
+            console.log(`\nChecking ${walletAddress}...`);
             
-            // Update database
-            await pool.query(
-                'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
-                [power, walletAddress]
-            );
+            const tokenOwnerRecord = await getTokenOwnerRecord(walletAddress);
             
-            if (power > 0) {
-                console.log(`Updated ${walletAddress}: ${power.toLocaleString()} ISLAND`);
+            if (tokenOwnerRecord && tokenOwnerRecord.depositAmount > 0) {
+                results[walletAddress] = tokenOwnerRecord.depositAmount;
+                console.log(`✅ Found governance deposit: ${tokenOwnerRecord.depositAmount.toLocaleString()} ISLAND`);
+            } else {
+                results[walletAddress] = 0;
+                console.log(`❌ No governance deposit found`);
             }
-            
-            // Small delay
-            await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
-        const citizensWithPower = Object.values(results).filter(p => p > 0).length;
-        const totalPower = Object.values(results).reduce((sum, p) => sum + p, 0);
-        
-        console.log(`\nSync complete:`);
-        console.log(`Citizens with governance power: ${citizensWithPower}/${walletAddresses.length}`);
-        console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
         
         return results;
         
     } catch (error) {
-        console.error('Error syncing VSR governance:', error.message);
+        console.error('Error getting governance deposits for all citizens:', error.message);
+        return {};
+    }
+}
+
+/**
+ * Update citizens with Token Owner Record governance data
+ */
+async function updateCitizensWithTokenOwnerRecords() {
+    try {
+        console.log('Updating citizens with Token Owner Record governance data...');
+        
+        const governanceDeposits = await getGovernanceDepositsForAllCitizens();
+        
+        if (Object.keys(governanceDeposits).length === 0) {
+            console.log('No governance deposits found');
+            return {};
+        }
+        
+        console.log('\nUpdating database with Token Owner Record data...');
+        
+        for (const [walletAddress, amount] of Object.entries(governanceDeposits)) {
+            // Update database
+            await pool.query(
+                'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
+                [amount, walletAddress]
+            );
+            
+            if (amount > 0) {
+                console.log(`  Updated ${walletAddress}: ${amount.toLocaleString()} ISLAND`);
+            }
+        }
+        
+        const citizensWithPower = Object.values(governanceDeposits).filter(p => p > 0).length;
+        const totalPower = Object.values(governanceDeposits).reduce((sum, p) => sum + p, 0);
+        
+        console.log(`\nToken Owner Records sync complete:`);
+        console.log(`Citizens with governance power: ${citizensWithPower}/${Object.keys(governanceDeposits).length}`);
+        console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
+        
+        return governanceDeposits;
+        
+    } catch (error) {
+        console.error('Error updating citizens with Token Owner Records:', error.message);
         return {};
     }
 }
 
 if (require.main === module) {
-    syncVSRGovernanceForCitizens()
+    // Test with known wallet first
+    console.log('Testing Realms SDK governance commands...\n');
+    
+    simulateWithdrawGovernanceTokens(KNOWN_WALLET)
+        .then((result) => {
+            if (result) {
+                console.log('\n✅ Found Token Owner Record data');
+                // If successful, update all citizens
+                return updateCitizensWithTokenOwnerRecords();
+            } else {
+                console.log('\n❌ No Token Owner Record found for known wallet');
+                console.log('This wallet may not have governance deposits in standard SPL Governance');
+                return {};
+            }
+        })
         .then(() => process.exit(0))
         .catch(error => {
             console.error('Process failed:', error.message);
@@ -333,7 +245,8 @@ if (require.main === module) {
 }
 
 module.exports = { 
-    syncVSRGovernanceForCitizens, 
-    getGovernancePowerVSR, 
-    testVSRGovernance 
+    updateCitizensWithTokenOwnerRecords,
+    getGovernanceDepositsForAllCitizens,
+    simulateWithdrawGovernanceTokens,
+    getTokenOwnerRecord
 };
