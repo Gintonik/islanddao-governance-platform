@@ -896,6 +896,21 @@
             background: rgba(255, 255, 255, 0.95) !important;
         }
 
+        /* Force dark theme styling for NFT labels in citizen cards */
+        body:not([data-theme="light"]) div[style*="background: #0F0F0F"] div[style*="padding: 4px"],
+        body:not([data-theme="light"]) div[onclick*="solscan.io"] div[style*="padding: 4px"] {
+            background: rgba(0, 0, 0, 0.9) !important;
+            color: #FAFAFA !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        [data-theme="light"] div[style*="background: #0F0F0F"] div[style*="padding: 4px"],
+        [data-theme="light"] div[onclick*="solscan.io"] div[style*="padding: 4px"] {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #333333 !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+
         .form-buttons {
             display: flex;
             gap: 1rem;
