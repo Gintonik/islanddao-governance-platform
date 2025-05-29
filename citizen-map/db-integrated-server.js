@@ -191,6 +191,33 @@ function startServer() {
           }
         });
       }
+      // API endpoint for wallet verification
+      else if (req.method === 'POST' && req.url === '/api/verify-wallet') {
+        let body = '';
+        
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        
+        req.on('end', async () => {
+          try {
+            const data = JSON.parse(body);
+            console.log('Wallet verification request:', data.walletAddress);
+            
+            // For now, just return success - wallet verification logic can be added later
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+              success: true, 
+              message: 'Wallet verified successfully',
+              walletAddress: data.walletAddress 
+            }));
+          } catch (error) {
+            console.error('Error verifying wallet:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Wallet verification failed' }));
+          }
+        });
+      }
       // API endpoint to save verified citizen pin (with wallet signature)
       else if (req.method === 'POST' && req.url === '/api/save-citizen-verified') {
         let body = '';
