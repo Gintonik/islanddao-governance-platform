@@ -7,8 +7,8 @@
 const { Connection, PublicKey } = require('@solana/web3.js');
 const db = require('./db');
 
-// Enhanced Helius RPC endpoint
-const HELIUS_RPC_URL = "https://malanie-kgvelq-fast-mainnet.helius-rpc.com";
+// Helius RPC endpoint with API key
+const HELIUS_RPC_URL = "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00";
 
 // ISLAND token configuration for IslandDAO governance
 const ISLAND_TOKEN_CONFIG = {
