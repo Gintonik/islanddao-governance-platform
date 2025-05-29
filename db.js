@@ -193,7 +193,7 @@ async function getAllCitizens() {
     // Get all citizens
     const citizens = await pool.query(`
       SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.message, c.created_at,
-             c.nickname, c.bio, c.twitter_handle, c.telegram_handle, c.discord_handle
+             c.nickname, c.bio, c.twitter_handle, c.telegram_handle, c.discord_handle, c.governance_power
       FROM citizens c
       ORDER BY c.created_at DESC
     `);
