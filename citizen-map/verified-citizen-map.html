@@ -1175,6 +1175,11 @@
                 <span class="stat-label">PERKS Represented:</span>
                 <span class="stat-value" id="perksCount">0</span>
             </div>
+            <div class="stat-separator"></div>
+            <div class="stat-item">
+                <span class="stat-label">Next Refresh:</span>
+                <span class="stat-value" id="nextRefresh">--:--</span>
+            </div>
         </div>
         
         <div class="controls">
@@ -1802,6 +1807,9 @@
             // Update the display with smooth counter animation
             animateCounter('citizenCount', citizenCount);
             animateCounter('perksCount', totalPerks);
+            
+            // Start the refresh countdown timer
+            startRefreshCountdown();
         }
 
         // Animate counter values for smooth visual effect
@@ -1815,6 +1823,44 @@
                 setTimeout(() => animateCounter(elementId, targetValue), 50);
             } else {
                 element.textContent = targetValue;
+            }
+        }
+
+        // Start refresh countdown timer
+        function startRefreshCountdown() {
+            updateRefreshCountdown();
+            
+            // Update countdown every minute
+            setInterval(updateRefreshCountdown, 60000);
+        }
+
+        // Update refresh countdown display
+        function updateRefreshCountdown() {
+            const now = new Date();
+            const nextRefreshHour = 24; // Refresh at midnight UTC (daily update)
+            
+            // Calculate next refresh time (next midnight UTC)
+            const nextRefresh = new Date(now);
+            nextRefresh.setUTCHours(nextRefreshHour, 0, 0, 0);
+            
+            // If we're past today's refresh time, move to tomorrow
+            if (now >= nextRefresh) {
+                nextRefresh.setUTCDate(nextRefresh.getUTCDate() + 1);
+            }
+            
+            // Calculate time remaining
+            const timeRemaining = nextRefresh - now;
+            const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
+            const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            
+            // Format and display countdown
+            const refreshElement = document.getElementById('nextRefresh');
+            if (refreshElement) {
+                if (hoursRemaining > 0) {
+                    refreshElement.textContent = `${hoursRemaining}h ${minutesRemaining}m`;
+                } else {
+                    refreshElement.textContent = `${minutesRemaining}m`;
+                }
             }
         }
 
