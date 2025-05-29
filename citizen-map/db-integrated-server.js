@@ -73,6 +73,38 @@ function startServer() {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
+      // API endpoint for all NFTs (used by collection grid)
+      else if (req.url === '/api/nfts') {
+        try {
+          const client = await db.pool.connect();
+          
+          try {
+            // Get all NFTs from database
+            const result = await client.query(`
+              SELECT mint_id, name, image_url, owner, json_uri
+              FROM nfts 
+              ORDER BY name
+            `);
+            
+            // Format for collection grid
+            const nfts = result.rows.map(nft => ({
+              id: nft.mint_id,
+              name: nft.name,
+              imageUrl: nft.image_url,
+              owner: nft.owner,
+              jsonUri: nft.json_uri
+            }));
+            
+            sendJsonResponse(res, nfts);
+          } finally {
+            client.release();
+          }
+        } catch (error) {
+          console.error('Error fetching NFTs:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server error fetching NFTs' }));
+        }
+      }
       // Add endpoint for nft-owners.json to support the existing code
       else if (req.url === '/nft-owners.json') {
         try {
