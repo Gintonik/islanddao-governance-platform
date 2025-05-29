@@ -872,6 +872,16 @@
             transform: scale(1.15) !important;
         }
 
+        .nft-text-label {
+            color: #FAFAFA !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+        }
+
+        [data-theme="light"] .nft-text-label {
+            color: #333333 !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+        }
+
         .form-buttons {
             display: flex;
             gap: 1rem;
@@ -2673,12 +2683,11 @@
                             aspect-ratio: 1;
                             object-fit: cover;
                         ">
-                        <div style="
+                        <div class="nft-text-label" style="
                             padding: 4px;
                             text-align: center;
                             font-size: 8px;
                             font-weight: 500;
-                            color: #FAFAFA;
                             line-height: 1.1;
                             height: 20px;
                             display: flex;
@@ -2686,6 +2695,8 @@
                             justify-content: center;
                             word-wrap: break-word;
                             overflow-wrap: break-word;
+                            color: #FAFAFA;
+                            background: rgba(0, 0, 0, 0.7);
                         ">${nft.name}</div>
                         ${isPrimary ? '<div style="position: absolute; top: 3px; right: 3px; background: #21E8A3; color: #0F0F0F; width: 12px; height: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold;">✓</div>' : ''}
                     </div>
