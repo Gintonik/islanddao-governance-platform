@@ -12,49 +12,39 @@ const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNj
 const ISLAND_TOKEN_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 const ISLAND_TOKEN_DECIMALS = 6;
 
-// Use environment variable for Helius API key
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '088dfd59-6d2e-4695-a42a-2e0c257c2d00';
-const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`, 'confirmed');
+// Use the exact Helius RPC endpoint provided
+const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
 
 /**
- * Get authentic governance power using Token Owner Record
+ * Get authentic governance power using SPL token balance
+ * This fetches actual ISLAND token holdings from wallet accounts
  */
 async function getGovernancePowerForWallet(walletAddress) {
     try {
-        const walletPubkey = new PublicKey(walletAddress);
+        console.log(`🔍 Fetching ISLAND token balance for: ${walletAddress}`);
         
-        // Derive Token Owner Record PDA
-        const [tokenOwnerRecordPda] = await PublicKey.findProgramAddress(
-            [
-                Buffer.from('governance'),
-                ISLAND_DAO_REALM.toBuffer(),
-                ISLAND_TOKEN_MINT.toBuffer(),
-                walletPubkey.toBuffer()
-            ],
-            GOVERNANCE_PROGRAM_ID
+        const publicKey = new PublicKey(walletAddress);
+        const tokenMintPublicKey = new PublicKey(ISLAND_TOKEN_MINT);
+        
+        // Get token accounts for ISLAND token
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+            publicKey,
+            { mint: tokenMintPublicKey }
         );
         
-        // Get the account info
-        const accountInfo = await connection.getAccountInfo(tokenOwnerRecordPda);
-        
-        if (!accountInfo) {
-            return 0; // No governance participation
+        // Extract balance from token account
+        let tokenBalance = 0;
+        if (tokenAccounts.value.length > 0) {
+            tokenBalance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
+            console.log(`💰 Found ${tokenBalance.toLocaleString()} $ISLAND tokens`);
+        } else {
+            console.log(`📭 No ISLAND token accounts found`);
         }
         
-        // Parse governance power from account data
-        // The deposited amount is stored at offset 32 (8 bytes for discriminator + 24 bytes for other fields)
-        const data = accountInfo.data;
-        if (data.length >= 40) {
-            // Read the governing token deposit amount (64-bit little-endian)
-            const depositAmount = data.readBigUInt64LE(32);
-            const governancePower = Number(depositAmount) / Math.pow(10, ISLAND_TOKEN_DECIMALS);
-            return governancePower;
-        }
-        
-        return 0;
+        return tokenBalance;
         
     } catch (error) {
-        console.error(`Error fetching governance power for ${walletAddress}:`, error.message);
+        console.error(`❌ Error fetching ISLAND token balance for ${walletAddress}:`, error.message);
         return 0;
     }
 }
