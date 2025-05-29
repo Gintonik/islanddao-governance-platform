@@ -6,7 +6,7 @@
 const { Connection, PublicKey } = require('@solana/web3.js');
 const db = require('./db');
 
-const HELIUS_RPC = "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00";
+const HELIUS_RPC = "https://malanie-kgvelq-fast-mainnet.helius-rpc.com";
 
 // VSR Configuration for IslandDAO
 const VSR_CONFIG = {
