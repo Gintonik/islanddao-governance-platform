@@ -202,14 +202,15 @@ function startServer() {
         req.on('end', async () => {
           try {
             const data = JSON.parse(body);
-            console.log('Wallet verification request:', data.walletAddress);
+            const walletAddress = data.walletAddress || data.publicKey;
+            console.log('Wallet verification request:', walletAddress);
             
             // For now, just return success - wallet verification logic can be added later
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ 
               success: true, 
               message: 'Wallet verified successfully',
-              walletAddress: data.walletAddress 
+              walletAddress: walletAddress 
             }));
           } catch (error) {
             console.error('Error verifying wallet:', error);
