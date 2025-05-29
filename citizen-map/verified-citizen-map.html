@@ -73,26 +73,26 @@
         }
 
         .wallet-connect-btn {
-            background: rgba(33, 232, 163, 0.1);
-            color: #21E8A3;
-            border: 1px solid rgba(33, 232, 163, 0.3);
+            background: var(--accent-glow);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-glow);
             padding: 6px 12px;
             border-radius: 6px;
             font-weight: 500;
-            font-size: 12px;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 8px;
             font-family: inherit;
-            font-size: 14px;
         }
 
         .wallet-connect-btn:hover {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
             transform: translateY(-1px);
             box-shadow: 0 4px 12px var(--accent-glow);
-            opacity: 0.95;
         }
 
         .wallet-connected {
@@ -372,23 +372,23 @@
         }
 
         .control-btn {
-            background: rgba(15, 15, 15, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-subtle);
             padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
             font-size: 11px;
-            color: #AFAFAF;
+            color: var(--text-secondary);
             transition: all 0.2s ease;
             backdrop-filter: blur(10px);
             min-width: auto;
         }
 
         .control-btn:hover {
-            background: rgba(15, 15, 15, 0.9);
-            border-color: #21E8A3;
-            color: #21E8A3;
+            background: var(--panel-hover);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
             transform: none;
         }
 
@@ -453,16 +453,16 @@
             position: fixed;
             top: 100px;
             right: 20px;
-            background: #1a1a1a;
-            color: white;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             padding: 1rem 1.5rem;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-soft);
             z-index: 2000;
             transform: translateX(400px);
             transition: transform 0.3s ease;
-            border-left: 4px solid #4facfe;
-            border: 1px solid rgba(33, 232, 163, 0.2);
+            border-left: 4px solid var(--accent-primary);
+            border: 1px solid var(--border-subtle);
         }
 
         .notification.show {
