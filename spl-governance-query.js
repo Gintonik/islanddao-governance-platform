@@ -1,369 +1,259 @@
 /**
- * SPL Governance Power Query
- * Fetches authentic governance deposits from SPL Governance program
+ * SPL Governance Direct Query
+ * Using the SPL Governance SDK to access token owner records directly
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
+const { Pool } = require('pg');
 
-const HELIUS_RPC_URL = "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00";
+const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00', 'confirmed');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// SPL Governance configuration for IslandDAO
-const GOVERNANCE_CONFIG = {
-    governanceProgramId: "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw",
-    realmId: "H2iny4dUP2ngt9p4niUWVX4TtoHiTsGVqUiPy8zF19oz",
-    communityMint: "Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a",
-    // 5 different governances in IslandDAO
-    governancePrograms: [
-        "CLgzSdeNcf9CYHiAdmXaPaCw2vYBeiqEeZcgguqirVM9",
-        "bDgqY2Qt4y2jSsRNvD7FETkRJJNiYZT1Q3UnAYYzUCo", 
-        "BtJaNZrZZmagHGzCU2VazSJWzBS9KY7tG41enBrT2NtU",
-        "6Vjsy1KabnHtSuHZcXuuCQFWoBML9JscSy3L4NGjqmhM",
-        "EUxUMEjcxZ9VxpP1gyJQtq9xHdWTvtLHowjN7JNJEsg7"
-    ]
-};
+const GOVERNANCE_PROGRAM_ID = 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw';
+const ISLAND_DAO_REALM = '1UdV7JFvAgtBiH2KYLUK2cVZZz2sZ1uoyeb8bojnWds';
+const ISLAND_TOKEN_MINT = 'Ds52CDgqdWbTWsua1hgT3AusSy4FNx2Ezge1br3jQ14a';
 
 /**
- * Get SPL Governance deposits for a specific wallet
+ * Get Token Owner Record PDA for a wallet
  */
-async function getSPLGovernanceDeposits(walletAddress) {
+function getTokenOwnerRecordPDA(walletAddress) {
     try {
-        console.log(`🔍 Checking SPL Governance deposits for: ${walletAddress}`);
+        const realmPubkey = new PublicKey(ISLAND_DAO_REALM);
+        const mintPubkey = new PublicKey(ISLAND_TOKEN_MINT);
+        const walletPubkey = new PublicKey(walletAddress);
+        const governanceProgramPubkey = new PublicKey(GOVERNANCE_PROGRAM_ID);
         
-        const connection = new Connection(HELIUS_RPC_URL, 'confirmed');
-        const wallet = new PublicKey(walletAddress);
-        const realm = new PublicKey(GOVERNANCE_CONFIG.realmId);
-        const communityMint = new PublicKey(GOVERNANCE_CONFIG.communityMint);
-        const governanceProgramId = new PublicKey(GOVERNANCE_CONFIG.governanceProgramId);
-        
-        // Derive Token Owner Record PDA (where governance deposits are stored)
-        const [tokenOwnerRecordPda] = PublicKey.findProgramAddressSync(
+        // Standard SPL Governance Token Owner Record PDA derivation
+        const [pda] = PublicKey.findProgramAddressSync(
             [
                 Buffer.from("governance"),
-                realm.toBuffer(),
-                communityMint.toBuffer(),
-                wallet.toBuffer()
+                realmPubkey.toBuffer(),
+                mintPubkey.toBuffer(),
+                walletPubkey.toBuffer()
             ],
-            governanceProgramId
+            governanceProgramPubkey
         );
         
-        console.log(`  📍 Token Owner Record PDA: ${tokenOwnerRecordPda.toString()}`);
-        
-        // Fetch the account
-        const account = await connection.getAccountInfo(tokenOwnerRecordPda);
-        
-        if (!account) {
-            console.log(`  ❌ No Token Owner Record found`);
-            return 0;
-        }
-        
-        console.log(`  ✅ Found Token Owner Record, data length: ${account.data.length} bytes`);
-        console.log(`  📊 Owner program: ${account.owner.toString()}`);
-        
-        // Parse SPL Governance Token Owner Record structure
-        // Based on SPL Governance program structure
-        const data = account.data;
-        
-        if (data.length < 100) {
-            console.log(`  ❌ Token Owner Record too small: ${data.length} bytes`);
-            return 0;
-        }
-        
-        try {
-            // SPL Governance Token Owner Record layout:
-            // 0-1: account_type (should be 3 for TokenOwnerRecord)
-            // 1-33: realm
-            // 33-65: governing_token_mint  
-            // 65-97: governing_token_owner
-            // 97-105: governing_token_deposit_amount (u64)
-            // 105-137: governance_delegate (optional)
-            
-            const accountType = data.readUInt8(0);
-            console.log(`  📋 Account type: ${accountType}`);
-            
-            if (accountType !== 3) {
-                console.log(`  ❌ Not a Token Owner Record (type should be 3, got ${accountType})`);
-                return 0;
-            }
-            
-            // Read the governing token deposit amount at offset 97
-            const depositAmountLamports = data.readBigUInt64LE(97);
-            const depositAmount = Number(depositAmountLamports) / Math.pow(10, 6); // Convert from lamports
-            
-            console.log(`  💰 Raw deposit amount: ${depositAmountLamports.toString()} lamports`);
-            console.log(`  💰 Governance deposit: ${depositAmount.toLocaleString()} ISLAND`);
-            
-            return depositAmount;
-            
-        } catch (parseError) {
-            console.log(`  ❌ Error parsing Token Owner Record: ${parseError.message}`);
-            
-            // Fallback: search for reasonable deposit amounts in the data
-            let maxAmount = 0;
-            for (let offset = 90; offset <= 110; offset += 8) {
-                if (offset + 8 <= data.length) {
-                    try {
-                        const amount = data.readBigUInt64LE(offset);
-                        const tokens = Number(amount) / Math.pow(10, 6);
-                        
-                        if (tokens > 0 && tokens <= 1000000) { // Reasonable range
-                            maxAmount = Math.max(maxAmount, tokens);
-                            console.log(`    💡 Found potential deposit at offset ${offset}: ${tokens.toLocaleString()} ISLAND`);
-                        }
-                    } catch (e) {
-                        // Continue
-                    }
-                }
-            }
-            
-            return maxAmount;
-        }
-        
+        return pda;
     } catch (error) {
-        console.error(`❌ Error fetching SPL Governance deposits: ${error.message}`);
-        return 0;
+        console.log(`Error deriving TOR PDA for ${walletAddress}:`, error.message);
+        return null;
     }
 }
 
 /**
- * Search all governance accounts for the wallet
+ * Parse Token Owner Record account data
  */
-async function searchGovernanceAccounts(walletAddress) {
+function parseTokenOwnerRecord(accountData) {
     try {
-        console.log(`🔎 Searching all SPL Governance accounts for: ${walletAddress}`);
+        if (!accountData || accountData.length < 105) return 0;
         
-        const connection = new Connection(HELIUS_RPC_URL, 'confirmed');
-        const wallet = new PublicKey(walletAddress);
-        const governanceProgramId = new PublicKey(GOVERNANCE_CONFIG.governanceProgramId);
+        // Token Owner Record structure:
+        // 0: account_type (1 byte)
+        // 1-32: realm (32 bytes)
+        // 33-64: governing_token_mint (32 bytes)
+        // 65-96: governing_token_owner (32 bytes)
+        // 97-104: governing_token_deposit_amount (8 bytes, little endian)
         
-        // Get all governance program accounts that contain this wallet
-        const accounts = await connection.getProgramAccounts(
-            governanceProgramId,
-            {
-                filters: [
-                    {
-                        memcmp: {
-                            offset: 65, // Offset where wallet address typically appears
-                            bytes: wallet.toBase58()
-                        }
-                    }
-                ]
-            }
-        );
+        const accountType = accountData.readUInt8(0);
+        if (accountType !== 2) return 0; // Must be TokenOwnerRecord type
         
-        console.log(`  📊 Found ${accounts.length} governance accounts`);
+        const depositLamports = accountData.readBigUInt64LE(97);
+        const depositAmount = Number(depositLamports) / Math.pow(10, 6);
         
-        let totalDeposits = 0;
-        
-        for (const account of accounts) {
-            console.log(`  📋 Account: ${account.pubkey.toString()}`);
-            
-            const data = account.account.data;
-            const accountType = data.length > 0 ? data.readUInt8(0) : -1;
-            
-            console.log(`    - Data length: ${data.length} bytes`);
-            console.log(`    - Account type: ${accountType}`);
-            
-            if (accountType === 3) { // TokenOwnerRecord
-                try {
-                    const depositAmount = data.readBigUInt64LE(97);
-                    const tokens = Number(depositAmount) / Math.pow(10, 6);
-                    
-                    if (tokens > 0) {
-                        console.log(`    💰 Governance deposit: ${tokens.toLocaleString()} ISLAND`);
-                        totalDeposits += tokens;
-                    }
-                } catch (e) {
-                    console.log(`    ❌ Error parsing: ${e.message}`);
-                }
-            }
-        }
-        
-        return totalDeposits;
-        
+        return depositAmount;
     } catch (error) {
-        console.error(`❌ Error searching governance accounts: ${error.message}`);
+        console.log('Error parsing Token Owner Record:', error.message);
         return 0;
     }
 }
 
 /**
- * Search across all 5 governance programs for deposits
+ * Get governance power for a specific wallet
  */
-async function searchAllGovernancePrograms(walletAddress) {
-    console.log(`🔍 Searching all 5 IslandDAO governance programs for: ${walletAddress}`);
-    
-    const connection = new Connection(HELIUS_RPC_URL, 'confirmed');
-    const wallet = new PublicKey(walletAddress);
-    const realm = new PublicKey(GOVERNANCE_CONFIG.realmId);
-    const communityMint = new PublicKey(GOVERNANCE_CONFIG.communityMint);
-    
-    let totalDeposits = 0;
-    
-    for (let i = 0; i < GOVERNANCE_CONFIG.governancePrograms.length; i++) {
-        const governanceProgramId = new PublicKey(GOVERNANCE_CONFIG.governancePrograms[i]);
-        console.log(`\n📋 Checking governance program ${i + 1}/5: ${governanceProgramId.toString()}`);
+async function getGovernancePower(walletAddress) {
+    try {
+        const torPDA = getTokenOwnerRecordPDA(walletAddress);
+        if (!torPDA) return 0;
         
-        try {
-            // Calculate Token Owner Record PDA for this governance program
-            const [tokenOwnerRecordPda] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("governance"),
-                    realm.toBuffer(),
-                    communityMint.toBuffer(),
-                    wallet.toBuffer()
-                ],
-                governanceProgramId
-            );
-            
-            console.log(`  📍 Token Owner Record PDA: ${tokenOwnerRecordPda.toString()}`);
-            
-            // Fetch the account
-            const account = await connection.getAccountInfo(tokenOwnerRecordPda);
-            
-            if (account) {
-                console.log(`  ✅ Found Token Owner Record, data length: ${account.data.length} bytes`);
-                
-                // Parse the governance deposit using getParsedTokenAccountsByOwner method structure
-                const data = account.data;
-                
-                // Try different parsing approaches
-                let depositFound = false;
-                
-                // Method 1: Standard SPL Governance structure
-                if (data.length >= 105) {
-                    try {
-                        const accountType = data.readUInt8(0);
-                        if (accountType === 3) { // TokenOwnerRecord
-                            const depositAmount = data.readBigUInt64LE(97);
-                            const tokens = Number(depositAmount) / Math.pow(10, 6);
-                            
-                            if (tokens > 0) {
-                                console.log(`  💰 Standard format: ${tokens.toLocaleString()} ISLAND`);
-                                totalDeposits += tokens;
-                                depositFound = true;
-                            }
-                        }
-                    } catch (e) {
-                        // Continue to next method
-                    }
-                }
-                
-                // Method 2: Search for uiAmount-like structure (similar to getParsedTokenAccountsByOwner)
-                if (!depositFound) {
-                    for (let offset = 0; offset < data.length - 8; offset += 4) {
-                        try {
-                            const rawAmount = data.readBigUInt64LE(offset);
-                            const tokens = Number(rawAmount) / Math.pow(10, 6);
-                            
-                            // Look for amounts similar to 625.58
-                            if (tokens >= 620 && tokens <= 630) {
-                                console.log(`  💰 Found potential deposit at offset ${offset}: ${tokens.toLocaleString()} ISLAND`);
-                                totalDeposits = Math.max(totalDeposits, tokens);
-                                depositFound = true;
-                            }
-                        } catch (e) {
-                            // Continue searching
-                        }
-                    }
-                }
-                
-                if (!depositFound) {
-                    console.log(`  ❌ No governance deposits found in this program`);
-                }
-                
-            } else {
-                console.log(`  ❌ No Token Owner Record found`);
-            }
-            
-            // Also search program accounts for this governance program
-            const accounts = await connection.getProgramAccounts(
-                governanceProgramId,
-                {
-                    filters: [
-                        {
-                            memcmp: {
-                                offset: 65,
-                                bytes: wallet.toBase58()
-                            }
-                        }
-                    ]
-                }
-            );
-            
-            if (accounts.length > 0) {
-                console.log(`  📊 Found ${accounts.length} additional governance accounts`);
-                
-                for (const acc of accounts) {
-                    try {
-                        const data = acc.account.data;
-                        // Use the same parsing approach
-                        for (let offset = 90; offset < data.length - 8; offset += 8) {
-                            try {
-                                const rawAmount = data.readBigUInt64LE(offset);
-                                const tokens = Number(rawAmount) / Math.pow(10, 6);
-                                
-                                if (tokens >= 620 && tokens <= 630) {
-                                    console.log(`    💰 Account ${acc.pubkey.toString()}: ${tokens.toLocaleString()} ISLAND`);
-                                    totalDeposits = Math.max(totalDeposits, tokens);
-                                }
-                            } catch (e) {
-                                // Continue
-                            }
-                        }
-                    } catch (e) {
-                        // Continue to next account
-                    }
-                }
-            }
-            
-        } catch (error) {
-            console.log(`  ❌ Error checking governance program: ${error.message}`);
-        }
+        const accountInfo = await connection.getAccountInfo(torPDA);
+        if (!accountInfo) return 0;
         
-        // Add delay between governance program queries
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const depositAmount = parseTokenOwnerRecord(accountInfo.data);
+        return depositAmount;
+    } catch (error) {
+        console.log(`Error getting governance power for ${walletAddress}:`, error.message);
+        return 0;
     }
-    
-    return totalDeposits;
 }
 
 /**
- * Main function to get comprehensive SPL Governance power
+ * Batch fetch governance power for multiple wallets
  */
-async function getComprehensiveSPLGovernancePower(walletAddress) {
-    console.log(`🏛️  Getting SPL Governance power for: ${walletAddress}\n`);
-    
-    const method1 = await getSPLGovernanceDeposits(walletAddress);
-    const method2 = await searchGovernanceAccounts(walletAddress);
-    const method3 = await searchAllGovernancePrograms(walletAddress);
-    
-    const finalAmount = Math.max(method1, method2, method3);
-    
-    console.log(`\n📊 SPL Governance Results:`);
-    console.log(`  Standard Token Owner Record: ${method1.toLocaleString()} ISLAND`);
-    console.log(`  Default Program Search: ${method2.toLocaleString()} ISLAND`);
-    console.log(`  All 5 Governance Programs: ${method3.toLocaleString()} ISLAND`);
-    console.log(`  Final Governance Power: ${finalAmount.toLocaleString()} ISLAND`);
-    
-    return finalAmount;
+async function batchGetGovernancePower(walletAddresses) {
+    try {
+        console.log(`Fetching governance power for ${walletAddresses.length} wallets...`);
+        
+        // Generate all PDAs
+        const pdas = [];
+        const walletToPdaMap = {};
+        
+        for (const walletAddress of walletAddresses) {
+            const torPDA = getTokenOwnerRecordPDA(walletAddress);
+            if (torPDA) {
+                pdas.push(torPDA);
+                walletToPdaMap[torPDA.toString()] = walletAddress;
+            }
+        }
+        
+        console.log(`Generated ${pdas.length} Token Owner Record PDAs`);
+        
+        // Batch fetch account infos
+        const batchSize = 100;
+        const results = {};
+        
+        for (let i = 0; i < pdas.length; i += batchSize) {
+            const batch = pdas.slice(i, i + batchSize);
+            
+            try {
+                const accountInfos = await connection.getMultipleAccountsInfo(batch);
+                
+                for (let j = 0; j < accountInfos.length; j++) {
+                    const accountInfo = accountInfos[j];
+                    const pda = batch[j];
+                    const walletAddress = walletToPdaMap[pda.toString()];
+                    
+                    if (accountInfo && accountInfo.data) {
+                        const depositAmount = parseTokenOwnerRecord(accountInfo.data);
+                        results[walletAddress] = depositAmount;
+                        
+                        if (depositAmount > 0) {
+                            console.log(`  ${walletAddress}: ${depositAmount.toLocaleString()} ISLAND`);
+                        }
+                    } else {
+                        results[walletAddress] = 0;
+                    }
+                }
+            } catch (error) {
+                console.log(`Error in batch ${i}: ${error.message}`);
+                // Set remaining wallets to 0
+                for (const pda of batch) {
+                    const walletAddress = walletToPdaMap[pda.toString()];
+                    if (!(walletAddress in results)) {
+                        results[walletAddress] = 0;
+                    }
+                }
+            }
+        }
+        
+        return results;
+    } catch (error) {
+        console.error('Error in batch governance fetch:', error.message);
+        return {};
+    }
 }
 
-// Export functions
-module.exports = {
-    getSPLGovernanceDeposits,
-    searchGovernanceAccounts,
-    getComprehensiveSPLGovernancePower
-};
+/**
+ * Sync governance power for all citizens
+ */
+async function syncGovernancePowerForCitizens() {
+    try {
+        console.log('Syncing SPL Governance power for citizens...');
+        
+        // Get all citizens
+        const citizensResult = await pool.query('SELECT wallet FROM citizens');
+        const walletAddresses = citizensResult.rows.map(row => row.wallet);
+        
+        if (walletAddresses.length === 0) {
+            console.log('No citizens found');
+            return {};
+        }
+        
+        console.log(`Found ${walletAddresses.length} citizens`);
+        
+        // Batch fetch governance power
+        const governancePowerMap = await batchGetGovernancePower(walletAddresses);
+        
+        // Update database
+        console.log('Updating database...');
+        
+        for (const [walletAddress, power] of Object.entries(governancePowerMap)) {
+            await pool.query(
+                'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
+                [power, walletAddress]
+            );
+        }
+        
+        // Summary
+        const citizensWithPower = Object.values(governancePowerMap).filter(p => p > 0).length;
+        const totalPower = Object.values(governancePowerMap).reduce((sum, p) => sum + p, 0);
+        
+        console.log(`\nSync complete:`);
+        console.log(`Citizens with governance power: ${citizensWithPower}/${walletAddresses.length}`);
+        console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
+        
+        // Check known wallet
+        const knownWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
+        if (governancePowerMap[knownWallet]) {
+            console.log(`Known wallet: ${governancePowerMap[knownWallet].toLocaleString()} ISLAND`);
+            
+            if (Math.abs(governancePowerMap[knownWallet] - 12625.580931) < 1) {
+                console.log('✅ Amount matches expected value!');
+            }
+        }
+        
+        return governancePowerMap;
+        
+    } catch (error) {
+        console.error('Error syncing governance power:', error.message);
+        return {};
+    }
+}
 
-// Run if called directly
+/**
+ * Test with known wallet first
+ */
+async function testKnownWallet() {
+    const knownWallet = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
+    console.log(`Testing SPL Governance query with known wallet: ${knownWallet}`);
+    
+    const power = await getGovernancePower(knownWallet);
+    
+    console.log(`Result: ${power.toLocaleString()} ISLAND`);
+    
+    if (power > 0) {
+        console.log('✅ SPL Governance query successful!');
+        
+        if (Math.abs(power - 12625.580931) < 1) {
+            console.log('✅ Amount matches expected 12,625.580931 ISLAND!');
+        }
+    } else {
+        console.log('❌ No governance deposit found');
+    }
+    
+    return power;
+}
+
 if (require.main === module) {
-    const testWallet = "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4";
-    getComprehensiveSPLGovernancePower(testWallet)
-        .then(result => {
-            console.log(`\n✅ SPL Governance power query completed`);
-            console.log(`Final result: ${result.toLocaleString()} ISLAND tokens`);
+    testKnownWallet()
+        .then((power) => {
+            if (power > 0) {
+                console.log('\nTest successful, proceeding with full citizen sync...');
+                return syncGovernancePowerForCitizens();
+            } else {
+                console.log('\nTest failed - Token Owner Records may not exist or use different structure');
+            }
         })
+        .then(() => process.exit(0))
         .catch(error => {
-            console.error(`💥 Query failed: ${error.message}`);
+            console.error('Process failed:', error.message);
+            process.exit(1);
         });
 }
+
+module.exports = { 
+    syncGovernancePowerForCitizens, 
+    getGovernancePower, 
+    batchGetGovernancePower, 
+    testKnownWallet 
+};
