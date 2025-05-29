@@ -859,6 +859,13 @@
             background: rgba(255, 255, 255, 0.9) !important;
         }
 
+        [data-theme="light"] .add-pin-btn {
+            background: linear-gradient(135deg, #21E8A3 0%, #1DB584 100%) !important;
+            border: 3px solid #21E8A3 !important;
+            box-shadow: 0 6px 30px rgba(33, 232, 163, 0.8), 0 0 50px rgba(33, 232, 163, 0.5) !important;
+            transform: scale(1.15) !important;
+        }
+
         .form-buttons {
             display: flex;
             gap: 1rem;
@@ -2391,14 +2398,17 @@
                                         margin: 0 auto 8px auto;
                                         background: var(--bg-secondary);
                                     ">
-                                    <div class="polaroid-text" style="
+                                    <div style="
                                         font-size: 12px;
                                         font-weight: 700;
                                         text-align: center;
                                         font-family: 'Inter', sans-serif;
                                         margin-top: 4px;
-                                        padding: 2px 4px;
-                                        border-radius: 3px;
+                                        padding: 3px 6px;
+                                        border-radius: 4px;
+                                        color: #1a1a1a;
+                                        background: rgba(255, 255, 255, 0.95);
+                                        border: 1px solid rgba(0, 0, 0, 0.1);
                                     ">
                                         ${perkName}
                                     </div>
