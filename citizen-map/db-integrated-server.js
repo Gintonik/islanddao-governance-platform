@@ -208,6 +208,7 @@ function startServer() {
             // For now, just return success - wallet verification logic can be added later
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ 
+              verified: true,
               success: true, 
               message: 'Wallet verified successfully',
               walletAddress: walletAddress 
