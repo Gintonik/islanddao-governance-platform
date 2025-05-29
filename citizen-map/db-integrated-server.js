@@ -50,6 +50,10 @@ function startServer() {
         res.end();
         return;
       }
+      // Handle collection route - serve the main HTML file
+      else if (req.url === '/collection' || req.url === '/collection.html') {
+        serveFile(res, HTML_FILE, 'text/html');
+      }
       // Serve the HTML file for the root route
       else if (req.url === '/' || req.url === '/index.html') {
         serveFile(res, HTML_FILE, 'text/html');
