@@ -53,7 +53,9 @@ async function initializeDatabase() {
       ADD COLUMN IF NOT EXISTS telegram_handle VARCHAR(255),
       ADD COLUMN IF NOT EXISTS discord_handle VARCHAR(255),
       ADD COLUMN IF NOT EXISTS image_url TEXT,
-      ADD COLUMN IF NOT EXISTS governance_power DECIMAL(20, 6) DEFAULT 0
+      ADD COLUMN IF NOT EXISTS governance_power DECIMAL(20, 6) DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS native_power DECIMAL(20, 6) DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS delegated_power DECIMAL(20, 6) DEFAULT 0
     `);
     
     // Create citizen_nfts junction table for many-to-many relationship
@@ -372,6 +374,23 @@ async function updateGovernancePower(walletAddress, governancePower) {
   }
 }
 
+/**
+ * Update native and delegated governance power for a specific citizen
+ */
+async function updateGovernancePowerBreakdown(walletAddress, nativePower, delegatedPower) {
+  const client = await pool.connect();
+  try {
+    const totalPower = parseFloat(nativePower) + parseFloat(delegatedPower);
+    const result = await client.query(
+      'UPDATE citizens SET native_power = $1, delegated_power = $2, governance_power = $3 WHERE wallet = $4 RETURNING *',
+      [nativePower, delegatedPower, totalPower, walletAddress]
+    );
+    return result.rows[0];
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   pool,
   initializeDatabase,
@@ -382,5 +401,6 @@ module.exports = {
   clearAllCitizens,
   removeCitizenByWallet,
   getNftOwnershipMap,
-  updateGovernancePower
+  updateGovernancePower,
+  updateGovernancePowerBreakdown
 };
