@@ -111,10 +111,14 @@ function CitizenProfile({ citizen, onClose }) {
                   <BreakdownItem>
                     <BreakdownLabel>Native Power</BreakdownLabel>
                     <BreakdownValue>
-                      {parseFloat(citizen.native_power || 0).toLocaleString(undefined, { 
-                        minimumFractionDigits: 0, 
-                        maximumFractionDigits: 3 
-                      })} ISLAND
+                      {(() => {
+                        const nativePower = parseFloat(citizen.native_power || 0);
+                        console.log('Native power for', citizen.nickname, ':', nativePower, 'Raw:', citizen.native_power);
+                        return nativePower.toLocaleString(undefined, { 
+                          minimumFractionDigits: 0, 
+                          maximumFractionDigits: 3 
+                        });
+                      })()} ISLAND
                     </BreakdownValue>
                     <BreakdownDesc>From your own token deposits</BreakdownDesc>
                   </BreakdownItem>
@@ -122,10 +126,15 @@ function CitizenProfile({ citizen, onClose }) {
                   <BreakdownItem>
                     <BreakdownLabel>Delegated Power</BreakdownLabel>
                     <BreakdownValue>
-                      {parseFloat(citizen.delegated_power || 0).toLocaleString(undefined, { 
-                        minimumFractionDigits: 0, 
-                        maximumFractionDigits: 3 
-                      })} ISLAND
+                      {(() => {
+                        const delegatedPower = parseFloat(citizen.delegated_power || 0);
+                        console.log('Delegated power for', citizen.nickname, ':', delegatedPower, 'Raw:', citizen.delegated_power);
+                        console.log('Full citizen object keys:', Object.keys(citizen));
+                        return delegatedPower.toLocaleString(undefined, { 
+                          minimumFractionDigits: 0, 
+                          maximumFractionDigits: 3 
+                        });
+                      })()} ISLAND
                     </BreakdownValue>
                     <BreakdownDesc>Delegated from other members</BreakdownDesc>
                   </BreakdownItem>
