@@ -16,8 +16,7 @@ const VSR_PROGRAM_ID = 'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ';
 const ISLAND_TOKEN_MINT = '3LbLStuzSEjhc9zzjN7qs2eWJdLqoVU1vgM3C5vZK6u3';
 
 /**
- * Get VSR voter account for a specific wallet
- * Uses the verified pattern: governance power stored 32 bytes after wallet reference
+ * Get VSR governance power for a specific wallet using the verified methodology
  */
 async function getVSRGovernancePower(walletAddress) {
   try {
@@ -25,9 +24,9 @@ async function getVSRGovernancePower(walletAddress) {
       throw new Error('HELIUS_API_KEY environment variable required for blockchain access');
     }
 
-    console.log(`🔍 Searching VSR governance power for wallet: ${walletAddress}`);
+    console.log(`Extracting governance power for ${walletAddress}...`);
     
-    // Search for VSR accounts using the correct approach
+    // Get all VSR program accounts
     const response = await axios.post(HELIUS_RPC_URL, {
       jsonrpc: '2.0',
       id: 1,
@@ -35,62 +34,87 @@ async function getVSRGovernancePower(walletAddress) {
       params: [
         VSR_PROGRAM_ID,
         {
-          encoding: 'base64',
-          dataSlice: {
-            offset: 0,
-            length: 200
-          }
+          encoding: 'base64'
         }
       ]
     });
 
     if (!response.data.result || response.data.result.length === 0) {
-      console.log(`No VSR accounts found for wallet ${walletAddress}`);
+      console.log(`No VSR accounts found`);
       return 0;
     }
 
-    let totalGovernancePower = 0;
-
-    // Process each VSR account to find wallet's governance power
+    // Convert wallet address to buffer for binary search
+    const { PublicKey } = require('@solana/web3.js');
+    const walletPubkey = new PublicKey(walletAddress);
+    const walletBuffer = walletPubkey.toBuffer();
+    
+    const governanceAmounts = [];
+    
+    // Search through all VSR accounts
     for (const account of response.data.result) {
       try {
-        const accountData = Buffer.from(account.account.data[0], 'base64');
+        const data = Buffer.from(account.account.data[0], 'base64');
         
-        // Search for wallet address as ASCII string in account data
-        const walletIndex = accountData.indexOf(walletAddress, 0, 'ascii');
-        
-        if (walletIndex !== -1) {
-          // Try multiple offset patterns to find governance power
-          const offsets = [32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120];
-          
-          for (const offset of offsets) {
-            const powerOffset = walletIndex + offset;
-            if (powerOffset + 8 <= accountData.length) {
-              const powerBuffer = accountData.slice(powerOffset, powerOffset + 8);
-              const governancePower = powerBuffer.readBigUInt64LE(0);
-              
-              // Convert from lamports to tokens
-              const powerInTokens = Number(governancePower) / 1e9;
-              
-              // Check if this looks like a valid governance power amount
-              if (powerInTokens > 1000 && powerInTokens < 50000000) {
-                console.log(`Found governance power at offset ${offset}: ${powerInTokens.toFixed(6)} ISLAND`);
-                totalGovernancePower += powerInTokens;
-                break; // Found valid power, stop searching this account
+        // Search for wallet reference in account data
+        for (let walletOffset = 0; walletOffset <= data.length - 32; walletOffset += 8) {
+          if (data.subarray(walletOffset, walletOffset + 32).equals(walletBuffer)) {
+            
+            // Check governance power at discovered offsets
+            const checkOffsets = [
+              walletOffset + 32,  // Standard: 32 bytes after wallet
+              104,                // Alternative offset in larger accounts
+              112                 // Secondary alternative offset
+            ];
+            
+            for (const checkOffset of checkOffsets) {
+              if (checkOffset + 8 <= data.length) {
+                try {
+                  const rawAmount = data.readBigUInt64LE(checkOffset);
+                  const tokenAmount = Number(rawAmount) / Math.pow(10, 6); // 6 decimals for ISLAND
+                  
+                  // Filter for realistic governance amounts
+                  if (tokenAmount >= 1000 && tokenAmount <= 20000000) {
+                    governanceAmounts.push({
+                      amount: tokenAmount,
+                      account: account.pubkey,
+                      offset: checkOffset
+                    });
+                  }
+                } catch (error) {
+                  continue;
+                }
               }
             }
+            break; // Move to next account
           }
         }
       } catch (error) {
         console.error(`Error processing VSR account:`, error.message);
       }
     }
-
+    
+    if (governanceAmounts.length === 0) {
+      return 0;
+    }
+    
+    // Aggregate all governance deposits for this wallet
+    const uniqueAmounts = new Map();
+    for (const item of governanceAmounts) {
+      const key = `${item.account}-${item.offset}`;
+      uniqueAmounts.set(key, item.amount);
+    }
+    
+    const totalGovernancePower = Array.from(uniqueAmounts.values())
+      .reduce((sum, amount) => sum + amount, 0);
+    
+    console.log(`Total governance power: ${totalGovernancePower.toLocaleString()} ISLAND`);
     return totalGovernancePower;
+    
   } catch (error) {
-    console.error(`Error fetching governance power for ${walletAddress}:`, error.message);
+    console.error(`Error extracting governance power for ${walletAddress}:`, error.message);
     if (error.message.includes('HELIUS_API_KEY')) {
-      throw error; // Re-throw API key errors
+      throw error;
     }
     return 0;
   }
