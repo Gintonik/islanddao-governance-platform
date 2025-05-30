@@ -146,75 +146,12 @@ async function updateCitizenGovernancePower(walletAddress) {
 }
 
 /**
- * Update governance power for all citizens in the database
+ * Update governance power for all citizens in the database using authentic VSR data
  */
 async function updateAllCitizensGovernancePower() {
   try {
-    if (!HELIUS_API_KEY) {
-      throw new Error('HELIUS_API_KEY required for blockchain governance data access');
-    }
-
-    console.log('🔄 Starting comprehensive governance power update for all citizens...');
-    
-    // Get all citizens from database
-    const client = await db.pool.connect();
-    let citizens;
-    
-    try {
-      const result = await client.query('SELECT wallet FROM citizens ORDER BY wallet');
-      citizens = result.rows;
-    } finally {
-      client.release();
-    }
-
-    if (citizens.length === 0) {
-      console.log('No citizens found in database');
-      return { success: true, updated: 0, total: 0 };
-    }
-
-    console.log(`📊 Processing governance power for ${citizens.length} citizens...`);
-    
-    const results = [];
-    let successCount = 0;
-    let totalGovernancePower = 0;
-
-    // Process citizens in batches to avoid rate limiting
-    for (let i = 0; i < citizens.length; i += 5) {
-      const batch = citizens.slice(i, i + 5);
-      
-      const batchPromises = batch.map(async (citizen) => {
-        try {
-          const result = await updateCitizenGovernancePower(citizen.wallet);
-          successCount++;
-          totalGovernancePower += result.governancePower;
-          return result;
-        } catch (error) {
-          console.error(`Failed to update ${citizen.wallet}:`, error.message);
-          return { walletAddress: citizen.wallet, governancePower: 0, error: error.message };
-        }
-      });
-
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
-      
-      // Rate limiting delay between batches
-      if (i + 5 < citizens.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    console.log(`✅ Governance power update completed:`);
-    console.log(`   Citizens processed: ${citizens.length}`);
-    console.log(`   Successful updates: ${successCount}`);
-    console.log(`   Total governance power: ${totalGovernancePower.toFixed(6)} ISLAND`);
-
-    return {
-      success: true,
-      total: citizens.length,
-      updated: successCount,
-      totalGovernancePower,
-      results
-    };
+    const authSync = require('./authentic-governance-sync');
+    return await authSync.syncAllCitizensGovernancePower();
   } catch (error) {
     console.error('Error updating all citizens governance power:', error);
     throw error;
