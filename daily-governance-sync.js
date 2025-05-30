@@ -3,7 +3,7 @@
  * Automatically updates governance power for all citizens from Solana blockchain
  */
 
-const governanceCalculator = require('./governance-power-calculator');
+const governanceCalculator = require('./final-governance-calculator');
 
 /**
  * Run daily governance power synchronization
