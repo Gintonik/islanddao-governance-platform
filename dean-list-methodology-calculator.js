@@ -19,7 +19,7 @@ const pool = new Pool({
  */
 async function loadAllVSRAccounts() {
   try {
-    const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`);
+    const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
     
     // Get all VSR accounts for IslandDAO
     const VSR_PROGRAM_ID = new PublicKey('VotEn9AWwTFtJPJSMV5F9jsMY6QwWM5qn3XP9PATGW7');
@@ -129,7 +129,7 @@ async function getNativeGovernancePower(walletAddress, vsrAccounts) {
  */
 async function findDelegationRecords(targetWalletAddress) {
   try {
-    const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`);
+    const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
     const SPL_GOVERNANCE_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
     
     // Get governance accounts that might contain delegations
