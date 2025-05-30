@@ -19,7 +19,7 @@ const VSR_PROGRAM_ID = new PublicKey('VotEn9AWwTFtJPJSMV5F9jsMY6QwWM5qn3XP9PATGW
  */
 async function getTestCitizens() {
   try {
-    const result = await pool.query('SELECT wallet_address, name FROM citizens LIMIT 10');
+    const result = await pool.query('SELECT wallet, nickname FROM citizens LIMIT 10');
     return result.rows;
   } catch (error) {
     console.error('Error getting citizens:', error);
@@ -178,9 +178,9 @@ async function testGovernancePowerExtraction() {
   // Test specific citizens
   console.log('\n=== Citizen Governance Power Test ===');
   for (const citizen of citizens) {
-    const power = walletGovernanceMap.get(citizen.wallet_address) || new BN(0);
-    const name = citizen.name || 'Unknown';
-    console.log(`${name} (${citizen.wallet_address}): ${power.toString()} ISLAND`);
+    const power = walletGovernanceMap.get(citizen.wallet) || new BN(0);
+    const name = citizen.nickname || 'Unknown';
+    console.log(`${name} (${citizen.wallet}): ${power.toString()} ISLAND`);
   }
   
   // Test known high-value wallets
@@ -205,12 +205,12 @@ async function updateDatabaseWithGovernancePower() {
   console.log('\nUpdating database with extracted governance power...\n');
   
   const walletGovernanceMap = await analyzeAllVSRAccounts();
-  const citizens = await pool.query('SELECT wallet_address FROM citizens');
+  const citizens = await pool.query('SELECT wallet FROM citizens');
   
   let updatedCount = 0;
   
   for (const citizen of citizens.rows) {
-    const walletAddress = citizen.wallet_address;
+    const walletAddress = citizen.wallet;
     const nativePower = walletGovernanceMap.get(walletAddress) || new BN(0);
     const delegatedPower = new BN(0); // Will implement delegation detection later
     const totalPower = nativePower.add(delegatedPower);
@@ -223,7 +223,7 @@ async function updateDatabaseWithGovernancePower() {
           delegated_governance_power = $2,
           total_governance_power = $3,
           governance_last_updated = NOW()
-        WHERE wallet_address = $4
+        WHERE wallet = $4
       `, [
         nativePower.toString(),
         delegatedPower.toString(),
