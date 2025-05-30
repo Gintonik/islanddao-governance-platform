@@ -287,6 +287,7 @@ async function getAllCitizens() {
 
 /**
  * Get governance power from Solana blockchain using VSR (Voter State Recorder)
+ * Properly calculates weighted voting power including lockup multipliers
  */
 async function getGovernancePowerFromSolana(walletAddress) {
   try {
@@ -299,9 +300,9 @@ async function getGovernancePowerFromSolana(walletAddress) {
     
     // IslandDAO VSR program ID and realm
     const VSR_PROGRAM_ID = 'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ';
-    const REALM_ID = 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw'; // Standard SPL Governance
+    const REALM_ID = 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw';
     
-    // Get VSR accounts for this wallet
+    // Get all VSR accounts for this wallet (voter and deposit records)
     const response = await fetch(rpcUrl, {
       method: 'POST',
       headers: {
@@ -318,7 +319,7 @@ async function getGovernancePowerFromSolana(walletAddress) {
             filters: [
               {
                 memcmp: {
-                  offset: 8, // Skip discriminator
+                  offset: 8, // Skip discriminator, look for voter authority
                   bytes: walletAddress,
                 },
               },
@@ -330,24 +331,73 @@ async function getGovernancePowerFromSolana(walletAddress) {
 
     const data = await response.json();
     
-    if (data.error) {
+    if (data.error || !data.result || data.result.length === 0) {
       console.log(`No VSR account found for ${walletAddress}`);
       return 0;
     }
 
-    if (!data.result || data.result.length === 0) {
-      return 0;
-    }
+    let totalGovernancePower = 0;
 
-    // Parse the VSR account data to extract governance power
-    const accountData = data.result[0].account.data;
-    const buffer = Buffer.from(accountData[0], 'base64');
+    // Process all VSR accounts for this wallet
+    for (const account of data.result) {
+      try {
+        const accountData = account.account.data;
+        const buffer = Buffer.from(accountData[0], 'base64');
+        
+        // VSR account discriminator check (first 8 bytes)
+        const discriminator = buffer.readBigUInt64LE(0);
+        
+        // Check if this is a Voter account (discriminator: 14540219962693990059)
+        if (discriminator.toString() === '14540219962693990059') {
+          // Voter account structure:
+          // 0-8: discriminator
+          // 8-40: voter_authority (32 bytes)
+          // 40-72: registrar (32 bytes) 
+          // 72-104: deposits (vector pointer)
+          // 104-112: voter_weight (u64)
+          // 112-120: voter_weight_record_bump (u8) + padding
+          
+          const voterWeight = buffer.readBigUInt64LE(104);
+          totalGovernancePower += Number(voterWeight);
+          
+          console.log(`Found voter account with weight: ${Number(voterWeight)} for ${walletAddress}`);
+        }
+        
+        // Check if this is a DepositEntry account for more detailed calculations
+        else if (discriminator.toString() === '13656403871097949570') {
+          // DepositEntry structure includes:
+          // - lockup information
+          // - amount deposited
+          // - rate/multiplier
+          
+          // Read deposit amount (u64 at offset 40)
+          const depositAmount = buffer.readBigUInt64LE(40);
+          
+          // Read rate (u64 at offset 48) - this includes lockup multipliers  
+          const rate = buffer.readBigUInt64LE(48);
+          
+          // Read lockup information
+          const lockupKind = buffer.readUInt8(56); // 0=none, 1=cliff, 2=constant
+          const lockupStartTs = buffer.readBigUInt64LE(64);
+          const lockupEndTs = buffer.readBigUInt64LE(72);
+          
+          // Calculate weighted power: deposit_amount * rate / 1e9 (rate precision)
+          const weightedPower = (Number(depositAmount) * Number(rate)) / 1e9;
+          totalGovernancePower += weightedPower;
+          
+          console.log(`Deposit: ${Number(depositAmount)}, Rate: ${Number(rate)}, Lockup: ${lockupKind}, Power: ${weightedPower}`);
+        }
+        
+      } catch (parseError) {
+        console.error(`Error parsing VSR account for ${walletAddress}:`, parseError.message);
+      }
+    }
     
-    // VSR account structure: governance power is stored as u64 at offset 40
-    const governancePower = buffer.readBigUInt64LE(40);
+    // Convert from lamports to tokens (divide by 1e6 for ISLND token decimals)
+    const governancePowerInTokens = totalGovernancePower / 1000000;
     
-    // Convert to number (divide by 1e6 for token decimals)
-    return Number(governancePower) / 1000000;
+    console.log(`Total governance power for ${walletAddress}: ${governancePowerInTokens}`);
+    return governancePowerInTokens;
     
   } catch (error) {
     console.error(`Error fetching governance power for ${walletAddress}:`, error.message);
