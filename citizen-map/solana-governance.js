@@ -30,53 +30,14 @@ function createConnection() {
 }
 
 /**
- * Get all token accounts for a wallet address
+ * Extract governance power from VSR using proven method
+ * Based on the working implementation from the gist
  */
-async function getTokenAccounts(connection, walletAddress) {
+async function extractGovernancePower(connection, wallet) {
   try {
-    const publicKey = new PublicKey(walletAddress);
+    const publicKey = new PublicKey(wallet);
     
-    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-      publicKey,
-      {
-        programId: TOKEN_PROGRAM_ID,
-      }
-    );
-    
-    return tokenAccounts.value;
-  } catch (error) {
-    console.error(`Error fetching token accounts for ${walletAddress}:`, error.message);
-    return [];
-  }
-}
-
-/**
- * Calculate base community token balance
- */
-function calculateCommunityTokenBalance(tokenAccounts) {
-  let balance = 0;
-  
-  tokenAccounts.forEach(account => {
-    const accountInfo = account.account.data.parsed.info;
-    
-    // Check if this is the IslandDAO community token
-    if (accountInfo.mint === GOVERNANCE_CONFIG.COMMUNITY_TOKEN_MINT) {
-      const tokenAmount = parseFloat(accountInfo.tokenAmount.uiAmount) || 0;
-      balance += tokenAmount;
-    }
-  });
-  
-  return balance;
-}
-
-/**
- * Get staked token balance from VSR (Voter Stake Registry)
- */
-async function getStakedTokenBalance(connection, walletAddress) {
-  try {
-    const publicKey = new PublicKey(walletAddress);
-    
-    // Query VSR program accounts for this wallet
+    // Search for VSR accounts containing this wallet
     const vsrAccounts = await connection.getProgramAccounts(
       new PublicKey(GOVERNANCE_CONFIG.VSR_PROGRAM_ID),
       {
@@ -84,49 +45,39 @@ async function getStakedTokenBalance(connection, walletAddress) {
           {
             memcmp: {
               offset: 8, // Skip discriminator
-              bytes: publicKey.toBase58(),
+              bytes: wallet,
             },
           },
         ],
       }
     );
-    
-    let stakedBalance = 0;
-    
-    // Parse VSR accounts to extract staked amounts
-    vsrAccounts.forEach(account => {
+
+    let totalGovernancePower = 0;
+
+    // Process each VSR account
+    for (const account of vsrAccounts) {
       try {
-        // VSR account data parsing (simplified)
         const data = account.account.data;
-        if (data.length >= 72) {
-          // Extract staked amount from VSR account structure
-          const stakedAmount = data.readBigUInt64LE(40); // Approximate offset for staked amount
-          stakedBalance += Number(stakedAmount) / 1e9; // Convert from lamports
+        
+        // Extract governance power from account data (32 bytes after wallet reference)
+        // This is the proven method from your gist
+        const startOffset = data.indexOf(Buffer.from(publicKey.toBytes())) + 32;
+        
+        if (startOffset > 32 && startOffset + 8 <= data.length) {
+          const powerBuffer = data.slice(startOffset, startOffset + 8);
+          const governancePower = powerBuffer.readBigUInt64LE(0);
+          totalGovernancePower += Number(governancePower) / 1e6; // Convert to proper decimals
         }
       } catch (parseError) {
-        console.log(`Could not parse VSR account for ${walletAddress}`);
+        console.log(`Could not parse VSR account for ${wallet}: ${parseError.message}`);
       }
-    });
-    
-    return stakedBalance;
+    }
+
+    return totalGovernancePower;
   } catch (error) {
-    console.log(`No VSR staking found for ${walletAddress}`);
+    console.log(`Error extracting governance power for ${wallet}: ${error.message}`);
     return 0;
   }
-}
-
-/**
- * Calculate total governance power using VSR multipliers
- */
-function calculateGovernancePower(communityBalance, stakedBalance) {
-  // VSR typically applies multipliers to staked tokens
-  const BASE_MULTIPLIER = 1;
-  const STAKED_MULTIPLIER = 2; // Staked tokens count 2x
-  
-  const baseVotingPower = communityBalance * BASE_MULTIPLIER;
-  const stakedVotingPower = stakedBalance * STAKED_MULTIPLIER;
-  
-  return baseVotingPower + stakedVotingPower;
 }
 
 /**
@@ -138,27 +89,13 @@ async function getWalletGovernancePower(walletAddress) {
     
     const connection = createConnection();
     
-    // Get all token accounts
-    const tokenAccounts = await getTokenAccounts(connection, walletAddress);
+    // Use the proven VSR extraction method
+    const governancePower = await extractGovernancePower(connection, walletAddress);
     
-    // Calculate community token balance
-    const communityBalance = calculateCommunityTokenBalance(tokenAccounts);
-    
-    // Get staked token balance from VSR
-    const stakedBalance = await getStakedTokenBalance(connection, walletAddress);
-    
-    // Calculate total governance power
-    const governancePower = calculateGovernancePower(communityBalance, stakedBalance);
-    
-    console.log(`📊 Governance calculation for ${walletAddress}:`);
-    console.log(`   Community tokens: ${communityBalance.toFixed(6)}`);
-    console.log(`   Staked tokens: ${stakedBalance.toFixed(6)}`);
-    console.log(`   Total governance power: ${governancePower.toFixed(6)}`);
+    console.log(`📊 Governance power for ${walletAddress}: ${governancePower.toFixed(6)}`);
     
     return {
       walletAddress,
-      communityBalance,
-      stakedBalance,
       governancePower,
       success: true
     };
@@ -167,8 +104,6 @@ async function getWalletGovernancePower(walletAddress) {
     console.error(`❌ Error calculating governance power for ${walletAddress}:`, error.message);
     return {
       walletAddress,
-      communityBalance: 0,
-      stakedBalance: 0,
       governancePower: 0,
       success: false,
       error: error.message
