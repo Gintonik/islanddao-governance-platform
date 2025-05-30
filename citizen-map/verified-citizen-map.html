@@ -1530,7 +1530,7 @@
                     selectedLocation = e.latlng;
                     showNotification('Location selected! Now fill out your profile.', 'success');
                     isPickingLocation = false;
-                    document.getElementById('addPinBtn').textContent = 'Add Your Pin';
+                    document.getElementById('addPinBtn').textContent = '+';
                     openPinForm();
                 } else {
                     // Close citizen panel when clicking on map
@@ -1786,7 +1786,7 @@
 
             // Start location picking mode
             isPickingLocation = true;
-            document.getElementById('addPinBtn').textContent = 'Click on Map';
+            document.getElementById('addPinBtn').textContent = '+';
             showNotification('Click anywhere on the map to place your pin', 'info');
         }
 
