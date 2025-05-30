@@ -3,8 +3,7 @@
  * Automatically updates governance power for all citizens from Solana blockchain
  */
 
-const governanceCalculator = require('./final-governance-calculator');
-const authenticExtraction = require('./authentic-governance-extraction');
+const vsrFormula = require('./vsr-authentic-formula');
 
 /**
  * Run daily governance power synchronization
