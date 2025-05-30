@@ -52,41 +52,43 @@ async function fetchVotingPower(connection, programId, registrar, voterPDA) {
     // Parse the voter account data to extract voting power
     const data = voterAccount.data;
     
-    // Based on VSR program structure, voting power is calculated from deposits
-    // The voter account contains information about all deposits and their voting weights
+    // VSR voter accounts contain multiple deposits that need to be summed
+    // Based on the analysis, we need to sum all deposit amounts to get total governance power
     
-    // Try to extract voting power from different potential offsets
-    let maxVotingPower = new BN(0);
+    let totalVotingPower = new BN(0);
+    const depositAmounts = [];
     
-    // Common offsets where voting power might be stored in VSR accounts
-    const votingPowerOffsets = [104, 112, 120, 128, 136];
-    
-    for (const offset of votingPowerOffsets) {
-      if (offset + 8 <= data.length) {
-        try {
-          const value = data.readBigUInt64LE(offset);
-          const bnValue = new BN(value.toString());
+    // Scan through the account data to find all deposit amounts
+    for (let offset = 0; offset <= data.length - 8; offset += 8) {
+      try {
+        const value = data.readBigUInt64LE(offset);
+        const tokenAmount = value / Math.pow(10, 6);
+        
+        // Look for deposit amounts in reasonable ranges
+        if (tokenAmount >= 1000 && tokenAmount <= 50000000) {
+          // Avoid duplicates by checking if we already have a very similar value
+          const isDuplicate = depositAmounts.some(existing => 
+            Math.abs(existing - tokenAmount) < 0.1
+          );
           
-          // Convert to token amount to validate it's in expected range
-          const tokenAmount = bnValue.toNumber() / Math.pow(10, 6);
-          
-          // Look for values that could be governance power (reasonable range)
-          if (tokenAmount >= 1000 && tokenAmount <= 50000000) {
-            if (bnValue.gt(maxVotingPower)) {
-              maxVotingPower = bnValue;
-            }
+          if (!isDuplicate) {
+            depositAmounts.push(tokenAmount);
+            totalVotingPower = totalVotingPower.add(new BN(value.toString()));
           }
-        } catch (error) {
-          continue;
         }
+      } catch (error) {
+        continue;
       }
     }
     
-    return { result: maxVotingPower };
+    return { 
+      result: totalVotingPower,
+      deposits: depositAmounts
+    };
     
   } catch (error) {
     console.error('Error fetching voting power:', error.message);
-    return { result: new BN(0) };
+    return { result: new BN(0), deposits: [] };
   }
 }
 
