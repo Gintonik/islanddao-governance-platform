@@ -5,7 +5,7 @@ const path = require('path');
 const apiRoutes = require('./api-routes');
 const db = require('../db');
 const governanceCalculator = require('../governance-power-calculator');
-const dailySync = require('../daily-governance-sync');
+const completeDailySync = require('../complete-daily-sync');
 
 // Constants
 const PORT = 5000;
@@ -20,9 +20,9 @@ async function initializeApp() {
     await db.initializeDatabase();
     console.log('Database initialized successfully for Citizen Map');
     
-    // Initialize daily governance sync system
+    // Initialize complete daily governance sync system
     if (process.env.HELIUS_API_KEY) {
-      dailySync.initializeGovernanceSync();
+      completeDailySync.scheduleDailyGovernanceSync();
       console.log('Daily governance sync system initialized');
     } else {
       console.log('HELIUS_API_KEY not found - governance sync will require manual setup');

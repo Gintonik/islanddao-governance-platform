@@ -13,9 +13,23 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power with efficient VSR extraction
+    // Update governance power with efficient VSR extraction  
     console.log('📊 Extracting authentic governance power from VSR accounts...');
     const result = await updateAllCitizensEfficient();
+    
+    // Ensure proper native/delegated breakdown
+    console.log('📊 Updating governance power breakdown...');
+    const { updateGovernancePowerBreakdown } = require('./db.js');
+    
+    for (const citizen of result) {
+      if (citizen.votingPower > 0) {
+        await updateGovernancePowerBreakdown(
+          citizen.walletAddress,
+          citizen.votingPower,  // native power from VSR accounts
+          0                     // delegated power (calculated separately)
+        );
+      }
+    }
     
     console.log('✅ Daily governance sync completed successfully');
     console.log(`📊 Citizens processed: ${result.length}`);
