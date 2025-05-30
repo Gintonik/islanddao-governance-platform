@@ -42,7 +42,7 @@ function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
     const governanceAmounts = [];
 
     for (const account of allVSRAccounts) {
-      const data = Buffer.from(account.account.data[0], 'base64');
+      const data = account.account.data;
       
       // ✅ CORRECT APPROACH: Search for wallet reference first, then calculate offset dynamically
       for (let walletOffset = 0; walletOffset <= data.length - 32; walletOffset += 8) {
@@ -65,7 +65,7 @@ function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
                 if (tokenAmount >= 1000 && tokenAmount <= 20000000) {
                   governanceAmounts.push({
                     amount: tokenAmount,
-                    account: account.pubkey,
+                    account: account.pubkey.toString(),
                     offset: checkOffset
                   });
                 }
@@ -141,7 +141,7 @@ async function syncAllCitizensGovernancePower() {
       try {
         console.log(`Processing ${citizen.wallet}...`);
         
-        const governancePower = extractGovernancePowerFromVSR(citizen.wallet, allVSRAccounts);
+        const governancePower = await extractGovernancePowerFromVSR(citizen.wallet, allVSRAccounts);
         
         // Update database
         const updateClient = await db.pool.connect();
