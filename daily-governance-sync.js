@@ -4,7 +4,7 @@
  */
 
 const governanceCalculator = require('./final-governance-calculator');
-const automaticBreakdown = require('./automatic-governance-breakdown');
+const authenticExtraction = require('./authentic-governance-extraction');
 
 /**
  * Run daily governance power synchronization
@@ -14,8 +14,8 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power with native/delegated breakdown for all citizens
-    console.log('📊 Calculating authentic native and delegated governance power...');
+    // Update governance power with authentic blockchain data extraction
+    console.log('📊 Extracting authentic governance power from VSR accounts...');
     const result = await automaticBreakdown.updateAllCitizensGovernanceBreakdown();
     
     console.log('✅ Daily governance sync completed successfully');
