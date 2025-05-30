@@ -100,6 +100,23 @@ function startServer() {
           res.end('Methodology document not found');
         }
       }
+      // Download link for formatted methodology document
+      else if (req.url === '/governance-methodology.md') {
+        try {
+          const methodologyPath = path.join(__dirname, '..', 'formatted-governance-methodology.md');
+          const methodologyContent = fs.readFileSync(methodologyPath, 'utf8');
+          
+          res.writeHead(200, {
+            'Content-Type': 'text/markdown',
+            'Content-Disposition': 'attachment; filename="islanddao-governance-methodology.md"'
+          });
+          res.end(methodologyContent);
+        } catch (error) {
+          console.error('Error serving formatted methodology document:', error);
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('Formatted methodology document not found');
+        }
+      }
       // API endpoint for all NFTs (used by collection grid)
       else if (req.url === '/api/nfts') {
         try {
