@@ -17,7 +17,7 @@ const GOVERNANCE_PROGRAM_PK = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNj
 const VSR_PROGRAM_PK = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
 /**
- * Get native governance power from VSR accounts (proven methodology)
+ * Get native governance power from VSR accounts using authentic calculation method
  */
 async function getNativeGovernancePower(walletAddress) {
     try {
@@ -26,34 +26,68 @@ async function getNativeGovernancePower(walletAddress) {
         
         const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_PK);
         
-        let nativePower = 0;
+        let maxGovernancePower = 0;
         
         for (const account of allVSRAccounts) {
             const data = account.account.data;
             
+            // Check if this account contains the wallet address
+            let walletFound = false;
             for (let offset = 0; offset <= data.length - 32; offset += 8) {
                 if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
-                    const discriminator = data.readBigUInt64LE(0).toString();
-                    
-                    if (discriminator === '14560581792603266545' && data.length >= 120) {
-                        try {
-                            // Native power at offset 112
-                            const rawAmount = data.readBigUInt64LE(112);
-                            const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
-                            
-                            if (tokenAmount >= 1000 && tokenAmount > nativePower) {
-                                nativePower = tokenAmount;
-                            }
-                        } catch (error) {
-                            continue;
-                        }
-                    }
+                    walletFound = true;
                     break;
+                }
+            }
+            
+            if (walletFound) {
+                const discriminator = data.readBigUInt64LE(0).toString();
+                
+                // Check Voter Weight Record for authentic governance power
+                if (discriminator === '14560581792603266545' && data.length >= 120) {
+                    try {
+                        // Check multiple potential offsets for the most accurate value
+                        const offsets = [104, 112, 120];
+                        
+                        for (const checkOffset of offsets) {
+                            if (checkOffset + 8 <= data.length) {
+                                const rawAmount = data.readBigUInt64LE(checkOffset);
+                                const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
+                                
+                                if (tokenAmount >= 1000 && tokenAmount > maxGovernancePower) {
+                                    maxGovernancePower = tokenAmount;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        continue;
+                    }
+                }
+                
+                // Also check Deposit Entry accounts for governance power calculation
+                else if (discriminator === '7076388912421561650' && data.length >= 120) {
+                    try {
+                        // Deposit entries may contain calculated governance power
+                        const offsets = [104, 112];
+                        
+                        for (const checkOffset of offsets) {
+                            if (checkOffset + 8 <= data.length) {
+                                const rawAmount = data.readBigUInt64LE(checkOffset);
+                                const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
+                                
+                                if (tokenAmount >= 1000 && tokenAmount > maxGovernancePower) {
+                                    maxGovernancePower = tokenAmount;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        continue;
+                    }
                 }
             }
         }
         
-        return nativePower;
+        return maxGovernancePower;
         
     } catch (error) {
         console.error(`Error getting native power for ${walletAddress}:`, error.message);
