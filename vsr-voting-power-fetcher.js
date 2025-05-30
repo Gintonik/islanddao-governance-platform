@@ -74,7 +74,7 @@ async function fetchVotingPowerFromVSRAccounts(connection, programId, walletAddr
       if (walletFound) {
         foundAccounts++;
         
-        // Extract voting power from known offsets
+        // Extract voting power from known offsets with broader range
         const potentialOffsets = [104, 112, 96, 120, 128];
         
         for (const offset of potentialOffsets) {
@@ -83,9 +83,9 @@ async function fetchVotingPowerFromVSRAccounts(connection, programId, walletAddr
               const value = data.readBigUInt64LE(offset);
               const bnValue = new BN(value.toString());
               
-              // Look for values in the expected governance power range
+              // Look for values in the governance power range (expanded for large holders)
               const tokenValue = bnValue.toNumber() / Math.pow(10, 6);
-              if (tokenValue > 50000 && tokenValue < 200000) {
+              if (tokenValue > 1000 && tokenValue < 50000000) {
                 if (bnValue.gt(maxVotingPower)) {
                   maxVotingPower = bnValue;
                 }
