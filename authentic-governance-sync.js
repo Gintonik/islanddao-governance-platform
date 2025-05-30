@@ -44,26 +44,25 @@ function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
     for (const account of allVSRAccounts) {
       const data = Buffer.from(account.account.data[0], 'base64');
       
-      // Search for wallet reference in account data using multiple methods
+      // ✅ CORRECT APPROACH: Search for wallet reference first, then calculate offset dynamically
       for (let walletOffset = 0; walletOffset <= data.length - 32; walletOffset += 8) {
         if (data.subarray(walletOffset, walletOffset + 32).equals(walletBuffer)) {
           
-          // Check governance power at discovered offsets from gist methodology
+          // ✅ Calculate offset dynamically (wallet + 32 bytes) AND check standard offsets
           const checkOffsets = [
-            walletOffset + 32,  // Standard: 32 bytes after wallet
-            104,                // Alternative offset in larger accounts  
-            112,                // Secondary alternative offset
-            120, 128, 136, 144  // Additional offsets to check
+            walletOffset + 32,  // ✅ Dynamic: 32 bytes after wallet reference
+            104,                // ✅ Standard offset in larger accounts
+            112                 // ✅ Secondary standard offset
           ];
           
           for (const checkOffset of checkOffsets) {
             if (checkOffset + 8 <= data.length) {
               try {
                 const rawAmount = data.readBigUInt64LE(checkOffset);
-                const tokenAmount = Number(rawAmount) / Math.pow(10, 9); // 9 decimals for ISLAND tokens
+                const tokenAmount = Number(rawAmount) / Math.pow(10, 6); // ISLAND uses 6 decimals
                 
-                // Filter for realistic governance amounts (adjusted for correct decimals)
-                if (tokenAmount >= 1 && tokenAmount <= 20000) {
+                // Filter for realistic governance amounts based on known values
+                if (tokenAmount >= 1000 && tokenAmount <= 20000000) {
                   governanceAmounts.push({
                     amount: tokenAmount,
                     account: account.pubkey,
