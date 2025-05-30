@@ -13,19 +13,18 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power with exact blockchain data extraction
-    console.log('📊 Extracting exact governance power from VSR accounts...');
-    const result = await realmsVSR.updateAllCitizensWithRealmsVSR();
+    // Update governance power with authentic IslandDAO VSR data
+    console.log('📊 Extracting authentic governance power from IslandDAO VSR accounts...');
+    const result = await updateAllCitizensWithIslandDAOPower();
     
     console.log('✅ Daily governance sync completed successfully');
-    console.log(`📊 Citizens processed: ${result.total}`);
-    console.log(`📈 Successful updates: ${result.success}`);
-    console.log(`❌ Errors: ${result.errors}`);
+    console.log(`📊 Citizens processed: ${result.length}`);
     
-    // Get updated statistics
-    const stats = await governanceCalculator.getGovernanceStatistics();
-    console.log(`📈 Participation rate: ${stats.participationRate}%`);
-    console.log(`👑 Top governance power: ${stats.maxGovernancePower.toFixed(6)} ISLAND`);
+    const successCount = result.filter(r => r.governancePower > 0).length;
+    const errorCount = result.filter(r => r.error).length;
+    
+    console.log(`📈 Successful updates: ${successCount}`);
+    console.log(`❌ Errors: ${errorCount}`);
     
     return result;
   } catch (error) {

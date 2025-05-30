@@ -18,8 +18,9 @@ async function extractIslandDAOGovernancePower(walletAddress) {
     const vsrProgram = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
     const allVSRAccounts = await connection.getProgramAccounts(vsrProgram);
     
-    let depositEntryAmount = 0;
-    let voterWeightRecordPower = 0;
+    let lockedAmount = 0;
+    let averageLockupMultiplier = 0;
+    let governancePower = 0;
     
     // Find VSR accounts for this wallet
     for (const account of allVSRAccounts) {
@@ -39,25 +40,29 @@ async function extractIslandDAOGovernancePower(walletAddress) {
         
         if (discriminator === '7076388912421561650') {
           // Deposit Entry - contains current locked amount
-          depositEntryAmount = Number(data.readBigUInt64LE(112)) / Math.pow(10, 6);
+          lockedAmount = Number(data.readBigUInt64LE(112)) / Math.pow(10, 6);
           
         } else if (discriminator === '14560581792603266545') {
-          // Voter Weight Record - calculate from active lockups
+          // Voter Weight Record - calculate lockup multiplier from active lockups
           const activeLockups = extractActiveLockups(data);
-          voterWeightRecordPower = calculateVSRGovernancePower(activeLockups);
+          averageLockupMultiplier = calculateAverageLockupMultiplier(activeLockups);
         }
       }
     }
     
-    // Use the higher of the two calculations as the governance power
-    const governancePower = Math.max(depositEntryAmount, voterWeightRecordPower);
+    // Apply VSR formula: voting_power = baseline_vote_weight + (lockup_multiplier * max_extra_lockup_vote_weight)
+    if (lockedAmount > 0) {
+      const baselineVoteWeight = lockedAmount;
+      const maxExtraLockupVoteWeight = lockedAmount;
+      governancePower = baselineVoteWeight + (averageLockupMultiplier * maxExtraLockupVoteWeight);
+    }
     
     return {
       walletAddress,
+      lockedAmount: lockedAmount,
+      lockupMultiplier: averageLockupMultiplier,
       governancePower: governancePower,
-      depositEntryAmount: depositEntryAmount,
-      voterWeightRecordPower: voterWeightRecordPower,
-      source: governancePower === depositEntryAmount ? 'Deposit Entry' : 'Voter Weight Record'
+      source: 'VSR Formula'
     };
     
   } catch (error) {
@@ -114,24 +119,22 @@ function extractActiveLockups(data) {
 }
 
 /**
- * Calculate VSR governance power from active lockups
+ * Calculate average lockup multiplier from active lockups weighted by amount
  */
-function calculateVSRGovernancePower(activeLockups) {
+function calculateAverageLockupMultiplier(activeLockups) {
   if (activeLockups.length === 0) return 0;
   
-  let totalVotingPower = 0;
+  let totalWeightedMultiplier = 0;
+  let totalAmount = 0;
   const lockupSaturationSecs = 3 * 365.25 * 24 * 60 * 60; // 3 years standard
   
   for (const lockup of activeLockups) {
     const lockupMultiplier = Math.min(lockup.timeRemainingSeconds / lockupSaturationSecs, 1);
-    const baselineVoteWeight = lockup.amount;
-    const maxExtraLockupVoteWeight = lockup.amount;
-    const votingPower = baselineVoteWeight + (lockupMultiplier * maxExtraLockupVoteWeight);
-    
-    totalVotingPower += votingPower;
+    totalWeightedMultiplier += (lockupMultiplier * lockup.amount);
+    totalAmount += lockup.amount;
   }
   
-  return totalVotingPower;
+  return totalAmount > 0 ? totalWeightedMultiplier / totalAmount : 0;
 }
 
 /**
