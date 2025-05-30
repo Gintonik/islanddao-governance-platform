@@ -48,11 +48,16 @@ async function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
       for (let walletOffset = 0; walletOffset <= data.length - 32; walletOffset += 8) {
         if (data.subarray(walletOffset, walletOffset + 32).equals(walletBuffer)) {
           
-          // ✅ Calculate offset dynamically (wallet + 32 bytes) AND check standard offsets
+          // Check governance power at multiple VSR structure offsets
           const checkOffsets = [
-            walletOffset + 32,  // ✅ Dynamic: 32 bytes after wallet reference
-            104,                // ✅ Standard offset in larger accounts
-            112                 // ✅ Secondary standard offset
+            walletOffset + 32,  // Standard: 32 bytes after wallet
+            walletOffset + 40,  // Lockup data offset
+            walletOffset + 48,  // Additional VSR data
+            104,                // Common VSR governance offset
+            112,                // Alternative VSR governance offset
+            120,                // Extended VSR data offset
+            128,                // Secondary VSR offset
+            136                 // Tertiary VSR offset
           ];
           
           for (const checkOffset of checkOffsets) {
