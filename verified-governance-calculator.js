@@ -88,23 +88,30 @@ async function getVoterWeight(walletAddress) {
  */
 function parseVoterWeightRecord(data, walletOffset) {
   try {
-    // The Voter Weight Record contains the final governance power at standard offsets
-    const standardOffsets = [104, 112];
+    // The Voter Weight Record contains governance power at multiple offsets
+    // We need to find the largest reasonable amount as the authentic governance power
+    const checkOffsets = [104, 112, 120, 128, 136, 144, 152, 160];
+    const validAmounts = [];
     
-    for (const offset of standardOffsets) {
+    for (const offset of checkOffsets) {
       if (offset + 8 <= data.length) {
         try {
           const rawAmount = data.readBigUInt64LE(offset);
           const tokenAmount = Number(rawAmount) / Math.pow(10, 6); // ISLAND has 6 decimals
           
-          // Validate the amount is reasonable
-          if (tokenAmount >= 1 && tokenAmount <= 50000000) {
-            return tokenAmount;
+          // Look for governance power in reasonable range
+          if (tokenAmount >= 1000 && tokenAmount <= 50000000) {
+            validAmounts.push(tokenAmount);
           }
         } catch (error) {
           continue;
         }
       }
+    }
+    
+    // Return the largest valid amount as the authentic governance power
+    if (validAmounts.length > 0) {
+      return Math.max(...validAmounts);
     }
     
     return 0;
