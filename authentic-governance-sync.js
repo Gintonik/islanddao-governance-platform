@@ -60,10 +60,10 @@ function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
             if (checkOffset + 8 <= data.length) {
               try {
                 const rawAmount = data.readBigUInt64LE(checkOffset);
-                const tokenAmount = Number(rawAmount) / Math.pow(10, 6); // 6 decimals for ISLAND
+                const tokenAmount = Number(rawAmount) / Math.pow(10, 9); // 9 decimals for ISLAND tokens
                 
-                // Filter for realistic governance amounts based on known values
-                if (tokenAmount >= 1000 && tokenAmount <= 20000000) {
+                // Filter for realistic governance amounts (adjusted for correct decimals)
+                if (tokenAmount >= 1 && tokenAmount <= 20000) {
                   governanceAmounts.push({
                     amount: tokenAmount,
                     account: account.pubkey,
