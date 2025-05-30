@@ -67,18 +67,12 @@ async function getNativeGovernancePower(walletAddress) {
                 // Also check Deposit Entry accounts for governance power calculation
                 else if (discriminator === '7076388912421561650' && data.length >= 120) {
                     try {
-                        // Deposit entries may contain calculated governance power
-                        const offsets = [104, 112];
+                        // Deposit entries contain calculated governance power at offset 104
+                        const rawAmount = data.readBigUInt64LE(104);
+                        const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
                         
-                        for (const checkOffset of offsets) {
-                            if (checkOffset + 8 <= data.length) {
-                                const rawAmount = data.readBigUInt64LE(checkOffset);
-                                const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
-                                
-                                if (tokenAmount >= 1000 && tokenAmount > maxGovernancePower) {
-                                    maxGovernancePower = tokenAmount;
-                                }
-                            }
+                        if (tokenAmount >= 1000 && tokenAmount > maxGovernancePower) {
+                            maxGovernancePower = tokenAmount;
                         }
                     } catch (error) {
                         continue;

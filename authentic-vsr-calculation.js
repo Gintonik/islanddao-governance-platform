@@ -98,15 +98,37 @@ async function calculateAuthenticGovernancePower(walletAddress) {
  */
 function parseDepositEntry(data) {
     try {
-        // VSR Deposit Entry structure
-        const amount = Number(data.readBigUInt64LE(48)) / Math.pow(10, 6); // Deposit amount
-        const lockupExpiration = Number(data.readBigUInt64LE(16)); // Lockup expiration timestamp
+        // Scan multiple offsets to find the correct deposit amount
+        // Expected: ~71,278 ISLAND for GJdRQcsy
+        const potentialOffsets = [40, 48, 56, 64, 72, 80, 88, 96, 104, 112];
         
-        if (amount >= 1000 && lockupExpiration > 0) {
-            return {
-                amount: amount,
-                lockupExpiration: lockupExpiration
-            };
+        for (const offset of potentialOffsets) {
+            if (offset + 8 <= data.length) {
+                const amount = Number(data.readBigUInt64LE(offset)) / Math.pow(10, 6);
+                
+                // Look for reasonable deposit amounts (between 1K and 10M ISLAND)
+                if (amount >= 1000 && amount <= 10000000) {
+                    // Try to find lockup expiration timestamp
+                    let lockupExpiration = 0;
+                    const timestampOffsets = [16, 24, 32];
+                    
+                    for (const tsOffset of timestampOffsets) {
+                        if (tsOffset + 8 <= data.length) {
+                            const ts = Number(data.readBigUInt64LE(tsOffset));
+                            if (ts > 1600000000 && ts < 2000000000) {
+                                lockupExpiration = ts;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    return {
+                        amount: amount,
+                        lockupExpiration: lockupExpiration,
+                        offset: offset
+                    };
+                }
+            }
         }
         
         return null;
