@@ -286,12 +286,126 @@ async function getAllCitizens() {
 }
 
 /**
+ * Get governance power from Solana blockchain using VSR (Voter State Recorder)
+ */
+async function getGovernancePowerFromSolana(walletAddress) {
+  try {
+    const heliusApiKey = process.env.HELIUS_API_KEY;
+    if (!heliusApiKey) {
+      throw new Error('HELIUS_API_KEY not configured');
+    }
+
+    const rpcUrl = `https://rpc.helius.xyz/?api-key=${heliusApiKey}`;
+    
+    // IslandDAO VSR program ID and realm
+    const VSR_PROGRAM_ID = 'vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ';
+    const REALM_ID = 'GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw'; // Standard SPL Governance
+    
+    // Get VSR accounts for this wallet
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getProgramAccounts',
+        params: [
+          VSR_PROGRAM_ID,
+          {
+            encoding: 'base64',
+            filters: [
+              {
+                memcmp: {
+                  offset: 8, // Skip discriminator
+                  bytes: walletAddress,
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      console.log(`No VSR account found for ${walletAddress}`);
+      return 0;
+    }
+
+    if (!data.result || data.result.length === 0) {
+      return 0;
+    }
+
+    // Parse the VSR account data to extract governance power
+    const accountData = data.result[0].account.data;
+    const buffer = Buffer.from(accountData[0], 'base64');
+    
+    // VSR account structure: governance power is stored as u64 at offset 40
+    const governancePower = buffer.readBigUInt64LE(40);
+    
+    // Convert to number (divide by 1e6 for token decimals)
+    return Number(governancePower) / 1000000;
+    
+  } catch (error) {
+    console.error(`Error fetching governance power for ${walletAddress}:`, error.message);
+    return 0;
+  }
+}
+
+/**
  * Sync governance power for all citizens
  */
 async function syncGovernancePower() {
   try {
-    console.log('🔄 Governance power sync not available - manual sync required');
-    return { message: 'Governance power sync endpoint available for manual integration' };
+    console.log('🔄 Starting governance power sync...');
+    
+    const client = await db.pool.connect();
+    
+    try {
+      // Get all citizens
+      const citizensResult = await client.query('SELECT wallet, nickname FROM citizens');
+      const citizens = citizensResult.rows;
+      
+      console.log(`Syncing governance power for ${citizens.length} citizens...`);
+      
+      let updatedCount = 0;
+      
+      for (const citizen of citizens) {
+        try {
+          const governancePower = await getGovernancePowerFromSolana(citizen.wallet);
+          
+          await client.query(
+            'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
+            [governancePower, citizen.wallet]
+          );
+          
+          console.log(`Updated ${citizen.nickname || citizen.wallet}: ${governancePower} governance power`);
+          updatedCount++;
+          
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (error) {
+          console.error(`Error updating governance power for ${citizen.wallet}:`, error.message);
+        }
+      }
+      
+      console.log(`✅ Governance power sync complete. Updated ${updatedCount}/${citizens.length} citizens.`);
+      
+      return { 
+        success: true, 
+        message: `Updated governance power for ${updatedCount}/${citizens.length} citizens`,
+        updatedCount,
+        totalCitizens: citizens.length
+      };
+      
+    } finally {
+      client.release();
+    }
+    
   } catch (error) {
     console.error('Error syncing governance power:', error);
     return { error: error.message };
