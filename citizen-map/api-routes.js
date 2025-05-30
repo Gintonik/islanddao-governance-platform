@@ -5,6 +5,7 @@
  */
 
 const db = require('../db');
+const governanceCalculator = require('../governance-power-calculator');
 
 /**
  * Get NFTs owned by a specific wallet address
@@ -290,8 +291,9 @@ async function getAllCitizens() {
  */
 async function syncGovernancePower() {
   try {
-    console.log('🔄 Governance power sync not available - manual sync required');
-    return { message: 'Governance power sync endpoint available for manual integration' };
+    console.log('Starting governance power sync from VSR blockchain...');
+    const result = await governanceCalculator.updateAllCitizensGovernancePower();
+    return result;
   } catch (error) {
     console.error('Error syncing governance power:', error);
     return { error: error.message };
@@ -303,7 +305,8 @@ async function syncGovernancePower() {
  */
 async function getGovernanceStats() {
   try {
-    return { success: true, stats: { message: 'Governance stats endpoint ready for integration' } };
+    const stats = await governanceCalculator.getGovernanceStatistics();
+    return { success: true, stats };
   } catch (error) {
     console.error('Error getting governance stats:', error);
     return { error: error.message };

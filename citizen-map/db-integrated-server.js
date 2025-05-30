@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const apiRoutes = require('./api-routes');
 const db = require('../db');
-// Governance update functionality can be integrated separately
+const governanceCalculator = require('../governance-power-calculator');
+const dailySync = require('../daily-governance-sync');
 
 // Constants
 const PORT = 5000;
@@ -18,6 +19,14 @@ async function initializeApp() {
     // Create tables if they don't exist
     await db.initializeDatabase();
     console.log('Database initialized successfully for Citizen Map');
+    
+    // Initialize daily governance sync system
+    if (process.env.HELIUS_API_KEY) {
+      dailySync.initializeGovernanceSync();
+      console.log('Daily governance sync system initialized');
+    } else {
+      console.log('HELIUS_API_KEY not found - governance sync will require manual setup');
+    }
     
     // Start the HTTP server
     startServer();
@@ -78,10 +87,10 @@ function startServer() {
       else if (req.url === '/api/sync-governance' && req.method === 'POST') {
         try {
           console.log('Starting governance power sync from VSR blockchain...');
-          const result = { message: 'Governance sync functionality ready for integration' };
+          const result = await governanceCalculator.updateAllCitizensGovernancePower();
           
-          const citizensWithPower = 0;
-          const totalPower = 0;
+          const citizensWithPower = result.updated || 0;
+          const totalPower = result.totalGovernancePower || 0;
           
           const response = {
             success: true,

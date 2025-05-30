@@ -106,7 +106,7 @@ async function updateCitizenGovernancePower(walletAddress) {
     const client = await db.pool.connect();
     try {
       await client.query(
-        'UPDATE citizens SET governance_power = $1 WHERE wallet_address = $2',
+        'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
         [governancePower, walletAddress]
       );
       
@@ -137,7 +137,7 @@ async function updateAllCitizensGovernancePower() {
     let citizens;
     
     try {
-      const result = await client.query('SELECT wallet_address FROM citizens ORDER BY wallet_address');
+      const result = await client.query('SELECT wallet FROM citizens ORDER BY wallet');
       citizens = result.rows;
     } finally {
       client.release();
@@ -160,13 +160,13 @@ async function updateAllCitizensGovernancePower() {
       
       const batchPromises = batch.map(async (citizen) => {
         try {
-          const result = await updateCitizenGovernancePower(citizen.wallet_address);
+          const result = await updateCitizenGovernancePower(citizen.wallet);
           successCount++;
           totalGovernancePower += result.governancePower;
           return result;
         } catch (error) {
-          console.error(`Failed to update ${citizen.wallet_address}:`, error.message);
-          return { walletAddress: citizen.wallet_address, governancePower: 0, error: error.message };
+          console.error(`Failed to update ${citizen.wallet}:`, error.message);
+          return { walletAddress: citizen.wallet, governancePower: 0, error: error.message };
         }
       });
 
