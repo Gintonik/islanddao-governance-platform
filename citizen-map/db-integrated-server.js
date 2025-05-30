@@ -418,12 +418,17 @@ function startServer() {
           const contentType = getContentType(extname);
           serveFile(res, requestedPath, contentType);
         }
-        // Default file serving
-        else {
+        // Default file serving (but not for API routes)
+        else if (!req.url.startsWith('/api/')) {
           const requestedPath = path.join(__dirname, req.url);
           const extname = path.extname(requestedPath);
           const contentType = getContentType(extname);
           serveFile(res, requestedPath, contentType);
+        }
+        // Handle unrecognized API routes
+        else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'API endpoint not found' }));
         }
       }
     } catch (error) {
