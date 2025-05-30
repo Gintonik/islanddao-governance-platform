@@ -16,7 +16,7 @@ async function runDailyGovernanceSync() {
     
     // Update governance power with authentic blockchain data extraction
     console.log('📊 Extracting authentic governance power from VSR accounts...');
-    const result = await automaticBreakdown.updateAllCitizensGovernanceBreakdown();
+    const result = await authenticExtraction.updateAllCitizensWithAuthenticPower();
     
     console.log('✅ Daily governance sync completed successfully');
     console.log(`📊 Citizens processed: ${result.total}`);
