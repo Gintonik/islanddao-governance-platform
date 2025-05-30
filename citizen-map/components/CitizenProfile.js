@@ -91,14 +91,14 @@ function CitizenProfile({ citizen, onClose }) {
           </Section>
 
           {/* Governance Power Section */}
-          {(citizen.governance_power > 0 || citizen.native_governance_power > 0 || citizen.delegated_governance_power > 0) && (
+          {parseFloat(citizen.governance_power) > 0 && (
             <Section>
               <SectionTitle>Governance Power</SectionTitle>
               <GovernanceContainer>
                 <TotalPowerCard>
                   <TotalPowerLabel>Total Voting Power</TotalPowerLabel>
                   <TotalPowerValue>
-                    {(citizen.governance_power || 0).toLocaleString(undefined, { 
+                    {parseFloat(citizen.governance_power || 0).toLocaleString(undefined, { 
                       minimumFractionDigits: 0, 
                       maximumFractionDigits: 3 
                     })} ISLAND
@@ -111,7 +111,7 @@ function CitizenProfile({ citizen, onClose }) {
                   <BreakdownItem>
                     <BreakdownLabel>Native Power</BreakdownLabel>
                     <BreakdownValue>
-                      {(citizen.native_governance_power || 0).toLocaleString(undefined, { 
+                      {parseFloat(citizen.native_governance_power || 0).toLocaleString(undefined, { 
                         minimumFractionDigits: 0, 
                         maximumFractionDigits: 3 
                       })} ISLAND
@@ -122,7 +122,7 @@ function CitizenProfile({ citizen, onClose }) {
                   <BreakdownItem>
                     <BreakdownLabel>Delegated Power</BreakdownLabel>
                     <BreakdownValue>
-                      {(citizen.delegated_governance_power || 0).toLocaleString(undefined, { 
+                      {parseFloat(citizen.delegated_governance_power || 0).toLocaleString(undefined, { 
                         minimumFractionDigits: 0, 
                         maximumFractionDigits: 3 
                       })} ISLAND
