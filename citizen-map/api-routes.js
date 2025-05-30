@@ -225,7 +225,7 @@ async function getAllCitizens() {
       const citizens = await client.query(`
         SELECT c.id, c.wallet, c.lat, c.lng, c.primary_nft, c.pfp_nft, c.message, c.created_at,
                c.nickname, c.bio, c.twitter_handle, c.telegram_handle, c.discord_handle, 
-               c.governance_power, c.native_governance_power, c.delegated_governance_power
+               c.governance_power, c.native_power, c.delegated_power
         FROM citizens c
         ORDER BY c.created_at DESC
       `);
@@ -258,8 +258,8 @@ async function getAllCitizens() {
           telegram_handle: citizen.telegram_handle,
           discord_handle: citizen.discord_handle,
           governance_power: citizen.governance_power || 0,
-          native_governance_power: citizen.native_governance_power || 0,
-          delegated_governance_power: citizen.delegated_governance_power || 0,
+          native_power: citizen.native_power || 0,
+          delegated_power: citizen.delegated_power || 0,
           nfts: nftsResult.rows.map(n => n.mint_id),
           timestamp: citizen.created_at,
           nftMetadata: {}
