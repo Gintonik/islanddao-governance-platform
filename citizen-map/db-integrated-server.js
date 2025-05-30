@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const apiRoutes = require('./api-routes');
 const db = require('../db');
+const { batchUpdateCitizensGovernance } = require('../complete-vsr-governance-update');
 
 // Constants
 const PORT = 5000;
@@ -73,10 +74,33 @@ function startServer() {
         const citizens = await apiRoutes.getAllCitizens();
         sendJsonResponse(res, citizens);
       }
-      // API endpoint to sync governance power
+      // API endpoint to sync governance power using VSR blockchain analysis
       else if (req.url === '/api/sync-governance' && req.method === 'POST') {
-        const result = await apiRoutes.syncGovernancePower();
-        sendJsonResponse(res, result);
+        try {
+          console.log('Starting governance power sync from VSR blockchain...');
+          const result = await batchUpdateCitizensGovernance();
+          
+          const citizensWithPower = Object.values(result).filter(p => p > 0).length;
+          const totalPower = Object.values(result).reduce((sum, p) => sum + p, 0);
+          
+          const response = {
+            success: true,
+            message: 'Governance power updated successfully',
+            citizensUpdated: citizensWithPower,
+            totalGovernancePower: totalPower,
+            timestamp: new Date().toISOString()
+          };
+          
+          sendJsonResponse(res, response);
+        } catch (error) {
+          console.error('Error syncing governance power:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: false,
+            error: 'Failed to sync governance power',
+            details: error.message 
+          }));
+        }
       }
       // API endpoint for governance statistics
       else if (req.url === '/api/governance-stats') {
