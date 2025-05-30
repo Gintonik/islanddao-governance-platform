@@ -3,7 +3,7 @@
  * Automatically updates governance power for all citizens from Solana blockchain
  */
 
-const vsrFormula = require('./vsr-authentic-formula');
+const exactVSR = require('./exact-vsr-governance');
 
 /**
  * Run daily governance power synchronization
@@ -13,9 +13,9 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power with authentic blockchain data extraction
-    console.log('📊 Extracting authentic governance power from VSR accounts...');
-    const result = await authenticExtraction.updateAllCitizensWithAuthenticPower();
+    // Update governance power with exact blockchain data extraction
+    console.log('📊 Extracting exact governance power from VSR accounts...');
+    const result = await exactVSR.updateAllCitizensWithExactPower();
     
     console.log('✅ Daily governance sync completed successfully');
     console.log(`📊 Citizens processed: ${result.total}`);
