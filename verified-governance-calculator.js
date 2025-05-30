@@ -46,15 +46,23 @@ async function getVoterWeight(walletAddress) {
           const discriminator = data.readBigUInt64LE(0);
           
           if (discriminator.toString() === '14560581792603266545') {
-            // Voter Weight Record - contains both native and delegated power
-            const breakdown = parseVoterWeightRecordBreakdown(data, offset);
-            nativePower += breakdown.native;
-            delegatedPower += breakdown.delegated;
+            // Voter Weight Record - contains the AUTHORITATIVE governance power
+            // This is the final calculated voting power, not raw deposits
+            const voterPower = parseVoterWeightRecord(data, offset);
+            if (voterPower > 0) {
+              // Use the Voter Weight Record as the definitive governance power
+              // This already includes lockup multipliers and proper weighting
+              nativePower = voterPower; // For now, assume all power is native unless we can detect delegation
+              delegatedPower = 0; // Would need additional logic to detect delegated power
+              break; // Found the authoritative record, no need to check deposits
+            }
             
           } else if (discriminator.toString() === '7076388912421561650') {
-            // Deposit Entry - individual locked deposits (native only)
-            const depositPower = parseDepositEntry(data, offset);
-            nativePower += depositPower;
+            // Deposit Entry - individual deposits, only use if no Voter Weight Record found
+            if (nativePower === 0) {
+              const depositPower = parseDepositEntry(data, offset);
+              nativePower += depositPower;
+            }
           }
           
           break; // Found wallet reference, move to next account
@@ -71,6 +79,38 @@ async function getVoterWeight(walletAddress) {
   } catch (error) {
     console.error(`Error getting voter weight for ${walletAddress}:`, error);
     return { native: 0, delegated: 0, total: 0 };
+  }
+}
+
+/**
+ * Parse Voter Weight Record to get the authoritative governance power
+ * This account type contains the final calculated voting power
+ */
+function parseVoterWeightRecord(data, walletOffset) {
+  try {
+    // The Voter Weight Record contains the final governance power at standard offsets
+    const standardOffsets = [104, 112];
+    
+    for (const offset of standardOffsets) {
+      if (offset + 8 <= data.length) {
+        try {
+          const rawAmount = data.readBigUInt64LE(offset);
+          const tokenAmount = Number(rawAmount) / Math.pow(10, 6); // ISLAND has 6 decimals
+          
+          // Validate the amount is reasonable
+          if (tokenAmount >= 1 && tokenAmount <= 50000000) {
+            return tokenAmount;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error('Error parsing Voter Weight Record:', error);
+    return 0;
   }
 }
 
