@@ -15,45 +15,21 @@ async function runCompleteGovernanceSync() {
     console.log('🔄 Starting complete daily governance synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Extract authentic governance power from VSR accounts
-    console.log('📊 Extracting governance power from blockchain VSR accounts...');
-    const results = await updateAllCitizensEfficient();
+    // Calculate complete governance breakdown with authentic delegation data
+    console.log('📊 Calculating complete governance breakdown from blockchain...');
+    const { updateAllCitizensGovernanceBreakdown } = require('./complete-governance-breakdown.js');
     
-    // Update governance power breakdown for all citizens
-    console.log('📊 Updating native/delegated power breakdown...');
-    let updatedCount = 0;
-    
-    for (const citizen of results) {
-      if (citizen.votingPower > 0) {
-        await updateGovernancePowerBreakdown(
-          citizen.walletAddress,
-          citizen.votingPower,  // native power from VSR
-          0                     // delegated power (future enhancement)
-        );
-        updatedCount++;
-      }
-    }
+    const breakdownResult = await updateAllCitizensGovernanceBreakdown();
+    const updatedCount = breakdownResult.updated;
     
     console.log('✅ Daily governance sync completed successfully');
-    console.log(`📊 Total citizens processed: ${results.length}`);
+    console.log(`📊 Total citizens processed: ${breakdownResult.processed}`);
     console.log(`📊 Citizens with governance power: ${updatedCount}`);
     console.log(`⏰ Sync completed at: ${new Date().toISOString()}`);
     
-    // Log top governance power holders for verification
-    const topHolders = results
-      .filter(r => r.votingPower > 0)
-      .sort((a, b) => b.votingPower - a.votingPower)
-      .slice(0, 5);
-    
-    console.log('\n📊 Top governance power holders:');
-    topHolders.forEach((holder, i) => {
-      const shortWallet = holder.walletAddress.substring(0, 8);
-      console.log(`  ${i + 1}. ${shortWallet}: ${holder.votingPower.toLocaleString()} ISLAND`);
-    });
-    
     return {
       success: true,
-      totalProcessed: results.length,
+      totalProcessed: breakdownResult.processed,
       updatedCount: updatedCount,
       timestamp: new Date().toISOString()
     };
