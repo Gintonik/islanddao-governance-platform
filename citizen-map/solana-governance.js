@@ -25,7 +25,7 @@ const GOVERNANCE_CONFIG = {
 
 // Initialize Helius RPC connection
 function createConnection() {
-  const heliusRpcUrl = `https://rpc.helius.xyz/?api-key=${process.env.HELIUS_API_KEY}`;
+  const heliusRpcUrl = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
   return new Connection(heliusRpcUrl, 'confirmed');
 }
 
