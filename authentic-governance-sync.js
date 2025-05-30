@@ -35,7 +35,7 @@ async function loadAllVSRAccounts() {
 /**
  * Extract governance power for a specific wallet from VSR accounts
  */
-function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
+async function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
   try {
     const walletPubkey = new PublicKey(walletAddress);
     const walletBuffer = walletPubkey.toBuffer();
