@@ -10,7 +10,7 @@ const { updateGovernancePowerBreakdown, getAllCitizens } = require('./db.js');
 const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || '7271240f-154a-4417-9663-718ac65c8b8e'}`);
 
 const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
-const REALM_PUBKEY = new PublicKey('F9V4Lwo49aUe8fFujMbU6uhdFvDRqKY54WpzdpncUSk9');
+const REALM_PUBKEY = new PublicKey('F9V4Lwo49aUe8fFujMbU6uhdFyDRqKY54WpzdpncUSk9');
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
 let vsrAccountsCache = null;
