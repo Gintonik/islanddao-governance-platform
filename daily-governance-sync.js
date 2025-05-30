@@ -3,7 +3,7 @@
  * Automatically updates governance power for all citizens from Solana blockchain
  */
 
-const realmsVSR = require('./realms-vsr-governance');
+const { updateAllCitizensWithIslandDAOPower } = require('./authentic-islanddao-vsr-calculator.js');
 
 /**
  * Run daily governance power synchronization
