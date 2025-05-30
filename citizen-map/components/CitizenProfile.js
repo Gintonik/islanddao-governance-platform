@@ -90,18 +90,49 @@ function CitizenProfile({ citizen, onClose }) {
             </NFTGrid>
           </Section>
 
-          {/* Governance Section - Placeholder for future implementation */}
-          <Section>
-            <SectionTitle>Governance Activity</SectionTitle>
-            <PlaceholderContent>
-              <PlaceholderIcon>🏛️</PlaceholderIcon>
-              <PlaceholderText>Governance data coming soon...</PlaceholderText>
-              <PlaceholderSubtext>
-                We're integrating with SPL Governance to show voting power, 
-                participation, and DAO engagement metrics.
-              </PlaceholderSubtext>
-            </PlaceholderContent>
-          </Section>
+          {/* Governance Power Section */}
+          {(citizen.governance_power > 0 || citizen.native_governance_power > 0 || citizen.delegated_governance_power > 0) && (
+            <Section>
+              <SectionTitle>Governance Power</SectionTitle>
+              <GovernanceContainer>
+                <TotalPowerCard>
+                  <TotalPowerLabel>Total Voting Power</TotalPowerLabel>
+                  <TotalPowerValue>
+                    {(citizen.governance_power || 0).toLocaleString(undefined, { 
+                      minimumFractionDigits: 0, 
+                      maximumFractionDigits: 3 
+                    })} ISLAND
+                  </TotalPowerValue>
+                  <TotalPowerNote>This is your complete voting power in governance</TotalPowerNote>
+                </TotalPowerCard>
+                
+                <PowerBreakdown>
+                  <BreakdownTitle>Power Breakdown</BreakdownTitle>
+                  <BreakdownItem>
+                    <BreakdownLabel>Native Power</BreakdownLabel>
+                    <BreakdownValue>
+                      {(citizen.native_governance_power || 0).toLocaleString(undefined, { 
+                        minimumFractionDigits: 0, 
+                        maximumFractionDigits: 3 
+                      })} ISLAND
+                    </BreakdownValue>
+                    <BreakdownDesc>From your own token deposits</BreakdownDesc>
+                  </BreakdownItem>
+                  
+                  <BreakdownItem>
+                    <BreakdownLabel>Delegated Power</BreakdownLabel>
+                    <BreakdownValue>
+                      {(citizen.delegated_governance_power || 0).toLocaleString(undefined, { 
+                        minimumFractionDigits: 0, 
+                        maximumFractionDigits: 3 
+                      })} ISLAND
+                    </BreakdownValue>
+                    <BreakdownDesc>Delegated from other members</BreakdownDesc>
+                  </BreakdownItem>
+                </PowerBreakdown>
+              </GovernanceContainer>
+            </Section>
+          )}
 
           <Section>
             <SectionTitle>Member Since</SectionTitle>
@@ -338,6 +369,90 @@ const PlaceholderSubtext = styled.div`
 const MemberSince = styled.div`
   color: #ddd;
   font-size: 16px;
+`;
+
+const GovernanceContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const TotalPowerCard = styled.div`
+  background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 16px rgba(153, 69, 255, 0.3);
+`;
+
+const TotalPowerLabel = styled.div`
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  opacity: 0.9;
+`;
+
+const TotalPowerValue = styled.div`
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+`;
+
+const TotalPowerNote = styled.div`
+  font-size: 14px;
+  opacity: 0.8;
+  font-style: italic;
+`;
+
+const PowerBreakdown = styled.div`
+  background-color: #222;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #333;
+`;
+
+const BreakdownTitle = styled.div`
+  color: #aaa;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const BreakdownItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const BreakdownLabel = styled.div`
+  color: white;
+  font-weight: 500;
+  flex: 1;
+`;
+
+const BreakdownValue = styled.div`
+  color: #14F195;
+  font-weight: bold;
+  font-family: monospace;
+  text-align: right;
+  flex: 1;
+`;
+
+const BreakdownDesc = styled.div`
+  color: #888;
+  font-size: 12px;
+  margin-top: 4px;
+  flex: 1;
 `;
 
 export default CitizenProfile;
