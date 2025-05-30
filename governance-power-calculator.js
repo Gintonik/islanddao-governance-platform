@@ -27,7 +27,7 @@ async function getVSRGovernancePower(walletAddress) {
 
     console.log(`🔍 Searching VSR governance power for wallet: ${walletAddress}`);
     
-    // Search for VSR accounts that reference this wallet
+    // Search for VSR accounts using the correct approach
     const response = await axios.post(HELIUS_RPC_URL, {
       jsonrpc: '2.0',
       id: 1,
@@ -36,14 +36,10 @@ async function getVSRGovernancePower(walletAddress) {
         VSR_PROGRAM_ID,
         {
           encoding: 'base64',
-          filters: [
-            {
-              memcmp: {
-                offset: 0,
-                bytes: walletAddress
-              }
-            }
-          ]
+          dataSlice: {
+            offset: 0,
+            length: 200
+          }
         }
       ]
     });
@@ -55,29 +51,33 @@ async function getVSRGovernancePower(walletAddress) {
 
     let totalGovernancePower = 0;
 
-    // Process each VSR account to extract governance power
+    // Process each VSR account to find wallet's governance power
     for (const account of response.data.result) {
       try {
         const accountData = Buffer.from(account.account.data[0], 'base64');
         
-        // Search for governance power using verified pattern
-        // Pattern: governance power stored 32 bytes after wallet reference
-        const walletBuffer = Buffer.from(walletAddress);
-        const walletIndex = accountData.indexOf(walletBuffer);
+        // Search for wallet address as ASCII string in account data
+        const walletIndex = accountData.indexOf(walletAddress, 0, 'ascii');
         
         if (walletIndex !== -1) {
-          // Extract governance power from verified offset
-          const powerOffset = walletIndex + 32;
-          if (powerOffset + 8 <= accountData.length) {
-            const powerBuffer = accountData.slice(powerOffset, powerOffset + 8);
-            const governancePower = powerBuffer.readBigUInt64LE(0);
-            
-            // Convert from lamports to tokens (divide by 1e9)
-            const powerInTokens = Number(governancePower) / 1e9;
-            
-            if (powerInTokens > 0) {
-              console.log(`Found governance power: ${powerInTokens.toFixed(6)} ISLAND`);
-              totalGovernancePower += powerInTokens;
+          // Try multiple offset patterns to find governance power
+          const offsets = [32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120];
+          
+          for (const offset of offsets) {
+            const powerOffset = walletIndex + offset;
+            if (powerOffset + 8 <= accountData.length) {
+              const powerBuffer = accountData.slice(powerOffset, powerOffset + 8);
+              const governancePower = powerBuffer.readBigUInt64LE(0);
+              
+              // Convert from lamports to tokens
+              const powerInTokens = Number(governancePower) / 1e9;
+              
+              // Check if this looks like a valid governance power amount
+              if (powerInTokens > 1000 && powerInTokens < 50000000) {
+                console.log(`Found governance power at offset ${offset}: ${powerInTokens.toFixed(6)} ISLAND`);
+                totalGovernancePower += powerInTokens;
+                break; // Found valid power, stop searching this account
+              }
             }
           }
         }
