@@ -155,18 +155,18 @@ async function getDelegatedGovernancePower(targetWalletAddress) {
 async function calculateGovernanceBreakdown(walletAddress) {
     console.log(`Calculating breakdown for: ${walletAddress.substring(0, 8)}...`);
     
-    // Get native power from VSR accounts
+    // Get native power from VSR accounts (citizen's own locked tokens)
     const nativePower = await getNativeGovernancePower(walletAddress);
     
-    // Get total power from VSR accounts  
-    const totalPower = await getTotalGovernancePower(walletAddress);
+    // Get delegated power by finding delegation records and summing delegator power
+    const delegatedPower = await getDelegatedGovernancePower(walletAddress);
     
-    // Calculate delegated power
-    const delegatedPower = Math.max(0, totalPower - nativePower);
+    // Calculate total power
+    const totalPower = nativePower + delegatedPower;
     
     console.log(`Native: ${nativePower.toLocaleString()} ISLAND`);
-    console.log(`Total: ${totalPower.toLocaleString()} ISLAND`);
     console.log(`Delegated: ${delegatedPower.toLocaleString()} ISLAND`);
+    console.log(`Total: ${totalPower.toLocaleString()} ISLAND`);
     
     return {
         native: nativePower,
@@ -251,7 +251,8 @@ async function updateAllCitizensGovernanceBreakdown() {
 
 module.exports = {
     getNativeGovernancePower,
-    getTotalGovernancePower,
+    findDelegationRecords,
+    getDelegatedGovernancePower,
     calculateGovernanceBreakdown,
     updateCitizenGovernanceBreakdown,
     updateAllCitizensGovernanceBreakdown
