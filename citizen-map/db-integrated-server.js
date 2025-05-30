@@ -75,23 +75,11 @@ function startServer() {
         sendJsonResponse(res, citizens);
       }
       // API endpoint to sync governance power using VSR blockchain analysis
-      else if (req.url === '/api/sync-governance' && req.method === 'POST') {
+      else if (req.url === '/api/sync-governance-power' && req.method === 'POST') {
         try {
           console.log('Starting governance power sync from VSR blockchain...');
-          const result = { message: 'Governance sync functionality ready for integration' };
-          
-          const citizensWithPower = 0;
-          const totalPower = 0;
-          
-          const response = {
-            success: true,
-            message: 'Governance power updated successfully',
-            citizensUpdated: citizensWithPower,
-            totalGovernancePower: totalPower,
-            timestamp: new Date().toISOString()
-          };
-          
-          sendJsonResponse(res, response);
+          const result = await apiRoutes.syncGovernancePower();
+          sendJsonResponse(res, result);
         } catch (error) {
           console.error('Error syncing governance power:', error);
           res.writeHead(500, { 'Content-Type': 'application/json' });
