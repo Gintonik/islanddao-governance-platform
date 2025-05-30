@@ -397,17 +397,21 @@
             color: white;
             border: 2px solid #21E8A3;
             font-weight: 700;
-            font-size: 14px;
-            padding: 12px 20px;
-            border-radius: 10px;
+            font-size: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 4px 25px rgba(33, 232, 163, 0.6), 0 0 40px rgba(33, 232, 163, 0.3);
             animation: pulse-glow 1.5s infinite;
             transform: scale(1.1);
-            letter-spacing: 0.5px;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
         }
 
         .add-pin-btn::before {
@@ -1283,7 +1287,7 @@
         </div>
         
         <div class="controls">
-            <button id="addPinBtn" class="control-btn add-pin-btn">Add Your Pin</button>
+            <button id="addPinBtn" class="control-btn add-pin-btn" title="Add Your Pin">+</button>
         </div>
     </div>
 
