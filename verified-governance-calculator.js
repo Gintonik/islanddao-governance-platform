@@ -21,8 +21,8 @@ const REALM_CONFIG = {
 };
 
 /**
- * Get the voter weight for a wallet using VSR methodology
- * This replicates the working leaderboard's approach
+ * Get the voter weight breakdown for a wallet using VSR methodology
+ * Returns native power, delegated power, and total
  */
 async function getVoterWeight(walletAddress) {
   try {
@@ -31,7 +31,8 @@ async function getVoterWeight(walletAddress) {
     // Get VSR accounts that reference this wallet
     const vsrAccounts = await connection.getProgramAccounts(REALM_CONFIG.vsrProgramId);
     
-    let totalVotingPower = 0;
+    let nativePower = 0;
+    let delegatedPower = 0;
     const walletBuffer = walletPubkey.toBuffer();
     
     for (const account of vsrAccounts) {
@@ -45,14 +46,15 @@ async function getVoterWeight(walletAddress) {
           const discriminator = data.readBigUInt64LE(0);
           
           if (discriminator.toString() === '14560581792603266545') {
-            // Voter Weight Record - contains the final calculated voting power
-            const votingPower = parseVoterWeightRecord(data, offset);
-            totalVotingPower += votingPower;
+            // Voter Weight Record - contains both native and delegated power
+            const breakdown = parseVoterWeightRecordBreakdown(data, offset);
+            nativePower += breakdown.native;
+            delegatedPower += breakdown.delegated;
             
           } else if (discriminator.toString() === '7076388912421561650') {
-            // Deposit Entry - individual locked deposits
+            // Deposit Entry - individual locked deposits (native only)
             const depositPower = parseDepositEntry(data, offset);
-            totalVotingPower += depositPower;
+            nativePower += depositPower;
           }
           
           break; // Found wallet reference, move to next account
@@ -60,20 +62,27 @@ async function getVoterWeight(walletAddress) {
       }
     }
     
-    return totalVotingPower;
+    return {
+      native: nativePower,
+      delegated: delegatedPower,
+      total: nativePower + delegatedPower
+    };
     
   } catch (error) {
     console.error(`Error getting voter weight for ${walletAddress}:`, error);
-    return 0;
+    return { native: 0, delegated: 0, total: 0 };
   }
 }
 
 /**
- * Parse Voter Weight Record to get governance power
- * This account type contains the final weighted voting power
+ * Parse Voter Weight Record to get governance power breakdown
+ * This account type contains the final weighted voting power with native/delegated split
  */
-function parseVoterWeightRecord(data, walletOffset) {
+function parseVoterWeightRecordBreakdown(data, walletOffset) {
   try {
+    let native = 0;
+    let delegated = 0;
+    
     // The voter weight is typically stored after the wallet reference
     // Check multiple potential offsets for the voting power
     const potentialOffsets = [
@@ -84,6 +93,7 @@ function parseVoterWeightRecord(data, walletOffset) {
       112                 // Alternative standard offset
     ];
     
+    // First offset usually contains native/own tokens
     for (const offset of potentialOffsets) {
       if (offset + 8 <= data.length) {
         try {
@@ -92,7 +102,8 @@ function parseVoterWeightRecord(data, walletOffset) {
           
           // Validate the amount is reasonable
           if (tokenAmount >= 1 && tokenAmount <= 50000000) {
-            return tokenAmount;
+            native = tokenAmount;
+            break;
           }
         } catch (error) {
           continue;
@@ -100,10 +111,27 @@ function parseVoterWeightRecord(data, walletOffset) {
       }
     }
     
-    return 0;
+    // Second offset usually contains delegated tokens (if any)
+    for (const offset of potentialOffsets) {
+      if (offset + 8 <= data.length && offset !== walletOffset + 32) {
+        try {
+          const rawAmount = data.readBigUInt64LE(offset);
+          const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
+          
+          if (tokenAmount >= 1 && tokenAmount <= 50000000 && tokenAmount !== native) {
+            delegated = tokenAmount;
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+    
+    return { native, delegated };
   } catch (error) {
     console.error('Error parsing Voter Weight Record:', error);
-    return 0;
+    return { native: 0, delegated: 0 };
   }
 }
 
@@ -170,23 +198,25 @@ async function updateAllCitizensVerifiedGovernance() {
     for (const citizen of citizens) {
       console.log(`\nProcessing ${citizen.wallet.substring(0, 8)}...`);
       
-      const governancePower = await getVoterWeight(citizen.wallet);
+      const governanceBreakdown = await getVoterWeight(citizen.wallet);
       
-      if (governancePower > 0) {
+      if (governanceBreakdown.total > 0) {
         citizensWithPower.push({
           wallet: citizen.wallet,
-          power: governancePower
+          power: governanceBreakdown.total,
+          native: governanceBreakdown.native,
+          delegated: governanceBreakdown.delegated
         });
         
-        // Update database
+        // Update database with breakdown
         const updateClient = await db.pool.connect();
         try {
           await updateClient.query(
-            'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
-            [governancePower, citizen.wallet]
+            'UPDATE citizens SET governance_power = $1, native_governance_power = $2, delegated_governance_power = $3 WHERE wallet = $4',
+            [governanceBreakdown.total, governanceBreakdown.native, governanceBreakdown.delegated, citizen.wallet]
           );
           
-          console.log(`✓ Updated: ${governancePower.toLocaleString()} ISLAND`);
+          console.log(`✓ Updated: ${governanceBreakdown.total.toLocaleString()} ISLAND (Native: ${governanceBreakdown.native.toLocaleString()}, Delegated: ${governanceBreakdown.delegated.toLocaleString()})`);
           
         } finally {
           updateClient.release();
