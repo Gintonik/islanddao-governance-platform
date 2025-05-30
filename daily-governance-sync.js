@@ -13,7 +13,7 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power with authentic VSR data
+    // Update governance power with authentic VSR data (native power)
     console.log('📊 Extracting authentic governance power from VSR accounts...');
     const result = await updateAllCitizensWithAuthenticVSR();
     
