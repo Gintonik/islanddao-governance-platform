@@ -4,6 +4,7 @@
  */
 
 const governanceCalculator = require('./final-governance-calculator');
+const automaticBreakdown = require('./automatic-governance-breakdown');
 
 /**
  * Run daily governance power synchronization
@@ -13,22 +14,19 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power for all citizens
-    const result = await governanceCalculator.updateAllCitizensGovernancePower();
+    // Update governance power with native/delegated breakdown for all citizens
+    console.log('📊 Calculating authentic native and delegated governance power...');
+    const result = await automaticBreakdown.updateAllCitizensGovernanceBreakdown();
     
-    if (result.success) {
-      console.log('✅ Daily governance sync completed successfully');
-      console.log(`📊 Citizens processed: ${result.total}`);
-      console.log(`📈 Successful updates: ${result.updated}`);
-      console.log(`💰 Total governance power: ${result.totalGovernancePower.toFixed(6)} ISLAND`);
-      
-      // Get updated statistics
-      const stats = await governanceCalculator.getGovernanceStatistics();
-      console.log(`📈 Participation rate: ${stats.participationRate}%`);
-      console.log(`👑 Top governance power: ${stats.maxGovernancePower.toFixed(6)} ISLAND`);
-    } else {
-      console.error('❌ Daily governance sync failed');
-    }
+    console.log('✅ Daily governance sync completed successfully');
+    console.log(`📊 Citizens processed: ${result.total}`);
+    console.log(`📈 Successful updates: ${result.success}`);
+    console.log(`❌ Errors: ${result.errors}`);
+    
+    // Get updated statistics
+    const stats = await governanceCalculator.getGovernanceStatistics();
+    console.log(`📈 Participation rate: ${stats.participationRate}%`);
+    console.log(`👑 Top governance power: ${stats.maxGovernancePower.toFixed(6)} ISLAND`);
     
     return result;
   } catch (error) {
