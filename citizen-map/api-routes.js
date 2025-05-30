@@ -290,8 +290,53 @@ async function getAllCitizens() {
  */
 async function syncGovernancePower() {
   try {
-    console.log('🔄 Governance power sync not available - manual sync required');
-    return { message: 'Governance power sync endpoint available for manual integration' };
+    console.log('🔄 Starting governance power sync for all citizens...');
+    
+    const { batchUpdateGovernancePower } = require('./solana-governance');
+    
+    // Connect to database
+    const client = await db.pool.connect();
+    
+    try {
+      // Get all citizen wallet addresses
+      const citizensResult = await client.query('SELECT wallet FROM citizens');
+      const walletAddresses = citizensResult.rows.map(row => row.wallet);
+      
+      if (walletAddresses.length === 0) {
+        return { message: 'No citizens found to sync' };
+      }
+      
+      console.log(`📊 Syncing governance power for ${walletAddresses.length} citizens`);
+      
+      // Batch fetch governance power from Solana blockchain
+      const governanceResults = await batchUpdateGovernancePower(walletAddresses);
+      
+      // Update database with real governance power values
+      let updatedCount = 0;
+      for (const result of governanceResults) {
+        if (result.success) {
+          await client.query(
+            'UPDATE citizens SET governance_power = $1 WHERE wallet = $2',
+            [result.governancePower, result.walletAddress]
+          );
+          updatedCount++;
+        } else {
+          console.warn(`Failed to update governance power for ${result.walletAddress}: ${result.error}`);
+        }
+      }
+      
+      console.log(`✅ Successfully updated governance power for ${updatedCount}/${walletAddresses.length} citizens`);
+      
+      return { 
+        success: true, 
+        message: `Governance power synced for ${updatedCount}/${walletAddresses.length} citizens`,
+        updatedCount,
+        totalCitizens: walletAddresses.length
+      };
+      
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Error syncing governance power:', error);
     return { error: error.message };
