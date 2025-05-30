@@ -1,103 +1,83 @@
 /**
- * Daily Governance Power Synchronization
- * Automatically updates governance power for all citizens from Solana blockchain
+ * Daily Governance Synchronization System
+ * Updates all citizen governance power values every 24 hours using authentic VSR data
+ * Uses the verified "max single value" methodology proven with DeanMachine
  */
 
-const { updateAllCitizensEfficient } = require('./efficient-vsr-extractor.js');
+const { updateAllCitizensAuthenticGovernance } = require('./authentic-governance-calculator.js');
 
 /**
- * Run daily governance power synchronization
+ * Run the daily governance synchronization
  */
 async function runDailyGovernanceSync() {
   try {
-    console.log('🔄 Starting daily governance power synchronization...');
-    console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
+    console.log('🌅 Starting daily governance synchronization...');
+    console.log('📅 Date:', new Date().toISOString());
     
-    // Update governance power with efficient VSR extraction  
-    console.log('📊 Extracting authentic governance power from VSR accounts...');
-    const result = await updateAllCitizensEfficient();
-    
-    // Ensure proper native/delegated breakdown
-    console.log('📊 Updating governance power breakdown...');
-    const { updateGovernancePowerBreakdown } = require('./db.js');
-    
-    for (const citizen of result) {
-      if (citizen.votingPower > 0) {
-        await updateGovernancePowerBreakdown(
-          citizen.walletAddress,
-          citizen.votingPower,  // native power from VSR accounts
-          0                     // delegated power (calculated separately)
-        );
-      }
-    }
+    const result = await updateAllCitizensAuthenticGovernance();
     
     console.log('✅ Daily governance sync completed successfully');
-    console.log(`📊 Citizens processed: ${result.length}`);
-    
-    const successCount = result.filter(r => r.governancePower > 0).length;
-    const errorCount = result.filter(r => r.error).length;
-    
-    console.log(`📈 Successful updates: ${successCount}`);
-    console.log(`❌ Errors: ${errorCount}`);
+    console.log(`📊 Citizens processed: ${result.processed}`);
+    console.log(`📊 Citizens updated: ${result.updated}`);
+    console.log('🕐 Next sync in 24 hours');
     
     return result;
+    
   } catch (error) {
-    console.error('❌ Error during daily governance sync:', error.message);
-    
-    if (error.message.includes('HELIUS_API_KEY')) {
-      console.error('🔑 Helius API key required for blockchain access');
-      console.error('   Please set HELIUS_API_KEY environment variable');
-    }
-    
+    console.error('❌ Daily governance sync failed:', error);
     throw error;
   }
 }
 
 /**
- * Schedule daily governance sync to run at specified UTC hour
+ * Schedule the daily governance sync to run every 24 hours
  */
-function scheduleDailyGovernanceSync(hour = 0) {
+function scheduleDailyGovernanceSync() {
+  console.log('🚀 Initializing daily governance synchronization system...');
+  
+  // Calculate time until next midnight UTC
   const now = new Date();
-  const scheduled = new Date();
-  scheduled.setUTCHours(hour, 0, 0, 0);
+  const tomorrow = new Date(now);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  tomorrow.setUTCHours(0, 0, 0, 0);
   
-  // If the scheduled time for today has passed, schedule for tomorrow
-  if (scheduled <= now) {
-    scheduled.setUTCDate(scheduled.getUTCDate() + 1);
-  }
+  const msUntilMidnight = tomorrow.getTime() - now.getTime();
   
-  const msUntilSync = scheduled.getTime() - now.getTime();
-  const hoursUntilSync = msUntilSync / (1000 * 60 * 60);
+  console.log(`📅 Next governance sync scheduled for: ${tomorrow.toISOString()}`);
+  console.log(`⏳ Time until next sync: ${Math.round(msUntilMidnight / (1000 * 60 * 60))} hours`);
   
-  console.log(`📅 Next governance sync scheduled for: ${scheduled.toISOString()}`);
-  console.log(`⏳ Time until next sync: ${hoursUntilSync.toFixed(1)} hours`);
-  
-  setTimeout(async () => {
-    try {
-      await runDailyGovernanceSync();
-    } catch (error) {
-      console.error('Scheduled sync failed:', error.message);
-    }
+  // Schedule first run at midnight UTC
+  setTimeout(() => {
+    runDailyGovernanceSync();
     
-    // Schedule the next day's sync
-    scheduleDailyGovernanceSync(hour);
-  }, msUntilSync);
+    // Then run every 24 hours
+    setInterval(runDailyGovernanceSync, 24 * 60 * 60 * 1000);
+    
+  }, msUntilMidnight);
+  
+  console.log('✅ Governance sync system initialized');
 }
 
 /**
- * Initialize governance sync system
+ * Run sync immediately for testing/manual trigger
  */
-function initializeGovernanceSync() {
-  console.log('🚀 Initializing daily governance synchronization system...');
-  
-  // Schedule daily sync at midnight UTC
-  scheduleDailyGovernanceSync(0);
-  
-  console.log('✅ Governance sync system initialized');
+async function runSyncNow() {
+  console.log('🔧 Manual governance sync triggered...');
+  return await runDailyGovernanceSync();
 }
 
 module.exports = {
   runDailyGovernanceSync,
   scheduleDailyGovernanceSync,
-  initializeGovernanceSync
+  runSyncNow
 };
+
+// Auto-initialize when imported
+if (require.main !== module) {
+  scheduleDailyGovernanceSync();
+}
+
+// Run sync when called directly
+if (require.main === module) {
+  runSyncNow().catch(console.error);
+}
