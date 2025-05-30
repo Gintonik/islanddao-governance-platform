@@ -1,246 +1,316 @@
 /**
- * Dean's List Delegation Methodology Implementation
- * Based on the exact approach from their leaderboard code
+ * Dean's List Delegation Methodology
+ * Based on the working leaderboard calculation from Dean's List DAO
  * https://github.com/dean-s-list/deanslist-platform/blob/leaderboard/libs/api/leaderboard/data-access/src/lib/api-leaderboard-voting-power.service.ts
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
+const { updateGovernancePowerBreakdown, getAllCitizens } = require('./db.js');
 
-// Initialize connection with dedicated RPC key
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '7271240f-154a-4417-9663-718ac65c8b8e';
-const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`);
+// Use the working Helius RPC connection
+const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || '7271240f-154a-4417-9663-718ac65c8b8e'}`);
 
-// IslandDAO configuration (same as Dean's List uses)
-const REALM_PK = new PublicKey('5piGF94RbCqaoGoRnEXwmPcgWnGNkoqm3cKqAvGmGdL3');
-const GOVERNANCE_PROGRAM_PK = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
-const VSR_PROGRAM_PK = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+// IslandDAO governance configuration (using the working values)
+const VSR_PROGRAM_ID = new PublicKey('VotEn9AWwTFtJPJSMV5F9jsMY6QwWM5qn3XP9PATGW7');
+const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
+const REALM_PUBKEY = new PublicKey('9M9xrrGQJgGGpn9CCdDQNpqk9aBo8Cv5HYPGKrsWMwKi');
+
+let vsrAccountsCache = null;
+let tokenOwnerRecordsCache = null;
 
 /**
- * Find Token Owner Records where power is delegated TO a specific wallet
- * This replicates Dean's List getGovAccounts() function
+ * Load VSR accounts using the proven method
  */
-async function findDelegationRecords(targetWalletAddress) {
-    try {
-        console.log(`Finding delegation records for: ${targetWalletAddress.substring(0, 8)}...`);
+async function loadVSRAccounts() {
+  if (vsrAccountsCache) {
+    console.log('Using cached VSR accounts...');
+    return vsrAccountsCache;
+  }
+
+  try {
+    console.log('Loading VSR accounts...');
+    
+    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { dataSize: 3264 } // Voter Weight Record size
+      ]
+    });
+
+    console.log(`Loaded ${accounts.length} VSR accounts`);
+    vsrAccountsCache = accounts;
+    return accounts;
+    
+  } catch (error) {
+    console.error('Error loading VSR accounts:', error);
+    return [];
+  }
+}
+
+/**
+ * Load Token Owner Records for delegation analysis
+ */
+async function loadTokenOwnerRecords() {
+  if (tokenOwnerRecordsCache) {
+    console.log('Using cached Token Owner Records...');
+    return tokenOwnerRecordsCache;
+  }
+
+  try {
+    console.log('Loading Token Owner Records...');
+    
+    const accounts = await connection.getProgramAccounts(GOVERNANCE_PROGRAM_ID, {
+      filters: [
+        { dataSize: 104 }, // Standard Token Owner Record size
+        {
+          memcmp: {
+            offset: 32,
+            bytes: REALM_PUBKEY.toBase58()
+          }
+        }
+      ]
+    });
+
+    console.log(`Loaded ${accounts.length} Token Owner Records`);
+    
+    // Parse delegation relationships
+    const delegationMappings = [];
+    
+    for (const account of accounts) {
+      try {
+        const data = account.account.data;
         
-        const targetWalletPubkey = new PublicKey(targetWalletAddress);
-        const targetWalletBuffer = targetWalletPubkey.toBuffer();
-        const realmBuffer = REALM_PK.toBuffer();
+        // Parse Token Owner Record structure
+        const owner = new PublicKey(data.slice(64, 96)).toBase58();
         
-        // Get all governance program accounts
-        const allGovAccounts = await connection.getProgramAccounts(GOVERNANCE_PROGRAM_PK);
-        console.log(`Scanning ${allGovAccounts.length} governance accounts...`);
-        
-        const delegationRecords = [];
-        
-        for (const account of allGovAccounts) {
-            const data = account.account.data;
-            
-            // Token Owner Record structure (based on Dean's List filters):
-            // Offset 1: realm (32 bytes)
-            // Offset 33: governing token mint (32 bytes) 
-            // Offset 65: governing token owner (32 bytes) - this is the delegator
-            // Offset 97: (other fields)
-            // Around offset 113+: delegate field (32 bytes) - this should be our target wallet
-            
-            try {
-                // Check if this account is for our realm
-                const accountRealmBuffer = data.subarray(1, 33);
-                if (!accountRealmBuffer.equals(realmBuffer)) {
-                    continue; // Not our realm
-                }
-                
-                // Look for our target wallet as the delegate
-                // Dean's List uses offset: 1 + 32 + 32 + 32 + 8 + 4 + 4 + 1 + 1 + 6 + 1 = 122
-                const delegateOffset = 122;
-                
-                if (data.length >= delegateOffset + 32) {
-                    const delegateBuffer = data.subarray(delegateOffset, delegateOffset + 32);
-                    
-                    if (delegateBuffer.equals(targetWalletBuffer)) {
-                        // Found a delegation TO our target wallet!
-                        const delegatorBuffer = data.subarray(65, 97);
-                        const delegatorPubkey = new PublicKey(delegatorBuffer);
-                        const delegatorAddress = delegatorPubkey.toString();
-                        
-                        console.log(`Found delegation from: ${delegatorAddress.substring(0, 8)}...`);
-                        
-                        delegationRecords.push({
-                            account: account.pubkey.toString(),
-                            delegator: delegatorAddress,
-                            delegate: targetWalletAddress
-                        });
-                    }
-                }
-            } catch (error) {
-                // Skip malformed accounts
-                continue;
+        // Check for governance delegate field
+        let governanceDelegate = null;
+        if (data.length >= 104) {
+          // Governance delegate is at a different offset than community delegate
+          try {
+            // Try different delegate field positions
+            const delegateBytes1 = data.slice(72, 104); // First potential delegate position
+            if (!delegateBytes1.every(byte => byte === 0)) {
+              governanceDelegate = new PublicKey(delegateBytes1).toBase58();
             }
+          } catch (e) {
+            // Try alternative delegate position if first fails
+          }
         }
         
-        console.log(`Found ${delegationRecords.length} delegation records`);
-        return delegationRecords;
+        delegationMappings.push({
+          pubkey: account.pubkey.toBase58(),
+          owner,
+          governanceDelegate
+        });
         
-    } catch (error) {
-        console.error(`Error finding delegation records:`, error.message);
-        return [];
+      } catch (parseError) {
+        // Skip invalid records
+      }
     }
+    
+    tokenOwnerRecordsCache = delegationMappings;
+    return delegationMappings;
+    
+  } catch (error) {
+    console.error('Error loading Token Owner Records:', error);
+    return [];
+  }
 }
 
 /**
- * Get governance power for a specific wallet from VSR accounts
- * This replicates Dean's List getGovPower() function
+ * Calculate native governance power from VSR accounts (like getLockTokensVotingPowerPerWallet)
  */
-async function getWalletGovernancePower(walletAddress) {
+async function getNativeGovernancePower(walletAddress) {
+  const vsrAccounts = await loadVSRAccounts();
+  let totalNativePower = 0;
+  
+  for (const account of vsrAccounts) {
     try {
-        const walletPubkey = new PublicKey(walletAddress);
-        const walletBuffer = walletPubkey.toBuffer();
-        
-        // Get all VSR program accounts
-        const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_PK);
-        
-        let maxPower = 0;
-        
-        for (const account of allVSRAccounts) {
-            const data = account.account.data;
-            
-            // Look for wallet reference
-            for (let offset = 0; offset <= data.length - 32; offset += 8) {
-                if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
-                    const discriminator = data.readBigUInt64LE(0).toString();
-                    
-                    // Focus on Voter Weight Records
-                    if (discriminator === '14560581792603266545' && data.length >= 120) {
-                        try {
-                            // Get native power from offset 112
-                            const rawAmount = data.readBigUInt64LE(112);
-                            const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
-                            
-                            if (tokenAmount >= 1000 && tokenAmount > maxPower) {
-                                maxPower = tokenAmount;
-                            }
-                        } catch (error) {
-                            continue;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        
-        return maxPower;
-        
+      const data = account.account.data;
+      
+      // Parse voter pubkey (offset 8)
+      const voterBytes = data.slice(8, 40);
+      const voterPubkey = new PublicKey(voterBytes);
+      
+      if (voterPubkey.toBase58() !== walletAddress) {
+        continue;
+      }
+      
+      // Parse governance power (offset 40, 8 bytes)
+      const governancePowerBytes = data.slice(40, 48);
+      const governancePower = Number(
+        governancePowerBytes.readBigUInt64LE(0)
+      ) / 1e6; // Convert from micro-lamports
+      
+      totalNativePower += governancePower;
+      
     } catch (error) {
-        console.error(`Error getting governance power for ${walletAddress}:`, error.message);
-        return 0;
+      // Skip invalid accounts
+      continue;
     }
+  }
+  
+  return totalNativePower;
 }
 
 /**
- * Calculate delegated voting power using Dean's List methodology
- * This replicates getDelegatedVotingPower() function
+ * Get delegated governance power (power delegated TO this wallet from others)
+ * Based on getDelegatedVotingPower methodology
  */
-async function calculateDelegatedPower(targetWalletAddress) {
-    console.log(`\\n=== DEAN'S LIST DELEGATION METHODOLOGY ===`);
-    console.log(`Target wallet: ${targetWalletAddress.substring(0, 8)}...`);
+async function getDelegatedGovernancePower(walletAddress) {
+  const [tokenOwnerRecords, vsrAccounts] = await Promise.all([
+    loadTokenOwnerRecords(),
+    loadVSRAccounts()
+  ]);
+  
+  // Find all Token Owner Records where governance is delegated TO this wallet
+  const delegationsToWallet = tokenOwnerRecords.filter(record => 
+    record.governanceDelegate === walletAddress && record.owner !== walletAddress
+  );
+  
+  console.log(`Found ${delegationsToWallet.length} delegations to ${walletAddress.substring(0, 8)}`);
+  
+  let totalDelegatedPower = 0;
+  
+  // For each delegation, calculate the delegator's native power
+  for (const delegation of delegationsToWallet) {
+    const delegatorNativePower = await getNativeGovernancePower(delegation.owner);
     
-    // Step 1: Find all Token Owner Records where power is delegated TO this wallet
-    const delegationRecords = await findDelegationRecords(targetWalletAddress);
-    
-    if (delegationRecords.length === 0) {
-        console.log(`No delegations found to this wallet`);
-        return { delegated: 0, delegators: [] };
+    if (delegatorNativePower > 0) {
+      totalDelegatedPower += delegatorNativePower;
+      console.log(`  Delegation from ${delegation.owner.substring(0, 8)}: ${delegatorNativePower.toLocaleString()} ISLAND`);
     }
-    
-    console.log(`\\nStep 2: Calculate power of each delegator`);
-    
-    let totalDelegatedPower = 0;
-    const delegatorDetails = [];
-    
-    for (const record of delegationRecords) {
-        console.log(`\\nChecking delegator: ${record.delegator.substring(0, 8)}...`);
-        
-        const delegatorPower = await getWalletGovernancePower(record.delegator);
-        console.log(`Delegator power: ${delegatorPower.toLocaleString()} ISLAND`);
-        
-        totalDelegatedPower += delegatorPower;
-        
-        delegatorDetails.push({
-            wallet: record.delegator,
-            power: delegatorPower
-        });
-    }
-    
-    console.log(`\\n=== DELEGATION SUMMARY ===`);
-    console.log(`Total delegators: ${delegationRecords.length}`);
-    console.log(`Total delegated power: ${totalDelegatedPower.toLocaleString()} ISLAND`);
-    
-    return {
-        delegated: totalDelegatedPower,
-        delegators: delegatorDetails
-    };
+  }
+  
+  return totalDelegatedPower;
 }
 
 /**
- * Get complete governance breakdown using Dean's List methodology
+ * Get complete governance power breakdown (native + delegated)
  */
-async function getCompleteGovernanceBreakdown(walletAddress) {
-    console.log(`\\n=== COMPLETE GOVERNANCE BREAKDOWN ===`);
-    console.log(`Wallet: ${walletAddress.substring(0, 8)}...`);
+async function getCompleteGovernancePowerBreakdown(walletAddress) {
+  console.log(`\nCalculating governance breakdown for ${walletAddress.substring(0, 8)}...`);
+  
+  try {
+    const [nativePower, delegatedPower] = await Promise.all([
+      getNativeGovernancePower(walletAddress),
+      getDelegatedGovernancePower(walletAddress)
+    ]);
     
-    // Get native power (wallet's own VSR power)
-    console.log(`\\nStep 1: Getting native governance power...`);
-    const nativePower = await getWalletGovernancePower(walletAddress);
-    console.log(`Native power: ${nativePower.toLocaleString()} ISLAND`);
+    const totalPower = nativePower + delegatedPower;
     
-    // Get delegated power (power delegated TO this wallet)
-    console.log(`\\nStep 2: Getting delegated governance power...`);
-    const delegationResult = await calculateDelegatedPower(walletAddress);
-    
-    const totalPower = nativePower + delegationResult.delegated;
-    
-    console.log(`\\n=== FINAL BREAKDOWN ===`);
-    console.log(`Native: ${nativePower.toLocaleString()} ISLAND`);
-    console.log(`Delegated: ${delegationResult.delegated.toLocaleString()} ISLAND`);
-    console.log(`Total: ${totalPower.toLocaleString()} ISLAND`);
-    
-    if (delegationResult.delegators.length > 0) {
-        console.log(`\\nDelegators:`);
-        delegationResult.delegators.forEach((delegator, index) => {
-            console.log(`${index + 1}. ${delegator.wallet.substring(0, 8)}... (${delegator.power.toLocaleString()} ISLAND)`);
-        });
-    }
+    console.log(`  Native Power: ${nativePower.toLocaleString()} ISLAND`);
+    console.log(`  Delegated Power: ${delegatedPower.toLocaleString()} ISLAND`);
+    console.log(`  Total Power: ${totalPower.toLocaleString()} ISLAND`);
     
     return {
-        native: nativePower,
-        delegated: delegationResult.delegated,
-        total: totalPower,
-        delegators: delegationResult.delegators
+      nativePower,
+      delegatedPower,
+      totalPower
     };
+    
+  } catch (error) {
+    console.error(`Error calculating governance breakdown for ${walletAddress}:`, error);
+    return {
+      nativePower: 0,
+      delegatedPower: 0,
+      totalPower: 0
+    };
+  }
+}
+
+/**
+ * Update a citizen with authentic native/delegated governance power
+ */
+async function updateCitizenWithAuthenticBreakdown(walletAddress) {
+  const breakdown = await getCompleteGovernancePowerBreakdown(walletAddress);
+  
+  if (breakdown.totalPower > 0) {
+    await updateGovernancePowerBreakdown(
+      walletAddress,
+      breakdown.nativePower,
+      breakdown.delegatedPower
+    );
+    
+    console.log(`✅ Updated ${walletAddress.substring(0, 8)} with authentic breakdown`);
+  }
+  
+  return breakdown;
+}
+
+/**
+ * Update all citizens with authentic native/delegated breakdown
+ */
+async function updateAllCitizensWithAuthenticBreakdown() {
+  try {
+    console.log('🔄 Starting authentic governance power breakdown...');
+    
+    const citizens = await getAllCitizens();
+    console.log(`📊 Processing ${citizens.length} citizens`);
+    
+    let processed = 0;
+    let updated = 0;
+    
+    for (const citizen of citizens) {
+      const breakdown = await getCompleteGovernancePowerBreakdown(citizen.wallet);
+      
+      if (breakdown.totalPower > 0) {
+        await updateGovernancePowerBreakdown(
+          citizen.wallet,
+          breakdown.nativePower,
+          breakdown.delegatedPower
+        );
+        updated++;
+      }
+      
+      processed++;
+      
+      if (processed % 5 === 0) {
+        console.log(`📊 Processed ${processed}/${citizens.length} citizens`);
+      }
+    }
+    
+    console.log('✅ Authentic breakdown completed');
+    console.log(`📊 Citizens processed: ${processed}`);
+    console.log(`📊 Citizens updated: ${updated}`);
+    
+    return { processed, updated };
+    
+  } catch (error) {
+    console.error('❌ Error in authentic breakdown:', error);
+    throw error;
+  }
+}
+
+/**
+ * Test breakdown calculation
+ */
+async function testBreakdown() {
+  console.log('🧪 Testing authentic governance breakdown...');
+  
+  // Test with the wallet we know has delegations
+  const testWallet = 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG';
+  const breakdown = await getCompleteGovernancePowerBreakdown(testWallet);
+  
+  console.log('\nTest Results:');
+  console.log(`Wallet: ${testWallet}`);
+  console.log(`Native: ${breakdown.nativePower.toLocaleString()} ISLAND`);
+  console.log(`Delegated: ${breakdown.delegatedPower.toLocaleString()} ISLAND`);
+  console.log(`Total: ${breakdown.totalPower.toLocaleString()} ISLAND`);
+  
+  return breakdown;
 }
 
 module.exports = {
-    findDelegationRecords,
-    getWalletGovernancePower,
-    calculateDelegatedPower,
-    getCompleteGovernanceBreakdown
+  getNativeGovernancePower,
+  getDelegatedGovernancePower,
+  getCompleteGovernancePowerBreakdown,
+  updateCitizenWithAuthenticBreakdown,
+  updateAllCitizensWithAuthenticBreakdown,
+  testBreakdown
 };
 
-// If run directly, test with specific wallets
+// Run test when called directly
 if (require.main === module) {
-    async function testDelegationMethodology() {
-        console.log('Testing Dean List delegation methodology...');
-        
-        const testWallets = [
-            'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG',
-            '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt'
-        ];
-        
-        for (const wallet of testWallets) {
-            await getCompleteGovernanceBreakdown(wallet);
-            console.log('\\n' + '='.repeat(80) + '\\n');
-        }
-    }
-    
-    testDelegationMethodology().catch(console.error);
+  testBreakdown().catch(console.error);
 }
