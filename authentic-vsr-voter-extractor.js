@@ -157,16 +157,7 @@ async function findAllVoterAccounts() {
     
     console.log('Fetching all VSR voter accounts...');
     
-    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        {
-          memcmp: {
-            offset: 0,
-            bytes: 'base58', // This would be the account discriminator for voter accounts
-          }
-        }
-      ]
-    });
+    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
     
     console.log(`Found ${accounts.length} VSR accounts`);
     
