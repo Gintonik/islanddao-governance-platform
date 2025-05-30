@@ -1,0 +1,69 @@
+ // This is a workaround for the fact that the VSR program IDL does not include the voterWeightRecord account
+    const votingPower = await fetchVotingPower(
+      this.program.provider.connection,
+      this.program.programId,
+      registrar,
+      voter,
+    )
+
+    const power = votingPower.result ?? new BN(0)
+
+    return { voterWeight: power }
+  }
+
+  // NO-OP
+  async createMaxVoterWeightRecord(): Promise<TransactionInstruction | null> {
+    return null
+  }
+
+  async updateVoterWeightRecord(voter: PublicKey, realm: PublicKey, mint: PublicKey) {
+    const pluginProgramId = this.program.programId
+    const { registrar } = this.getRegistrarPDA(realm, mint)
+    const { voter: voterPDA } = getVoterPDA(registrar, voter, pluginProgramId)
+    const { voterWeightPk } = await this.getVoterWeightRecordPDA(realm, mint, voter)
+    const ix = await this.program.methods
+      .updateVoterWeightRecord()
+      .accounts({
+        registrar,
+        voter: voterPDA,
+        voterWeightRecord: voterWeightPk,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      })
+      .instruction()
+
+    return { pre: [ix] }
+  }
+  // NO-OP
+  async updateMaxVoterWeightRecord(): Promise<TransactionInstruction | null> {
+    return null
+  }
+  async calculateVoterWeight(voter: PublicKey, realm: PublicKey, mint: PublicKey): Promise<BN | null> {
+    // TODO should use vsr govpower multi? see useVsrGovpowerMulti
+    const { registrar: registrarPk } = this.getRegistrarPDA(realm, mint)
+    const programId = this.program.programId
+    if (registrarPk === undefined || programId === undefined) {
+      return null
+    }
+
+    const { voter: voterPk } = getVoterPDA(registrarPk, voter, programId)
+    const votingPower = await fetchVotingPower(this.program.provider.connection, programId, registrarPk, voterPk)
+
+    return votingPower.result ?? new BN(0)
+  }
+  constructor(program: Program<VoterStakeRegistry>, devnet: boolean) {
+    super(program, devnet)
+  }
+
+  static async connect(
+    provider: Provider,
+    programId: web3.PublicKey = DEFAULT_VSR_ID,
+    devnet = false,
+  ): Promise<VsrClient> {
+    const idl = IDL
+
+    return new VsrClient(
+      new Program<VoterStakeRegistry>(idl as VoterStakeRegistry, programId, provider) as Program<VoterStakeRegistry>,
+      devnet,
+    )
+  }
+}

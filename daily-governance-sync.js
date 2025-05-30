@@ -3,7 +3,7 @@
  * Automatically updates governance power for all citizens from Solana blockchain
  */
 
-const { updateAllCitizensWithIslandDAOPower } = require('./authentic-islanddao-vsr-calculator.js');
+const { updateAllCitizensWithAuthenticVSR } = require('./vsr-voting-power-fetcher.js');
 
 /**
  * Run daily governance power synchronization
@@ -13,9 +13,9 @@ async function runDailyGovernanceSync() {
     console.log('🔄 Starting daily governance power synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Update governance power with authentic IslandDAO VSR data
-    console.log('📊 Extracting authentic governance power from IslandDAO VSR accounts...');
-    const result = await updateAllCitizensWithIslandDAOPower();
+    // Update governance power with authentic VSR data
+    console.log('📊 Extracting authentic governance power from VSR accounts...');
+    const result = await updateAllCitizensWithAuthenticVSR();
     
     console.log('✅ Daily governance sync completed successfully');
     console.log(`📊 Citizens processed: ${result.length}`);
