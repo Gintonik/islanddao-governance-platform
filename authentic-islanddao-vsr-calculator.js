@@ -175,9 +175,10 @@ async function updateAllCitizensWithIslandDAOPower() {
     let errorCount = 0;
     
     for (const citizen of citizens) {
-      console.log(`Processing ${citizen.wallet_address}...`);
+      const walletAddress = citizen.wallet; // Use 'wallet' field from database
+      console.log(`Processing ${walletAddress}...`);
       
-      const result = await updateCitizenWithIslandDAOPower(citizen.wallet_address);
+      const result = await updateCitizenWithIslandDAOPower(walletAddress);
       results.push(result);
       
       if (result.governancePower > 0) {
