@@ -67,7 +67,7 @@ async function findDelegators(targetWalletAddress) {
 async function calculateNativeDelegatedBreakdown(walletAddress, vsrAccounts) {
   try {
     // Get native power using proven VSR extraction
-    const nativeResult = await extractGovernancePowerFromCache(walletAddress, vsrAccounts);
+    const nativeResult = await extractGovernancePowerEfficient(walletAddress);
     const nativePower = nativeResult.votingPower || 0;
     
     // Find delegators and sum their governance power
@@ -78,7 +78,7 @@ async function calculateNativeDelegatedBreakdown(walletAddress, vsrAccounts) {
       console.log(`  Found ${delegators.length} delegators for ${walletAddress.substring(0, 8)}`);
       
       for (const delegatorWallet of delegators) {
-        const delegatorResult = await extractGovernancePowerFromCache(delegatorWallet, vsrAccounts);
+        const delegatorResult = await extractGovernancePowerEfficient(delegatorWallet);
         delegatedPower += delegatorResult.votingPower || 0;
       }
     }

@@ -111,7 +111,7 @@ function CitizenProfile({ citizen, onClose }) {
                   <BreakdownItem>
                     <BreakdownLabel>Native Power</BreakdownLabel>
                     <BreakdownValue>
-                      {parseFloat(citizen.native_governance_power || 0).toLocaleString(undefined, { 
+                      {parseFloat(citizen.native_power || 0).toLocaleString(undefined, { 
                         minimumFractionDigits: 0, 
                         maximumFractionDigits: 3 
                       })} ISLAND
@@ -122,7 +122,7 @@ function CitizenProfile({ citizen, onClose }) {
                   <BreakdownItem>
                     <BreakdownLabel>Delegated Power</BreakdownLabel>
                     <BreakdownValue>
-                      {parseFloat(citizen.delegated_governance_power || 0).toLocaleString(undefined, { 
+                      {parseFloat(citizen.delegated_power || 0).toLocaleString(undefined, { 
                         minimumFractionDigits: 0, 
                         maximumFractionDigits: 3 
                       })} ISLAND
