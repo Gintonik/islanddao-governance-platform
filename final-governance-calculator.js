@@ -12,8 +12,8 @@
 const { Connection, PublicKey } = require('@solana/web3.js');
 const db = require('./db');
 
-// Initialize connection with proper API key handling
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '088dfd59-6d2e-4695-a42a-2e0c257c2d00';
+// Initialize connection with dedicated RPC key
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '7271240f-154a-4417-9663-718ac65c8b8e';
 const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`);
 
 /**
@@ -46,26 +46,30 @@ async function extractAuthenticGovernancePower(walletAddress) {
                     foundVSRAccounts++;
                     const discriminator = data.readBigUInt64LE(0).toString();
                     
-                    // Check the critical offsets where governance power is stored
-                    const offsetsToCheck = [104, 112];
+                    // Check for total governance power at offset 104 or 112
+                    const totalPower104 = data.length >= 112 ? Number(data.readBigUInt64LE(104)) / Math.pow(10, 6) : 0;
+                    const totalPower112 = data.length >= 120 ? Number(data.readBigUInt64LE(112)) / Math.pow(10, 6) : 0;
                     
-                    for (const checkOffset of offsetsToCheck) {
-                        if (checkOffset + 8 <= data.length) {
-                            try {
-                                const rawAmount = data.readBigUInt64LE(checkOffset);
-                                const tokenAmount = Number(rawAmount) / Math.pow(10, 6);
-                                
-                                // Look for governance amounts (must be substantial)
-                                if (tokenAmount >= 1000 && tokenAmount <= 100000000) {
-                                    if (tokenAmount > authenticGovernancePower) {
-                                        authenticGovernancePower = tokenAmount;
-                                        // For now, assume all power is native (will refine delegation detection later)
-                                        nativeGovernancePower = tokenAmount;
-                                        delegatedGovernancePower = 0;
-                                    }
-                                }
-                            } catch (error) {
-                                continue;
+                    // Get the authentic total power (use the larger value)
+                    const currentTotalPower = Math.max(totalPower104, totalPower112);
+                    
+                    if (currentTotalPower >= 1000 && currentTotalPower <= 100000000) {
+                        if (currentTotalPower > authenticGovernancePower) {
+                            authenticGovernancePower = currentTotalPower;
+                            
+                            // Extract native and delegated power breakdown
+                            const nativePower = totalPower112 >= 1000 ? totalPower112 : 0;
+                            const delegatedPower = data.length >= 128 ? Number(data.readBigUInt64LE(120)) / Math.pow(10, 6) : 0;
+                            
+                            // Verify the breakdown adds up correctly
+                            const calculatedTotal = nativePower + delegatedPower;
+                            if (Math.abs(calculatedTotal - authenticGovernancePower) < 1000) {
+                                nativeGovernancePower = nativePower;
+                                delegatedGovernancePower = delegatedPower;
+                            } else {
+                                // If breakdown doesn't match, assume all native
+                                nativeGovernancePower = authenticGovernancePower;
+                                delegatedGovernancePower = 0;
                             }
                         }
                     }
