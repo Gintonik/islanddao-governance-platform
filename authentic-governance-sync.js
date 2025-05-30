@@ -42,7 +42,7 @@ async function extractGovernancePowerFromVSR(walletAddress, allVSRAccounts) {
     const governanceAmounts = [];
 
     for (const account of allVSRAccounts) {
-      const data = account.account.data;
+      const data = Buffer.from(account.account.data[0], 'base64');
       
       // ✅ CORRECT APPROACH: Search for wallet reference first, then calculate offset dynamically
       for (let walletOffset = 0; walletOffset <= data.length - 32; walletOffset += 8) {
