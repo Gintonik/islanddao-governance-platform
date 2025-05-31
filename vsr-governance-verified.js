@@ -7,7 +7,7 @@
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { Pool } = require('pg');
 
-const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
+const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 const REGISTRAR_PUBKEY = new PublicKey('5ZEf6X4qGMP3crrftbfGGwBhRj5qyc2xC2A1QmGmPWuQ');
 
