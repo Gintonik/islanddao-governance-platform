@@ -4,8 +4,9 @@
  * Run with: node update-native-power.js
  */
 
-const { Connection, PublicKey } = require('@solana/web3.js');
+const { Connection, PublicKey, Transaction, TransactionInstruction, Keypair } = require('@solana/web3.js');
 const { Pool } = require('pg');
+const { BorshCoder, EventParser } = require('@coral-xyz/anchor');
 
 // Configuration
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
@@ -164,50 +165,261 @@ function calculateDepositVotingPower(deposit, registrarConfig, currentTimestamp)
 }
 
 /**
- * Calculate native governance power using the proven VSR methodology
- * Uses the same approach that successfully extracted authentic data before
+ * Derive Voter PDA for a wallet
  */
-async function getLockTokensVotingPowerPerWallet(walletAddress) {
+function deriveVoterPDA(walletPubkey, registrarPubkey) {
+  const [voterPDA] = PublicKey.findProgramAddressSync(
+    [
+      registrarPubkey.toBuffer(),
+      Buffer.from('voter'),
+      walletPubkey.toBuffer()
+    ],
+    VSR_PROGRAM_ID
+  );
+  return voterPDA;
+}
+
+/**
+ * Simulate logVoterInfo transaction to get complete deposit information
+ */
+async function simulateLogVoterInfoTransaction(walletAddress) {
   try {
-    console.log(`  Fetching VSR data for ${walletAddress.substring(0, 8)}...`);
+    console.log(`  Simulating logVoterInfo for ${walletAddress.substring(0, 8)}...`);
     
     const walletPubkey = new PublicKey(walletAddress);
     
-    // Get VSR accounts for this wallet using the proven method
+    // Derive Registrar PDA
+    const [registrarPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('registrar'),
+        ISLANDDAO_REALM.toBuffer(),
+        ISLAND_MINT.toBuffer()
+      ],
+      VSR_PROGRAM_ID
+    );
+    
+    // Derive Voter PDA
+    const voterPDA = deriveVoterPDA(walletPubkey, registrarPDA);
+    
+    // Check if Voter account exists
+    const voterAccount = await connection.getAccountInfo(voterPDA);
+    if (!voterAccount) {
+      console.log(`    No Voter account found for ${walletAddress.substring(0, 8)}`);
+      return 0;
+    }
+    
+    console.log(`    Found Voter account: ${voterPDA.toBase58().substring(0, 8)}`);
+    
+    // Create logVoterInfo instruction
+    const instruction = new TransactionInstruction({
+      programId: VSR_PROGRAM_ID,
+      keys: [
+        { pubkey: registrarPDA, isSigner: false, isWritable: false },
+        { pubkey: voterPDA, isSigner: false, isWritable: false }
+      ],
+      data: Buffer.from([
+        0x9a, 0x27, 0x1c, 0x61, 0x7a, 0x85, 0x9a, 0x2c, // logVoterInfo discriminator
+        0, 0, 0, 0, // start index (0)
+        10, 0, 0, 0 // count (10 deposits)
+      ])
+    });
+    
+    // Create dummy transaction for simulation
+    const dummyKeypair = Keypair.generate();
+    const transaction = new Transaction().add(instruction);
+    transaction.feePayer = dummyKeypair.publicKey;
+    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    
+    // Simulate transaction to get logs
+    const simulationResult = await connection.simulateTransaction(transaction, {
+      sigVerify: false,
+      accounts: {
+        encoding: 'base64',
+        addresses: [voterPDA.toBase58(), registrarPDA.toBase58()]
+      }
+    });
+    
+    if (simulationResult.value.err) {
+      console.log(`    Simulation error: ${JSON.stringify(simulationResult.value.err)}`);
+      return await fallbackVotingPowerCalculation(walletAddress);
+    }
+    
+    // Parse logs for VoterInfo and DepositEntryInfo events
+    const logs = simulationResult.value.logs || [];
+    console.log(`    Found ${logs.length} log entries`);
+    
+    let totalVotingPower = 0;
+    let depositCount = 0;
+    
+    // Look for voting power information in logs
+    for (const log of logs) {
+      if (log.includes('VoterInfo')) {
+        // Parse VoterInfo log for total voting power
+        const match = log.match(/votingPower:\s*(\d+)/);
+        if (match) {
+          totalVotingPower = parseInt(match[1]) / 1e6; // Convert from micro-tokens
+          console.log(`    Found VoterInfo total voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
+        }
+      } else if (log.includes('DepositEntryInfo')) {
+        // Parse individual deposit info
+        const powerMatch = log.match(/votingPower:\s*(\d+)/);
+        const amountMatch = log.match(/amountDeposited:\s*(\d+)/);
+        
+        if (powerMatch && amountMatch) {
+          const depositPower = parseInt(powerMatch[1]) / 1e6;
+          const depositAmount = parseInt(amountMatch[1]) / 1e6;
+          
+          if (depositPower > 0) {
+            depositCount++;
+            console.log(`    Deposit ${depositCount}: ${depositAmount.toLocaleString()} ISLAND → ${depositPower.toLocaleString()} voting power`);
+          }
+        }
+      }
+    }
+    
+    if (totalVotingPower > 0) {
+      console.log(`    Total deposits analyzed: ${depositCount}`);
+      console.log(`    Final authentic voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
+      return totalVotingPower;
+    }
+    
+    // If no VoterInfo found, try fallback method
+    return await fallbackVotingPowerCalculation(walletAddress);
+    
+  } catch (error) {
+    console.error(`    Error simulating logVoterInfo: ${error.message}`);
+    return await fallbackVotingPowerCalculation(walletAddress);
+  }
+}
+
+/**
+ * Fallback voting power calculation using direct account parsing
+ */
+async function fallbackVotingPowerCalculation(walletAddress) {
+  try {
+    console.log(`    Using fallback calculation for ${walletAddress.substring(0, 8)}...`);
+    
+    const walletPubkey = new PublicKey(walletAddress);
+    
+    // Get VSR accounts for this wallet
     const vsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
         { memcmp: { offset: 8, bytes: walletPubkey.toBase58() } }
       ]
     });
     
-    console.log(`    Found ${vsrAccounts.length} VSR accounts`);
-    
     if (vsrAccounts.length === 0) {
       return 0;
     }
     
     let maxVotingPower = 0;
-    let depositDetails = [];
     
     for (const account of vsrAccounts) {
       const data = account.account.data;
       
-      // Check if this is a voter weight record using proven discriminator
+      // Check if this is a voter weight record
       const discriminator = data.readBigUInt64LE(0);
       if (discriminator.toString() === '14560581792603266545') {
         
-        // Extract voting power from standard VSR offsets that worked before
+        // Extract voting power from standard VSR offsets
         const powerOffsets = [104, 112, 120];
         
         for (const offset of powerOffsets) {
           if (offset + 8 <= data.length) {
             try {
               const rawPower = data.readBigUInt64LE(offset);
-              const votingPower = Number(rawPower) / 1e6; // Convert from micro-tokens
+              const votingPower = Number(rawPower) / 1e6;
               
               if (votingPower > 0 && votingPower < 50000000) {
                 maxVotingPower = Math.max(maxVotingPower, votingPower);
-                console.log(`      Power at offset ${offset}: ${votingPower.toLocaleString()} ISLAND`);
+                console.log(`      Fallback power at offset ${offset}: ${votingPower.toLocaleString()} ISLAND`);
+              }
+            } catch (e) {
+              // Skip invalid data
+            }
+          }
+        }
+      }
+    }
+    
+    return maxVotingPower;
+    
+  } catch (error) {
+    console.error(`    Fallback calculation error: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
+ * Calculate complete native governance power using enhanced VSR account analysis
+ */
+async function getLockTokensVotingPowerPerWallet(walletAddress) {
+  try {
+    console.log(`  Calculating complete VSR power for ${walletAddress.substring(0, 8)}...`);
+    
+    // First try the transaction simulation approach
+    let totalVotingPower = await simulateLogVoterInfoTransaction(walletAddress);
+    
+    // If simulation doesn't work, use enhanced fallback with comprehensive deposit analysis
+    if (totalVotingPower === 0) {
+      totalVotingPower = await enhancedVSRAccountAnalysis(walletAddress);
+    }
+    
+    console.log(`    Final calculated voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
+    return totalVotingPower;
+    
+  } catch (error) {
+    console.error(`  Error calculating VSR power for ${walletAddress}: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
+ * Enhanced VSR account analysis with comprehensive deposit parsing
+ */
+async function enhancedVSRAccountAnalysis(walletAddress) {
+  try {
+    console.log(`    Enhanced VSR analysis for ${walletAddress.substring(0, 8)}...`);
+    
+    const walletPubkey = new PublicKey(walletAddress);
+    
+    // Get all VSR accounts for this wallet
+    const vsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { memcmp: { offset: 8, bytes: walletPubkey.toBase58() } }
+      ]
+    });
+    
+    if (vsrAccounts.length === 0) {
+      return 0;
+    }
+    
+    console.log(`    Found ${vsrAccounts.length} VSR accounts`);
+    
+    let totalCalculatedPower = 0;
+    let maxAccountPower = 0;
+    let depositAnalysis = [];
+    
+    for (const account of vsrAccounts) {
+      const data = account.account.data;
+      
+      // Check if this is a voter weight record
+      const discriminator = data.readBigUInt64LE(0);
+      if (discriminator.toString() === '14560581792603266545') {
+        
+        // Extract account-level voting power from multiple offsets
+        const powerOffsets = [104, 112, 120, 128, 136];
+        let accountMaxPower = 0;
+        
+        for (const offset of powerOffsets) {
+          if (offset + 8 <= data.length) {
+            try {
+              const rawPower = data.readBigUInt64LE(offset);
+              const votingPower = Number(rawPower) / 1e6;
+              
+              if (votingPower > 0 && votingPower < 50000000) {
+                accountMaxPower = Math.max(accountMaxPower, votingPower);
+                console.log(`      Account power at offset ${offset}: ${votingPower.toLocaleString()} ISLAND`);
               }
             } catch (e) {
               // Skip invalid data
@@ -215,38 +427,61 @@ async function getLockTokensVotingPowerPerWallet(walletAddress) {
           }
         }
         
-        // Enhanced deposit analysis for high-power wallets
-        if (maxVotingPower > 1000000) {
-          console.log(`      Analyzing deposits for high-power wallet...`);
-          
-          // Parse deposits with improved structure detection
-          for (let depositOffset = 200; depositOffset < data.length - 72; depositOffset += 72) {
+        maxAccountPower = Math.max(maxAccountPower, accountMaxPower);
+        
+        // Enhanced deposit analysis for all accounts
+        console.log(`      Analyzing deposits in account ${account.pubkey.toBase58().substring(0, 8)}...`);
+        
+        let accountDepositPower = 0;
+        let validDeposits = 0;
+        
+        // Parse deposits with multiple possible starting offsets and sizes
+        const depositConfigs = [
+          { startOffset: 200, size: 72 },
+          { startOffset: 184, size: 64 },
+          { startOffset: 216, size: 80 }
+        ];
+        
+        for (const config of depositConfigs) {
+          for (let depositOffset = config.startOffset; depositOffset < data.length - config.size; depositOffset += config.size) {
             const deposit = parseDepositEntry(data, depositOffset);
             
             if (deposit && deposit.isUsed && deposit.amountDeposited > 0) {
-              depositDetails.push(deposit);
+              validDeposits++;
+              accountDepositPower += deposit.votingPowerBaseline || 0;
+              
               const lockupType = ['None', 'Cliff', 'Constant', 'Vested'][deposit.lockupKind] || 'Unknown';
-              console.log(`        Used Deposit: ${deposit.amountDeposited.toLocaleString()} ISLAND (${lockupType}), locked: ${deposit.currentlyLocked.toLocaleString()}`);
+              console.log(`        Deposit ${validDeposits}: ${deposit.amountDeposited.toLocaleString()} ISLAND (${lockupType}), baseline: ${(deposit.votingPowerBaseline || 0).toLocaleString()}`);
+              
+              depositAnalysis.push(deposit);
             }
           }
+          
+          if (validDeposits > 0) break; // Found valid deposits with this config
+        }
+        
+        if (validDeposits > 0) {
+          console.log(`      Account deposit summary: ${validDeposits} deposits, ${accountDepositPower.toLocaleString()} total baseline power`);
+          totalCalculatedPower = Math.max(totalCalculatedPower, accountDepositPower);
         }
       }
     }
     
-    // Enhanced logging for high-power wallets
-    if (maxVotingPower > 1000000) {
-      console.log(`    HIGH POWER WALLET ANALYSIS:`);
-      console.log(`      Total used deposits: ${depositDetails.length}`);
-      console.log(`      Sum of deposit amounts: ${depositDetails.reduce((sum, d) => sum + d.amountDeposited, 0).toLocaleString()} ISLAND`);
-      console.log(`      Sum of currently locked: ${depositDetails.reduce((sum, d) => sum + d.currentlyLocked, 0).toLocaleString()} ISLAND`);
-      console.log(`      Final max voting power: ${maxVotingPower.toLocaleString()} ISLAND`);
+    // Use the highest value found: either account-level power or calculated deposit power
+    const finalPower = Math.max(maxAccountPower, totalCalculatedPower);
+    
+    if (finalPower > 1000) {
+      console.log(`    COMPREHENSIVE ANALYSIS SUMMARY:`);
+      console.log(`      Max account-level power: ${maxAccountPower.toLocaleString()} ISLAND`);
+      console.log(`      Calculated deposit power: ${totalCalculatedPower.toLocaleString()} ISLAND`);
+      console.log(`      Total valid deposits: ${depositAnalysis.length}`);
+      console.log(`      Final power used: ${finalPower.toLocaleString()} ISLAND`);
     }
     
-    console.log(`    Final voting power: ${maxVotingPower.toLocaleString()} ISLAND`);
-    return maxVotingPower;
+    return finalPower;
     
   } catch (error) {
-    console.error(`  Error fetching power for ${walletAddress}: ${error.message}`);
+    console.error(`    Enhanced analysis error: ${error.message}`);
     return 0;
   }
 }
