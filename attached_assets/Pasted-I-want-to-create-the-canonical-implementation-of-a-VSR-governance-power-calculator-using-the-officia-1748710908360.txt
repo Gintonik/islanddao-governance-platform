@@ -1,0 +1,52 @@
+I want to create the canonical implementation of a VSR governance power calculator using the official Anchor-based struct deserialization approach.
+
+📝 File:
+Create a new file named:
+`vsr-governance-struct-aware.js`
+
+🛠️ Goal:
+Read on-chain governance deposits for a list of wallet addresses that participate in SPL Governance using the Voter Stake Registry (VSR) on Solana.
+
+🎯 Requirements:
+1. Use `@coral-xyz/anchor` to load the VSR IDL from:
+   https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json
+
+2. For each wallet in my `citizens` table (PostgreSQL), do the following:
+   - Search for all Voter accounts owned by that wallet under VSR program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+   - Do NOT stop after finding one. Aggregate across **all valid accounts**.
+
+3. For each account:
+   - Deserialize using Anchor
+   - Loop through all `voter.depositEntries`
+   - For each deposit:
+     - If `isUsed === true` and either `amountDepositedNative > 0` or `amountInitiallyLockedNative > 0`, count it
+     - Apply governance power multiplier:
+       - If `lockup.kind` is `'none'`, use `1.0x`
+       - If `lockup.kind` is time-based, calculate multiplier using:
+         - `baseline_vote_weight`
+         - `max_extra_lockup_vote_weight`
+         - `lockup_saturation_secs`
+         - `lockup.startTs` and `lockup.endTs` timestamps
+     - Sum the adjusted voting power per deposit
+
+4. After processing all deposits for all accounts:
+   - Store the `native_governance_power` for each wallet in the Postgres `citizens` table
+   - Set `delegated_governance_power = 0` for now
+   - Set `total_governance_power = native + delegated`
+
+✅ Validation targets:
+- `Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1` (Titanmaker): 200,000 ISLAND
+- `Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG` (Legend): 3,361,730.15 ISLAND
+- `kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC` (KO3): ~1.8M ISLAND
+- `7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA` (Takisoul): ~8.7M ISLAND
+
+🧪 If all validations pass:
+Replace the current calculator (`final-vsr-governance.js`) with this new one.
+
+🚨 If any fail:
+Keep `final-vsr-governance.js` active and continue improving `vsr-governance-struct-aware.js` without patches or wallet-specific overrides.
+
+Important:
+- Do NOT filter deposits based on amount thresholds
+- Do NOT skip VSR accounts once one is found
+- Use only clean deserialization + authentic on-chain logic
