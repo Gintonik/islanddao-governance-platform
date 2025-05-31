@@ -11,7 +11,7 @@ const completeDailySync = require('../complete-daily-sync');
 const PORT = 5000;
 const HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
 const GLOBE_HTML_FILE = path.join(__dirname, 'verified-citizen-map.html');
-// Collection HTML file removed during cleanup
+const COLLECTION_HTML_FILE = path.join(__dirname, 'collection.html');
 
 // Initialize the database on startup
 async function initializeApp() {
@@ -61,10 +61,9 @@ function startServer() {
         res.end();
         return;
       }
-      // Handle collection route - redirect to main map for now
+      // Handle collection route - serve the collection grid
       else if (req.url === '/collection' || req.url === '/collection.html') {
-        res.writeHead(302, { 'Location': '/' });
-        res.end();
+        serveFile(res, COLLECTION_HTML_FILE, 'text/html');
       }
       // Serve the HTML file for the root route
       else if (req.url === '/' || req.url === '/index.html') {

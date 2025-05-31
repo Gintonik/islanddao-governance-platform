@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERKS Collection - IslandDAO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0F0F0F;
+            --bg-secondary: #1D1D1D;
+            --accent-primary: #21E8A3;
+            --accent-glow: rgba(33, 232, 163, 0.3);
+            --text-primary: #FAFAFA;
+            --text-secondary: #AFAFAF;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --panel-bg: rgba(29, 29, 29, 0.95);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            height: 28px;
+            width: auto;
+        }
+
+        .title {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .nft-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nft-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .nft-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
+
+        .nft-info {
+            padding: 1rem;
+        }
+
+        .nft-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .nft-owner {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .nft-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .stats-banner {
+            background: linear-gradient(135deg, rgba(33, 232, 163, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
+            border: 1px solid var(--accent-glow);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <img src="/islanddao-logo.png" alt="IslandDAO" class="logo">
+            <div class="title">PERKS Collection</div>
+        </div>
+        <div class="nav-links">
+            <a href="/" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Map</a>
+            <a href="/collection" style="color: #21E8A3; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; background: rgba(33, 232, 163, 0.1);">Collection</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">PERKS Collection</h1>
+        <p class="page-subtitle">Explore all PERKS NFTs owned by IslandDAO citizens</p>
+
+        <div class="stats-banner">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalNfts">0</div>
+                    <div class="stat-label">Total PERKS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalOwners">0</div>
+                    <div class="stat-label">Owners</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCitizens">0</div>
+                    <div class="stat-label">Citizens</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading PERKS collection...
+        </div>
+
+        <div id="collectionGrid" class="collection-grid" style="display: none;">
+            <!-- NFTs will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        async function loadCollection() {
+            try {
+                const response = await fetch('/api/citizens');
+                const citizens = await response.json();
+                
+                // Extract all NFTs from citizens
+                const allNfts = [];
+                let totalOwners = 0;
+                
+                citizens.forEach(citizen => {
+                    if (citizen.nfts && citizen.nfts.length > 0) {
+                        totalOwners++;
+                        citizen.nfts.forEach(nftId => {
+                            if (citizen.nftMetadata && citizen.nftMetadata[nftId]) {
+                                allNfts.push({
+                                    ...citizen.nftMetadata[nftId],
+                                    owner: citizen.nickname || 'Anonymous',
+                                    ownerWallet: citizen.wallet
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Update stats
+                document.getElementById('totalNfts').textContent = allNfts.length;
+                document.getElementById('totalOwners').textContent = totalOwners;
+                document.getElementById('totalCitizens').textContent = citizens.length;
+
+                // Display NFTs
+                const grid = document.getElementById('collectionGrid');
+                const loading = document.getElementById('loading');
+                
+                if (allNfts.length === 0) {
+                    loading.textContent = 'No PERKS NFTs found in the collection yet.';
+                    return;
+                }
+
+                grid.innerHTML = allNfts.map(nft => `
+                    <div class="nft-card">
+                        <img src="${nft.image}" alt="${nft.name}" class="nft-image" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDI1MCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyNTAiIGhlaWdodD0iMjUwIiBmaWxsPSIjMUQxRDFEIi8+Cjx0ZXh0IHg9IjEyNSIgeT0iMTI1IiBmaWxsPSIjQUZBRkFGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1mYW1pbHk9IkludGVyIiBmb250LXNpemU9IjE0Ij5QRVJLUyBORlQ8L3RleHQ+Cjwvc3ZnPgo='">
+                        <div class="nft-info">
+                            <div class="nft-name">${nft.name || 'PERKS NFT'}</div>
+                            <div class="nft-owner">Owned by ${nft.owner}</div>
+                            <div class="nft-stats">
+                                <span>PERKS Collection</span>
+                                <span>${nft.symbol || 'PERKS'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                loading.style.display = 'none';
+                grid.style.display = 'grid';
+
+            } catch (error) {
+                console.error('Error loading collection:', error);
+                document.getElementById('loading').textContent = 'Error loading collection. Please try again.';
+            }
+        }
+
+        // Load collection on page load
+        loadCollection();
+    </script>
+</body>
+</html>
