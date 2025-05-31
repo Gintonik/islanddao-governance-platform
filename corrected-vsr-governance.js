@@ -152,26 +152,26 @@ function extractDepositsFromVSRAccount(data) {
 }
 
 /**
- * Calculate governance power for a single deposit using standard VSR formula
+ * Calculate governance power for a single deposit using correct VSR formula
  */
 function calculateDepositGovernancePower(deposit) {
   const currentTime = Math.floor(Date.now() / 1000);
+  let multiplier = BASELINE; // Start with baseline (1.0)
   
-  // Skip unlocked deposits
-  if (!deposit.isLocked) {
+  // Skip zero-amount deposits only
+  if (deposit.amount === 0) {
     return 0;
   }
   
-  // Skip expired deposits
-  if (deposit.endTs <= currentTime) {
-    return 0;
+  // Calculate multiplier based on lockup status
+  if (deposit.isLocked && deposit.endTs > currentTime) {
+    // Active lockup: apply bonus multiplier based on remaining time
+    const remaining = deposit.endTs - currentTime;
+    multiplier = BASELINE + Math.min(remaining / SATURATION, 1.0) * BONUS;
+  } else {
+    // Unlocked or expired lockup: use baseline multiplier (1.0)
+    multiplier = BASELINE;
   }
-  
-  // Calculate remaining time
-  const remaining = deposit.endTs - currentTime;
-  
-  // Apply standard VSR formula: multiplier = baseline + min(remaining/saturation, 1.0) * bonus
-  const multiplier = BASELINE + Math.min(remaining / SATURATION, 1.0) * BONUS;
   
   // Return governance power for this deposit
   return deposit.amount * multiplier;
@@ -234,12 +234,27 @@ async function calculateNativeGovernancePower(walletAddress) {
         
         if (governancePower > 0) {
           const currentTime = Math.floor(Date.now() / 1000);
-          const remaining = deposit.endTs - currentTime;
-          const multiplier = BASELINE + Math.min(remaining / SATURATION, 1.0) * BONUS;
-          const remainingYears = remaining / (365.25 * 24 * 3600);
+          let multiplier = BASELINE;
+          let lockupStatus = 'unlocked';
+          let remainingYears = 0;
+          
+          // Calculate multiplier and status for display
+          if (deposit.isLocked && deposit.endTs > currentTime) {
+            const remaining = deposit.endTs - currentTime;
+            multiplier = BASELINE + Math.min(remaining / SATURATION, 1.0) * BONUS;
+            remainingYears = remaining / (365.25 * 24 * 3600);
+            lockupStatus = `${remainingYears.toFixed(2)}y active`;
+          } else if (deposit.isLocked && deposit.endTs <= currentTime) {
+            multiplier = BASELINE;
+            lockupStatus = 'expired lockup';
+          } else {
+            multiplier = BASELINE;
+            lockupStatus = 'unlocked';
+          }
+          
           const lockupKindName = ['None', 'Cliff', 'Constant', 'Daily', 'Monthly'][deposit.lockupKind] || 'Unknown';
           
-          console.log(`    Deposit: ${deposit.amount.toLocaleString()} ISLAND (${lockupKindName}, ${remainingYears.toFixed(2)}y) × ${multiplier.toFixed(3)} = ${governancePower.toLocaleString()} power`);
+          console.log(`    Deposit: ${deposit.amount.toLocaleString()} ISLAND (${lockupKindName}, ${lockupStatus}) × ${multiplier.toFixed(3)} = ${governancePower.toLocaleString()} power`);
           console.log(`      Raw: amount=${deposit.amount}, kind=${deposit.lockupKind}, locked=${deposit.isLocked}, start=${deposit.startTs}, end=${deposit.endTs}`);
           
           allDeposits.push({
@@ -250,17 +265,11 @@ async function calculateNativeGovernancePower(walletAddress) {
             startTs: deposit.startTs,
             endTs: deposit.endTs,
             multiplier,
-            governancePower
+            governancePower,
+            lockupStatus
           });
           
           totalGovernancePower += governancePower;
-        } else if (deposit.amount > 0) {
-          // Log skipped deposits for transparency
-          if (!deposit.isLocked) {
-            console.log(`    Skipped: ${deposit.amount.toLocaleString()} ISLAND (unlocked)`);
-          } else if (deposit.endTs <= Math.floor(Date.now() / 1000)) {
-            console.log(`    Skipped: ${deposit.amount.toLocaleString()} ISLAND (expired)`);
-          }
         }
       }
     }
