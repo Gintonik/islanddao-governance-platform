@@ -61,9 +61,10 @@ function startServer() {
         res.end();
         return;
       }
-      // Handle collection route - serve the NFT collection grid
+      // Handle collection route - redirect to main map for now
       else if (req.url === '/collection' || req.url === '/collection.html') {
-        serveFile(res, COLLECTION_HTML_FILE, 'text/html');
+        res.writeHead(302, { 'Location': '/' });
+        res.end();
       }
       // Serve the HTML file for the root route
       else if (req.url === '/' || req.url === '/index.html') {
