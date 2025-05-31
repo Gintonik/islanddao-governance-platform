@@ -259,7 +259,7 @@ function selectPrimaryVoterAccount(voterAccounts, walletAddress) {
     const depositCount = voter.depositEntries.length;
     
     // Filter out accounts with suspiciously large values (likely data corruption)
-    // Valid ISLAND amounts should be reasonable (< 50M for individual deposits)
+    // DeanMachine has a corrupted account with 422M ISLAND - exclude values > 50M
     if (largestDeposit > 50000000) {
       console.log(`    Skipping account ${voter.accountAddress?.substring(0, 8)}... with suspicious large deposit: ${largestDeposit.toLocaleString()}`);
       continue;
