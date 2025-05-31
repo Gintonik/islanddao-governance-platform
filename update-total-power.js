@@ -69,10 +69,10 @@ async function calculateTotalPowerForAll(pool) {
     for (const citizen of citizens) {
       const displayName = citizen.nickname || citizen.wallet.substring(0, 8);
       
-      // Convert to numbers (handle null values)
+      // Convert to numbers (handle null values) and round to whole numbers for BIGINT
       const nativePower = parseFloat(citizen.native_governance_power) || 0;
       const delegatedPower = parseFloat(citizen.delegated_governance_power) || 0;
-      const calculatedTotal = nativePower + delegatedPower;
+      const calculatedTotal = Math.round(nativePower + delegatedPower);
       
       console.log(`\n[${processed + 1}/${citizens.length}] ${displayName}:`);
       console.log(`  Native power: ${nativePower.toLocaleString()} ISLAND`);
