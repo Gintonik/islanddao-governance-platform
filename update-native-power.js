@@ -398,7 +398,6 @@ async function enhancedVSRAccountAnalysis(walletAddress) {
     
     let totalCalculatedPower = 0;
     let maxAccountPower = 0;
-    let depositAnalysis = [];
     
     for (const account of vsrAccounts) {
       const data = account.account.data;
@@ -419,7 +418,6 @@ async function enhancedVSRAccountAnalysis(walletAddress) {
               
               if (votingPower > 0 && votingPower < 50000000) {
                 accountMaxPower = Math.max(accountMaxPower, votingPower);
-                console.log(`      Account power at offset ${offset}: ${votingPower.toLocaleString()} ISLAND`);
               }
             } catch (e) {
               // Skip invalid data
@@ -429,59 +427,103 @@ async function enhancedVSRAccountAnalysis(walletAddress) {
         
         maxAccountPower = Math.max(maxAccountPower, accountMaxPower);
         
-        // Enhanced deposit analysis for all accounts
-        console.log(`      Analyzing deposits in account ${account.pubkey.toBase58().substring(0, 8)}...`);
-        
-        let accountDepositPower = 0;
-        let validDeposits = 0;
-        
-        // Parse deposits with multiple possible starting offsets and sizes
-        const depositConfigs = [
-          { startOffset: 200, size: 72 },
-          { startOffset: 184, size: 64 },
-          { startOffset: 216, size: 80 }
-        ];
-        
-        for (const config of depositConfigs) {
-          for (let depositOffset = config.startOffset; depositOffset < data.length - config.size; depositOffset += config.size) {
-            const deposit = parseDepositEntry(data, depositOffset);
-            
-            if (deposit && deposit.isUsed && deposit.amountDeposited > 0) {
-              validDeposits++;
-              accountDepositPower += deposit.votingPowerBaseline || 0;
-              
-              const lockupType = ['None', 'Cliff', 'Constant', 'Vested'][deposit.lockupKind] || 'Unknown';
-              console.log(`        Deposit ${validDeposits}: ${deposit.amountDeposited.toLocaleString()} ISLAND (${lockupType}), baseline: ${(deposit.votingPowerBaseline || 0).toLocaleString()}`);
-              
-              depositAnalysis.push(deposit);
-            }
+        // Advanced pattern analysis for complex deposits
+        if (accountMaxPower < 50000) { // Only do expensive analysis for wallets that might need it
+          const patternPower = analyzeDepositPatterns(data);
+          if (patternPower > accountMaxPower) {
+            console.log(`      Pattern analysis found higher power: ${patternPower.toLocaleString()} vs ${accountMaxPower.toLocaleString()}`);
+            totalCalculatedPower = Math.max(totalCalculatedPower, patternPower);
           }
-          
-          if (validDeposits > 0) break; // Found valid deposits with this config
-        }
-        
-        if (validDeposits > 0) {
-          console.log(`      Account deposit summary: ${validDeposits} deposits, ${accountDepositPower.toLocaleString()} total baseline power`);
-          totalCalculatedPower = Math.max(totalCalculatedPower, accountDepositPower);
         }
       }
     }
     
-    // Use the highest value found: either account-level power or calculated deposit power
+    // Use the highest value found
     const finalPower = Math.max(maxAccountPower, totalCalculatedPower);
     
     if (finalPower > 1000) {
-      console.log(`    COMPREHENSIVE ANALYSIS SUMMARY:`);
-      console.log(`      Max account-level power: ${maxAccountPower.toLocaleString()} ISLAND`);
-      console.log(`      Calculated deposit power: ${totalCalculatedPower.toLocaleString()} ISLAND`);
-      console.log(`      Total valid deposits: ${depositAnalysis.length}`);
-      console.log(`      Final power used: ${finalPower.toLocaleString()} ISLAND`);
+      console.log(`    Final power: ${finalPower.toLocaleString()} ISLAND`);
     }
     
     return finalPower;
     
   } catch (error) {
     console.error(`    Enhanced analysis error: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
+ * Analyze deposit patterns in VSR account data
+ */
+function analyzeDepositPatterns(data) {
+  try {
+    const depositAmounts = [];
+    const timestampOffsets = [];
+    
+    // Scan for deposit amounts and timestamps
+    for (let i = 0; i < Math.min(400, data.length); i += 8) {
+      if (i + 8 <= data.length) {
+        const value = Number(data.readBigUInt64LE(i));
+        const asTokens = value / 1e6;
+        
+        // Look for token amounts
+        if (value > 10000000 && value < 100000000000000) { // 10 tokens to 100M tokens
+          if (asTokens >= 1000 && asTokens <= 100000) {
+            depositAmounts.push({ offset: i, amount: asTokens });
+          }
+        }
+        
+        // Look for timestamps
+        if (value > 1700000000 && value < 1800000000) {
+          timestampOffsets.push({ offset: i, timestamp: value });
+        }
+      }
+    }
+    
+    // Calculate voting power if we have significant deposits
+    if (depositAmounts.length >= 3) {
+      let calculatedPower = 0;
+      
+      // Remove duplicates (same amount at consecutive offsets)
+      const uniqueDeposits = [];
+      for (let i = 0; i < depositAmounts.length; i++) {
+        const current = depositAmounts[i];
+        const next = depositAmounts[i + 1];
+        
+        if (!next || Math.abs(current.amount - next.amount) > 0.1 || Math.abs(current.offset - next.offset) > 8) {
+          uniqueDeposits.push(current);
+        }
+      }
+      
+      uniqueDeposits.forEach(dep => {
+        let multiplier = 1.0;
+        
+        // Find nearby timestamp for lockup calculation
+        const nearbyTimestamps = timestampOffsets.filter(ts => 
+          Math.abs(ts.offset - dep.offset) < 32
+        );
+        
+        if (nearbyTimestamps.length > 0) {
+          const expiration = nearbyTimestamps[0].timestamp;
+          const lockupYears = Math.max(0, (expiration - Date.now()/1000) / (365.25 * 24 * 3600));
+          
+          if (lockupYears > 0) {
+            const maxLockupYears = 5.0;
+            const maxBonusMultiplier = 2.0;
+            const lockupFactor = Math.min(lockupYears / maxLockupYears, 1.0);
+            multiplier = 1.0 + (lockupFactor * maxBonusMultiplier);
+          }
+        }
+        
+        calculatedPower += dep.amount * multiplier;
+      });
+      
+      return calculatedPower;
+    }
+    
+    return 0;
+  } catch (error) {
     return 0;
   }
 }
