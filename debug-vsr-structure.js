@@ -1,134 +1,135 @@
 /**
- * Debug VSR Account Structure
- * Analyzes raw VSR account data to understand the actual deposit structure
+ * Debug VSR Structure
+ * Examine the actual byte layout to understand deposit storage
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
 
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const REGISTRAR_ADDRESS = new PublicKey('5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM');
 
 const connection = new Connection(HELIUS_RPC, 'confirmed');
 
-/**
- * Debug VSR account structure for GJdRQcsy wallet
- */
 async function debugVSRStructure() {
-  const walletAddress = 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh';
-  const walletPubkey = new PublicKey(walletAddress);
+  console.log('=== DEBUGGING VSR STRUCTURE ===');
   
-  console.log('=== VSR Account Structure Debug ===');
-  console.log(`Wallet: ${walletAddress}`);
-  console.log('');
+  const walletPubkey = new PublicKey('Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1');
   
-  // Find VSR accounts
-  const vsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-    filters: [
-      { memcmp: { offset: 8, bytes: walletPubkey.toBase58() } }
-    ]
-  });
+  const [voterPDA] = PublicKey.findProgramAddressSync(
+    [
+      REGISTRAR_ADDRESS.toBuffer(),
+      Buffer.from('voter'),
+      walletPubkey.toBuffer()
+    ],
+    VSR_PROGRAM_ID
+  );
   
-  if (vsrAccounts.length === 0) {
-    console.log('No VSR accounts found');
+  const account = await connection.getAccountInfo(voterPDA);
+  if (!account) {
+    console.log('No VSR account found');
     return;
   }
   
-  console.log(`Found ${vsrAccounts.length} VSR account(s)`);
-  console.log('');
+  const data = account.data;
+  console.log(`\nAccount: ${voterPDA.toBase58()}`);
+  console.log(`Data length: ${data.length} bytes`);
   
-  for (let i = 0; i < vsrAccounts.length; i++) {
-    const account = vsrAccounts[i];
-    const data = account.account.data;
-    
-    console.log(`=== VSR Account ${i + 1} ===`);
-    console.log(`Address: ${account.pubkey.toBase58()}`);
-    console.log(`Data length: ${data.length} bytes`);
-    console.log('');
-    
-    // Check discriminator
-    const discriminator = data.readBigUInt64LE(0);
-    console.log(`Discriminator: ${discriminator.toString()}`);
-    
-    // Show first 200 bytes in hex for analysis
-    console.log('First 200 bytes (hex):');
-    for (let j = 0; j < Math.min(200, data.length); j += 16) {
-      const chunk = data.subarray(j, Math.min(j + 16, data.length));
-      const hex = Array.from(chunk).map(b => b.toString(16).padStart(2, '0')).join(' ');
-      const offset = j.toString().padStart(3, '0');
-      console.log(`${offset}: ${hex}`);
-    }
-    console.log('');
-    
-    // Look for potential deposit amounts (1000-100000 ISLAND range)
-    console.log('Potential deposit amounts found:');
-    for (let offset = 0; offset < data.length - 8; offset += 8) {
+  // We know 200,000 ISLAND is at offset 112
+  const target200k = 200000 * 1e6;
+  console.log(`\nTarget value: ${target200k} (200,000 ISLAND)`);
+  
+  // Examine the structure around offset 112
+  console.log('\nStructure analysis around offset 112:');
+  for (let i = 72; i <= 200; i += 8) {
+    if (i + 8 <= data.length) {
       try {
-        const value = Number(data.readBigUInt64LE(offset));
+        const value = Number(data.readBigUInt64LE(i));
         const asTokens = value / 1e6;
         
-        if (asTokens >= 1000 && asTokens <= 100000) {
-          console.log(`  Offset ${offset}: ${asTokens.toLocaleString()} ISLAND (raw: ${value})`);
-          
-          // Check surrounding bytes for potential flags and timestamps
-          console.log(`    Bytes around offset ${offset}:`);
-          const start = Math.max(0, offset - 8);
-          const end = Math.min(data.length, offset + 24);
-          
-          for (let k = start; k < end; k += 8) {
-            const val = k + 8 <= data.length ? Number(data.readBigUInt64LE(k)) : 0;
-            const asTime = val > 1600000000 && val < 2000000000 ? new Date(val * 1000).toISOString() : '';
-            console.log(`      ${k}: ${val} ${asTime ? `(${asTime})` : ''}`);
-          }
-          console.log('');
+        let annotation = '';
+        if (value === target200k) {
+          annotation = ' ← 200,000 ISLAND DEPOSIT';
+        } else if (value === 1) {
+          annotation = ' ← is_used flag?';
+        } else if (value === 0) {
+          annotation = ' ← unused/zero';
+        } else if (value >= 1700000000 && value <= 1800000000) {
+          annotation = ` ← timestamp: ${new Date(value * 1000).toISOString()}`;
+        } else if (asTokens >= 1000 && asTokens <= 50000000) {
+          annotation = ` ← potential deposit: ${asTokens.toLocaleString()} ISLAND`;
         }
+        
+        console.log(`Offset ${i}: ${value}${annotation}`);
       } catch (e) {
-        // Skip invalid reads
+        console.log(`Offset ${i}: [read error]`);
       }
     }
+  }
+  
+  // Try to find the pattern for deposit slots
+  console.log('\nLooking for deposit slot pattern:');
+  
+  // Check if the structure is different - maybe deposits start earlier
+  for (let slotStart = 72; slotStart <= 144; slotStart += 8) {
+    console.log(`\nTesting slot starting at offset ${slotStart}:`);
     
-    // Try to parse standard VSR deposit structure
-    console.log('Attempting standard VSR deposit parsing:');
-    for (let depositIndex = 0; depositIndex < 32; depositIndex++) {
-      const depositOffset = 72 + (depositIndex * 72);
-      
-      if (depositOffset + 72 > data.length) break;
-      
+    if (slotStart + 72 <= data.length) {
       try {
-        const isUsed = data.readUInt8(depositOffset);
-        const lockupKind = data.readUInt8(depositOffset + 1);
-        const isLocked = data.readUInt8(depositOffset + 2);
-        const amountDeposited = Number(data.readBigUInt64LE(depositOffset + 8)) / 1e6;
+        const amount = Number(data.readBigUInt64LE(slotStart));
+        const field1 = Number(data.readBigUInt64LE(slotStart + 8));
+        const field2 = Number(data.readBigUInt64LE(slotStart + 16));
+        const field3 = Number(data.readBigUInt64LE(slotStart + 24));
+        const byte32 = data.readUInt8(slotStart + 32);
+        const byte33 = data.readUInt8(slotStart + 33);
         
-        if (isUsed === 1 && amountDeposited > 0) {
-          console.log(`  Deposit ${depositIndex}:`);
-          console.log(`    Used: ${isUsed}`);
-          console.log(`    Lockup Kind: ${lockupKind}`);
-          console.log(`    Is Locked: ${isLocked}`);
-          console.log(`    Amount: ${amountDeposited.toLocaleString()} ISLAND`);
+        const amountTokens = amount / 1e6;
+        
+        console.log(`  Amount: ${amount} (${amountTokens.toLocaleString()} ISLAND)`);
+        console.log(`  Field1: ${field1}`);
+        console.log(`  Field2: ${field2}`);
+        console.log(`  Field3: ${field3}`);
+        console.log(`  Byte32: ${byte32}`);
+        console.log(`  Byte33: ${byte33}`);
+        
+        if (amount === target200k) {
+          console.log(`  ✅ FOUND 200K DEPOSIT! Structure:`);
+          console.log(`    Amount at offset ${slotStart}: ${amountTokens.toLocaleString()} ISLAND`);
+          console.log(`    Field1: ${field1}`);
+          console.log(`    Field2: ${field2}`);
+          console.log(`    Field3: ${field3}`);
+          console.log(`    Byte32: ${byte32} (potential is_used flag)`);
+          console.log(`    Byte33: ${byte33}`);
           
-          // Try to read timestamps
-          try {
-            const startTs = Number(data.readBigUInt64LE(depositOffset + 24));
-            const endTs = Number(data.readBigUInt64LE(depositOffset + 32));
-            
-            if (startTs > 1600000000 && startTs < 2000000000) {
-              console.log(`    Start: ${new Date(startTs * 1000).toISOString()}`);
+          // Check subsequent bytes for more flags
+          for (let j = 34; j < 50; j++) {
+            const byteVal = data.readUInt8(slotStart + j);
+            if (byteVal === 1) {
+              console.log(`    Byte${j}: ${byteVal} ← potential active flag`);
             }
-            if (endTs > 1600000000 && endTs < 2000000000) {
-              console.log(`    End: ${new Date(endTs * 1000).toISOString()}`);
-            }
-          } catch (e) {
-            console.log(`    Timestamp parsing failed`);
           }
-          
-          console.log('');
         }
+        
       } catch (e) {
-        // Skip invalid deposit
+        console.log(`  Error: ${e.message}`);
       }
+    }
+  }
+  
+  // Look for other potential amounts in the data
+  console.log('\nScanning for other potential deposit amounts:');
+  for (let offset = 0; offset < data.length - 8; offset += 8) {
+    try {
+      const value = Number(data.readBigUInt64LE(offset));
+      const asTokens = value / 1e6;
+      
+      if (asTokens >= 1000 && asTokens <= 50000000 && value !== target200k) {
+        console.log(`Offset ${offset}: ${asTokens.toLocaleString()} ISLAND`);
+      }
+    } catch (e) {
+      continue;
     }
   }
 }
 
-// Run the debug
 debugVSRStructure().catch(console.error);
