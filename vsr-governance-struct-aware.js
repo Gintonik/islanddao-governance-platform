@@ -344,40 +344,51 @@ async function calculateGovernancePower(walletAddress) {
     
     // Process ALL accounts, not just one primary account
     for (const accountInfo of voterAccounts) {
-      const voter = deserializeVoterAccount(accountInfo.account.data, accountInfo.pubkey?.toBase58());
-      
-      if (!voter || voter.depositEntries.length === 0) {
+      try {
+        const voter = deserializeVoterAccount(accountInfo.account.data, accountInfo.pubkey?.toBase58());
+        
+        if (!voter) {
+          console.log(`  Account ${accountInfo.pubkey?.toBase58()?.substring(0, 8)}...: Failed to deserialize`);
+          continue;
+        }
+        
+        if (voter.depositEntries.length === 0) {
+          console.log(`  Account ${voter.accountAddress?.substring(0, 8)}...: No active deposits`);
+          continue;
+        }
+        
+        // Check for corrupted accounts (like DeanMachine's 422M ISLAND account)
+        const largestDeposit = Math.max(...voter.depositEntries.map(entry => entry.amountInTokens));
+        if (largestDeposit > 50000000) {
+          console.log(`    Skipping account ${voter.accountAddress?.substring(0, 8)}... with suspicious large deposit: ${largestDeposit.toLocaleString()}`);
+          continue;
+        }
+        
+        console.log(`  Account ${voter.accountAddress?.substring(0, 8)}...: ${voter.depositEntries.length} active deposits`);
+        validAccountsProcessed++;
+        
+        // Process all deposits in this account
+        for (const depositEntry of voter.depositEntries) {
+          const { multiplier, lockupKind, status } = calculateVotingPowerMultiplier(depositEntry);
+          const power = depositEntry.amountInTokens * multiplier;
+          
+          console.log(`    Entry ${depositEntry.entryIndex}: ${depositEntry.amountInTokens.toLocaleString()} ISLAND | ${lockupKind} | ${status} | ${multiplier.toFixed(6)}x = ${power.toLocaleString()} power`);
+          
+          allDeposits.push({
+            amount: depositEntry.amountInTokens,
+            lockupKind,
+            multiplier,
+            power,
+            status,
+            accountAddress: depositEntry.accountAddress,
+            entryIndex: depositEntry.entryIndex
+          });
+          
+          totalPower += power;
+        }
+      } catch (error) {
+        console.log(`  Account ${accountInfo.pubkey?.toBase58()?.substring(0, 8)}...: Error processing - ${error.message}`);
         continue;
-      }
-      
-      // Check for corrupted accounts (like DeanMachine's 422M ISLAND account)
-      const largestDeposit = Math.max(...voter.depositEntries.map(entry => entry.amountInTokens));
-      if (largestDeposit > 50000000) {
-        console.log(`    Skipping account ${voter.accountAddress?.substring(0, 8)}... with suspicious large deposit: ${largestDeposit.toLocaleString()}`);
-        continue;
-      }
-      
-      console.log(`  Account ${voter.accountAddress?.substring(0, 8)}...: ${voter.depositEntries.length} active deposits`);
-      validAccountsProcessed++;
-      
-      // Process all deposits in this account
-      for (const depositEntry of voter.depositEntries) {
-        const { multiplier, lockupKind, status } = calculateVotingPowerMultiplier(depositEntry);
-        const power = depositEntry.amountInTokens * multiplier;
-        
-        console.log(`    Entry ${depositEntry.entryIndex}: ${depositEntry.amountInTokens.toLocaleString()} ISLAND | ${lockupKind} | ${status} | ${multiplier.toFixed(6)}x = ${power.toLocaleString()} power`);
-        
-        allDeposits.push({
-          amount: depositEntry.amountInTokens,
-          lockupKind,
-          multiplier,
-          power,
-          status,
-          accountAddress: depositEntry.accountAddress,
-          entryIndex: depositEntry.entryIndex
-        });
-        
-        totalPower += power;
       }
     }
     
