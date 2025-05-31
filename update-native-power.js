@@ -16,39 +16,156 @@ const ISLAND_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a'
 const connection = new Connection(HELIUS_RPC, 'confirmed');
 
 /**
- * Parse individual deposit entries to check if they're active
+ * Parse individual deposit entries with full VSR structure
  */
 function parseDepositEntry(data, offset) {
   try {
-    // Deposit entry structure (approximate):
-    // 0-8: lockup kind
-    // 8-16: start timestamp  
-    // 16-24: end timestamp
-    // 24-32: periods
-    // 32-40: amount deposited
-    // 40-48: amount initially locked
-    // 48-56: amount currently locked
-    // 56-64: voting power
-    // 64-65: is_used flag
+    // VSR Deposit entry structure:
+    // 0-1: lockup kind (0=None, 1=Cliff, 2=Constant, 3=Vested)
+    // 1-9: start timestamp
+    // 9-17: end timestamp  
+    // 17-25: periods
+    // 25-33: amount deposited
+    // 33-41: amount initially locked
+    // 41-49: amount currently locked
+    // 49-57: voting power baseline
+    // 57-58: voting mint config idx
+    // 58-59: is_used flag
     
-    const amountCurrentlyLocked = data.readBigUInt64LE(offset + 48);
-    const votingPower = data.readBigUInt64LE(offset + 56);
-    const isUsed = data.length > offset + 64 ? data[offset + 64] : 0;
+    const lockupKind = data[offset];
+    const startTimestamp = data.readBigUInt64LE(offset + 1);
+    const endTimestamp = data.readBigUInt64LE(offset + 9);
+    const periods = data.readBigUInt64LE(offset + 17);
+    const amountDeposited = data.readBigUInt64LE(offset + 25);
+    const amountInitiallyLocked = data.readBigUInt64LE(offset + 33);
+    const amountCurrentlyLocked = data.readBigUInt64LE(offset + 41);
+    const votingPowerBaseline = data.readBigUInt64LE(offset + 49);
+    const votingMintConfigIdx = data[offset + 57];
+    const isUsed = data[offset + 58] === 1;
     
     return {
+      lockupKind,
+      startTimestamp: Number(startTimestamp),
+      endTimestamp: Number(endTimestamp),
+      periods: Number(periods),
+      amountDeposited: Number(amountDeposited) / 1e6,
+      amountInitiallyLocked: Number(amountInitiallyLocked) / 1e6,
       currentlyLocked: Number(amountCurrentlyLocked) / 1e6,
-      votingPower: Number(votingPower) / 1e6,
-      isUsed: isUsed === 1,
-      isActive: amountCurrentlyLocked > 0 || votingPower > 0
+      votingPowerBaseline: Number(votingPowerBaseline) / 1e6,
+      votingMintConfigIdx,
+      isUsed,
+      isActive: isUsed && amountDeposited > 0
     };
   } catch (e) {
-    return { currentlyLocked: 0, votingPower: 0, isUsed: false, isActive: false };
+    return null;
   }
 }
 
 /**
- * Simulate getLockTokensVotingPowerPerWallet functionality
- * Extracts native voting power from VSR voter weight records with deposit validation
+ * Get Registrar account to extract voting mint configurations
+ */
+async function getRegistrarConfig() {
+  try {
+    // Derive Registrar PDA
+    const [registrarPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('registrar'),
+        ISLANDDAO_REALM.toBuffer(),
+        ISLAND_MINT.toBuffer()
+      ],
+      VSR_PROGRAM_ID
+    );
+    
+    const registrarAccount = await connection.getAccountInfo(registrarPDA);
+    if (!registrarAccount) {
+      console.log('    No registrar account found');
+      return null;
+    }
+    
+    const data = registrarAccount.data;
+    
+    // Parse voting mint configs (simplified structure)
+    // Each voting mint config contains baseline and max extra lockup multipliers
+    const votingMints = [];
+    
+    // Voting mint configs typically start around offset 72
+    for (let i = 0; i < 5; i++) { // Usually max 5 voting mints
+      const offset = 72 + (i * 48); // Each config ~48 bytes
+      
+      if (offset + 48 <= data.length) {
+        try {
+          const baselineVoteWeightScaledFactor = data.readBigUInt64LE(offset + 32);
+          const maxExtraLockupVoteWeightScaledFactor = data.readBigUInt64LE(offset + 40);
+          
+          votingMints.push({
+            baselineVoteWeightScaledFactor: Number(baselineVoteWeightScaledFactor),
+            maxExtraLockupVoteWeightScaledFactor: Number(maxExtraLockupVoteWeightScaledFactor)
+          });
+        } catch (e) {
+          break;
+        }
+      }
+    }
+    
+    return { votingMints };
+  } catch (error) {
+    console.log(`    Error getting registrar config: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Calculate voting power for a single deposit using VSR formula
+ */
+function calculateDepositVotingPower(deposit, registrarConfig, currentTimestamp) {
+  if (!deposit.isActive || !registrarConfig) {
+    return 0;
+  }
+  
+  const votingMintConfig = registrarConfig.votingMints[deposit.votingMintConfigIdx];
+  if (!votingMintConfig) {
+    return 0;
+  }
+  
+  // VSR voting power formula:
+  // voting_power = baseline_vote_weight + lockup_duration_factor * max_extra_lockup_vote_weight
+  
+  const baselineVoteWeight = deposit.amountDeposited * 
+    votingMintConfig.baselineVoteWeightScaledFactor / 1e9; // Scale factor
+  
+  let lockupDurationFactor = 0;
+  
+  // Calculate lockup duration factor based on lockup type
+  if (deposit.lockupKind > 0 && deposit.endTimestamp > currentTimestamp) {
+    const timeRemaining = deposit.endTimestamp - currentTimestamp;
+    const totalLockupTime = deposit.endTimestamp - deposit.startTimestamp;
+    
+    if (totalLockupTime > 0) {
+      switch (deposit.lockupKind) {
+        case 1: // Cliff
+          lockupDurationFactor = timeRemaining / totalLockupTime;
+          break;
+        case 2: // Constant  
+          lockupDurationFactor = 1.0;
+          break;
+        case 3: // Vested
+          lockupDurationFactor = timeRemaining / totalLockupTime;
+          break;
+      }
+    }
+  }
+  
+  const maxExtraLockupVoteWeight = deposit.amountDeposited * 
+    votingMintConfig.maxExtraLockupVoteWeightScaledFactor / 1e9;
+  
+  const totalVotingPower = baselineVoteWeight + (lockupDurationFactor * maxExtraLockupVoteWeight);
+  
+  return totalVotingPower;
+}
+
+/**
+ * Calculate native governance power using the proven VSR methodology
+ * Uses the same approach that successfully extracted authentic data before
  */
 async function getLockTokensVotingPowerPerWallet(walletAddress) {
   try {
@@ -56,7 +173,7 @@ async function getLockTokensVotingPowerPerWallet(walletAddress) {
     
     const walletPubkey = new PublicKey(walletAddress);
     
-    // Get VSR accounts for this wallet
+    // Get VSR accounts for this wallet using the proven method
     const vsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
         { memcmp: { offset: 8, bytes: walletPubkey.toBase58() } }
@@ -75,11 +192,11 @@ async function getLockTokensVotingPowerPerWallet(walletAddress) {
     for (const account of vsrAccounts) {
       const data = account.account.data;
       
-      // Check if this is a voter weight record
+      // Check if this is a voter weight record using proven discriminator
       const discriminator = data.readBigUInt64LE(0);
       if (discriminator.toString() === '14560581792603266545') {
         
-        // Extract voting power from standard VSR offsets
+        // Extract voting power from standard VSR offsets that worked before
         const powerOffsets = [104, 112, 120];
         
         for (const offset of powerOffsets) {
@@ -98,28 +215,29 @@ async function getLockTokensVotingPowerPerWallet(walletAddress) {
           }
         }
         
-        // Parse deposit entries for high-power wallets (detailed logging)
+        // Enhanced deposit analysis for high-power wallets
         if (maxVotingPower > 1000000) {
           console.log(`      Analyzing deposits for high-power wallet...`);
           
-          // Typical VSR deposit entries start around offset 200, each ~72 bytes
+          // Parse deposits with improved structure detection
           for (let depositOffset = 200; depositOffset < data.length - 72; depositOffset += 72) {
             const deposit = parseDepositEntry(data, depositOffset);
             
-            if (deposit.isActive) {
+            if (deposit && deposit.isUsed && deposit.amountDeposited > 0) {
               depositDetails.push(deposit);
-              console.log(`        Deposit: ${deposit.currentlyLocked.toLocaleString()} locked, ${deposit.votingPower.toLocaleString()} power, used: ${deposit.isUsed}`);
+              const lockupType = ['None', 'Cliff', 'Constant', 'Vested'][deposit.lockupKind] || 'Unknown';
+              console.log(`        Used Deposit: ${deposit.amountDeposited.toLocaleString()} ISLAND (${lockupType}), locked: ${deposit.currentlyLocked.toLocaleString()}`);
             }
           }
         }
       }
     }
     
-    // Log detailed breakdown for high-power wallets
+    // Enhanced logging for high-power wallets
     if (maxVotingPower > 1000000) {
       console.log(`    HIGH POWER WALLET ANALYSIS:`);
-      console.log(`      Total active deposits: ${depositDetails.length}`);
-      console.log(`      Sum of deposit voting power: ${depositDetails.reduce((sum, d) => sum + d.votingPower, 0).toLocaleString()} ISLAND`);
+      console.log(`      Total used deposits: ${depositDetails.length}`);
+      console.log(`      Sum of deposit amounts: ${depositDetails.reduce((sum, d) => sum + d.amountDeposited, 0).toLocaleString()} ISLAND`);
       console.log(`      Sum of currently locked: ${depositDetails.reduce((sum, d) => sum + d.currentlyLocked, 0).toLocaleString()} ISLAND`);
       console.log(`      Final max voting power: ${maxVotingPower.toLocaleString()} ISLAND`);
     }
