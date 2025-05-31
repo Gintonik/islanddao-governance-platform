@@ -191,8 +191,8 @@ async function getAllCitizens() {
   });
   
   try {
-    const result = await pool.query('SELECT wallet_address, name FROM citizens ORDER BY name');
-    return result.rows;
+    const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
+    return result.rows.map(row => ({ wallet_address: row.wallet, name: row.nickname }));
   } catch (error) {
     console.error('Error fetching citizens:', error);
     return [];
@@ -211,7 +211,7 @@ async function updateCitizenGovernancePower(walletAddress, nativePower) {
   
   try {
     await pool.query(
-      'UPDATE citizens SET native_governance_power = $1 WHERE wallet_address = $2',
+      'UPDATE citizens SET native_governance_power = $1 WHERE wallet = $2',
       [nativePower, walletAddress]
     );
     console.log(`✅ Updated ${walletAddress.substring(0, 8)}... with ${nativePower.toLocaleString()} ISLAND power`);
