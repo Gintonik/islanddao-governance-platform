@@ -16,8 +16,39 @@ const ISLAND_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a'
 const connection = new Connection(HELIUS_RPC, 'confirmed');
 
 /**
+ * Parse individual deposit entries to check if they're active
+ */
+function parseDepositEntry(data, offset) {
+  try {
+    // Deposit entry structure (approximate):
+    // 0-8: lockup kind
+    // 8-16: start timestamp  
+    // 16-24: end timestamp
+    // 24-32: periods
+    // 32-40: amount deposited
+    // 40-48: amount initially locked
+    // 48-56: amount currently locked
+    // 56-64: voting power
+    // 64-65: is_used flag
+    
+    const amountCurrentlyLocked = data.readBigUInt64LE(offset + 48);
+    const votingPower = data.readBigUInt64LE(offset + 56);
+    const isUsed = data.length > offset + 64 ? data[offset + 64] : 0;
+    
+    return {
+      currentlyLocked: Number(amountCurrentlyLocked) / 1e6,
+      votingPower: Number(votingPower) / 1e6,
+      isUsed: isUsed === 1,
+      isActive: amountCurrentlyLocked > 0 || votingPower > 0
+    };
+  } catch (e) {
+    return { currentlyLocked: 0, votingPower: 0, isUsed: false, isActive: false };
+  }
+}
+
+/**
  * Simulate getLockTokensVotingPowerPerWallet functionality
- * Extracts native voting power from VSR voter weight records
+ * Extracts native voting power from VSR voter weight records with deposit validation
  */
 async function getLockTokensVotingPowerPerWallet(walletAddress) {
   try {
@@ -39,6 +70,7 @@ async function getLockTokensVotingPowerPerWallet(walletAddress) {
     }
     
     let maxVotingPower = 0;
+    let depositDetails = [];
     
     for (const account of vsrAccounts) {
       const data = account.account.data;
@@ -65,7 +97,31 @@ async function getLockTokensVotingPowerPerWallet(walletAddress) {
             }
           }
         }
+        
+        // Parse deposit entries for high-power wallets (detailed logging)
+        if (maxVotingPower > 1000000) {
+          console.log(`      Analyzing deposits for high-power wallet...`);
+          
+          // Typical VSR deposit entries start around offset 200, each ~72 bytes
+          for (let depositOffset = 200; depositOffset < data.length - 72; depositOffset += 72) {
+            const deposit = parseDepositEntry(data, depositOffset);
+            
+            if (deposit.isActive) {
+              depositDetails.push(deposit);
+              console.log(`        Deposit: ${deposit.currentlyLocked.toLocaleString()} locked, ${deposit.votingPower.toLocaleString()} power, used: ${deposit.isUsed}`);
+            }
+          }
+        }
       }
+    }
+    
+    // Log detailed breakdown for high-power wallets
+    if (maxVotingPower > 1000000) {
+      console.log(`    HIGH POWER WALLET ANALYSIS:`);
+      console.log(`      Total active deposits: ${depositDetails.length}`);
+      console.log(`      Sum of deposit voting power: ${depositDetails.reduce((sum, d) => sum + d.votingPower, 0).toLocaleString()} ISLAND`);
+      console.log(`      Sum of currently locked: ${depositDetails.reduce((sum, d) => sum + d.currentlyLocked, 0).toLocaleString()} ISLAND`);
+      console.log(`      Final max voting power: ${maxVotingPower.toLocaleString()} ISLAND`);
     }
     
     console.log(`    Final voting power: ${maxVotingPower.toLocaleString()} ISLAND`);

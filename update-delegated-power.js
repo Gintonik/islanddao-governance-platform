@@ -24,26 +24,24 @@ async function findDelegationRecords(delegateWallet) {
     
     const delegateKey = new PublicKey(delegateWallet);
     
-    // Token Owner Record structure offsets (approximate):
-    // 0-8: discriminator
-    // 8-40: realm
-    // 40-72: governing token mint
-    // 72-104: governing token owner (delegator)
-    // 104-136: governance delegate (where votes are delegated to)
-    // 136+: other fields including hasDelegate boolean
+    // Token Owner Record structure with corrected offsets:
+    // 0: discriminator (1 byte)
+    // 1: realm (32 bytes)
+    // 33: governing token mint (32 bytes)  
+    // 65: governing token owner (32 bytes)
+    // 97: governance delegate (32 bytes) - this is where votes are delegated to
+    // Plus additional fields
     
     const delegationAccounts = await connection.getProgramAccounts(SPL_GOVERNANCE_PROGRAM_ID, {
       filters: [
-        // Filter by realm
-        { memcmp: { offset: 8, bytes: ISLANDDAO_REALM.toBase58() } },
-        // Filter by governance delegate (wallet receiving delegation)
-        { memcmp: { offset: 104, bytes: delegateKey.toBase58() } },
-        // Standard Token Owner Record size
-        { dataSize: 169 }
+        // Filter by realm at offset 1
+        { memcmp: { offset: 1, bytes: ISLANDDAO_REALM.toBase58() } },
+        // Filter by governance delegate at offset 97 (where votes are delegated to)
+        { memcmp: { offset: 97, bytes: delegateKey.toBase58() } }
       ]
     });
     
-    console.log(`    Found ${delegationAccounts.length} potential delegation records`);
+    console.log(`    Found ${delegationAccounts.length} delegation records`);
     
     const validDelegators = [];
     
@@ -51,21 +49,15 @@ async function findDelegationRecords(delegateWallet) {
       try {
         const data = account.account.data;
         
-        // Extract the delegator address (governing token owner)
-        const delegatorBytes = data.slice(72, 104);
+        // Extract the delegator address (governing token owner at offset 65)
+        const delegatorBytes = data.slice(65, 97);
         const delegatorAddress = new PublicKey(delegatorBytes).toBase58();
         
-        // Check if hasDelegate flag is set (approximate offset)
-        const hasDelegateOffset = 136;
-        const hasDelegate = data.length > hasDelegateOffset && data[hasDelegateOffset] === 1;
-        
-        if (hasDelegate) {
-          validDelegators.push({
-            delegator: delegatorAddress,
-            account: account.pubkey.toBase58()
-          });
-          console.log(`      Valid delegator: ${delegatorAddress.substring(0, 8)}`);
-        }
+        validDelegators.push({
+          delegator: delegatorAddress,
+          account: account.pubkey.toBase58()
+        });
+        console.log(`      Found delegator: ${delegatorAddress.substring(0, 8)}`);
         
       } catch (error) {
         console.log(`      Error parsing delegation record: ${error.message}`);
