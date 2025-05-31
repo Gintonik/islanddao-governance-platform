@@ -1,0 +1,93 @@
+/**
+ * Final VSR Governance Power Calculator for IslandDAO
+ * -----------------------------------------------
+ * Requirements:
+ * - No hardcoded registrar values (e.g. no 1.0 fallback)
+ * - Use authentic values from IslandDAO registrar account on mainnet
+ * - Apply per-deposit multipliers:
+ *     - 1.0x for expired or unlocked
+ *     - Formula for active lockups:
+ *       multiplier = baseline_vote_weight + min(remaining_secs / lockup_saturation_secs, 1.0) * max_extra_lockup_vote_weight
+ * - Validate against known test wallets:
+ *     - GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh: should be ~144,709
+ *     - Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG: should be ~3,361,730
+ */
+
+const { Connection, PublicKey } = require('@solana/web3.js');
+const { getRegistrar } = require('./vsr_helpers'); // your module to parse registrar correctly
+const db = require('./db');
+const BN = require('bn.js');
+
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY;
+const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`, 'confirmed');
+
+const REGISTRAR_ADDRESS = new PublicKey('5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM');
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const ISLAND_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
+
+// Main function
+(async () => {
+  const registrar = await getRegistrar(connection, REGISTRAR_ADDRESS);
+
+  if (!registrar) throw new Error('Registrar could not be fetched or parsed.');
+
+  const mintConfig = registrar.votingMints.find(m => m.mint.toBase58() === ISLAND_MINT.toBase58());
+  if (!mintConfig) throw new Error('ISLAND mint not found in registrar');
+
+  const scaleFactor = new BN('1000000000'); // 1e9 fixed-point precision
+  const baseline = mintConfig.baselineVoteWeight.scale.div(scaleFactor).toNumber();
+  const maxExtra = mintConfig.maxExtraLockupVoteWeight.scale.div(scaleFactor).toNumber();
+  const saturationSecs = mintConfig.lockupSaturationSecs.toNumber();
+
+  if (baseline <= 0 || maxExtra < 0 || saturationSecs < 10_000)
+    throw new Error('Registrar values look invalid. Aborting to prevent bad data.');
+
+  console.log('✅ Registrar config loaded:');
+  console.log(`Baseline: ${baseline}, Max Extra: ${maxExtra}, Saturation: ${saturationSecs} seconds`);
+
+  const citizens = await db.getAllCitizens();
+  let totalPower = 0;
+
+  for (const citizen of citizens) {
+    const wallet = new PublicKey(citizen.wallet);
+    const deposits = await getDeposits(wallet); // must fetch all VSR deposits per wallet
+
+    let power = 0;
+
+    for (const deposit of deposits) {
+      const amount = deposit.amount;
+      const now = Math.floor(Date.now() / 1000);
+
+      let multiplier = 1.0;
+
+      if (deposit.lockup.kind !== 'none') {
+        const remaining = deposit.lockup.endTs - now;
+        if (remaining > 0) {
+          const factor = Math.min(remaining / saturationSecs, 1.0);
+          multiplier = baseline + (factor * maxExtra);
+        } else {
+          multiplier = baseline;
+        }
+      } else {
+        multiplier = baseline;
+      }
+
+      const powerAdded = amount * multiplier;
+      power += powerAdded;
+
+      // Optional: debug per deposit
+      console.log(`[${citizen.wallet}] ${deposit.lockup.kind} | amt: ${amount} | mult: ${multiplier.toFixed(3)} | power: ${powerAdded.toFixed(3)}`);
+    }
+
+    await db.updateCitizenPower(citizen.wallet, power);
+    totalPower += power;
+
+    // Validation for known wallet
+    if (citizen.wallet === 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh' && Math.abs(power - 144709) > 2000)
+      console.warn('❌ GJdRQcsy wallet power off from expected ~144,709');
+    if (citizen.wallet === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG' && Math.abs(power - 3361730) > 20000)
+      console.warn('❌ Fywb7YDC wallet power off from expected ~3,361,730');
+  }
+
+  console.log(`✅ All citizens processed. Total governance power: ${totalPower.toFixed(3)} ISLAND`);
+})();
