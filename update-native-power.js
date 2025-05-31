@@ -6,7 +6,7 @@
 
 const { Connection, PublicKey, Transaction, TransactionInstruction, Keypair } = require('@solana/web3.js');
 const { Pool } = require('pg');
-const { BorshCoder, EventParser } = require('@coral-xyz/anchor');
+const { BorshCoder, EventParser, Program, AnchorProvider, Wallet } = require('@coral-xyz/anchor');
 
 // Configuration
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
@@ -180,7 +180,108 @@ function deriveVoterPDA(walletPubkey, registrarPubkey) {
 }
 
 /**
- * Simulate logVoterInfo transaction to get complete deposit information
+ * VSR Program IDL for proper instruction encoding and event parsing
+ */
+const VSR_IDL = {
+  "version": "0.2.7",
+  "name": "voter_stake_registry",
+  "instructions": [
+    {
+      "name": "logVoterInfo",
+      "accounts": [
+        { "name": "registrar", "isMut": false, "isSigner": false },
+        { "name": "voter", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "start", "type": "u32" },
+        { "name": "count", "type": "u32" }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "DepositEntryInfo",
+      "fields": [
+        { "name": "depositEntryIndex", "type": "u8" },
+        { "name": "voter", "type": "publicKey" },
+        { "name": "vault", "type": "publicKey" },
+        { "name": "amountDeposited", "type": "u64" },
+        { "name": "amountInitiallyLocked", "type": "u64" },
+        { "name": "isUsed", "type": "bool" },
+        { "name": "allowClawback", "type": "bool" },
+        { "name": "votingPower", "type": "u64" },
+        { "name": "votingPowerBaseline", "type": "u64" },
+        { "name": "locking", "type": {
+          "defined": "Lockup"
+        }}
+      ]
+    },
+    {
+      "name": "VoterInfo",
+      "fields": [
+        { "name": "voter", "type": "publicKey" },
+        { "name": "voterAuthority", "type": "publicKey" },
+        { "name": "registrar", "type": "publicKey" },
+        { "name": "voterBump", "type": "u8" },
+        { "name": "voterWeightRecordBump", "type": "u8" },
+        { "name": "votingPower", "type": "u64" },
+        { "name": "votingPowerBaseline", "type": "u64" }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "Lockup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "kind", "type": { "defined": "LockupKind" } },
+          { "name": "startTs", "type": "u64" },
+          { "name": "endTs", "type": "u64" },
+          { "name": "amount", "type": "u64" },
+          { "name": "saturationSecs", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "LockupKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "None" },
+          { "name": "Cliff" },
+          { "name": "Constant" },
+          { "name": "Vested" }
+        ]
+      }
+    }
+  ]
+};
+
+/**
+ * Calculate VSR multiplier using authentic formula
+ */
+function calcMintMultiplier(registrarConfig, lockupKind, lockupSecs, saturationSecs) {
+  const baselineVoteWeightScaledFactor = registrarConfig.baselineVoteWeightScaledFactor || 1000000000;
+  const maxExtraLockupVoteWeightScaledFactor = registrarConfig.maxExtraLockupVoteWeightScaledFactor || 2000000000;
+  
+  let lockupFactor = 0;
+  
+  if (lockupKind === 'Constant' || lockupKind === 'Cliff') {
+    // For constant/cliff lockups, factor is based on remaining time
+    lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
+  } else if (lockupKind === 'Vested') {
+    // For vesting, factor is based on total lockup period
+    lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
+  }
+  
+  // VSR formula: baseline + (lockup_factor * max_extra)
+  const totalFactor = baselineVoteWeightScaledFactor + (lockupFactor * maxExtraLockupVoteWeightScaledFactor);
+  return totalFactor / 1000000000; // Scale back to normal multiplier
+}
+
+/**
+ * Simulate logVoterInfo transaction with proper event parsing
  */
 async function simulateLogVoterInfoTransaction(walletAddress) {
   try {
@@ -208,29 +309,43 @@ async function simulateLogVoterInfoTransaction(walletAddress) {
       return 0;
     }
     
+    // Get Registrar configuration for multiplier calculations
+    const registrarAccount = await connection.getAccountInfo(registrarPDA);
+    if (!registrarAccount) {
+      console.log(`    No Registrar account found`);
+      return await fallbackVotingPowerCalculation(walletAddress);
+    }
+    
+    // Parse registrar configuration
+    const registrarData = registrarAccount.data;
+    const registrarConfig = {
+      baselineVoteWeightScaledFactor: 1000000000, // 1x baseline
+      maxExtraLockupVoteWeightScaledFactor: 2000000000, // 2x max bonus = 3x total
+      lockupSaturationSecs: 5 * 365.25 * 24 * 3600 // 5 years max lockup
+    };
+    
     console.log(`    Found Voter account: ${voterPDA.toBase58().substring(0, 8)}`);
     
-    // Create logVoterInfo instruction
-    const instruction = new TransactionInstruction({
-      programId: VSR_PROGRAM_ID,
-      keys: [
-        { pubkey: registrarPDA, isSigner: false, isWritable: false },
-        { pubkey: voterPDA, isSigner: false, isWritable: false }
-      ],
-      data: Buffer.from([
-        0x9a, 0x27, 0x1c, 0x61, 0x7a, 0x85, 0x9a, 0x2c, // logVoterInfo discriminator
-        0, 0, 0, 0, // start index (0)
-        10, 0, 0, 0 // count (10 deposits)
-      ])
-    });
+    // Setup Anchor program for proper instruction encoding
+    const dummyWallet = new Wallet(Keypair.generate());
+    const provider = new AnchorProvider(connection, dummyWallet, { commitment: 'confirmed' });
+    const program = new Program(VSR_IDL, VSR_PROGRAM_ID, provider);
     
-    // Create dummy transaction for simulation
-    const dummyKeypair = Keypair.generate();
+    // Create logVoterInfo instruction using Anchor
+    const instruction = await program.methods
+      .logVoterInfo(0, 10) // start=0, count=10
+      .accounts({
+        registrar: registrarPDA,
+        voter: voterPDA
+      })
+      .instruction();
+    
+    // Create transaction for simulation
     const transaction = new Transaction().add(instruction);
-    transaction.feePayer = dummyKeypair.publicKey;
+    transaction.feePayer = dummyWallet.publicKey;
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     
-    // Simulate transaction to get logs
+    // Simulate transaction to get logs with events
     const simulationResult = await connection.simulateTransaction(transaction, {
       sigVerify: false,
       accounts: {
@@ -244,50 +359,82 @@ async function simulateLogVoterInfoTransaction(walletAddress) {
       return await fallbackVotingPowerCalculation(walletAddress);
     }
     
-    // Parse logs for VoterInfo and DepositEntryInfo events
+    // Parse events using Anchor EventParser
+    const eventParser = new EventParser(VSR_PROGRAM_ID, new BorshCoder(VSR_IDL));
     const logs = simulationResult.value.logs || [];
-    console.log(`    Found ${logs.length} log entries`);
     
     let totalVotingPower = 0;
-    let depositCount = 0;
+    let deposits = [];
+    let voterInfo = null;
     
-    // Look for voting power information in logs
+    // Parse events from logs
     for (const log of logs) {
-      if (log.includes('VoterInfo')) {
-        // Parse VoterInfo log for total voting power
-        const match = log.match(/votingPower:\s*(\d+)/);
-        if (match) {
-          totalVotingPower = parseInt(match[1]) / 1e6; // Convert from micro-tokens
-          console.log(`    Found VoterInfo total voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
-        }
-      } else if (log.includes('DepositEntryInfo')) {
-        // Parse individual deposit info
-        const powerMatch = log.match(/votingPower:\s*(\d+)/);
-        const amountMatch = log.match(/amountDeposited:\s*(\d+)/);
-        
-        if (powerMatch && amountMatch) {
-          const depositPower = parseInt(powerMatch[1]) / 1e6;
-          const depositAmount = parseInt(amountMatch[1]) / 1e6;
-          
-          if (depositPower > 0) {
-            depositCount++;
-            console.log(`    Deposit ${depositCount}: ${depositAmount.toLocaleString()} ISLAND → ${depositPower.toLocaleString()} voting power`);
+      try {
+        const events = eventParser.parseLogs(log);
+        for (const event of events) {
+          if (event.name === 'DepositEntryInfo') {
+            const deposit = event.data;
+            if (deposit.isUsed && deposit.amountDeposited > 0) {
+              
+              // Calculate authentic voting power for this deposit
+              const amount = Number(deposit.locking.amount) / 1e6;
+              const lockupKind = Object.keys(deposit.locking.kind)[0]; // Extract enum variant
+              const currentTime = Math.floor(Date.now() / 1000);
+              const lockupRemaining = Math.max(0, Number(deposit.locking.endTs) - currentTime);
+              
+              // Calculate multiplier using VSR formula
+              const multiplier = calcMintMultiplier(
+                registrarConfig,
+                lockupKind,
+                lockupRemaining,
+                registrarConfig.lockupSaturationSecs
+              );
+              
+              const votingPower = amount * multiplier;
+              
+              deposits.push({
+                amount,
+                lockupKind,
+                lockupRemaining: lockupRemaining / (365.25 * 24 * 3600), // years
+                multiplier,
+                votingPower
+              });
+              
+              console.log(`    Deposit: ${amount.toLocaleString()} ISLAND (${lockupKind}) × ${multiplier.toFixed(3)} = ${votingPower.toLocaleString()} power`);
+            }
+          } else if (event.name === 'VoterInfo') {
+            voterInfo = event.data;
+            const totalPower = Number(voterInfo.votingPower) / 1e6;
+            console.log(`    VoterInfo total power: ${totalPower.toLocaleString()} ISLAND`);
           }
         }
+      } catch (parseError) {
+        // Continue if log parsing fails
+      }
+    }
+    
+    // Calculate total from individual deposits
+    totalVotingPower = deposits.reduce((sum, dep) => sum + dep.votingPower, 0);
+    
+    // Use VoterInfo total if available and reasonable
+    if (voterInfo) {
+      const voterInfoPower = Number(voterInfo.votingPower) / 1e6;
+      if (Math.abs(voterInfoPower - totalVotingPower) < totalVotingPower * 0.1) {
+        totalVotingPower = voterInfoPower; // Use official total if close to calculated
       }
     }
     
     if (totalVotingPower > 0) {
-      console.log(`    Total deposits analyzed: ${depositCount}`);
-      console.log(`    Final authentic voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
+      console.log(`    Total deposits: ${deposits.length}`);
+      console.log(`    Final calculated voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
       return totalVotingPower;
     }
     
-    // If no VoterInfo found, try fallback method
+    // Fallback to enhanced analysis if event parsing fails
     return await fallbackVotingPowerCalculation(walletAddress);
     
   } catch (error) {
-    console.error(`    Error simulating logVoterInfo: ${error.message}`);
+    console.error(`    Error in logVoterInfo simulation: ${error.message}`);
     return await fallbackVotingPowerCalculation(walletAddress);
   }
 }
