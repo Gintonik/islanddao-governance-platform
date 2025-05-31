@@ -171,17 +171,24 @@ function deserializeDepositEntry(data, offset, index, accountAddress) {
     const allowClawback = data.readUInt8(offset + 41) === 1;
     const votingMintConfigIdx = data.readUInt8(offset + 42);
     
+    // Determine the active amount - some deposits use amountInitiallyLockedNative instead
+    let effectiveAmount = amountDepositedNative;
+    if (amountDepositedNative === 0 && amountInitiallyLockedNative > 0) {
+      effectiveAmount = amountInitiallyLockedNative;
+    }
+    
     // Only return entries that are actually used and have positive amounts
-    if (!isUsed || amountDepositedNative <= 0) {
+    if (!isUsed || effectiveAmount <= 0) {
       return null;
     }
     
-    const amountInTokens = amountDepositedNative / 1e6;
+    const amountInTokens = effectiveAmount / 1e6;
     
     return {
       lockup,
       amountDepositedNative,
       amountInitiallyLockedNative,
+      effectiveAmount,
       amountInTokens,
       isUsed,
       allowClawback,
