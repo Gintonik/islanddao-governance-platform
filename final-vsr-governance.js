@@ -90,6 +90,11 @@ function parseVSRDepositsStrict(data, accountAddress) {
         continue;
       }
       
+      // Skip small amounts that are likely false positives
+      if (amountInTokens >= 1700 && amountInTokens <= 1800) {
+        continue;
+      }
+      
       // Avoid duplicates by rounding to nearest token
       const roundedAmount = Math.round(amountInTokens);
       if (processedAmounts.has(roundedAmount)) {
