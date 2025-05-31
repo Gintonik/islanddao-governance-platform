@@ -1,0 +1,54 @@
+// REPLIT AI PROMPT
+
+I want to rewrite the IslandDAO governance power calculator to use proper struct-aware deserialization of Voter Stake Registry (VSR) accounts. No more heuristics, no scanning bytes manually.
+
+✅ Here's what I want:
+
+1. **Fetch and load the official VSR IDL:**
+   - URL: https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json
+
+2. **Use @coral-xyz/anchor** to deserialize the `Voter` account using the IDL.
+
+3. From the `Voter` account, extract the `depositEntries` array.
+
+4. For each deposit entry:
+   - Check that `isUsed` is true.
+   - Use `amountDepositedNative` as the deposit amount.
+   - Use the `lockup` object to calculate the multiplier based on:
+     - `kind`
+     - `startTs`
+     - `endTs`
+     - `cliffTs`
+
+5. Fetch the **registrar config** from the real IslandDAO registrar address:
+   - `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+
+   Use it to get:
+   - `baselineVoteWeightFactor`
+   - `maxExtraLockupVoteWeightFactor`
+   - `lockupSaturationSecs`
+
+6. Calculate voting power:
+   - Multiplier = 1.0 + (remaining lockup time / lockupSaturationSecs) × maxExtra
+   - Clamp multiplier between 1.0 and (1.0 + maxExtra)
+   - Governance Power = amountDepositedNative × multiplier
+
+7. Save the new results per wallet to the Postgres citizens table:
+   - `native_governance_power` field (6 decimal places)
+
+🚫 Avoid:
+- Byte-level scans or magic offsets
+- Value-based filtering like “ignore if 1,700–1,800 ISLAND”
+- Using hardcoded values per wallet
+
+✅ This is the final version: clean, struct-aware, and fully compatible with Anchor.
+
+Start by testing it on Titanmaker and Legend wallets:
+- Titanmaker: `Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1`
+- Legend: `Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG`
+
+Make sure the values match exactly what we saw before:
+- Titanmaker = 200,000 ISLAND (no lockups)
+- Legend ≈ 3,361,730 ISLAND (all expired lockups = 1.0x)
+
+Once it works, expand to all citizens in the DB.
