@@ -1,0 +1,56 @@
+🔧 Fix the `vsr-governance-struct-aware.js` file to ensure it processes **all valid VSR accounts and deposits**, including for wallets like Takisoul and KO3.
+
+## ☑️ Goals:
+- Recover full governance power for:
+  - Takisoul (should show ~8.7M ISLAND)
+  - KO3 (should show ~1.8M ISLAND)
+- Ensure no valid deposits are skipped due to offset or struct assumptions
+- Log and recover any previously skipped or failed accounts
+
+## ✅ Implementation Steps:
+
+1️⃣ Process **all VSR accounts** matching the `authority` of each citizen:
+   - Use `getProgramAccounts` with `memcmp` at offsets 8, 40, and 72
+   - Don’t assume only one "primary" account per wallet
+
+2️⃣ When deserializing accounts:
+   - Try Anchor deserialization using the VSR IDL
+   - If Anchor fails, **fall back to manual buffer parsing**:
+     - Loop through `depositEntries[]`
+     - For each entry:
+       - If `isUsed === true` and amount > 0
+       - Extract:
+         - `amountDepositedNative`
+         - `amountInitiallyLockedNative`
+         - `lockup.kind`
+         - `lockup.startTs`, `lockup.endTs`
+     - Compute multiplier using registrar config (1.0x for unlocked)
+
+3️⃣ Log all VSR accounts per wallet:
+   - Print wallet, account address, offset used, number of deposits, and total power
+   - This helps verify we aren’t missing hidden accounts
+
+4️⃣ Fix filtering:
+   - Remove any filter that skips deposits below a threshold (e.g. 1000 ISLAND)
+   - Do not discard accounts based on balance size
+
+5️⃣ Validation Targets:
+   - Takisoul = ~8.7M ISLAND
+   - KO3 = ~1.8M ISLAND
+   - Legend = 3,361,730.15 ISLAND
+   - DeanMachine = 10,353,648 ISLAND
+   - Titanmaker = 200,000 ISLAND
+
+6️⃣ Summary Output:
+   - Print native, delegated, and total governance power for all wallets
+   - Print # of VSR accounts processed per wallet
+
+## 🧪 Test Accounts:
+- Takisoul: `7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA`
+- KO3: `kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC`
+
+## ✅ Success Criteria:
+- Struct-aware calculator restores ~8.7M for Takisoul and ~1.8M for KO3
+- Anchor + fallback parsing combined
+- All previously validated accounts remain accurate
+- No hardcoded values

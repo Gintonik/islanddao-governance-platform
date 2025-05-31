@@ -111,9 +111,27 @@ async function findVoterAccounts(walletPubkey) {
 }
 
 /**
- * Deserialize Voter account using proper struct layout
+ * Deserialize Voter account using proper struct layout with fallback parsing
  */
 function deserializeVoterAccount(data, accountAddress) {
+  // Try Anchor-style deserialization first
+  try {
+    const result = deserializeVoterAccountAnchor(data, accountAddress);
+    if (result && result.depositEntries.length > 0) {
+      return result;
+    }
+  } catch (error) {
+    // Fall through to manual parsing
+  }
+  
+  // Fallback: Manual buffer parsing for non-standard accounts
+  return deserializeVoterAccountManual(data, accountAddress);
+}
+
+/**
+ * Anchor-style VSR Voter account deserialization
+ */
+function deserializeVoterAccountAnchor(data, accountAddress) {
   const VSR_DISCRIMINATOR = '14560581792603266545';
   
   if (data.length < 8) return null;
@@ -164,6 +182,62 @@ function deserializeVoterAccount(data, accountAddress) {
     voterWeightRecordBump,
     depositEntries,
     accountAddress
+  };
+}
+
+/**
+ * Manual buffer parsing for accounts that don't match standard Anchor layout
+ */
+function deserializeVoterAccountManual(data, accountAddress) {
+  if (data.length < 80) return null;
+  
+  const depositEntries = [];
+  
+  // Try different starting offsets for deposit entries
+  const possibleOffsets = [80, 120, 160, 200];
+  
+  for (const startOffset of possibleOffsets) {
+    const entries = [];
+    const DEPOSIT_SIZE = 72;
+    const MAX_DEPOSITS = 32;
+    
+    for (let i = 0; i < MAX_DEPOSITS; i++) {
+      const entryOffset = startOffset + (i * DEPOSIT_SIZE);
+      
+      if (entryOffset + DEPOSIT_SIZE > data.length) {
+        break;
+      }
+      
+      try {
+        const depositEntry = deserializeDepositEntry(data, entryOffset, i, accountAddress);
+        if (depositEntry) {
+          entries.push(depositEntry);
+        }
+      } catch (error) {
+        // Skip invalid entries
+        continue;
+      }
+    }
+    
+    if (entries.length > 0) {
+      depositEntries.push(...entries);
+      break; // Found valid entries at this offset
+    }
+  }
+  
+  if (depositEntries.length === 0) {
+    return null;
+  }
+  
+  return {
+    discriminator: null,
+    registrar: null,
+    authority: null,
+    voterBump: null,
+    voterWeightRecordBump: null,
+    depositEntries,
+    accountAddress,
+    parsedManually: true
   };
 }
 
@@ -348,7 +422,7 @@ async function calculateGovernancePower(walletAddress) {
         const voter = deserializeVoterAccount(accountInfo.account.data, accountInfo.pubkey?.toBase58());
         
         if (!voter) {
-          console.log(`  Account ${accountInfo.pubkey?.toBase58()?.substring(0, 8)}...: Failed to deserialize`);
+          console.log(`  Account ${accountInfo.pubkey?.toBase58()?.substring(0, 8)}...: Failed to deserialize (both Anchor and manual parsing)`);
           continue;
         }
         
@@ -357,6 +431,10 @@ async function calculateGovernancePower(walletAddress) {
           continue;
         }
         
+        const parseMethod = voter.parsedManually ? 'manual' : 'anchor';
+        console.log(`  Account ${voter.accountAddress?.substring(0, 8)}...: ${voter.depositEntries.length} active deposits (${parseMethod})`);
+        validAccountsProcessed++;
+        
         // Check for corrupted accounts (like DeanMachine's 422M ISLAND account)
         const largestDeposit = Math.max(...voter.depositEntries.map(entry => entry.amountInTokens));
         if (largestDeposit > 50000000) {
@@ -364,8 +442,7 @@ async function calculateGovernancePower(walletAddress) {
           continue;
         }
         
-        console.log(`  Account ${voter.accountAddress?.substring(0, 8)}...: ${voter.depositEntries.length} active deposits`);
-        validAccountsProcessed++;
+
         
         // Process all deposits in this account
         for (const depositEntry of voter.depositEntries) {
