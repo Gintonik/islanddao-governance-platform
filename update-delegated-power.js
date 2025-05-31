@@ -17,6 +17,7 @@ const connection = new Connection(HELIUS_RPC, 'confirmed');
 
 /**
  * Find Token Owner Records where governance is delegated to a specific wallet
+ * Scans all IslandDAO TokenOwnerRecords, not limited to citizen wallets
  */
 async function findDelegationRecords(delegateWallet) {
   try {
@@ -24,24 +25,26 @@ async function findDelegationRecords(delegateWallet) {
     
     const delegateKey = new PublicKey(delegateWallet);
     
-    // Token Owner Record structure with corrected offsets:
+    // Token Owner Record structure:
     // 0: discriminator (1 byte)
-    // 1: realm (32 bytes)
+    // 1: realm (32 bytes) - IslandDAO realm
     // 33: governing token mint (32 bytes)  
-    // 65: governing token owner (32 bytes)
-    // 97: governance delegate (32 bytes) - this is where votes are delegated to
+    // 65: governing token owner (32 bytes) - wallet that owns the tokens (delegator)
+    // 97: governance delegate (32 bytes) - wallet receiving delegation (delegatee)
     // Plus additional fields
+    
+    console.log(`    Scanning SPL Governance Program for IslandDAO delegations...`);
     
     const delegationAccounts = await connection.getProgramAccounts(SPL_GOVERNANCE_PROGRAM_ID, {
       filters: [
-        // Filter by realm at offset 1
+        // Filter by IslandDAO realm at offset 1
         { memcmp: { offset: 1, bytes: ISLANDDAO_REALM.toBase58() } },
-        // Filter by governance delegate at offset 97 (where votes are delegated to)
+        // Filter by governance delegate at offset 97 (citizen receiving delegation)
         { memcmp: { offset: 97, bytes: delegateKey.toBase58() } }
       ]
     });
     
-    console.log(`    Found ${delegationAccounts.length} delegation records`);
+    console.log(`    Found ${delegationAccounts.length} TokenOwnerRecord accounts with delegations`);
     
     const validDelegators = [];
     
@@ -53,11 +56,17 @@ async function findDelegationRecords(delegateWallet) {
         const delegatorBytes = data.slice(65, 97);
         const delegatorAddress = new PublicKey(delegatorBytes).toBase58();
         
+        // Skip self-delegation (wallet delegating to itself)
+        if (delegatorAddress === delegateWallet) {
+          console.log(`      Skipping self-delegation: ${delegatorAddress.substring(0, 8)}`);
+          continue;
+        }
+        
         validDelegators.push({
           delegator: delegatorAddress,
           account: account.pubkey.toBase58()
         });
-        console.log(`      Found delegator: ${delegatorAddress.substring(0, 8)}`);
+        console.log(`      Found external delegator: ${delegatorAddress.substring(0, 8)}`);
         
       } catch (error) {
         console.log(`      Error parsing delegation record: ${error.message}`);
@@ -128,21 +137,21 @@ async function getDelegatorVotingPower(delegatorWallet) {
 }
 
 /**
- * Calculate total delegated power for a wallet
+ * Calculate total delegated power for a wallet from all IslandDAO delegators
  */
 async function calculateDelegatedPower(walletAddress) {
   try {
     console.log(`  Calculating delegated power for ${walletAddress.substring(0, 8)}...`);
     
-    // Find all delegations to this wallet
+    // Find all delegations to this wallet across entire IslandDAO ecosystem
     const delegators = await findDelegationRecords(walletAddress);
     
     if (delegators.length === 0) {
-      console.log('    No delegations found');
+      console.log('    No delegations found from any IslandDAO wallets');
       return { totalDelegatedPower: 0, delegations: [] };
     }
     
-    console.log(`    Processing ${delegators.length} delegators...`);
+    console.log(`    Processing ${delegators.length} delegators from IslandDAO ecosystem...`);
     
     let totalDelegatedPower = 0;
     const delegationDetails = [];
@@ -150,7 +159,7 @@ async function calculateDelegatedPower(walletAddress) {
     for (const delegatorInfo of delegators) {
       const { delegator } = delegatorInfo;
       
-      console.log(`      Checking power for delegator ${delegator.substring(0, 8)}...`);
+      console.log(`      Calculating VSR power for delegator ${delegator.substring(0, 8)}...`);
       
       const votingPower = await getDelegatorVotingPower(delegator);
       
@@ -161,10 +170,14 @@ async function calculateDelegatedPower(walletAddress) {
           power: votingPower
         });
         
-        console.log(`        Delegated power: ${votingPower.toLocaleString()} ISLAND`);
+        console.log(`        DELEGATION: ${delegator.substring(0, 8)} delegated ${votingPower.toLocaleString()} ISLAND to ${walletAddress.substring(0, 8)}`);
       } else {
-        console.log(`        No voting power found`);
+        console.log(`        Delegator ${delegator.substring(0, 8)} has no VSR voting power`);
       }
+    }
+    
+    if (totalDelegatedPower > 0) {
+      console.log(`    TOTAL DELEGATED TO ${walletAddress.substring(0, 8)}: ${totalDelegatedPower.toLocaleString()} ISLAND from ${delegationDetails.length} delegators`);
     }
     
     return { totalDelegatedPower, delegations: delegationDetails };
