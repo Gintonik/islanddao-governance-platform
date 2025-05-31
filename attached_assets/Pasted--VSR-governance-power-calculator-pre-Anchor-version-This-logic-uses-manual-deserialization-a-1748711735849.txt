@@ -1,0 +1,62 @@
+// VSR governance power calculator – pre-Anchor version
+// This logic uses manual deserialization and multi-offset scanning to get accurate values
+
+const { Connection, PublicKey } = require('@solana/web3.js');
+const bs58 = require('bs58');
+const BN = require('bn.js');
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+
+async function getAllVSRAccountsForWallet(wallet, connection) {
+  const filters = [
+    { offset: 8,   bytes: wallet.toBase58() },
+    { offset: 40,  bytes: wallet.toBase58() },
+    { offset: 72,  bytes: wallet.toBase58() }
+  ];
+
+  const accounts = [];
+  for (const filter of filters) {
+    const found = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [{ memcmp: filter }],
+      commitment: 'confirmed'
+    });
+    accounts.push(...found);
+  }
+  return accounts;
+}
+
+function parseVoterAccount(buffer) {
+  // This logic was based on reverse-engineering VSR voter accounts
+  try {
+    const depositCount = buffer.readUInt32LE(8 + 32 * 4 + 8); // hardcoded for layout
+    const deposits = [];
+
+    for (let i = 0; i < depositCount && i < 32; i++) {
+      const base = 8 + 32 * 4 + 8 + 4 + i * 96;
+      const isUsed = buffer[base] === 1;
+      const amountLocked = new BN(buffer.slice(base + 8, base + 16), 'le');
+      const amountDeposited = new BN(buffer.slice(base + 24, base + 32), 'le');
+      if (isUsed && (amountLocked.gt(new BN(0)) || amountDeposited.gt(new BN(0)))) {
+        deposits.push(amountLocked.gt(amountDeposited) ? amountLocked : amountDeposited);
+      }
+    }
+
+    return deposits.reduce((sum, bn) => sum.add(bn), new BN(0));
+  } catch (err) {
+    console.warn('Deserialization error', err);
+    return new BN(0);
+  }
+}
+
+async function getGovernancePower(wallet, connection) {
+  const walletPk = new PublicKey(wallet);
+  const accounts = await getAllVSRAccountsForWallet(walletPk, connection);
+
+  let totalPower = new BN(0);
+  for (const acc of accounts) {
+    const raw = acc.account.data;
+    const power = parseVoterAccount(raw);
+    totalPower = totalPower.add(power);
+  }
+
+  return totalPower.toNumber() / 1e9; // ISLAND has 9 decimals
+}

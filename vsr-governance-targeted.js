@@ -1,7 +1,7 @@
 /**
- * Official VSR Governance Calculator
- * Comprehensive blockchain governance power calculation
- * Uses multi-strategy VSR account parsing for accurate results
+ * Targeted VSR Governance Calculator
+ * Focused fix for missing Takisoul and KO3 deposits
+ * Uses efficient account discovery with multiple parsing strategies
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
