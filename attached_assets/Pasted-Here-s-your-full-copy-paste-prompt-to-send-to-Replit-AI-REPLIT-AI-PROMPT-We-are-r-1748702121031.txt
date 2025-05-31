@@ -1,0 +1,110 @@
+Here’s your full copy-paste prompt to send to Replit AI:
+
+---
+
+**REPLIT AI PROMPT:**
+
+We are redoing the **IslandDAO native governance power calculator** from scratch. Ignore all previous versions. We need a clean and accurate Node.js script that:
+
+---
+
+### ✅ OBJECTIVE
+
+Calculate **native governance power** for all citizens based on **authentic on-chain Voter Stake Registry (VSR)** data. Use:
+
+* Real registrar config (no hardcoded values)
+* Validated deposit logic
+* Accurate lockup multiplier calculations
+* PostgreSQL database updates
+
+---
+
+### 🔧 SETUP
+
+* Node.js + PostgreSQL
+* Blockchain RPC:
+  `https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00`
+* Program IDs:
+
+  * VSR: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+  * Registrar: `5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM`
+  * Mint: `Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a`
+* Citizens stored in DB:
+
+  * Table: `citizens`
+  * Fields: `wallet`, `native_governance_power`
+
+---
+
+### 🧠 CALCULATION RULES
+
+1. **Parse Registrar Config On-Chain**
+
+   * Pull from VSR registrar account
+   * Parse:
+
+     * `baseline_vote_weight`
+     * `max_extra_lockup_vote_weight`
+     * `lockup_saturation_secs`
+   * Format is likely I80F48 → divide by `1e9` after decoding
+
+2. **Fetch VSR accounts for each citizen wallet**
+
+   * Filter for `Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a` (ISLAND mint)
+   * For each deposit:
+
+     * Amount in lamports → convert to ISLAND
+     * Lockup kind: None, Cliff, Constant
+     * Check if lock expired
+     * Calculate time left for lockup
+
+3. **Multiplier Calculation**
+
+```
+If unlocked or expired:
+  multiplier = baseline_vote_weight
+
+If locked:
+  multiplier = baseline_vote_weight + (max_extra_lockup_vote_weight * remaining_time / lockup_saturation_secs)
+  Cap at (baseline + max_extra)
+```
+
+4. **Final Governance Power**
+
+```
+deposit * multiplier
+```
+
+* Sum all deposits per wallet
+* Save total to `native_governance_power` in the DB (6 decimal precision)
+
+---
+
+### 🔍 TEST CASE VALIDATION
+
+Ensure these wallets match expected results:
+
+* `GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh` → \~144,709
+* `Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG` → \~3,361,730
+* `Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1` → 200,000
+
+Reject results if deviation is over **0.5%**
+
+---
+
+### 🚫 DO NOT:
+
+* Hardcode multiplier values or user data
+* Use fallback multipliers or guesses
+* Break unlocked accounts (1.0x baseline must stay correct)
+
+---
+
+### ✅ OUTPUT
+
+* Log governance power per wallet
+* Show top 10 leaderboard
+* Update all records in the DB
+* Ready for daily cron job
+
+Make this version **precise, readable, and reliable.**
