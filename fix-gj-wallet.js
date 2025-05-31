@@ -185,17 +185,85 @@ async function analyzeGJdRQcsyWallet() {
         }
         
         if (!foundValidDeposits) {
-          console.log('  No valid deposit configuration found - using raw data dump');
+          console.log('  No valid deposit configuration found - analyzing raw patterns');
           
-          // Raw data analysis for debugging
+          // Identify deposit amounts from raw data patterns
+          const depositAmounts = [];
+          const timestampOffsets = [];
+          
           console.log('\n  Raw account data analysis:');
           for (let i = 0; i < Math.min(400, data.length); i += 8) {
             if (i + 8 <= data.length) {
               const value = Number(data.readBigUInt64LE(i));
               const asTokens = value / 1e6;
-              if (asTokens > 10 && asTokens < 1000000) {
+              
+              // Look for token amounts (micro-tokens between 10 and 100M)
+              if (value > 10000000 && value < 100000000000000) { // 10 tokens to 100M tokens in micro-tokens
                 console.log(`    Offset ${i}: ${value} (${asTokens.toLocaleString()} tokens)`);
+                
+                // Check if this looks like a deposit amount (reasonable size)
+                if (asTokens >= 1000 && asTokens <= 100000) {
+                  depositAmounts.push({ offset: i, amount: asTokens });
+                }
               }
+              
+              // Look for timestamps (Unix timestamps around current time)
+              if (value > 1700000000 && value < 1800000000) { // 2023-2026 range
+                timestampOffsets.push({ offset: i, timestamp: value });
+              }
+            }
+          }
+          
+          console.log('\n  Identified potential deposits:');
+          depositAmounts.forEach((dep, index) => {
+            console.log(`    Deposit ${index + 1}: ${dep.amount.toLocaleString()} ISLAND at offset ${dep.offset}`);
+          });
+          
+          console.log('\n  Identified timestamps (lockup expirations):');
+          timestampOffsets.forEach((ts, index) => {
+            const date = new Date(ts.timestamp * 1000);
+            const yearsFromNow = (ts.timestamp - Date.now()/1000) / (365.25 * 24 * 3600);
+            console.log(`    Timestamp ${index + 1}: ${date.toISOString().split('T')[0]} (${yearsFromNow.toFixed(2)} years) at offset ${ts.offset}`);
+          });
+          
+          // Try to calculate voting power based on identified deposits
+          if (depositAmounts.length >= 3) {
+            console.log('\n  Calculating voting power from identified deposits:');
+            
+            let calculatedPower = 0;
+            
+            depositAmounts.forEach((dep, index) => {
+              // Try to find corresponding lockup timestamp
+              let lockupYears = 0;
+              let multiplier = 1.0;
+              
+              // Look for timestamp near this deposit (within 32 bytes)
+              const nearbyTimestamps = timestampOffsets.filter(ts => 
+                Math.abs(ts.offset - dep.offset) < 32
+              );
+              
+              if (nearbyTimestamps.length > 0) {
+                const expiration = nearbyTimestamps[0].timestamp;
+                lockupYears = Math.max(0, (expiration - Date.now()/1000) / (365.25 * 24 * 3600));
+                
+                // Calculate VSR multiplier (1 + lockup_factor * 2)
+                const maxLockupYears = 5.0;
+                const maxBonusMultiplier = 2.0; // 3x total = 1x base + 2x bonus
+                const lockupFactor = Math.min(lockupYears / maxLockupYears, 1.0);
+                multiplier = 1.0 + (lockupFactor * maxBonusMultiplier);
+              }
+              
+              const depositPower = dep.amount * multiplier;
+              calculatedPower += depositPower;
+              
+              console.log(`    Deposit ${index + 1}: ${dep.amount.toLocaleString()} × ${multiplier.toFixed(3)} = ${depositPower.toLocaleString()} ISLAND`);
+            });
+            
+            console.log(`\n  Total calculated from pattern analysis: ${calculatedPower.toLocaleString()} ISLAND`);
+            
+            if (calculatedPower > 50000) {
+              totalCalculatedPower = calculatedPower;
+              foundValidDeposits = true;
             }
           }
         }
