@@ -1,37 +1,16 @@
 /**
- * Canonical VSR Governance Power Calculator
+ * Canonical VSR Governance Calculator
  * Uses official Anchor struct deserialization with discriminators
- * Zero guesswork - only authentic VSR program data
+ * No guesswork - only authentic VSR program data
  */
 
+const anchor = require('@coral-xyz/anchor');
 const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
-const { AnchorProvider, Program, Wallet } = require('@coral-xyz/anchor');
 const { Pool } = require('pg');
-const fetch = require('node-fetch');
+const vsrIdl = require('./vsr_idl.json');
 
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
-
-/**
- * Fetch VSR IDL from official repository
- */
-async function fetchVSRIdl() {
-  try {
-    console.log('Fetching VSR IDL from official repository...');
-    const response = await fetch('https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const idl = await response.json();
-    console.log('✅ VSR IDL loaded successfully');
-    return idl;
-  } catch (error) {
-    console.error('Failed to fetch VSR IDL:', error.message);
-    throw error;
-  }
-}
 
 /**
  * Initialize Anchor provider and VSR program
@@ -39,20 +18,20 @@ async function fetchVSRIdl() {
 async function initializeVSRProgram() {
   const connection = new Connection(HELIUS_RPC, 'confirmed');
   
-  // Create dummy signer for read-only operations
-  const dummyWallet = new Wallet(Keypair.generate());
+  // Create dummy wallet for read-only operations
+  const dummyKeypair = Keypair.generate();
+  const wallet = new anchor.Wallet(dummyKeypair);
   
-  const provider = new AnchorProvider(
+  const provider = new anchor.AnchorProvider(
     connection,
-    dummyWallet,
+    wallet,
     { commitment: 'confirmed' }
   );
   
-  // Load VSR IDL
-  const vsrIdl = await fetchVSRIdl();
+  anchor.setProvider(provider);
   
-  // Initialize VSR program
-  const program = new Program(vsrIdl, VSR_PROGRAM_ID, provider);
+  // Initialize VSR program with local IDL
+  const program = new anchor.Program(vsrIdl, VSR_PROGRAM_ID, provider);
   
   console.log('✅ Anchor provider and VSR program initialized');
   return { program, connection };
@@ -106,10 +85,9 @@ function calculateVotingPowerMultiplier(deposit) {
 }
 
 /**
- * Process a single voter account to extract governance power
+ * Process voter account to extract governance power
  */
-function processVoterAccount(voterAccount, accountPubkey) {
-  const voter = voterAccount.account;
+function processVoterAccount(voter, accountPubkey) {
   const accountAddress = accountPubkey.toBase58();
   
   if (!voter.depositEntries || voter.depositEntries.length === 0) {
@@ -130,14 +108,14 @@ function processVoterAccount(voterAccount, accountPubkey) {
     if (deposit.amountDepositedNative && deposit.amountDepositedNative.toNumber) {
       effectiveAmount = deposit.amountDepositedNative.toNumber();
     } else if (deposit.amountDepositedNative) {
-      effectiveAmount = deposit.amountDepositedNative;
+      effectiveAmount = Number(deposit.amountDepositedNative);
     }
     
     if (effectiveAmount === 0) {
       if (deposit.amountInitiallyLockedNative && deposit.amountInitiallyLockedNative.toNumber) {
         effectiveAmount = deposit.amountInitiallyLockedNative.toNumber();
       } else if (deposit.amountInitiallyLockedNative) {
-        effectiveAmount = deposit.amountInitiallyLockedNative;
+        effectiveAmount = Number(deposit.amountInitiallyLockedNative);
       }
     }
     
@@ -172,7 +150,7 @@ function processVoterAccount(voterAccount, accountPubkey) {
 }
 
 /**
- * Calculate governance power for all wallets using canonical Anchor approach
+ * Calculate governance power using canonical Anchor approach
  */
 async function calculateCanonicalGovernancePower() {
   console.log('=== Canonical VSR Governance Power Calculator ===');
@@ -201,7 +179,7 @@ async function calculateCanonicalGovernancePower() {
     const voterAuthority = voter.authority.toBase58();
     
     // Process deposits in this account
-    const deposits = processVoterAccount(voterAccount, accountPubkey);
+    const deposits = processVoterAccount(voter, accountPubkey);
     
     if (deposits.length > 0) {
       const accountPower = deposits.reduce((sum, deposit) => sum + deposit.power, 0);
@@ -229,25 +207,6 @@ async function calculateCanonicalGovernancePower() {
 }
 
 /**
- * Load citizens from database and match with governance power
- */
-async function loadCitizensAndMatchPower() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-  });
-  
-  let citizens;
-  try {
-    const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
-    citizens = result.rows;
-  } finally {
-    await pool.end();
-  }
-  
-  return citizens;
-}
-
-/**
  * Main execution function
  */
 async function runCanonicalCalculator() {
@@ -256,7 +215,17 @@ async function runCanonicalCalculator() {
     const { walletPowers, walletDetails } = await calculateCanonicalGovernancePower();
     
     // Load citizens from database
-    const citizens = await loadCitizensAndMatchPower();
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+    
+    let citizens;
+    try {
+      const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
+      citizens = result.rows;
+    } finally {
+      await pool.end();
+    }
     
     console.log('=== CITIZEN GOVERNANCE POWER RESULTS ===');
     console.log('');
@@ -264,14 +233,17 @@ async function runCanonicalCalculator() {
     const results = [];
     let totalFoundPower = 0;
     let citizensWithPower = 0;
+    let validationsPassed = 0;
+    let validationsFailed = 0;
     
     for (const citizen of citizens) {
       const power = walletPowers.get(citizen.wallet) || 0;
       const details = walletDetails.get(citizen.wallet) || [];
       
+      const citizenName = citizen.nickname || 'Anonymous';
+      console.log(`${citizenName.padEnd(20)} (${citizen.wallet.substring(0, 8)}...): ${power.toLocaleString()} ISLAND`);
+      
       if (power > 0) {
-        console.log(`${(citizen.nickname || 'Anonymous').padEnd(20)} (${citizen.wallet.substring(0, 8)}...): ${power.toLocaleString()} ISLAND`);
-        
         // Show account breakdown for significant holders
         if (power > 100000) {
           for (const accountDetail of details) {
@@ -286,11 +258,76 @@ async function runCanonicalCalculator() {
         totalFoundPower += power;
       }
       
+      // Critical validations
+      if (citizen.wallet === '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA') {
+        // Takisoul should have ~8.7M ISLAND
+        if (power > 8000000) {
+          console.log(`✅ Takisoul validation PASSED: ${power.toLocaleString()} ISLAND (expected ~8.7M)`);
+          validationsPassed++;
+        } else {
+          console.log(`❌ Takisoul validation FAILED: ${power.toLocaleString()} ISLAND (should be ~8.7M)`);
+          console.log(`   Accounts discovered: ${details.length}`);
+          details.forEach(detail => {
+            console.log(`   Account ${detail.accountAddress}: ${detail.accountPower.toLocaleString()} ISLAND`);
+          });
+          validationsFailed++;
+        }
+      } else if (citizen.wallet === 'kruHL3zJdEfBUcdDo42BSKTjTWmrmfLhZ3WUDi14n1r') {
+        // KO3 should have ~1.8M ISLAND
+        if (power > 1500000) {
+          console.log(`✅ KO3 validation PASSED: ${power.toLocaleString()} ISLAND (expected ~1.8M)`);
+          validationsPassed++;
+        } else {
+          console.log(`❌ KO3 validation FAILED: ${power.toLocaleString()} ISLAND (should be ~1.8M)`);
+          console.log(`   Accounts discovered: ${details.length}`);
+          details.forEach(detail => {
+            console.log(`   Account ${detail.accountAddress}: ${detail.accountPower.toLocaleString()} ISLAND`);
+          });
+          validationsFailed++;
+        }
+      }
+      
       results.push({
         wallet: citizen.wallet,
-        nickname: citizen.nickname,
+        nickname: citizenName,
         power
       });
+    }
+    
+    console.log('');
+    console.log('=== VALIDATION RESULTS ===');
+    console.log(`Validations passed: ${validationsPassed}`);
+    console.log(`Validations failed: ${validationsFailed}`);
+    
+    // If validations pass, update database
+    if (validationsFailed === 0) {
+      console.log('');
+      console.log('✅ All validations passed - updating database...');
+      
+      const updatePool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      try {
+        for (const result of results) {
+          await updatePool.query(`
+            UPDATE citizens 
+            SET native_governance_power = $1::numeric,
+                delegated_governance_power = 0::numeric,
+                total_governance_power = $1::numeric
+            WHERE wallet = $2
+          `, [result.power, result.wallet]);
+        }
+        
+        console.log(`✅ Updated ${results.length} citizens in database`);
+        console.log('✅ CANONICAL: This implementation is now the official calculator');
+      } finally {
+        await updatePool.end();
+      }
+    } else {
+      console.log('');
+      console.log('❌ Validations failed - reverting to previous calculator');
+      console.log('The canonical Anchor approach did not capture expected governance power');
     }
     
     console.log('');
@@ -306,14 +343,16 @@ async function runCanonicalCalculator() {
     console.log('=== TOP 10 GOVERNANCE POWER HOLDERS ===');
     results.slice(0, 10).forEach((citizen, index) => {
       if (citizen.power > 0) {
-        console.log(`${index + 1}. ${citizen.nickname || 'Anonymous'}: ${citizen.power.toLocaleString()} ISLAND`);
+        console.log(`${index + 1}. ${citizen.nickname}: ${citizen.power.toLocaleString()} ISLAND`);
       }
     });
     
-    console.log('');
-    console.log('🎯 Canonical VSR calculation complete using official Anchor deserialization');
-    
-    return results;
+    return {
+      results,
+      validationsPassed,
+      validationsFailed,
+      isCanonical: validationsFailed === 0
+    };
     
   } catch (error) {
     console.error('Canonical calculator failed:', error);

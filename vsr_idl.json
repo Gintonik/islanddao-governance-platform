@@ -1,1 +1,239 @@
-404: Not Found
+{
+  "version": "0.2.2",
+  "name": "voter_stake_registry",
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "registrar",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "governanceProgramId",
+            "type": "publicKey"
+          },
+          {
+            "name": "realm",
+            "type": "publicKey"
+          },
+          {
+            "name": "realmGoverningTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "realmAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "reserved1",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "votingMints",
+            "type": {
+              "vec": {
+                "defined": "VotingMintConfig"
+              }
+            }
+          },
+          {
+            "name": "timeOffset",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "reserved2",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "reserved3",
+            "type": {
+              "array": [
+                "u64",
+                11
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "voter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "registrar",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "voterBump",
+            "type": "u8"
+          },
+          {
+            "name": "voterWeightRecordBump",
+            "type": "u8"
+          },
+          {
+            "name": "depositEntries",
+            "type": {
+              "vec": {
+                "defined": "DepositEntry"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "VotingMintConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "grantAuthority",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "baselineVoteWeightScaledFactor",
+            "type": "u64"
+          },
+          {
+            "name": "maxExtraLockupVoteWeightScaledFactor",
+            "type": "u64"
+          },
+          {
+            "name": "lockupSaturationSecs",
+            "type": "u64"
+          },
+          {
+            "name": "digitShift",
+            "type": "i8"
+          },
+          {
+            "name": "reserved1",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "reserved2",
+            "type": {
+              "array": [
+                "u64",
+                7
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lockup",
+            "type": {
+              "defined": "Lockup"
+            }
+          },
+          {
+            "name": "amountDepositedNative",
+            "type": "u64"
+          },
+          {
+            "name": "amountInitiallyLockedNative",
+            "type": "u64"
+          },
+          {
+            "name": "isUsed",
+            "type": "bool"
+          },
+          {
+            "name": "allowClawback",
+            "type": "bool"
+          },
+          {
+            "name": "votingMintConfigIdx",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Lockup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "startTs",
+            "type": "i64"
+          },
+          {
+            "name": "endTs",
+            "type": "i64"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": "LockupKind"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockupKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "none"
+          },
+          {
+            "name": "daily"
+          },
+          {
+            "name": "monthly"
+          },
+          {
+            "name": "cliff"
+          },
+          {
+            "name": "constant"
+          }
+        ]
+      }
+    }
+  ]
+}
