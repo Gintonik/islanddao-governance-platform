@@ -1,0 +1,55 @@
+// REPLIT AI: Fix the VSR governance power calculator to accurately calculate native governance power using the authentic IslandDAO registrar configuration. Do not fallback to default values. The current script is returning wrong results and must be fixed with proper validation and logic.
+
+// IslandDAO Realm ID: 9h8RnZbJ9XP1ZLzLqSpg9Hy67JdNDUNnHqccuYagxvQV
+// IslandDAO Registrar Address: 5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM
+// ISLAND Governance Mint: Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a
+// VSR IDL: https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json
+
+// ✅ GOAL:
+// Correctly calculate native governance power per citizen using all deposits (locked, unlocked, expired).
+// Each deposit’s voting power = deposit amount × multiplier, where multiplier depends on lockup status and is derived using the VSR VotingMintConfig from the registrar account.
+
+// ✅ REQUIREMENTS:
+// 1. Fetch the Registrar at address: 5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM using Anchor and the official IDL.
+// 2. Search registrar.votingMintConfigs for a config with votingMint equal to the ISLAND mint:
+//    Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a
+//    If not found, throw an error and exit (do NOT use fallback multipliers).
+// 3. From the correct VotingMintConfig, extract the following using proper I80F48 decoding:
+//    - baseline_vote_weight
+//    - max_extra_lockup_vote_weight
+//    - lockup_saturation_secs
+
+// ✅ VALIDATION:
+// - baseline_vote_weight should be close to 1.0 (e.g. 1.0–5.0 range)
+// - max_extra_lockup_vote_weight should be > 0.0 (e.g. 0.5–10.0 range)
+// - lockup_saturation_secs should be around 126144000 (≈ 4 years in seconds)
+// If values fall outside those bounds, print a warning but still use them as long as decoding is valid.
+
+// ✅ MULTIPLIER LOGIC:
+// For each deposit:
+// - If unlocked or expired: multiplier = baseline_vote_weight
+// - If locked and active:
+//     multiplier = baseline_vote_weight + min((end_ts - now) / lockup_saturation_secs, 1.0) × max_extra_lockup_vote_weight
+
+// ✅ PROCESSING:
+// - Include all deposits (unlocked, locked, expired)
+// - Calculate native governance power per deposit and sum per wallet
+// - Store native_governance_power and total_governance_power in the citizens table
+// - Use 6-digit rounding precision for stored numbers
+// - Make sure the script updates every user including future wallets
+
+// ✅ DO NOT:
+// - Do not default to 1.0x or 0.0x values if config isn’t found — stop execution instead.
+// - Do not treat active locked deposits as baseline 1.0x — apply the multiplier logic correctly.
+// - Do not ignore the VotingMintConfig list — this is the source of all real multiplier values.
+
+// ✅ FINAL CHECKS:
+// - Verify known unlocked users (e.g. who deposited 200,000 ISLAND) have governance power exactly matching the deposit.
+// - Verify that users with active lockups (like KO3 and Anonymous) have boosted governance power (e.g. 1.1x – 1.7x multiplier).
+// - Print summary stats:
+//     - Total citizens processed
+//     - Total native governance power
+//     - Top 10 citizens by power
+//     - Multiplier stats (min, max, avg)
+
+// This script is critical for IslandDAO’s governance leaderboard and must be 100% accurate. No more regressions or placeholder logic.
