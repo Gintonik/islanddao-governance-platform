@@ -197,24 +197,21 @@ function parseDepositFromRawData(data, offset) {
       let isLocked = false;
       let lockupKind = 0;
       
-      // Based on debug output, look for timestamp patterns in surrounding data
-      // Pattern observed: amount at offset, then timestamp at offset+8 or nearby
-      
-      // Check multiple nearby offsets for timestamp pairs
       const currentTime = Math.floor(Date.now() / 1000);
       
-      for (let tsOffset = offset + 8; tsOffset <= offset + 32 && tsOffset + 16 <= data.length; tsOffset += 8) {
-        try {
-          const ts1 = Number(data.readBigUInt64LE(tsOffset));
-          const ts2 = Number(data.readBigUInt64LE(tsOffset + 8));
-          
-          // Look for valid timestamp pairs (start < end, both in future or recent past)
-          if (ts1 > 1700000000 && ts1 < 1800000000 && 
-              ts2 > 1700000000 && ts2 < 1800000000 && 
-              ts2 > ts1) {
-            
-            startTs = ts1;
-            endTs = ts2;
+      // Based on debug output, the pattern is:
+      // - Deposit amount and start timestamp share the same 8-byte value (when start timestamp is in past)
+      // - End timestamp is typically at offset + 8
+      
+      // Check if the current value could be a start timestamp
+      if (value > 1700000000 && value < 1800000000) {
+        startTs = value;
+        
+        // Look for end timestamp at offset + 8
+        if (offset + 16 <= data.length) {
+          const endValue = Number(data.readBigUInt64LE(offset + 8));
+          if (endValue > 1700000000 && endValue < 1800000000 && endValue > startTs) {
+            endTs = endValue;
             
             // Check if end timestamp is in the future (indicating active lockup)
             if (endTs > currentTime) {
@@ -232,10 +229,43 @@ function parseDepositFromRawData(data, offset) {
                 lockupKind = 1; // Cliff
               }
             }
-            break;
           }
-        } catch (e) {
-          continue;
+        }
+      } else {
+        // If current value is not a timestamp, look for nearby timestamp pairs
+        for (let searchOffset = Math.max(0, offset - 16); searchOffset <= offset + 16 && searchOffset + 16 <= data.length; searchOffset += 8) {
+          try {
+            const ts1 = Number(data.readBigUInt64LE(searchOffset));
+            const ts2 = Number(data.readBigUInt64LE(searchOffset + 8));
+            
+            // Look for valid timestamp pairs
+            if (ts1 > 1700000000 && ts1 < 1800000000 && 
+                ts2 > 1700000000 && ts2 < 1800000000 && 
+                ts2 > ts1) {
+              
+              startTs = ts1;
+              endTs = ts2;
+              
+              // Check if end timestamp is in the future
+              if (endTs > currentTime) {
+                isLocked = true;
+                
+                const lockupDuration = endTs - startTs;
+                if (lockupDuration < 86400 * 7) {
+                  lockupKind = 3; // Daily
+                } else if (lockupDuration < 86400 * 32) {
+                  lockupKind = 4; // Monthly  
+                } else if (lockupDuration < 86400 * 365) {
+                  lockupKind = 2; // Constant
+                } else {
+                  lockupKind = 1; // Cliff
+                }
+              }
+              break;
+            }
+          } catch (e) {
+            continue;
+          }
         }
       }
       
