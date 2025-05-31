@@ -1,0 +1,47 @@
+Fix the governance power calculator to properly parse the IslandDAO registrar config using the Anchor-based VSR layout.
+
+1. Use the `@solana/spl-governance` and `@solana/spl-governance-tools` libraries to decode the registrar account using Anchor.
+
+2. The Registrar struct layout is defined here:
+https://github.com/solana-labs/voter-stake-registry/blob/main/programs/voter-stake-registry/src/state/registrar.rs
+
+Anchor layout (expected fields):
+- `realm`
+- `governing_token_mint`
+- `baseline_vote_weight`
+- `max_extra_lockup_vote_weight`
+- `lockup_saturation_secs`
+
+3. Decode `baseline_vote_weight` and `max_extra_lockup_vote_weight` using the Anchor struct decoding method (`VoteWeight::try_from_bytes()` or equivalent).
+   - These are NOT simple u64 — they use a fixed-point decimal encoded by Anchor’s `Fixed` type, typically 64.64 fixed-point or decimal string in JS libraries.
+
+4. Correctly parse `lockup_saturation_secs` as an `i64` or `u64` based on Anchor layout.
+
+5. Once decoded, you should get:
+   - `baseline_vote_weight` ≈ 1.0
+   - `max_extra_lockup_vote_weight` ≈ 2.0
+   - `lockup_saturation_secs` ≈ 126144000 (4 years in seconds)
+
+6. Apply the correct multiplier formula:
+```ts
+multiplier = baseline + min(remaining_secs / saturation, 1.0) * max_extra
+
+If decoding fails, exit and log error. Do NOT use garbage fallback values or parse raw bytes by offset.
+
+
+✅ Bonus: Anchor Decode Helper (JavaScript)
+
+If you’re using JavaScript, here’s how to decode Anchor-style structs:
+
+```js
+import { AnchorProvider, Program, Idl } from '@coral-xyz/anchor';
+import idl from './vsr_idl.json'; // You can get this from VSR repo or Realms SDK
+const programId = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const provider = new AnchorProvider(connection, wallet, {});
+const program = new Program(idl, programId, provider);
+
+const registrarAccount = await program.account.registrar.fetch(registrarPubkey);
+console.log('Baseline:', registrarAccount.baselineVoteWeight.toNumber());
+console.log('Bonus:', registrarAccount.maxExtraLockupVoteWeight.toNumber());
+console.log('Saturation:', registrarAccount.lockupSaturationSecs.toNumber());
+
