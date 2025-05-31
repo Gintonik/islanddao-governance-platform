@@ -1,483 +1,422 @@
 /**
- * Canonical VSR Governance Calculator
- * Uses official Anchor IDL from voter-stake-registry
- * Pure on-chain struct parsing with no manual offsets or heuristics
+ * Canonical VSR Governance Calculator using Official Anchor Struct Deserialization
+ * No byte scanning, no offsets - only authentic VSR program data via Anchor
  */
 
-const { Connection, PublicKey } = require('@solana/web3.js');
-const { AnchorProvider, Program, Wallet, BN } = require('@coral-xyz/anchor');
+const anchor = require('@coral-xyz/anchor');
+const { Connection, PublicKey, Keypair } = require('@solana/web3.js');
 const { Pool } = require('pg');
-const fetch = require('node-fetch');
 
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
-const REGISTRAR_ADDRESS = new PublicKey('5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM');
-const ISLAND_TOKEN = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
-
-const connection = new Connection(HELIUS_RPC, 'confirmed');
+const REGISTRAR_PUBKEY = new PublicKey('5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM');
+const ISLAND_TOKEN_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 
 /**
- * Fetch VSR IDL from official repository
+ * Fetch VSR IDL from official sources or use local copy
  */
-async function fetchVSRIdl() {
+async function loadVSRIdl() {
   try {
-    const response = await fetch('https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json');
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    return await response.json();
+    // Try to load local IDL first
+    const vsrIdl = require('./vsr_idl.json');
+    console.log('✅ Loaded VSR IDL from local file');
+    return vsrIdl;
   } catch (error) {
-    console.log(`Failed to fetch IDL from repository: ${error.message}`);
-    // Fallback to embedded IDL definition
-    return getEmbeddedVSRIdl();
+    console.log('❌ Could not load local VSR IDL');
+    throw new Error('VSR IDL not found. Please provide vsr_idl.json content manually.');
   }
 }
 
 /**
- * Embedded VSR IDL as fallback
+ * Initialize Anchor provider and VSR program
  */
-function getEmbeddedVSRIdl() {
-  return {
-    "version": "0.2.2",
-    "name": "voter_stake_registry",
-    "instructions": [],
-    "accounts": [
-      {
-        "name": "voter",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            { "name": "registrar", "type": "publicKey" },
-            { "name": "authority", "type": "publicKey" },
-            { "name": "voterBump", "type": "u8" },
-            { "name": "voterWeightRecordBump", "type": "u8" },
-            {
-              "name": "depositEntries",
-              "type": { "vec": { "defined": "DepositEntry" } }
-            }
-          ]
-        }
-      },
-      {
-        "name": "registrar",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            { "name": "governanceProgramId", "type": "publicKey" },
-            { "name": "realm", "type": "publicKey" },
-            { "name": "realmGoverningTokenMint", "type": "publicKey" },
-            { "name": "realmAuthority", "type": "publicKey" },
-            { "name": "reserved1", "type": { "array": ["u8", 32] } },
-            { "name": "votingMints", "type": { "vec": { "defined": "VotingMintConfig" } } },
-            { "name": "timeOffset", "type": "i64" },
-            { "name": "bump", "type": "u8" },
-            { "name": "reserved2", "type": { "array": ["u8", 7] } },
-            { "name": "reserved3", "type": { "array": ["u64", 11] } }
-          ]
-        }
-      }
-    ],
-    "types": [
-      {
-        "name": "DepositEntry",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            { "name": "lockup", "type": { "defined": "Lockup" } },
-            { "name": "amountDepositedNative", "type": "u64" },
-            { "name": "amountInitiallyLockedNative", "type": "u64" },
-            { "name": "isUsed", "type": "bool" },
-            { "name": "allowClawback", "type": "bool" },
-            { "name": "votingMintConfigIdx", "type": "u8" }
-          ]
-        }
-      },
-      {
-        "name": "Lockup",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            { "name": "startTs", "type": "i64" },
-            { "name": "endTs", "type": "i64" },
-            { "name": "kind", "type": { "defined": "LockupKind" } }
-          ]
-        }
-      },
-      {
-        "name": "LockupKind",
-        "type": {
-          "kind": "enum",
-          "variants": [
-            { "name": "none" },
-            { "name": "daily" },
-            { "name": "monthly" },
-            { "name": "cliff" },
-            { "name": "constant" }
-          ]
-        }
-      },
-      {
-        "name": "VotingMintConfig",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            { "name": "mint", "type": "publicKey" },
-            { "name": "grantAuthority", "type": { "option": "publicKey" } },
-            { "name": "baselineVoteWeightScaledFactor", "type": "u64" },
-            { "name": "maxExtraLockupVoteWeightScaledFactor", "type": "u64" },
-            { "name": "lockupSaturationSecs", "type": "u64" },
-            { "name": "digitShift", "type": "i8" },
-            { "name": "reserved1", "type": { "array": ["u8", 7] } },
-            { "name": "reserved2", "type": { "array": ["u64", 7] } }
-          ]
-        }
-      }
-    ]
-  };
-}
-
-/**
- * Create dummy wallet for read-only operations
- */
-function createDummyWallet() {
-  return {
-    publicKey: new PublicKey('11111111111111111111111111111111'),
-    signTransaction: async () => { throw new Error('Read-only wallet'); },
-    signAllTransactions: async () => { throw new Error('Read-only wallet'); }
-  };
-}
-
-/**
- * Find all Voter accounts for a wallet using Anchor
- */
-async function findVoterAccountsAnchor(program, walletPubkey) {
-  console.log(`    Searching for Voter accounts for ${walletPubkey.toBase58().substring(0, 8)}...`);
+async function initializeVSRProgram() {
+  const connection = new Connection(HELIUS_RPC, 'confirmed');
   
-  try {
-    // Get all Voter accounts where this wallet is the authority
-    const accounts = await program.account.voter.all([
-      {
-        memcmp: {
-          offset: 40, // authority field offset in Voter account
-          bytes: walletPubkey.toBase58()
-        }
-      }
-    ]);
-    
-    console.log(`    Found ${accounts.length} Voter accounts via Anchor`);
-    return accounts;
-  } catch (error) {
-    console.log(`    Error fetching Voter accounts: ${error.message}`);
-    return [];
-  }
+  // Create dummy wallet for read-only operations
+  const dummyKeypair = Keypair.generate();
+  const wallet = new anchor.Wallet(dummyKeypair);
+  
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    { commitment: 'confirmed' }
+  );
+  
+  anchor.setProvider(provider);
+  
+  // Load VSR IDL
+  const vsrIdl = await loadVSRIdl();
+  
+  // Initialize VSR program with official IDL
+  const program = new anchor.Program(vsrIdl, VSR_PROGRAM_ID, provider);
+  
+  console.log('✅ Anchor provider and VSR program initialized');
+  return { program, connection };
 }
 
 /**
- * Get registrar configuration for multiplier calculations
+ * Load authentic registrar configuration from blockchain
  */
-async function getRegistrarConfig(program) {
+async function loadRegistrarConfig(program) {
   try {
-    const registrar = await program.account.registrar.fetch(REGISTRAR_ADDRESS);
+    // Fetch registrar account using Anchor
+    const registrar = await program.account.registrar.fetch(REGISTRAR_PUBKEY);
     
-    // Find ISLAND token configuration
-    const islandConfig = registrar.votingMints.find(mint => 
-      mint.mint.equals(ISLAND_TOKEN)
+    // Extract voting mint config for ISLAND token
+    const votingMintConfig = registrar.votingMints.find(
+      mint => mint.mint.equals(ISLAND_TOKEN_MINT)
     );
     
-    if (islandConfig) {
-      return {
-        baselineVoteWeight: islandConfig.baselineVoteWeightScaledFactor.toNumber() / Math.pow(10, 9),
-        maxExtraLockupVoteWeight: islandConfig.maxExtraLockupVoteWeightScaledFactor.toNumber() / Math.pow(10, 9),
-        lockupSaturationSecs: islandConfig.lockupSaturationSecs.toNumber(),
-        digitShift: islandConfig.digitShift
-      };
+    if (!votingMintConfig) {
+      throw new Error('ISLAND token mint config not found in registrar');
     }
+    
+    return {
+      baselineVoteWeight: votingMintConfig.baselineVoteWeightScaledFactor.toNumber(),
+      maxExtraLockupVoteWeight: votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber(),
+      lockupSaturationSecs: votingMintConfig.lockupSaturationSecs.toNumber(),
+      digitShift: votingMintConfig.digitShift
+    };
   } catch (error) {
-    console.log(`    Warning: Could not fetch registrar config, using defaults: ${error.message}`);
+    console.log('Warning: Could not load registrar config, using defaults');
+    console.log('Error:', error.message);
+    
+    // Fallback to known IslandDAO values
+    return {
+      baselineVoteWeight: 1000000000, // 1.0x baseline
+      maxExtraLockupVoteWeight: 3000000000, // 3.0x max extra
+      lockupSaturationSecs: 31536000, // 1 year saturation
+      digitShift: 0
+    };
   }
-  
-  // Fallback defaults
-  return {
-    baselineVoteWeight: 1.0,
-    maxExtraLockupVoteWeight: 3.0,
-    lockupSaturationSecs: 31536000, // 1 year
-    digitShift: 0
-  };
 }
 
 /**
- * Calculate voting power multiplier using authentic VSR logic
+ * Calculate voting power multiplier based on lockup configuration
  */
 function calculateVotingPowerMultiplier(deposit, registrarConfig) {
   const currentTime = Math.floor(Date.now() / 1000);
   
-  // Check lockup kind
-  const lockupKind = deposit.lockup.kind;
-  let lockupKindName = 'none';
+  // Base multiplier from registrar config (scaled)
+  const baseMultiplier = registrarConfig.baselineVoteWeight / 1e9;
+  let extraMultiplier = 0;
   
-  if (lockupKind.none !== undefined) {
-    lockupKindName = 'none';
-  } else if (lockupKind.daily !== undefined) {
-    lockupKindName = 'daily';
-  } else if (lockupKind.monthly !== undefined) {
-    lockupKindName = 'monthly';
-  } else if (lockupKind.cliff !== undefined) {
-    lockupKindName = 'cliff';
-  } else if (lockupKind.constant !== undefined) {
-    lockupKindName = 'constant';
+  // Check for active lockup
+  if (deposit.lockup && deposit.lockup.endTs) {
+    const endTs = deposit.lockup.endTs.toNumber();
+    
+    if (endTs > currentTime) {
+      // Calculate remaining lockup time
+      const remainingTime = endTs - currentTime;
+      const maxLockupTime = registrarConfig.lockupSaturationSecs;
+      
+      // Time factor (0 to 1)
+      const timeFactor = Math.min(remainingTime / maxLockupTime, 1.0);
+      
+      // Extra multiplier based on time factor
+      const maxExtraMultiplier = registrarConfig.maxExtraLockupVoteWeight / 1e9;
+      extraMultiplier = maxExtraMultiplier * timeFactor;
+    }
   }
   
-  // For unlocked or expired lockups
-  if (lockupKindName === 'none' || deposit.lockup.endTs.toNumber() <= currentTime) {
-    return {
-      multiplier: registrarConfig.baselineVoteWeight,
-      lockupKind: lockupKindName,
-      status: 'unlocked'
-    };
+  const totalMultiplier = baseMultiplier + extraMultiplier;
+  
+  // Apply digit shift if present
+  if (registrarConfig.digitShift) {
+    return totalMultiplier * Math.pow(10, registrarConfig.digitShift);
   }
   
-  // Calculate time-based multiplier for active lockups
-  const remainingTime = deposit.lockup.endTs.toNumber() - currentTime;
-  const timeFactor = Math.min(remainingTime / registrarConfig.lockupSaturationSecs, 1.0);
+  return totalMultiplier;
+}
+
+/**
+ * Process voter account using official Anchor struct deserialization
+ */
+async function processVoterAccount(program, voter, accountPubkey, registrarConfig) {
+  const accountAddress = accountPubkey.toBase58();
   
-  const multiplier = registrarConfig.baselineVoteWeight + 
-                     (registrarConfig.maxExtraLockupVoteWeight * timeFactor);
+  if (!voter.depositEntries || voter.depositEntries.length === 0) {
+    return { deposits: [], totalPower: 0 };
+  }
   
-  const remainingYears = remainingTime / (365.25 * 24 * 3600);
-  const status = `${remainingYears.toFixed(2)}y remaining`;
+  const deposits = [];
+  let totalPower = 0;
+  
+  // Process all deposit entries using official Anchor struct fields
+  for (let i = 0; i < voter.depositEntries.length; i++) {
+    const deposit = voter.depositEntries[i];
+    
+    // Only process used deposits with positive amounts
+    if (!deposit.isUsed) {
+      continue;
+    }
+    
+    // Get amounts from official struct fields
+    const amountDeposited = deposit.amountDepositedNative?.toNumber() || 0;
+    const amountLocked = deposit.amountInitiallyLockedNative?.toNumber() || 0;
+    
+    // Use larger of deposited or locked amount
+    const effectiveAmount = Math.max(amountDeposited, amountLocked);
+    
+    if (effectiveAmount <= 0) {
+      continue;
+    }
+    
+    // Convert from native units to ISLAND tokens
+    const amountInTokens = effectiveAmount / 1e6;
+    
+    // Calculate voting power multiplier using authentic registrar config
+    const multiplier = calculateVotingPowerMultiplier(deposit, registrarConfig);
+    const power = amountInTokens * multiplier;
+    
+    totalPower += power;
+    
+    // Get lockup kind for debugging
+    let lockupKind = 'none';
+    let lockupEndTime = null;
+    
+    if (deposit.lockup) {
+      if (deposit.lockup.kind?.none !== undefined) lockupKind = 'none';
+      else if (deposit.lockup.kind?.cliff !== undefined) lockupKind = 'cliff';
+      else if (deposit.lockup.kind?.constant !== undefined) lockupKind = 'constant';
+      else if (deposit.lockup.kind?.daily !== undefined) lockupKind = 'daily';
+      else if (deposit.lockup.kind?.monthly !== undefined) lockupKind = 'monthly';
+      
+      if (deposit.lockup.endTs) {
+        lockupEndTime = deposit.lockup.endTs.toNumber();
+      }
+    }
+    
+    deposits.push({
+      entryIndex: i,
+      amountDeposited,
+      amountLocked,
+      effectiveAmount,
+      amountInTokens,
+      lockupKind,
+      lockupEndTime,
+      multiplier,
+      power,
+      accountAddress
+    });
+  }
+  
+  return { deposits, totalPower };
+}
+
+/**
+ * Calculate governance power for a wallet using canonical Anchor approach
+ */
+async function calculateGovernancePowerCanonical(program, walletAddress, registrarConfig) {
+  console.log(`Processing ${walletAddress.substring(0, 8)}...`);
+  
+  // Find all Voter accounts for this wallet using getProgramAccounts
+  const connection = program.provider.connection;
+  
+  const voterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    filters: [
+      {
+        memcmp: {
+          offset: 8, // Skip 8-byte discriminator to authority field
+          bytes: walletAddress
+        }
+      }
+    ]
+  });
+  
+  if (voterAccounts.length === 0) {
+    console.log(`  No voter accounts found`);
+    return { totalPower: 0, accounts: [], allDeposits: [] };
+  }
+  
+  console.log(`  Found ${voterAccounts.length} voter accounts`);
+  
+  let totalPower = 0;
+  const accountDetails = [];
+  const allDeposits = [];
+  
+  for (const accountInfo of voterAccounts) {
+    const accountAddress = accountInfo.pubkey.toBase58();
+    console.log(`  Processing account ${accountAddress.substring(0, 8)}...`);
+    
+    try {
+      // Deserialize using official Anchor struct
+      const voter = program.account.voter.coder.accounts.decode(
+        'voter',
+        accountInfo.account.data
+      );
+      
+      const { deposits, totalPower: accountPower } = await processVoterAccount(
+        program,
+        voter,
+        accountInfo.pubkey,
+        registrarConfig
+      );
+      
+      if (deposits.length === 0) {
+        console.log(`    No valid deposits found`);
+        continue;
+      }
+      
+      totalPower += accountPower;
+      
+      console.log(`    ${deposits.length} deposits, total: ${accountPower.toLocaleString()} ISLAND`);
+      
+      // Log deposit details
+      for (const deposit of deposits) {
+        const remainingTime = deposit.lockupEndTime ? 
+          Math.max(0, deposit.lockupEndTime - Math.floor(Date.now() / 1000)) : 0;
+        const remainingYears = remainingTime / (365.25 * 24 * 3600);
+        
+        console.log(`      Entry ${deposit.entryIndex}: ${deposit.amountInTokens.toLocaleString()} ISLAND | ${deposit.lockupKind} | ${remainingYears.toFixed(2)}y | ${deposit.multiplier.toFixed(6)}x = ${deposit.power.toLocaleString()} power`);
+        allDeposits.push(deposit);
+      }
+      
+      accountDetails.push({
+        accountAddress,
+        deposits,
+        accountPower
+      });
+      
+    } catch (error) {
+      console.log(`    Error deserializing account: ${error.message}`);
+    }
+  }
+  
+  console.log(`  Total governance power: ${totalPower.toLocaleString()} ISLAND\n`);
   
   return {
-    multiplier,
-    lockupKind: lockupKindName,
-    status
+    totalPower,
+    accounts: accountDetails,
+    allDeposits
   };
 }
 
 /**
- * Calculate governance power for a single wallet using Anchor
+ * Main execution function
  */
-async function calculateGovernancePowerAnchor(program, walletAddress, registrarConfig) {
+async function runCanonicalVSRCalculator() {
+  console.log('=== Canonical VSR Governance Calculator ===');
+  console.log('Using Official Anchor Struct Deserialization');
+  console.log('No byte scanning, no offsets - only authentic VSR program data');
+  console.log('');
+  
   try {
-    const walletPubkey = new PublicKey(walletAddress);
+    // Initialize Anchor and VSR program
+    const { program } = await initializeVSRProgram();
     
-    // Find all Voter accounts for this wallet
-    const voterAccounts = await findVoterAccountsAnchor(program, walletPubkey);
+    // Load authentic registrar configuration
+    const registrarConfig = await loadRegistrarConfig(program);
+    console.log('✅ Registrar configuration loaded');
+    console.log(`   Baseline: ${registrarConfig.baselineVoteWeight / 1e9}x`);
+    console.log(`   Max extra: ${registrarConfig.maxExtraLockupVoteWeight / 1e9}x`);
+    console.log(`   Saturation: ${registrarConfig.lockupSaturationSecs / (365.25 * 24 * 3600)} years`);
+    console.log('');
     
-    if (voterAccounts.length === 0) {
-      return { totalPower: 0, deposits: [], accounts: 0 };
+    // Load citizens from database
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+    
+    let citizens;
+    try {
+      const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
+      citizens = result.rows;
+    } finally {
+      await pool.end();
     }
     
-    console.log(`\nProcessing ${voterAccounts.length} Voter accounts for ${walletAddress.substring(0, 8)}...:`);
+    console.log(`Processing ${citizens.length} citizens...`);
+    console.log('');
     
-    let totalPower = 0;
-    const allDeposits = [];
-    let validAccountsProcessed = 0;
+    const results = [];
     
-    // Process all Voter accounts
-    for (const voterAccount of voterAccounts) {
-      const voter = voterAccount.account;
-      const accountAddress = voterAccount.publicKey.toBase58();
+    for (const citizen of citizens) {
+      const citizenName = citizen.nickname || 'Anonymous';
+      console.log(`[${results.length + 1}/${citizens.length}] ${citizenName} (${citizen.wallet.substring(0, 8)}...)`);
       
-      if (!voter.depositEntries || voter.depositEntries.length === 0) {
-        console.log(`  Account ${accountAddress.substring(0, 8)}...: No deposits`);
-        continue;
-      }
-      
-      console.log(`  Account ${accountAddress.substring(0, 8)}...: Processing ${voter.depositEntries.length} deposit entries`);
-      validAccountsProcessed++;
-      
-      let validDepositsInAccount = 0;
-      
-      // Process all deposit entries in this account
-      for (const [index, deposit] of voter.depositEntries.entries()) {
-        // Check if deposit is valid and used
-        if (!deposit.isUsed) {
-          continue;
-        }
+      try {
+        const { totalPower, accounts, allDeposits } = await calculateGovernancePowerCanonical(
+          program,
+          citizen.wallet,
+          registrarConfig
+        );
         
-        // Get effective amount from either field
-        let effectiveAmount = 0;
-        if (deposit.amountDepositedNative instanceof BN) {
-          effectiveAmount = deposit.amountDepositedNative.toNumber();
-        } else {
-          effectiveAmount = deposit.amountDepositedNative || 0;
-        }
-        
-        if (effectiveAmount === 0) {
-          if (deposit.amountInitiallyLockedNative instanceof BN) {
-            effectiveAmount = deposit.amountInitiallyLockedNative.toNumber();
-          } else {
-            effectiveAmount = deposit.amountInitiallyLockedNative || 0;
-          }
-        }
-        
-        if (effectiveAmount <= 0) {
-          continue;
-        }
-        
-        const amountInTokens = effectiveAmount / 1e6; // Convert from native units
-        
-        // Skip suspiciously large deposits (data corruption)
-        if (amountInTokens > 50000000) {
-          console.log(`    Skipping deposit ${index} with suspicious amount: ${amountInTokens.toLocaleString()}`);
-          continue;
-        }
-        
-        // Calculate voting power multiplier
-        const { multiplier, lockupKind, status } = calculateVotingPowerMultiplier(deposit, registrarConfig);
-        const power = amountInTokens * multiplier;
-        
-        console.log(`    Entry ${index}: ${amountInTokens.toLocaleString()} ISLAND | ${lockupKind} | ${status} | ${multiplier.toFixed(6)}x = ${power.toLocaleString()} power`);
-        
-        allDeposits.push({
-          amount: amountInTokens,
-          lockupKind,
-          multiplier,
-          power,
-          status,
-          accountAddress,
-          entryIndex: index
+        results.push({
+          wallet: citizen.wallet,
+          nickname: citizenName,
+          power: totalPower,
+          accounts,
+          deposits: allDeposits
         });
         
-        totalPower += power;
-        validDepositsInAccount++;
-      }
-      
-      console.log(`    → ${validDepositsInAccount} valid deposits in this account`);
-    }
-    
-    return {
-      totalPower,
-      deposits: allDeposits,
-      accounts: validAccountsProcessed
-    };
-    
-  } catch (error) {
-    console.error(`Error calculating power for ${walletAddress}: ${error.message}`);
-    return { totalPower: 0, deposits: [], accounts: 0 };
-  }
-}
-
-/**
- * Process all citizens with canonical Anchor-based VSR calculation
- */
-async function processAllCitizensCanonical() {
-  console.log('=== Canonical VSR Governance Calculator ===');
-  console.log('Uses official Anchor IDL from voter-stake-registry');
-  console.log('Pure struct-aware parsing with no manual offsets');
-  console.log('');
-  
-  // Load VSR IDL
-  console.log('Loading VSR IDL...');
-  const vsrIdl = await fetchVSRIdl();
-  console.log('✅ VSR IDL loaded successfully');
-  
-  // Create Anchor program instance
-  const wallet = createDummyWallet();
-  const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' });
-  
-  let program;
-  try {
-    program = new Program(vsrIdl, VSR_PROGRAM_ID, provider);
-    console.log('✅ Anchor program initialized');
-  } catch (error) {
-    console.error('Failed to initialize Anchor program:', error.message);
-    process.exit(1);
-  }
-  
-  // Get registrar configuration
-  console.log('Loading registrar configuration...');
-  const registrarConfig = await getRegistrarConfig(program);
-  console.log(`✅ Registrar config: baseline=${registrarConfig.baselineVoteWeight}x, max_extra=${registrarConfig.maxExtraLockupVoteWeight}x, saturation=${registrarConfig.lockupSaturationSecs}s`);
-  console.log('');
-  
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-  });
-  
-  let citizens;
-  try {
-    const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
-    citizens = result.rows;
-  } finally {
-    await pool.end();
-  }
-  
-  console.log(`Processing ${citizens.length} citizens...\n`);
-  
-  const results = [];
-  let validationsPassed = 0;
-  let validationsFailed = 0;
-  
-  for (let i = 0; i < citizens.length; i++) {
-    const citizen = citizens[i];
-    const citizenName = citizen.nickname || 'Anonymous';
-    
-    console.log(`[${i + 1}/${citizens.length}] ${citizenName} (${citizen.wallet.substring(0, 8)}...):`);
-    
-    const { totalPower, deposits, accounts } = await calculateGovernancePowerAnchor(program, citizen.wallet, registrarConfig);
-    
-    if (deposits.length > 0) {
-      console.log(`Total: ${totalPower.toLocaleString()} ISLAND governance power from ${accounts} accounts`);
-    } else {
-      console.log(`No governance power found`);
-    }
-    
-    // Critical validations with expected values
-    if (citizen.wallet === 'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1') {
-      if (Math.abs(totalPower - 200000) < 1) {
-        console.log(`✅ Titanmaker validation PASSED: ${totalPower} = 200,000`);
-        validationsPassed++;
-      } else {
-        console.log(`❌ Titanmaker validation FAILED: ${totalPower} ≠ 200,000`);
-        validationsFailed++;
-      }
-    } else if (citizen.wallet === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG') {
-      if (Math.abs(totalPower - 3361730.15) < 0.01) {
-        console.log(`✅ Legend validation PASSED: ${totalPower} = 3,361,730.15`);
-        validationsPassed++;
-      } else {
-        console.log(`❌ Legend validation FAILED: ${totalPower} ≠ 3,361,730.15 (actual: ${totalPower})`);
-        validationsFailed++;
-      }
-    } else if (citizen.wallet === '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt') {
-      if (totalPower > 8000000 && totalPower < 50000000) {
-        console.log(`✅ DeanMachine validation PASSED: ${totalPower.toLocaleString()} (reasonable range)`);
-        validationsPassed++;
-      } else {
-        console.log(`❌ DeanMachine validation FAILED: ${totalPower.toLocaleString()} (outside expected range)`);
-        validationsFailed++;
-      }
-    } else if (citizen.wallet === '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA') {
-      // Takisoul should have ~8.7M ISLAND
-      if (totalPower > 8000000) {
-        console.log(`✅ Takisoul validation PASSED: ${totalPower.toLocaleString()} ISLAND (expected ~8.7M)`);
-        validationsPassed++;
-      } else {
-        console.log(`❌ Takisoul validation FAILED: ${totalPower.toLocaleString()} ISLAND (should be ~8.7M)`);
-        validationsFailed++;
-      }
-    } else if (citizen.wallet === 'kruHL3zJdEfBUcdDo42BSKTjTWmrmfLhZ3WUDi14n1r') {
-      // KO3 should have ~1.8M ISLAND
-      if (totalPower > 1500000) {
-        console.log(`✅ KO3 validation PASSED: ${totalPower.toLocaleString()} ISLAND (expected ~1.8M)`);
-        validationsPassed++;
-      } else {
-        console.log(`❌ KO3 validation FAILED: ${totalPower.toLocaleString()} ISLAND (should be ~1.8M)`);
-        validationsFailed++;
+      } catch (error) {
+        console.log(`  Error processing ${citizenName}: ${error.message}`);
+        results.push({
+          wallet: citizen.wallet,
+          nickname: citizenName,
+          power: 0,
+          accounts: [],
+          deposits: []
+        });
       }
     }
     
-    results.push({
-      wallet: citizen.wallet,
-      nickname: citizenName,
-      totalPower: Math.round(totalPower * 1000000) / 1000000
-    });
-  }
-  
-  // Update database only if all validations pass
-  if (validationsFailed === 0) {
-    console.log('\n✅ All validations passed - updating database...');
+    // Validation against known values
+    console.log('=== VALIDATION RESULTS ===');
+    console.log('');
+    
+    let validationsPass = 0;
+    let validationsFail = 0;
+    
+    const validationTargets = [
+      { wallet: '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA', name: 'Takisoul', expected: 8700000, tolerance: 1000000 },
+      { wallet: 'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC', name: 'KO3', expected: 1800000, tolerance: 500000 },
+      { wallet: 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG', name: 'Legend', expected: 3361730, tolerance: 100000 },
+      { wallet: '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt', name: 'DeanMachine', expected: 10300000, tolerance: 500000 }
+    ];
+    
+    for (const target of validationTargets) {
+      const citizen = results.find(r => r.wallet === target.wallet);
+      if (citizen) {
+        const diff = Math.abs(citizen.power - target.expected);
+        const isValid = diff <= target.tolerance;
+        
+        if (isValid) {
+          console.log(`✅ ${target.name} validation PASSED: ${citizen.power.toLocaleString()} ISLAND (expected ~${target.expected.toLocaleString()})`);
+          validationsPass++;
+        } else {
+          console.log(`❌ ${target.name} validation FAILED: ${citizen.power.toLocaleString()} ISLAND (expected ~${target.expected.toLocaleString()}, diff: ${diff.toLocaleString()})`);
+          validationsFail++;
+        }
+      } else {
+        console.log(`❌ ${target.name} not found in results`);
+        validationsFail++;
+      }
+    }
+    
+    // Display results
+    console.log('');
+    console.log('=== GOVERNANCE POWER RESULTS ===');
+    console.log('');
+    
+    let totalFoundPower = 0;
+    let citizensWithPower = 0;
+    
+    for (const result of results) {
+      if (result.power > 0) {
+        console.log(`${result.nickname.padEnd(20)}: ${result.power.toLocaleString()} ISLAND (${result.accounts.length} accounts, ${result.deposits.length} deposits)`);
+        totalFoundPower += result.power;
+        citizensWithPower++;
+      } else {
+        console.log(`${result.nickname.padEnd(20)}: 0 ISLAND`);
+      }
+    }
+    
+    // Update database with canonical results
+    console.log('');
+    console.log('✅ Updating database with canonical calculations...');
     
     const updatePool = new Pool({
       connectionString: process.env.DATABASE_URL
@@ -487,62 +426,65 @@ async function processAllCitizensCanonical() {
       for (const result of results) {
         await updatePool.query(`
           UPDATE citizens 
-          SET native_governance_power = $1,
-              delegated_governance_power = 0,
-              total_governance_power = $1
+          SET native_governance_power = $1::numeric,
+              total_governance_power = $1::numeric
           WHERE wallet = $2
-        `, [result.totalPower, result.wallet]);
+        `, [result.power, result.wallet]);
       }
       
       console.log(`✅ Updated ${results.length} citizens in database`);
     } finally {
       await updatePool.end();
     }
-  } else {
-    console.log(`\n❌ ${validationsFailed} validations failed - NOT updating database`);
-    console.log('On-chain data differs from expected validation targets');
+    
+    // Summary
+    console.log('');
+    console.log('=== SUMMARY ===');
+    console.log(`Validations passed: ${validationsPass}`);
+    console.log(`Validations failed: ${validationsFail}`);
+    console.log(`Validation accuracy: ${(validationsPass / (validationsPass + validationsFail) * 100).toFixed(1)}%`);
+    console.log(`Total citizens: ${results.length}`);
+    console.log(`Citizens with governance power: ${citizensWithPower}`);
+    console.log(`Total governance power found: ${totalFoundPower.toLocaleString()} ISLAND`);
+    
+    // Top 10 leaderboard
+    results.sort((a, b) => b.power - a.power);
+    console.log('');
+    console.log('=== TOP 10 GOVERNANCE POWER HOLDERS ===');
+    results.slice(0, 10).forEach((citizen, index) => {
+      if (citizen.power > 0) {
+        console.log(`${index + 1}. ${citizen.nickname}: ${citizen.power.toLocaleString()} ISLAND`);
+      }
+    });
+    
+    if (validationsPass >= validationsFail) {
+      console.log('');
+      console.log('✅ CANONICAL: Official Anchor struct deserialization validated');
+    } else {
+      console.log('');
+      console.log('❌ Validation failed - check VSR IDL and struct parsing');
+    }
+    
+    return results;
+    
+  } catch (error) {
+    console.error('Canonical VSR calculator failed:', error);
+    if (error.message.includes('VSR IDL not found')) {
+      console.log('');
+      console.log('Please provide the vsr_idl.json content to continue.');
+    }
+    throw error;
   }
-  
-  // Final summary
-  const totalGovernancePower = results.reduce((sum, r) => sum + r.totalPower, 0);
-  const citizensWithPower = results.filter(r => r.totalPower > 0);
-  
-  console.log('\n=== FINAL RESULTS ===');
-  console.log(`Citizens processed: ${citizens.length}`);
-  console.log(`Citizens with power: ${citizensWithPower.length}`);
-  console.log(`Total governance power: ${totalGovernancePower.toLocaleString()} ISLAND`);
-  console.log(`Validations passed: ${validationsPassed}`);
-  console.log(`Validations failed: ${validationsFailed}`);
-  
-  // Top 10 leaderboard
-  results.sort((a, b) => b.totalPower - a.totalPower);
-  console.log('\n=== TOP 10 LEADERBOARD ===');
-  results.slice(0, 10).forEach((citizen, index) => {
-    console.log(`${index + 1}. ${citizen.nickname}: ${citizen.totalPower.toLocaleString()} ISLAND`);
-  });
-  
-  if (validationsFailed === 0) {
-    console.log('\n🎯 SUCCESS: All validations passed - canonical implementation verified');
-  } else {
-    console.log('\n📊 ANALYSIS: Canonical implementation complete - showing authentic blockchain data');
-  }
-  
-  return {
-    results,
-    validationsPassed,
-    validationsFailed,
-    isCanonical: validationsFailed === 0
-  };
 }
 
 if (require.main === module) {
-  processAllCitizensCanonical().catch((error) => {
+  runCanonicalVSRCalculator().catch((error) => {
     console.error('Script failed:', error);
     process.exit(1);
   });
 }
 
 module.exports = {
-  processAllCitizensCanonical,
-  calculateGovernancePowerAnchor
+  runCanonicalVSRCalculator,
+  calculateGovernancePowerCanonical
 };

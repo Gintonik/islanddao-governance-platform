@@ -4,9 +4,7 @@
   "description": "A sophisticated decentralized governance platform that visualizes DAO members on an interactive global map, displaying authentic governance power extracted directly from Solana blockchain data.",
   "main": "daily-governance-sync.js",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1",
     "@solana/spl-governance": "^0.3.28",
-    "@solana/web3.js": "^1.98.2",
     "accepts": "^2.0.0",
     "accessor-fn": "^1.5.3",
     "agentkeepalive": "^4.6.0",
