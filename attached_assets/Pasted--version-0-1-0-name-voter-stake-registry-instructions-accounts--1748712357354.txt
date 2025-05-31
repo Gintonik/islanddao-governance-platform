@@ -75,3 +75,9 @@
     "address": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ"
   }
 }
+
+2. 🧠 Update the Replit code to use local IDL
+Make sure your canonical-vsr-calculator.js includes:
+
+const vsrIdl = require('./vsr_idl.json');
+const program = new anchor.Program(vsrIdl, VSR_PROGRAM_ID, provider);

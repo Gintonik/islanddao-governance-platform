@@ -38,7 +38,7 @@ async function initializeVSRProgram() {
 }
 
 /**
- * Calculate voting power multiplier based on lockup
+ * Calculate voting power multiplier based on lockup (v0.2.x structure)
  */
 function calculateVotingPowerMultiplier(deposit) {
   const currentTime = Math.floor(Date.now() / 1000);
@@ -85,6 +85,55 @@ function calculateVotingPowerMultiplier(deposit) {
 }
 
 /**
+ * Calculate voting power multiplier based on lockup (v0.1.0 structure)
+ */
+function calculateVotingPowerMultiplierV1(deposit) {
+  const currentTime = Math.floor(Date.now() / 1000);
+  
+  // Default multiplier for unlocked deposits
+  let multiplier = 1.0;
+  let lockupKind = 'none';
+  let status = 'unlocked';
+  
+  // Check lockup configuration using v0.1.0 structure
+  if (deposit.kind) {
+    // Handle different lockup kind representations
+    if (deposit.kind.none !== undefined) {
+      lockupKind = 'none';
+    } else if (deposit.kind.daily !== undefined) {
+      lockupKind = 'daily';
+    } else if (deposit.kind.cliff !== undefined) {
+      lockupKind = 'cliff';
+    } else if (deposit.kind.constant !== undefined) {
+      lockupKind = 'constant';
+    }
+    
+    // Calculate time-based multiplier for active lockups
+    if (lockupKind !== 'none' && deposit.endTs) {
+      const endTs = deposit.endTs.toNumber ? deposit.endTs.toNumber() : Number(deposit.endTs);
+      
+      if (endTs > currentTime) {
+        const remainingTime = endTs - currentTime;
+        const maxLockupTime = 31536000; // 1 year in seconds
+        const timeFactor = Math.min(remainingTime / maxLockupTime, 1.0);
+        
+        // VSR multiplier formula: base + (max_extra * time_factor)
+        multiplier = 1.0 + (3.0 * timeFactor);
+        
+        const remainingYears = remainingTime / (365.25 * 24 * 3600);
+        status = `${remainingYears.toFixed(2)}y remaining`;
+      }
+    }
+  }
+  
+  return {
+    multiplier,
+    lockupKind,
+    status
+  };
+}
+
+/**
  * Process voter account to extract governance power
  */
 function processVoterAccount(voter, accountPubkey) {
@@ -102,15 +151,26 @@ function processVoterAccount(voter, accountPubkey) {
       continue;
     }
     
-    // Get effective amount from either field
+    // Get effective amount from either field using the correct IDL structure
     let effectiveAmount = 0;
     
-    if (deposit.amountDepositedNative && deposit.amountDepositedNative.toNumber) {
-      effectiveAmount = deposit.amountDepositedNative.toNumber();
-    } else if (deposit.amountDepositedNative) {
-      effectiveAmount = Number(deposit.amountDepositedNative);
+    // Try stake field first (from VoterDepositEntry)
+    if (deposit.stake && deposit.stake.toNumber) {
+      effectiveAmount = deposit.stake.toNumber();
+    } else if (deposit.stake) {
+      effectiveAmount = Number(deposit.stake);
     }
     
+    // Fallback to amountDepositedNative
+    if (effectiveAmount === 0) {
+      if (deposit.amountDepositedNative && deposit.amountDepositedNative.toNumber) {
+        effectiveAmount = deposit.amountDepositedNative.toNumber();
+      } else if (deposit.amountDepositedNative) {
+        effectiveAmount = Number(deposit.amountDepositedNative);
+      }
+    }
+    
+    // Fallback to amountInitiallyLockedNative
     if (effectiveAmount === 0) {
       if (deposit.amountInitiallyLockedNative && deposit.amountInitiallyLockedNative.toNumber) {
         effectiveAmount = deposit.amountInitiallyLockedNative.toNumber();
@@ -131,8 +191,8 @@ function processVoterAccount(voter, accountPubkey) {
       continue;
     }
     
-    // Calculate voting power multiplier
-    const { multiplier, lockupKind, status } = calculateVotingPowerMultiplier(deposit);
+    // Calculate voting power multiplier using the correct structure
+    const { multiplier, lockupKind, status } = calculateVotingPowerMultiplierV1(deposit);
     const power = amountInTokens * multiplier;
     
     deposits.push({
