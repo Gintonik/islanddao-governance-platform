@@ -1,0 +1,45 @@
+// 🧠 TASK:
+// Implement the canonical VSR governance power calculator using official Anchor struct deserialization.
+// We want ZERO guesswork — use discriminators, not offset scans.
+
+// ✅ GOAL:
+// Calculate authentic governance power from all Voter accounts created under the Voter Stake Registry (VSR)
+// and display total locked ISLAND voting power for a list of known wallets.
+
+// 🛠️ ENVIRONMENT: CommonJS, Node.js, @coral-xyz/anchor
+// 🔗 VSR Program ID: "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ"
+// 📦 VSR IDL: https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json
+// 🧠 Use the IDL to deserialize `Voter` and access `depositEntries[]`
+
+// ✅ REQUIREMENTS:
+
+// 1. Load the Anchor IDL and instantiate the program
+// 2. Use `program.account.voter.all()` to fetch all voter accounts via discriminator (no manual offsets)
+// 3. For each account:
+//    - Extract the `voterAuthority` (wallet address)
+//    - Loop through `depositEntries[]`
+//    - Keep only deposits where: `isUsed === true && (amountDepositedNative > 0 || amountInitiallyLockedNative > 0)`
+//    - Apply correct multipliers based on lockup config from Registrar (you can use 1.0x if config unavailable for now)
+// 4. Aggregate governance power per wallet
+// 5. Print per-wallet totals and overall stats
+
+// ⚠️ DO NOT:
+// - Use offset scanning
+// - Filter by account size or heuristics
+// - Hardcode specific wallets
+// ✅ DO:
+// - Use only Anchor struct deserialization and official VSR program data
+
+// Use @solana/web3.js + @coral-xyz/anchor
+// Load wallets from our citizens database (PostgreSQL) or hardcoded array for now
+
+// Output: Print governance power per wallet and total power found
+
+To avoid rate limits and fetch all voter accounts cleanly, ensure:
+
+const provider = new anchor.AnchorProvider(
+  new Connection("https://mainnet.helius-rpc.com/?api-key=YOUR_KEY", "confirmed"),
+  new anchor.Wallet(Keypair.generate()), // Dummy signer
+  { commitment: "confirmed" }
+);
+anchor.setProvider(provider);
