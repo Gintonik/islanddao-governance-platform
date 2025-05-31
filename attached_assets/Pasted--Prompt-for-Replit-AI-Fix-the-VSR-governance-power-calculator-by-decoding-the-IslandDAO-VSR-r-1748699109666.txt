@@ -1,0 +1,61 @@
+// Prompt for Replit AI:
+// Fix the VSR governance power calculator by decoding the IslandDAO VSR registrar account using the official Anchor IDL. Do NOT use guessed byte offsets. Use Anchor's account deserialization to extract `baseline_vote_weight`, `max_extra_lockup_vote_weight`, and `lockup_saturation_secs`. Use these values in the multiplier formula to compute governance power correctly.
+
+//
+// Step 1: Add the official Voter Stake Registry IDL
+//
+// Download this JSON file and place it in your project root as `vsr_idl.json`:
+// https://raw.githubusercontent.com/solana-labs/voter-stake-registry/main/idl/voter_stake_registry.json
+
+//
+// Step 2: Use this script to decode and calculate governance power.
+//
+
+import * as anchor from "@coral-xyz/anchor";
+import { Connection, PublicKey } from "@solana/web3.js";
+import idl from "./vsr_idl.json";
+import BN from "bn.js";
+
+// Connect to Solana mainnet
+const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+const wallet = anchor.Wallet.local(); // Dummy wallet; we are only reading
+const provider = new anchor.AnchorProvider(connection, wallet, {});
+anchor.setProvider(provider);
+
+// Load the VSR program using IDL + program ID
+const programId = new PublicKey("vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ");
+const program = new anchor.Program(idl, programId, provider);
+
+// IslandDAO Registrar account
+const registrarPk = new PublicKey("5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM");
+
+(async () => {
+  try {
+    const registrar = await program.account.registrar.fetch(registrarPk);
+    const config = registrar.votingMints[0]; // Assuming first mint is ISLAND
+
+    const baselineVoteWeight = config.baselineVoteWeight.toNumber() / 1e9;
+    const maxExtraLockupWeight = config.maxExtraLockupVoteWeight.toNumber() / 1e9;
+    const lockupSaturationSecs = config.lockupSaturationSecs.toNumber();
+
+    console.log("✅ Parsed VSR Registrar Config:");
+    console.log("Baseline Vote Weight:", baselineVoteWeight);
+    console.log("Max Extra Lockup Weight:", maxExtraLockupWeight);
+    console.log("Lockup Saturation (secs):", lockupSaturationSecs);
+
+    //
+    // Example governance multiplier formula (applied to each deposit):
+    //
+    // const now = Math.floor(Date.now() / 1000);
+    // const remaining = deposit.lockup.endTs - now;
+    // const multiplier = baselineVoteWeight + Math.min(remaining / lockupSaturationSecs, 1.0) * maxExtraLockupWeight;
+    //
+
+    // NOTE: You must now plug these values into your existing deposit-processing logic
+    // and use this multiplier formula when calculating native governance power.
+
+  } catch (err) {
+    console.error("❌ Failed to fetch or parse VSR registrar config:", err);
+    throw new Error("Registrar fetch failed. Cannot continue.");
+  }
+})();
