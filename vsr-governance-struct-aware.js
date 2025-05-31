@@ -21,24 +21,20 @@ const VSR_CONFIG = {
 };
 
 /**
- * Find all Voter accounts for a wallet
+ * Find all Voter accounts for a wallet - comprehensive search
  */
 async function findVoterAccounts(walletPubkey) {
   const accounts = [];
+  const searchResults = {
+    offset8: 0,
+    offset40: 0,
+    offset72: 0,
+    pda: 0
+  };
   
-  // Method 1: Find accounts by authority field (offset 40 in Voter struct)
-  try {
-    const authAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        { memcmp: { offset: 40, bytes: walletPubkey.toBase58() } }
-      ]
-    });
-    accounts.push(...authAccounts);
-  } catch (error) {
-    // Continue with other methods
-  }
+  console.log(`    Searching for VSR accounts for ${walletPubkey.toBase58().substring(0, 8)}...`);
   
-  // Method 2: Find accounts by authority field (offset 8 - some VSR accounts store authority here)
+  // Method 1: Authority at offset 8 (primary method based on investigation)
   try {
     const auth8Accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
@@ -46,11 +42,38 @@ async function findVoterAccounts(walletPubkey) {
       ]
     });
     accounts.push(...auth8Accounts);
+    searchResults.offset8 = auth8Accounts.length;
   } catch (error) {
-    // Continue with other methods
+    console.log(`      Error searching offset 8: ${error.message}`);
   }
   
-  // Method 3: Find Voter PDA for this registrar
+  // Method 2: Authority at offset 40 (standard Voter struct)
+  try {
+    const authAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { memcmp: { offset: 40, bytes: walletPubkey.toBase58() } }
+      ]
+    });
+    accounts.push(...authAccounts);
+    searchResults.offset40 = authAccounts.length;
+  } catch (error) {
+    console.log(`      Error searching offset 40: ${error.message}`);
+  }
+  
+  // Method 3: Authority at offset 72 (alternative position)
+  try {
+    const auth72Accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { memcmp: { offset: 72, bytes: walletPubkey.toBase58() } }
+      ]
+    });
+    accounts.push(...auth72Accounts);
+    searchResults.offset72 = auth72Accounts.length;
+  } catch (error) {
+    console.log(`      Error searching offset 72: ${error.message}`);
+  }
+  
+  // Method 4: Find Voter PDA for this registrar
   try {
     const [voterPDA] = PublicKey.findProgramAddressSync(
       [
@@ -64,9 +87,10 @@ async function findVoterAccounts(walletPubkey) {
     const voterAccount = await connection.getAccountInfo(voterPDA);
     if (voterAccount) {
       accounts.push({ pubkey: voterPDA, account: voterAccount });
+      searchResults.pda = 1;
     }
   } catch (error) {
-    // Continue
+    console.log(`      Error searching PDA: ${error.message}`);
   }
   
   // Remove duplicates
@@ -80,6 +104,8 @@ async function findVoterAccounts(walletPubkey) {
       uniqueAccounts.push(account);
     }
   }
+  
+  console.log(`    Found: ${searchResults.offset8} at offset8, ${searchResults.offset40} at offset40, ${searchResults.offset72} at offset72, ${searchResults.pda} PDA = ${uniqueAccounts.length} total unique accounts`);
   
   return uniqueAccounts;
 }
@@ -178,6 +204,7 @@ function deserializeDepositEntry(data, offset, index, accountAddress) {
     }
     
     // Only return entries that are actually used and have positive amounts
+    // REMOVED: No minimum amount filters - include all valid deposits
     if (!isUsed || effectiveAmount <= 0) {
       return null;
     }
