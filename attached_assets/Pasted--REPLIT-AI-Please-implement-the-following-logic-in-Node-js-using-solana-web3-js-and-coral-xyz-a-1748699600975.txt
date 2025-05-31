@@ -1,0 +1,41 @@
+// REPLIT AI: Please implement the following logic in Node.js using @solana/web3.js and @coral-xyz/anchor (or manual decoding if necessary)
+
+// PURPOSE: Calculate authentic native governance power from Voter Stake Registry (VSR) for IslandDAO citizens, with accurate multiplier logic per deposit.
+
+// STEP 1: Load registrar for IslandDAO
+// Use this registrar address: 5ZnjJjALX8xs7zuM6t6m7XVkPV3fY3NqxwHvDLhwpShM
+// Extract the following values from the registrar (use Anchor if possible):
+// - baseline_vote_weight
+// - max_extra_lockup_vote_weight
+// - lockup_saturation_secs
+
+// STEP 2: Validate the registrar fields BEFORE applying them
+// These values must fall in sane ranges. If they don't, exit and report an error.
+// - baseline_vote_weight should be between 0.5 and 5.0
+// - max_extra_lockup_vote_weight should be between 0.1 and 10.0
+// - lockup_saturation_secs should be between 10_000 and 500_000_000 (approx 3 hours to 15 years)
+
+// If any of these values fall outside those ranges, DO NOT proceed.
+// Instead, throw a clear error like:
+//   "Registrar config appears corrupted or misparsed. Parsed lockup_saturation_secs = XYZ, which is out of bounds."
+
+// STEP 3: Load all VSR voter accounts for addresses in the citizens table
+// For each citizen:
+//   - Find their VSR voter account
+//   - Parse all deposits
+//   - For each deposit:
+//       - If it’s unlocked or expired: apply baseline_vote_weight
+//       - If it’s locked and not expired: apply this multiplier:
+//         multiplier = baseline_vote_weight + min(remaining_time / lockup_saturation_secs, 1.0) * max_extra_lockup_vote_weight
+
+// STEP 4: Sum all deposit-weighted powers and save the result as `native_governance_power` in the citizens table
+// Also store `total_governance_power` = native + delegated
+
+// STEP 5: Run this once per day. Use authentic blockchain data only. No hardcoded values.
+
+📌 What Changed:
+Added strict validation: Now lockup_saturation_secs must be within a sane range.
+
+Clear error path if registrar values are out of bounds.
+
+Ensures the script doesn’t use garbage data or inflate voting power from parsing bugs.
