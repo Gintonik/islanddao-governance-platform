@@ -23,18 +23,20 @@ const pool = new Pool({
 });
 
 // Solana connection
-const VSR_PROGRAM_ID = new PublicKey("vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ");
+const VSR_PROGRAM_ID = new PublicKey(
+  "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
+);
 const connection = new Connection(process.env.HELIUS_API_KEY);
-console.log("🚀 Helius RPC URL:", process.env.HELIUS_API_KEY);
+console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
 app.use(cors());
 app.use(express.json());
 
 app.get("/api/governance-power", async (req, res) => {
   const voterStakeRegistryIdl = JSON.parse(
-    await fs.readFile("./vsr-idl.json", "utf-8")
+    await fs.readFile("./vsr-idl.json", "utf-8"),
   );
-  
+
   const wallet = req.query.wallet;
   if (!wallet) {
     return res.status(400).json({ error: "Missing wallet parameter" });
@@ -44,11 +46,14 @@ app.get("/api/governance-power", async (req, res) => {
     const provider = new AnchorProvider(
       connection,
       {},
-      AnchorProvider.defaultOptions()
+      AnchorProvider.defaultOptions(),
     );
 
-  
-    const program = new Program(voterStakeRegistryIdl, VSR_PROGRAM_ID, provider);
+    const program = new Program(
+      voterStakeRegistryIdl,
+      VSR_PROGRAM_ID,
+      provider,
+    );
     const walletKey = new PublicKey(wallet);
 
     const allVoterAccounts = await program.account.voter.all([
@@ -65,7 +70,8 @@ app.get("/api/governance-power", async (req, res) => {
 
     for (const { account: voter } of allVoterAccounts) {
       for (const entry of voter.depositEntries) {
-        if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0) continue;
+        if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0)
+          continue;
         if (entry.votingMintConfigIdx !== 0) continue;
 
         const lockupStart = entry.lockup.startTs.toNumber();
