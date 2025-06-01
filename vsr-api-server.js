@@ -30,6 +30,10 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/governance-power", async (req, res) => {
+  const voterStakeRegistryIdl = JSON.parse(
+    await fs.readFile("./vsr-idl.json", "utf-8")
+  );
+  
   const wallet = req.query.wallet;
   if (!wallet) {
     return res.status(400).json({ error: "Missing wallet parameter" });
@@ -40,10 +44,6 @@ app.get("/api/governance-power", async (req, res) => {
       connection,
       {},
       AnchorProvider.defaultOptions()
-    );
-
-    const voterStakeRegistryIdl = JSON.parse(
-      await fs.readFile("./vsr-idl.json", "utf-8")
     );
 
   
