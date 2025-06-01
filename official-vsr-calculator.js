@@ -5,14 +5,12 @@
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { updateGovernancePowerBreakdown, getAllCitizens } = require('./db.js');
+const { Pool } = require('pg');
 
-// Use proven Helius connection
-const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || '7271240f-154a-4417-9663-718ac65c8b8e'}`);
-
-// Verified VSR and governance configuration  
+const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
-const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
+
+const connection = new Connection(HELIUS_RPC, 'confirmed');
 const REALM_PUBKEY = new PublicKey('9M9xrrGQJgGGpn9CCdDQNpqk9aBo8Cv5HYPGKrsWMwKi');
 
 let vsrAccountsCache = null;
