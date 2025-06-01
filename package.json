@@ -280,8 +280,8 @@
     "zod-to-json-schema": "^3.24.5"
   },
   "scripts": {
-    "start": "node index.js"
-  },
+    "start": "node vsr-api-server.js"
+  }
   "keywords": [],
   "author": "",
   "license": "ISC"
