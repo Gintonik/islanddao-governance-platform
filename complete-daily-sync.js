@@ -1,10 +1,10 @@
 /**
  * Complete Daily Governance Synchronization System
  * Updates all governance power data from blockchain VSR accounts daily
- * Ensures authentic data integrity across the entire citizen database
+ * Uses authentic VSR calculation with proven on-chain scanning methodology
  */
 
-const { updateAllCitizensEfficient } = require('./efficient-vsr-extractor.js');
+const { syncAllNativeGovernancePower } = require('./daily-native-governance-sync.js');
 const { updateGovernancePowerBreakdown } = require('./db.js');
 
 /**
@@ -15,22 +15,15 @@ async function runCompleteGovernanceSync() {
     console.log('🔄 Starting complete daily governance synchronization...');
     console.log(`⏰ Sync started at: ${new Date().toISOString()}`);
     
-    // Calculate complete governance breakdown with authentic delegation data
-    console.log('📊 Calculating complete governance breakdown from blockchain...');
-    const { updateAllCitizensGovernanceBreakdown } = require('./complete-governance-breakdown.js');
-    
-    const breakdownResult = await updateAllCitizensGovernanceBreakdown();
-    const updatedCount = breakdownResult.updated;
+    // Use authentic VSR native governance power calculation
+    console.log('📊 Updating native governance power from VSR accounts...');
+    await syncAllNativeGovernancePower();
     
     console.log('✅ Daily governance sync completed successfully');
-    console.log(`📊 Total citizens processed: ${breakdownResult.processed}`);
-    console.log(`📊 Citizens with governance power: ${updatedCount}`);
     console.log(`⏰ Sync completed at: ${new Date().toISOString()}`);
     
     return {
       success: true,
-      totalProcessed: breakdownResult.processed,
-      updatedCount: updatedCount,
       timestamp: new Date().toISOString()
     };
     
