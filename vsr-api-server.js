@@ -28,6 +28,27 @@ const connection = new Connection(
 
 app.use(cors());
 app.use(express.json());
+app.get("/api/governance-power", async (req, res) => {
+  const wallet = req.query.wallet;
+
+  if (!wallet) {
+    return res.status(400).json({ error: "Missing wallet parameter" });
+  }
+
+  try {
+    // ✅ Placeholder response for testing
+    // Replace with real logic later
+    return res.json({
+      wallet,
+      nativePower: 1234567,
+      delegatedPower: 0,
+      totalPower: 1234567,
+    });
+  } catch (err) {
+    console.error("Error fetching governance power:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // TODO: Add routes for:
 // - GET /power/:wallet (from hybrid-vsr-calculator.js)
