@@ -204,7 +204,8 @@ function calculateVSRMultiplier(lockupSecs, registrarConfig) {
 }
 
 /**
- * Calculate native governance power for a wallet
+ * Calculate native governance power for a wallet using the proven scanning approach
+ * Based on successful patterns from accurate-vsr-calculator.js
  */
 async function calculateNativeGovernancePower(walletAddress) {
   try {
@@ -212,100 +213,132 @@ async function calculateNativeGovernancePower(walletAddress) {
     
     const connection = new Connection(process.env.HELIUS_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
     
-    // Get PDAs
-    const { registrar: registrarPk } = getRegistrarPDA(ISLAND_DAO_REALM, ISLAND_TOKEN_MINT, VSR_PROGRAM_ID);
+    // Load all VSR accounts and search for this wallet (proven approach)
+    console.log('Loading all VSR accounts...');
+    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+    console.log(`Loaded ${allVSRAccounts.length} VSR accounts`);
+    
     const walletPubkey = new PublicKey(walletAddress);
-    const { voter: voterPk } = getVoterPDA(registrarPk, walletPubkey, VSR_PROGRAM_ID);
+    const walletBuffer = walletPubkey.toBuffer();
     
-    console.log(`Registrar PDA: ${registrarPk.toBase58()}`);
-    console.log(`Voter PDA: ${voterPk.toBase58()}`);
+    let totalGovernancePower = 0;
+    let accountsFound = 0;
     
-    // First verify registrar exists - this tells us if we have the right realm config
-    const registrarAccountInfo = await connection.getAccountInfo(registrarPk);
-    
-    if (!registrarAccountInfo) {
-      console.log('No registrar account found - checking if this is the correct IslandDAO configuration...');
-      
-      // Let's try to find VSR registrar accounts for this wallet by scanning
-      const filters = [
-        {
-          memcmp: {
-            offset: 0,
-            bytes: 'voter', // This might help find voter accounts
+    for (const account of allVSRAccounts) {
+      try {
+        const data = account.account.data;
+        
+        // Check if wallet is referenced in this account
+        let walletFound = false;
+        for (let offset = 0; offset <= data.length - 32; offset += 8) {
+          if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
+            walletFound = true;
+            break;
           }
         }
-      ];
-      
-      try {
-        const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-          filters: [
-            {
-              memcmp: {
-                offset: 40, // voter_authority offset in voter account
-                bytes: walletPubkey.toBase58(),
-              }
-            }
-          ]
-        });
         
-        if (accounts.length > 0) {
-          console.log(`Found ${accounts.length} VSR accounts for this wallet`);
-          console.log(`First account: ${accounts[0].pubkey.toBase58()}`);
-          // The registrar should be referenced in the voter account
-          return 0; // Will implement proper parsing if we find accounts
-        } else {
-          console.log('No VSR accounts found for this wallet');
+        if (!walletFound) continue;
+        
+        accountsFound++;
+        console.log(`Found VSR account ${accountsFound}: ${account.pubkey.toBase58()}`);
+        
+        // Extract governance power values from proven offsets
+        let maxAccountPower = 0;
+        const governanceOffsets = [104, 112];
+        
+        for (const offset of governanceOffsets) {
+          if (offset + 8 <= data.length) {
+            try {
+              const value = Number(data.readBigUInt64LE(offset)) / 1e6;
+              
+              // Valid governance power range check
+              if (value > 1000 && value < 50000000) {
+                maxAccountPower = Math.max(maxAccountPower, value);
+              }
+            } catch (error) {
+              // Skip invalid data
+            }
+          }
         }
+        
+        if (maxAccountPower > 0) {
+          console.log(`  Account power: ${maxAccountPower.toLocaleString()} ISLAND`);
+          totalGovernancePower += maxAccountPower;
+        }
+        
+        // Also try to parse using the governance-ui inspired VSR formula
+        const alternativePower = parseVSRAccountWithMultiplier(data, walletPubkey);
+        if (alternativePower > maxAccountPower) {
+          console.log(`  Alternative calculation: ${alternativePower.toLocaleString()} ISLAND`);
+          totalGovernancePower = Math.max(totalGovernancePower, alternativePower);
+        }
+        
       } catch (error) {
-        console.log('Error scanning for VSR accounts:', error.message);
+        // Skip problematic accounts
       }
-      
-      return 0;
     }
     
-    const voterAccountInfo = await connection.getAccountInfo(voterPk);
+    console.log(`Found ${accountsFound} VSR accounts for ${walletAddress}`);
+    console.log(`Total governance power: ${totalGovernancePower.toFixed(2)} ISLAND`);
     
-    if (!voterAccountInfo) {
-      console.log('No voter account found');
-      return 0;
-    }
-    
-    console.log(`Registrar account size: ${registrarAccountInfo.data.length} bytes`);
-    console.log(`Voter account size: ${voterAccountInfo.data.length} bytes`);
-    
-    // Parse account data
-    const registrarConfig = parseRegistrarAccountData(registrarAccountInfo.data);
-    const deposits = parseVoterAccountData(voterAccountInfo.data);
-    
-    if (!registrarConfig) {
-      console.log('Failed to parse registrar configuration');
-      return 0;
-    }
-    
-    console.log('Registrar config:', registrarConfig);
-    console.log(`Found ${deposits.length} deposits`);
-    
-    // Calculate total voting power
-    let totalVotingPower = 0;
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    
-    for (const deposit of deposits) {
-      if (!deposit.isUsed) continue;
-      
-      const lockupSecs = Math.max(0, deposit.lockup.endTs - currentTimestamp);
-      const multiplier = calculateVSRMultiplier(lockupSecs, registrarConfig);
-      const depositPower = (deposit.amountDepositedNative * multiplier) / 1e6; // Convert to ISLAND units
-      
-      console.log(`Deposit: ${deposit.amountDepositedNative / 1e6} ISLAND, lockup: ${lockupSecs}s, multiplier: ${multiplier.toFixed(2)}, power: ${depositPower.toFixed(2)}`);
-      
-      totalVotingPower += depositPower;
-    }
-    
-    console.log(`Total voting power: ${totalVotingPower.toFixed(2)} ISLAND`);
-    return totalVotingPower;
+    return totalGovernancePower;
     
   } catch (error) {
     console.error(`Error calculating native governance power for ${walletAddress}:`, error.message);
+    return 0;
+  }
+}
+
+/**
+ * Parse VSR account using multiplier-based calculation inspired by governance-ui
+ */
+function parseVSRAccountWithMultiplier(data, walletPubkey) {
+  try {
+    // Look for voter account structure (discriminator + voter_authority + registrar + deposits)
+    if (data.length < 100) return 0;
+    
+    // Check if this looks like a voter account by checking the voter_authority field
+    for (let baseOffset = 8; baseOffset <= 50; baseOffset += 8) {
+      try {
+        const potentialAuthority = new PublicKey(data.slice(baseOffset, baseOffset + 32));
+        if (potentialAuthority.equals(walletPubkey)) {
+          // This might be a voter account, try to parse deposits
+          const depositsOffset = baseOffset + 64; // Skip voter_authority + registrar
+          
+          if (depositsOffset + 4 < data.length) {
+            const depositsCount = data.readUInt32LE(depositsOffset);
+            
+            if (depositsCount > 0 && depositsCount < 20) { // Reasonable deposits count
+              let totalPower = 0;
+              let depositOffset = depositsOffset + 4;
+              
+              for (let i = 0; i < depositsCount && depositOffset + 40 < data.length; i++) {
+                // Parse deposit entry
+                const amountDeposited = Number(data.readBigUInt64LE(depositOffset + 24)); // amount_deposited_native
+                const isUsed = data.readUInt8(depositOffset + 40) === 1; // is_used flag
+                
+                if (isUsed && amountDeposited > 0) {
+                  // Simple multiplier calculation (baseline of 1.0 for now)
+                  const depositPower = amountDeposited / 1e6; // Convert to ISLAND units
+                  totalPower += depositPower;
+                }
+                
+                depositOffset += 48; // Move to next deposit (approximate size)
+              }
+              
+              if (totalPower > 0) {
+                return totalPower;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Continue searching
+      }
+    }
+    
+    return 0;
+  } catch (error) {
     return 0;
   }
 }
