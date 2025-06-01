@@ -1,6 +1,7 @@
 {
   "name": "workspace",
   "version": "1.0.0",
+  "type": "module",
   "description": "A sophisticated decentralized governance platform that visualizes DAO members on an interactive global map, displaying authentic governance power extracted directly from Solana blockchain data.",
   "main": "daily-governance-sync.js",
   "dependencies": {
