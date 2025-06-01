@@ -6,9 +6,10 @@
 import express from "express";
 import pkg from "pg";
 import cors from "cors";
+import fs from "fs/promises";
+
 import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import voterStakeRegistryIdl from "./vsr-idl.json" assert { type: "json" };
 
 const { Pool } = pkg;
 const app = express();
@@ -36,8 +37,10 @@ app.get("/api/governance-power", async (req, res) => {
   if (!wallet) {
     return res.status(400).json({ error: "Missing wallet parameter" });
   }
-
   try {
+    const voterStakeRegistryIdl = JSON.parse(
+      await fs.readFile("./vsr-idl.json", "utf-8")
+    );
     const provider = new AnchorProvider(
       connection,
       {},
