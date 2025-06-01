@@ -7,6 +7,8 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import voterStakeRegistryIdl from "./vsr-idl.json" assert { type: "json" };
 
 const { Pool } = pkg;
 const app = express();
@@ -36,17 +38,57 @@ app.get("/api/governance-power", async (req, res) => {
   }
 
   try {
-    // ✅ Placeholder response for testing
-    // Replace with real logic later
+    const provider = new AnchorProvider(
+      connection,
+      {},
+      AnchorProvider.defaultOptions(),
+    );
+    const program = new Program(
+      voterStakeRegistryIdl,
+      VSR_PROGRAM_ID,
+      provider,
+    );
+    const walletKey = new PublicKey(wallet);
+
+    const allVoterAccounts = await program.account.voter.all([
+      {
+        memcmp: {
+          offset: 8, // 'authority' field in Voter struct
+          bytes: walletKey.toBase58(),
+        },
+      },
+    ]);
+
+    let nativePower = 0;
+
+    for (const { account: voter } of allVoterAccounts) {
+      for (const entry of voter.depositEntries) {
+        if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0)
+          continue;
+
+        const lockupEnd = entry.lockup.endTs.toNumber();
+        const now = Math.floor(Date.now() / 1000);
+        if (lockupEnd <= now) continue; // Only count locked tokens
+
+        const multiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
+        const power = Math.floor(
+          entry.amountDepositedNative.toNumber() * multiplier,
+        );
+        nativePower += power;
+      }
+    }
+
     return res.json({
       wallet,
-      nativePower: 1234567,
-      delegatedPower: 0,
-      totalPower: 1234567,
+      nativePower,
+      delegatedPower: 0, // We'll add this next
+      totalPower: nativePower,
     });
   } catch (err) {
-    console.error("Error fetching governance power:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Governance power error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to calculate governance power" });
   }
 });
 

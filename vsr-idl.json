@@ -1,0 +1,59 @@
+{
+  "version": "0.1.0",
+  "name": "voter_stake_registry",
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "Voter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "registrar", "type": "publicKey" },
+          { "name": "authority", "type": "publicKey" },
+          { "name": "votingPower", "type": "u64" },
+          { "name": "votingPowerBaseline", "type": "u64" },
+          { "name": "votingPowerTimestamp", "type": "i64" },
+          {
+            "name": "depositEntries",
+            "type": { "array": [{ "defined": "DepositEntry" }, 32] }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "DepositEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "isUsed", "type": "bool" },
+          { "name": "amountDepositedNative", "type": "u64" },
+          { "name": "votingMintConfigIdx", "type": "u8" },
+          { "name": "lockup", "type": { "defined": "Lockup" } }
+        ]
+      }
+    },
+    {
+      "name": "Lockup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "startTs", "type": "i64" },
+          { "name": "endTs", "type": "i64" },
+          { "name": "kind", "type": { "defined": "LockupKind" } }
+        ]
+      }
+    },
+    {
+      "name": "LockupKind",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "multiplier", "type": "u64" },
+          { "name": "reserved", "type": { "array": ["u8", 7] } }
+        ]
+      }
+    }
+  ]
+}
