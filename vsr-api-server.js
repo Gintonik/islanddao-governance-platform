@@ -24,7 +24,8 @@ const pool = new Pool({
 
 // Solana connection
 const VSR_PROGRAM_ID = new PublicKey("vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ");
-const connection = new Connection(process.env.HELIUS_RPC_URL);
+const connection = new Connection(process.env.HELIUS_API_KEY);
+console.log("🚀 Helius RPC URL:", process.env.HELIUS_API_KEY);
 
 app.use(cors());
 app.use(express.json());
