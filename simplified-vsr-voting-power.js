@@ -220,16 +220,50 @@ async function calculateNativeGovernancePower(walletAddress) {
     console.log(`Registrar PDA: ${registrarPk.toBase58()}`);
     console.log(`Voter PDA: ${voterPk.toBase58()}`);
     
-    // Fetch account data
-    const [registrarAccountInfo, voterAccountInfo] = await Promise.all([
-      connection.getAccountInfo(registrarPk),
-      connection.getAccountInfo(voterPk)
-    ]);
+    // First verify registrar exists - this tells us if we have the right realm config
+    const registrarAccountInfo = await connection.getAccountInfo(registrarPk);
     
     if (!registrarAccountInfo) {
-      console.log('No registrar account found');
+      console.log('No registrar account found - checking if this is the correct IslandDAO configuration...');
+      
+      // Let's try to find VSR registrar accounts for this wallet by scanning
+      const filters = [
+        {
+          memcmp: {
+            offset: 0,
+            bytes: 'voter', // This might help find voter accounts
+          }
+        }
+      ];
+      
+      try {
+        const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+          filters: [
+            {
+              memcmp: {
+                offset: 40, // voter_authority offset in voter account
+                bytes: walletPubkey.toBase58(),
+              }
+            }
+          ]
+        });
+        
+        if (accounts.length > 0) {
+          console.log(`Found ${accounts.length} VSR accounts for this wallet`);
+          console.log(`First account: ${accounts[0].pubkey.toBase58()}`);
+          // The registrar should be referenced in the voter account
+          return 0; // Will implement proper parsing if we find accounts
+        } else {
+          console.log('No VSR accounts found for this wallet');
+        }
+      } catch (error) {
+        console.log('Error scanning for VSR accounts:', error.message);
+      }
+      
       return 0;
     }
+    
+    const voterAccountInfo = await connection.getAccountInfo(voterPk);
     
     if (!voterAccountInfo) {
       console.log('No voter account found');
@@ -281,10 +315,11 @@ async function calculateNativeGovernancePower(walletAddress) {
  */
 async function testSpecificWallets() {
   const testWallets = [
-    'DeanMc4LPetrT7mFQYNMcGx2bCDjfzj6o83LRqoyYWGG', // DeanMachine
-    'GJdRQcsy2Dm6xdPxZFNNhTgKPGEg7SzWjrW8L7mYgCpH', // Known wallet
-    'takisoul9hjqKoUX23VoBfWc1LSQpKtMUdT3nFaKWmKd', // Takisoul
-    'KO3LV8MRkWw6GU9QEt4BhGjuSfuSFmTj4b9UZqYdqf9X'  // KO3
+    'B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST', // Real citizen wallet
+    'ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd', // Real citizen wallet
+    '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA', // Real citizen wallet
+    'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG', // Real citizen wallet
+    '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt'  // Real citizen wallet
   ];
   
   console.log('🧪 Testing simplified VSR calculation on specific wallets...');
