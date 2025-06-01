@@ -9,6 +9,7 @@ const { Pool } = require('pg');
 
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const GOVERNANCE_PROGRAM_ID = new PublicKey('GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw');
 
 const connection = new Connection(HELIUS_RPC, 'confirmed');
 const REALM_PUBKEY = new PublicKey('9M9xrrGQJgGGpn9CCdDQNpqk9aBo8Cv5HYPGKrsWMwKi');
@@ -210,11 +211,54 @@ async function calculateGovernanceBreakdown(walletAddress) {
 }
 
 /**
+ * Get all citizens from database
+ */
+async function getAllCitizens() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+  
+  try {
+    const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
+    return result.rows.map(row => ({ 
+      wallet: row.wallet, 
+      name: row.nickname || 'Anonymous' 
+    }));
+  } catch (error) {
+    console.error('Error fetching citizens:', error);
+    return [];
+  } finally {
+    await pool.end();
+  }
+}
+
+/**
+ * Update citizen governance power in database
+ */
+async function updateGovernancePowerBreakdown(walletAddress, breakdown) {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+  
+  try {
+    await pool.query(
+      'UPDATE citizens SET native_governance_power = $1, delegated_governance_power = $2, total_governance_power = $3 WHERE wallet = $4',
+      [breakdown.nativePower, breakdown.delegatedPower, breakdown.totalPower, walletAddress]
+    );
+  } catch (error) {
+    console.error(`Error updating citizen ${walletAddress}:`, error);
+  } finally {
+    await pool.end();
+  }
+}
+
+/**
  * Update all citizens with accurate governance calculation
  */
 async function updateAllCitizensAccurateGovernance() {
   try {
-    console.log('🔄 Starting accurate governance calculation for all citizens...');
+    console.log('=== OFFICIAL VSR GOVERNANCE CALCULATOR ===');
+    console.log('100% On-Chain Data - No Hardcoded Values\n');
     
     const citizens = await getAllCitizens();
     console.log(`📊 Processing ${citizens.length} citizens`);
