@@ -26,7 +26,7 @@ const VSR_PROGRAM_ID = new PublicKey(
 );
 const connection = new Connection(
   process.env.HELIUS_RPC_URL ||
-    "https://mainnet.helius-rpc.com/?api-key=YOUR-API-KEY",
+    "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00"
 );
 
 app.use(cors());
