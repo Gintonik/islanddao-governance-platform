@@ -9,31 +9,32 @@ const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXq
 
 async function findActualVSRStructure() {
   try {
-    console.log('🔍 Finding actual VSR structure used by citizens...\n');
+    console.log('🔍 Finding actual VSR structure used by DeanMachine...\n');
     
     const connection = new Connection(process.env.HELIUS_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
     
-    // Test wallet with known VSR accounts
-    const testWallet = '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt'; // DeanMachine
+    const deanMachineAddress = '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt';
+    const walletPubkey = new PublicKey(deanMachineAddress);
+    const walletBuffer = walletPubkey.toBuffer();
     
-    console.log(`Analyzing VSR accounts for: ${testWallet}\n`);
+    console.log(`Target wallet: ${deanMachineAddress}`);
+    console.log('Loading all VSR program accounts...\n');
     
     // Load all VSR accounts
     const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-    console.log(`Total VSR accounts: ${allVSRAccounts.length}`);
+    console.log(`Found ${allVSRAccounts.length} total VSR accounts`);
     
-    const walletPubkey = new PublicKey(testWallet);
-    const walletBuffer = walletPubkey.toBuffer();
+    const voterAccounts = [];
+    const registrarAccounts = [];
+    const voterWeightRecords = [];
     
-    let voterAccounts = [];
-    let registrarAccounts = [];
-    
-    // Find all VSR accounts that reference this wallet
+    // Analyze each account
     for (const account of allVSRAccounts) {
       try {
         const data = account.account.data;
+        const accountSize = data.length;
         
-        // Check if wallet is referenced
+        // Check if wallet is referenced in this account
         let walletFound = false;
         for (let offset = 0; offset <= data.length - 32; offset += 8) {
           if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
@@ -42,199 +43,162 @@ async function findActualVSRStructure() {
           }
         }
         
-        if (walletFound) {
-          console.log(`\n📍 VSR Account: ${account.pubkey.toBase58()}`);
-          console.log(`   Size: ${data.length} bytes`);
-          console.log(`   Owner: ${account.account.owner.toBase58()}`);
-          
-          // Try to identify account type by size and structure
-          if (data.length === 176) {
-            console.log(`   Type: Likely Voter Weight Record (176 bytes)`);
-            analyzeVoterWeightRecord(data, account.pubkey.toBase58());
-          } else if (data.length === 2728) {
-            console.log(`   Type: Likely Voter Account (2728 bytes)`);
-            analyzeVoterAccount(data, account.pubkey.toBase58(), walletPubkey);
-            voterAccounts.push(account);
-          } else {
-            console.log(`   Type: Unknown (${data.length} bytes)`);
-          }
+        if (!walletFound) continue;
+        
+        const accountAddress = account.pubkey.toBase58();
+        
+        // Categorize by size
+        if (accountSize === 176) {
+          voterWeightRecords.push({
+            address: accountAddress,
+            size: accountSize
+          });
+        } else if (accountSize === 2728) {
+          voterAccounts.push({
+            address: accountAddress,
+            size: accountSize
+          });
+        } else if (accountSize === 880) {
+          registrarAccounts.push({
+            address: accountAddress,
+            size: accountSize
+          });
         }
+        
+        console.log(`Found account: ${accountAddress} (${accountSize} bytes)`);
+        
       } catch (error) {
         // Skip problematic accounts
       }
     }
     
-    // Look for registrar accounts (they won't reference the wallet directly)
-    console.log(`\n🔍 Searching for registrar accounts...`);
+    console.log(`\n📊 Summary of accounts containing DeanMachine wallet:`);
+    console.log(`   Voter Weight Records (176 bytes): ${voterWeightRecords.length}`);
+    console.log(`   Voter Accounts (2728 bytes): ${voterAccounts.length}`);
+    console.log(`   Registrar Accounts (880 bytes): ${registrarAccounts.length}`);
     
-    for (const account of allVSRAccounts) {
-      const data = account.account.data;
-      
-      // Registrar accounts are typically larger and contain realm references
-      if (data.length > 500 && data.length < 2000) {
-        // Check for known realm pubkeys in the data
-        const islandRealmBuffer = new PublicKey('FEbFRw7pauKbFhbgLmJ7ogbZjHFQQBUKdZ1qLw9dUYfq').toBuffer();
-        const governanceRealmBuffer = new PublicKey('9M9xrrGQJgGGpn9CCdDQNpqk9aBo8Cv5HYPGKrsWMwKi').toBuffer();
-        
-        let foundRealm = false;
-        for (let offset = 0; offset <= data.length - 32; offset += 8) {
-          if (data.subarray(offset, offset + 32).equals(islandRealmBuffer) ||
-              data.subarray(offset, offset + 32).equals(governanceRealmBuffer)) {
-            foundRealm = true;
-            break;
-          }
-        }
-        
-        if (foundRealm) {
-          console.log(`\n📋 Potential Registrar: ${account.pubkey.toBase58()}`);
-          console.log(`   Size: ${data.length} bytes`);
-          analyzeRegistrarAccount(data, account.pubkey.toBase58());
-          registrarAccounts.push(account);
-        }
-      }
-    }
-    
-    console.log(`\n📊 Summary:`);
-    console.log(`   Voter accounts found: ${voterAccounts.length}`);
-    console.log(`   Registrar accounts found: ${registrarAccounts.length}`);
-    
-    // If we found voter accounts, try to extract the registrar reference
+    // Analyze voter accounts in detail
     if (voterAccounts.length > 0) {
-      console.log(`\n🔗 Extracting registrar references from voter accounts...`);
+      console.log(`\n🔍 Analyzing voter accounts:`);
       
       for (const voterAccount of voterAccounts) {
-        const registrarRef = extractRegistrarFromVoter(voterAccount.account.data);
-        if (registrarRef) {
-          console.log(`   Voter ${voterAccount.pubkey.toBase58()} -> Registrar: ${registrarRef}`);
+        try {
+          const accountInfo = await connection.getAccountInfo(new PublicKey(voterAccount.address));
+          if (!accountInfo) continue;
           
-          // Fetch the referenced registrar
-          try {
-            const registrarInfo = await connection.getAccountInfo(new PublicKey(registrarRef));
-            if (registrarInfo) {
-              console.log(`   ✅ Found registrar account: ${registrarRef} (${registrarInfo.data.length} bytes)`);
-              analyzeRegistrarAccount(registrarInfo.data, registrarRef);
+          const data = accountInfo.data;
+          
+          // Extract registrar reference from voter account (at offset 40-72)
+          const registrarPubkey = new PublicKey(data.slice(40, 72));
+          
+          console.log(`\n   Voter Account: ${voterAccount.address}`);
+          console.log(`   References Registrar: ${registrarPubkey.toBase58()}`);
+          
+          // Try to derive the PDA that should match this account
+          const [expectedPDA] = PublicKey.findProgramAddressSync(
+            [
+              Buffer.from('voter'),
+              registrarPubkey.toBuffer(),
+              walletPubkey.toBuffer()
+            ],
+            VSR_PROGRAM_ID
+          );
+          
+          const isValidPDA = expectedPDA.toBase58() === voterAccount.address;
+          console.log(`   Expected PDA: ${expectedPDA.toBase58()}`);
+          console.log(`   PDA Match: ${isValidPDA ? '✅' : '❌'}`);
+          
+          if (!isValidPDA) {
+            console.log(`   ⚠️  This voter account doesn't match standard PDA derivation!`);
+            
+            // Try alternate derivation methods
+            console.log(`   Trying alternate PDA derivations...`);
+            
+            // Try with different seeds
+            const alternateSeeds = [
+              ['voter', registrarPubkey.toBuffer(), walletPubkey.toBuffer()],
+              [Buffer.from('voter'), registrarPubkey.toBuffer(), walletPubkey.toBuffer()],
+              ['Voter', registrarPubkey.toBuffer(), walletPubkey.toBuffer()],
+              [walletPubkey.toBuffer(), registrarPubkey.toBuffer()],
+              [registrarPubkey.toBuffer(), walletPubkey.toBuffer()]
+            ];
+            
+            for (let i = 0; i < alternateSeeds.length; i++) {
+              try {
+                const [altPDA] = PublicKey.findProgramAddressSync(alternateSeeds[i], VSR_PROGRAM_ID);
+                if (altPDA.toBase58() === voterAccount.address) {
+                  console.log(`   ✅ Found matching derivation method ${i + 1}`);
+                  break;
+                }
+              } catch (error) {
+                // Skip invalid seed combinations
+              }
             }
-          } catch (error) {
-            console.log(`   ❌ Error fetching registrar: ${error.message}`);
           }
-        }
-      }
-    }
-    
-  } catch (error) {
-    console.error('Error finding VSR structure:', error);
-  }
-}
-
-function analyzeVoterWeightRecord(data, address) {
-  try {
-    console.log(`   📝 Voter Weight Record Analysis:`);
-    
-    // Check for VSR discriminator
-    const discriminator = data.readBigUInt64LE(0);
-    console.log(`      Discriminator: ${discriminator.toString()}`);
-    
-    // Extract voting power from known offsets
-    const offsets = [104, 112, 120, 128];
-    for (const offset of offsets) {
-      if (offset + 8 <= data.length) {
-        try {
-          const value = Number(data.readBigUInt64LE(offset)) / 1e6;
-          if (value > 1000 && value < 50000000) {
-            console.log(`      Offset ${offset}: ${value.toLocaleString()} ISLAND`);
-          }
+          
         } catch (error) {
-          // Skip invalid reads
+          console.log(`   ❌ Error analyzing ${voterAccount.address}: ${error.message}`);
         }
       }
     }
-  } catch (error) {
-    console.log(`   ❌ Error analyzing voter weight record: ${error.message}`);
-  }
-}
-
-function analyzeVoterAccount(data, address, walletPubkey) {
-  try {
-    console.log(`   👤 Voter Account Analysis:`);
     
-    // Look for voter authority at various offsets
-    const commonOffsets = [8, 40, 72];
-    for (const offset of commonOffsets) {
-      if (offset + 32 <= data.length) {
-        try {
-          const pubkey = new PublicKey(data.slice(offset, offset + 32));
-          if (pubkey.equals(walletPubkey)) {
-            console.log(`      ✅ Voter authority found at offset ${offset}: ${pubkey.toBase58()}`);
-            
-            // Try to find registrar reference (usually next 32 bytes)
-            if (offset + 64 <= data.length) {
-              const registrarPubkey = new PublicKey(data.slice(offset + 32, offset + 64));
-              console.log(`      Registrar reference: ${registrarPubkey.toBase58()}`);
-            }
-            
-            // Try to parse deposits count
-            const depositsOffset = offset + 64;
-            if (depositsOffset + 4 <= data.length) {
-              const depositsCount = data.readUInt32LE(depositsOffset);
-              console.log(`      Deposits count: ${depositsCount}`);
-            }
-            
-            break;
-          }
-        } catch (error) {
-          // Skip invalid pubkey reads
-        }
-      }
-    }
-  } catch (error) {
-    console.log(`   ❌ Error analyzing voter account: ${error.message}`);
-  }
-}
-
-function analyzeRegistrarAccount(data, address) {
-  try {
-    console.log(`   📋 Registrar Account Analysis:`);
-    console.log(`      Size: ${data.length} bytes`);
+    // Check if we can find any working PDAs by brute force with known registrars
+    console.log(`\n🧪 Testing PDA derivation with known registrars:`);
     
-    // Look for known realm pubkeys
-    const knownRealms = [
-      'FEbFRw7pauKbFhbgLmJ7ogbZjHFQQBUKdZ1qLw9dUYfq', // Island DAO
-      '9M9xrrGQJgGGpn9CCdDQNpqk9aBo8Cv5HYPGKrsWMwKi'  // Another realm
+    const knownRegistrars = [
+      '3xJZ38FE31xVcsYnGpeHy36N7YwkBUsGi8Y5aPFNr4s9',
+      '6YGuFEQnMtHfRNn6hgmnYVdEk6yMLGGeESRgLikSdLgP',
+      '5vVAxag6WVUWn1Yq2hqKrWUkNtSJEefJmBLtk5syLZJ5',
+      'Du7fEQExVrmNKDWjctgA4vbn2CnVSDvH2AoXsBpPcYvd',
+      'FYGUd8h7mNt7QKyEZeCKA69heM85YNfuFKqFWvAtiVar'
     ];
     
-    for (const realm of knownRealms) {
-      const realmBuffer = new PublicKey(realm).toBuffer();
-      for (let offset = 0; offset <= data.length - 32; offset += 8) {
-        if (data.subarray(offset, offset + 32).equals(realmBuffer)) {
-          console.log(`      ✅ Found realm ${realm} at offset ${offset}`);
+    for (const registrarAddress of knownRegistrars) {
+      try {
+        const registrarPubkey = new PublicKey(registrarAddress);
+        const [voterPDA] = PublicKey.findProgramAddressSync(
+          [
+            Buffer.from('voter'),
+            registrarPubkey.toBuffer(),
+            walletPubkey.toBuffer()
+          ],
+          VSR_PROGRAM_ID
+        );
+        
+        const accountInfo = await connection.getAccountInfo(voterPDA);
+        console.log(`   Registrar: ${registrarAddress}`);
+        console.log(`   Derived PDA: ${voterPDA.toBase58()}`);
+        console.log(`   Account exists: ${accountInfo ? '✅' : '❌'}`);
+        
+        if (accountInfo) {
+          console.log(`   Account size: ${accountInfo.data.length} bytes`);
         }
+        
+      } catch (error) {
+        console.log(`   Error with registrar ${registrarAddress}: ${error.message}`);
       }
     }
     
-    // Look for ISLAND token mint
-    const islandMintBuffer = new PublicKey('4SLdYJzqbRUzwKJSvBdoFiY24KjTMvKMCpWcBAdTQrby').toBuffer();
-    for (let offset = 0; offset <= data.length - 32; offset += 8) {
-      if (data.subarray(offset, offset + 32).equals(islandMintBuffer)) {
-        console.log(`      ✅ Found ISLAND mint at offset ${offset}`);
-      }
+    // Final recommendation
+    console.log(`\n🎯 Recommendation:`);
+    
+    if (voterAccounts.length > 0) {
+      console.log(`Found ${voterAccounts.length} voter accounts for DeanMachine.`);
+      console.log(`These accounts contain the actual deposit data needed for governance power calculation.`);
+      console.log(`The offset-based approach successfully reads from these accounts.`);
+    } else {
+      console.log(`No voter accounts found for DeanMachine.`);
+      console.log(`This suggests either the wallet has no VSR deposits or uses a different structure.`);
+    }
+    
+    if (voterWeightRecords.length > 0) {
+      console.log(`Found ${voterWeightRecords.length} voter weight records.`);
+      console.log(`These contain the final calculated governance power values.`);
     }
     
   } catch (error) {
-    console.log(`   ❌ Error analyzing registrar: ${error.message}`);
+    console.error('Error in VSR structure analysis:', error);
   }
-}
-
-function extractRegistrarFromVoter(data) {
-  try {
-    // Common voter account structure: discriminator(8) + voter_authority(32) + registrar(32)
-    if (data.length >= 72) {
-      const registrarPubkey = new PublicKey(data.slice(40, 72));
-      return registrarPubkey.toBase58();
-    }
-  } catch (error) {
-    // Return null if can't extract
-  }
-  return null;
 }
 
 findActualVSRStructure();
