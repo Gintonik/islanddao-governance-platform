@@ -3,10 +3,12 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import apiRoutes from './api-routes.js';
-import db from '../db.js';
-import governanceCalculator from '../governance-power-calculator.js';
-import completeDailySync from '../complete-daily-sync.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const apiRoutes = require('./api-routes.js');
+const db = require('../db.js');
+const governanceCalculator = require('../governance-power-calculator.js');
+const completeDailySync = require('../complete-daily-sync.js');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
