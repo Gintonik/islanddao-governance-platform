@@ -2519,7 +2519,7 @@
                                     display: flex;
                                     flex-direction: column;
                                 ">
-                                    ${citizen.nfts && citizen.nfts.length > 0 ? createNftGrid(citizen) : `
+                                    ${citizen.pfp_nft && citizen.image_url ? createSingleNFTDisplay(citizen) : `
                                         <div style="
                                             height: 160px; 
                                             display: flex; 
@@ -2680,6 +2680,67 @@
             
             socialHtml += '</div>';
             return socialHtml;
+        }
+
+        // Create single NFT display for citizen panel
+        function createSingleNFTDisplay(citizen) {
+            if (!citizen.pfp_nft || !citizen.image_url) {
+                return '<p style="text-align: center; color: var(--text-secondary); font-size: 14px; margin: 20px 0;">No NFTs found</p>';
+            }
+
+            return `
+                <div style="
+                    display: flex;
+                    justify-content: center;
+                    padding: 20px;
+                ">
+                    <div style="
+                        position: relative;
+                        width: 120px;
+                        height: 160px;
+                        background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                        border-radius: 8px;
+                        padding: 8px;
+                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                        border: 2px solid #4facfe;
+                    ">
+                        <img src="${citizen.image_url}" 
+                             style="
+                                width: 100%;
+                                height: 120px;
+                                object-fit: cover;
+                                border-radius: 4px;
+                                background: #333;
+                             "
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'"
+                        >
+                        <div style="
+                            padding: 4px;
+                            text-align: center;
+                            font-size: 10px;
+                            font-weight: 500;
+                            color: #FAFAFA;
+                            background: rgba(0, 0, 0, 0.8);
+                            border-radius: 0 0 4px 4px;
+                        ">PERKS NFT</div>
+                        <div style="
+                            position: absolute;
+                            top: 6px;
+                            right: 6px;
+                            background: #21E8A3;
+                            color: #0F0F0F;
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 10px;
+                            font-weight: bold;
+                        ">✓</div>
+                    </div>
+                </div>
+            `;
         }
 
         // Create NFT grid for citizen panel
