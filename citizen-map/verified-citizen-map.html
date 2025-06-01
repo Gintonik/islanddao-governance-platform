@@ -1984,7 +1984,10 @@
                 // Process each citizen and calculate their display position
                 citizens.forEach(citizen => {
                     let lat, lng;
-                    if (citizen.lat && citizen.lng) {
+                    if (citizen.latitude && citizen.longitude) {
+                        lat = parseFloat(citizen.latitude);
+                        lng = parseFloat(citizen.longitude);
+                    } else if (citizen.lat && citizen.lng) {
                         lat = parseFloat(citizen.lat);
                         lng = parseFloat(citizen.lng);
                     } else if (citizen.location && Array.isArray(citizen.location)) {
@@ -2155,7 +2158,10 @@
             let totalLat = 0, totalLng = 0;
             
             citizens.forEach(citizen => {
-                if (citizen.lat && citizen.lng) {
+                if (citizen.latitude && citizen.longitude) {
+                    totalLat += parseFloat(citizen.latitude);
+                    totalLng += parseFloat(citizen.longitude);
+                } else if (citizen.lat && citizen.lng) {
                     totalLat += parseFloat(citizen.lat);
                     totalLng += parseFloat(citizen.lng);
                 } else if (citizen.location && Array.isArray(citizen.location)) {
