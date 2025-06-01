@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IslandDAO Citizens Map - Governance Power Visualization</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --bg-primary: #0F0F0F;
+            --text-primary: #FAFAFA;
+            --accent-primary: #21E8A3;
+            --bg-secondary: #1a1a1a;
+            --border-subtle: rgba(33, 232, 163, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100%;
+            background: var(--bg-primary);
+        }
+
+        .citizen-marker {
+            border-radius: 50%;
+            border: 3px solid var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(33, 232, 163, 0.4);
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .leaflet-popup-content {
+            margin: 16px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-width: 280px;
+        }
+
+        .citizen-popup h3 {
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .governance-section {
+            background: rgba(33, 232, 163, 0.1);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .governance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 6px 0;
+        }
+
+        .governance-row.total {
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 8px;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .power-label {
+            color: #AFAFAF;
+            font-size: 14px;
+        }
+
+        .power-value {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .wallet-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 12px;
+        }
+
+        .wallet-label {
+            color: #AFAFAF;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .wallet-address {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            color: var(--accent-primary);
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .wallet-address:hover {
+            opacity: 0.7;
+        }
+
+        .stats-header {
+            text-align: center;
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-title {
+            color: var(--accent-primary);
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stats-count {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        #map {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-header">
+        <div class="stats-title">IslandDAO Citizens Map</div>
+        <div class="stats-count" id="citizenCount">Loading citizens...</div>
+    </div>
+
+    <div id="loadingIndicator" class="loading">
+        <div style="color: var(--accent-primary);">Loading citizen data...</div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([20, 0], 2);
+
+        // Add dark tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Format numbers with thousand separators
+        function formatNumber(num) {
+            if (!num || num === 0) return '0';
+            return Number(num).toLocaleString();
+        }
+
+        // Create citizen popup content
+        function createCitizenPopup(citizen) {
+            const nickname = citizen.nickname || 'Anonymous Citizen';
+            const walletShort = citizen.wallet_address ? 
+                citizen.wallet_address.substring(0, 8) + '...' + citizen.wallet_address.substring(citizen.wallet_address.length - 6) :
+                'Unknown Wallet';
+
+            return `
+                <div class="citizen-popup">
+                    <h3>${nickname}</h3>
+                    
+                    <div class="governance-section">
+                        <div class="governance-row">
+                            <span class="power-label">Native Power:</span>
+                            <span class="power-value">${formatNumber(citizen.native_governance_power)}</span>
+                        </div>
+                        <div class="governance-row">
+                            <span class="power-label">Delegated Power:</span>
+                            <span class="power-value">${formatNumber(citizen.delegated_governance_power)}</span>
+                        </div>
+                        <div class="governance-row total">
+                            <span class="power-label">Total Power:</span>
+                            <span class="power-value">${formatNumber(citizen.total_governance_power)}</span>
+                        </div>
+                    </div>
+
+                    <div class="wallet-section">
+                        <div class="wallet-label">Wallet Address:</div>
+                        <div class="wallet-address" onclick="window.open('https://solscan.io/account/${citizen.wallet_address}', '_blank')" title="View on Solscan">
+                            ${walletShort}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load and display citizens
+        async function loadCitizens() {
+            try {
+                console.log('Loading citizens data...');
+                const response = await fetch('/api/citizens');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const citizens = await response.json();
+                console.log(`Loaded ${citizens.length} citizens`);
+
+                // Update stats
+                document.getElementById('citizenCount').textContent = `${citizens.length} Citizens Worldwide`;
+                
+                let validCitizens = 0;
+
+                citizens.forEach(citizen => {
+                    const lat = parseFloat(citizen.latitude);
+                    const lng = parseFloat(citizen.longitude);
+                    
+                    if (!isNaN(lat) && !isNaN(lng) && lat !== null && lng !== null) {
+                        validCitizens++;
+                        
+                        // Create citizen marker
+                        const marker = L.circleMarker([lat, lng], {
+                            radius: 10,
+                            fillColor: '#21E8A3',
+                            color: '#21E8A3',
+                            weight: 3,
+                            opacity: 1,
+                            fillOpacity: 0.8,
+                            className: 'citizen-marker'
+                        }).addTo(map);
+
+                        // Add popup with citizen info
+                        marker.bindPopup(createCitizenPopup(citizen), {
+                            maxWidth: 320,
+                            className: 'citizen-popup-wrapper'
+                        });
+
+                        // Add hover effects
+                        marker.on('mouseover', function() {
+                            this.setStyle({
+                                radius: 12,
+                                weight: 4
+                            });
+                        });
+
+                        marker.on('mouseout', function() {
+                            this.setStyle({
+                                radius: 10,
+                                weight: 3
+                            });
+                        });
+                    } else {
+                        console.warn('Invalid coordinates for citizen:', citizen.nickname, lat, lng);
+                    }
+                });
+
+                console.log(`Successfully placed ${validCitizens} citizen markers`);
+                
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (validCitizens === 0) {
+                    document.getElementById('citizenCount').textContent = 'No citizens with valid coordinates found';
+                }
+
+            } catch (error) {
+                console.error('Error loading citizens:', error);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <div style="color: #ff6b6b;">Error loading citizen data: ${error.message}</div>
+                `;
+                document.getElementById('citizenCount').textContent = 'Error loading citizens';
+            }
+        }
+
+        // Initialize the map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing map...');
+            loadCitizens();
+        });
+    </script>
+</body>
+</html>
