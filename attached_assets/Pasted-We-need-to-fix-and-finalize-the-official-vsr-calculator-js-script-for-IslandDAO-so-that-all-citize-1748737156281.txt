@@ -1,0 +1,72 @@
+We need to fix and finalize the `official-vsr-calculator.js` script for IslandDAO so that all citizen governance power is calculated **100% from on-chain Voter Stake Registry (VSR) data**, without hardcoded values or assumptions.
+
+Requirements:
+
+---
+
+1. ✅ PostgreSQL Integration
+- Connect to the database
+- Select all wallet addresses from the `citizens` table
+- Use the correct column: `wallet` (not `wallet_address`)
+
+---
+
+2. ✅ Solana Blockchain Access
+- Use this Helius RPC endpoint: https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00
+
+
+---
+
+3. ✅ VSR Account Discovery
+- Use VSR program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+- For each wallet:
+- Search all Voter accounts where `authority == wallet`
+- Multiple Voter accounts may exist per wallet
+- Do NOT stop after finding the first
+
+---
+
+4. ✅ Accurate Deserialization of Deposits
+- For each `voter.depositEntry` in each voter account:
+- Skip if `amountDepositedNative <= 0`
+- Read and apply the `votingMultiplier` field correctly
+  - It's typically stored as a fixed-point (multiplier * 100 or 1_000_000 precision)
+- Calculate:
+  ```
+  power = amountDepositedNative * votingMultiplier
+  ```
+- Sum power across **all** voter accounts for the wallet
+- No hardcoded values — all data must come from the on-chain voter account buffers
+
+---
+
+5. ✅ Fallback Parsing
+- If Anchor-based deserialization fails (e.g., due to IDL mismatch), implement a fallback parser:
+- Skip the 8-byte account discriminator
+- Loop through each 192-byte `DepositEntry` struct (or correct size based on VSR layout)
+- Extract:
+  - `amountDepositedNative`
+  - `votingMultiplier` (fixed-point)
+  - `lockup.kind`, `lockup.endTs`, and other fields as needed
+- This ensures robustness even with multiple deposits or old voter versions
+
+---
+
+6. ✅ Store and Log Results
+- Save each wallet’s `nativeGovernancePower` back into the `citizens` table
+- Log the following per wallet for verification:
+- Wallet address
+- Total locked ISLAND (sum of `amountDepositedNative`)
+- Total weighted power
+- Breakdown per deposit: amount, multiplier, lockup end timestamp
+
+---
+
+7. ✅ Validation Target
+- This must match on-chain data as seen in https://app.realms.today
+- Example: Takisoul should show ≈ `8,709,019.78` ISLAND governance power
+- Ensure future wallets are automatically parsed with no special casing or patching
+
+---
+
+Ensure everything is derived from live Solana data — no hardcoded values, no cached assumptions.
