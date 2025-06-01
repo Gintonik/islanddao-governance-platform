@@ -36,16 +36,17 @@ app.get("/api/governance-power", async (req, res) => {
   }
 
   try {
-    // ✅ LOAD VSR IDL before usage
-    const voterStakeRegistryIdl = JSON.parse(
-      await fs.readFile("./vsr-idl.json", "utf-8")
-    );
-
     const provider = new AnchorProvider(
       connection,
       {},
       AnchorProvider.defaultOptions()
     );
+
+    const voterStakeRegistryIdl = JSON.parse(
+      await fs.readFile("./vsr-idl.json", "utf-8")
+    );
+
+  
     const program = new Program(voterStakeRegistryIdl, VSR_PROGRAM_ID, provider);
     const walletKey = new PublicKey(wallet);
 
