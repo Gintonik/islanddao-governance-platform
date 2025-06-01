@@ -7,7 +7,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
     "@solana/spl-governance": "^0.3.28",
-    "@solana/web3.js": "^1.66.2",
+    "@solana/web3.js": "^1.98.2",
     "accepts": "^2.0.0",
     "accessor-fn": "^1.5.3",
     "agentkeepalive": "^4.6.0",
@@ -76,6 +76,7 @@
     "dequal": "^2.0.3",
     "diff-match-patch": "^1.0.5",
     "dot-case": "^3.0.4",
+    "dotenv": "^16.5.0",
     "dunder-proto": "^1.0.1",
     "earcut": "^3.0.1",
     "ee-first": "^1.1.1",

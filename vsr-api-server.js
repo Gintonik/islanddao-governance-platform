@@ -6,10 +6,14 @@
 import express from "express";
 import pkg from "pg";
 import cors from "cors";
+import { config } from "dotenv";
 import fs from "fs/promises";
 
 import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { readFile } from "fs/promises";
+
+config(); // ✅ Load .env
 
 const { Pool } = pkg;
 const app = express();
@@ -24,64 +28,54 @@ const pool = new Pool({
 const VSR_PROGRAM_ID = new PublicKey(
   "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
 );
-const connection = new Connection(
-  process.env.HELIUS_RPC_URL ||
-    "https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00"
-);
+const connection = new Connection(process.env.HELIUS_RPC_URL);
+
 
 app.use(cors());
 app.use(express.json());
 app.get("/api/governance-power", async (req, res) => {
   const wallet = req.query.wallet;
-
   if (!wallet) {
     return res.status(400).json({ error: "Missing wallet parameter" });
   }
+
   try {
-    const voterStakeRegistryIdl = JSON.parse(
-      await fs.readFile("./vsr-idl.json", "utf-8")
-    );
-    const provider = new AnchorProvider(
-      connection,
-      {},
-      AnchorProvider.defaultOptions(),
-    );
-    const program = new Program(
-      voterStakeRegistryIdl,
-      VSR_PROGRAM_ID,
-      provider,
-    );
+    const provider = new AnchorProvider(connection, {}, AnchorProvider.defaultOptions());
+    const program = new Program(voterStakeRegistryIdl, VSR_PROGRAM_ID, provider);
     const walletKey = new PublicKey(wallet);
 
     const allVoterAccounts = await program.account.voter.all([
       {
         memcmp: {
-          offset: 8, // 'authority' field in Voter struct
+          offset: 8, // authority
           bytes: walletKey.toBase58(),
         },
       },
     ]);
 
     let nativePower = 0;
+    const now = Math.floor(Date.now() / 1000);
 
     for (const { account: voter } of allVoterAccounts) {
       for (const entry of voter.depositEntries) {
-        // Check all required conditions
-        if (entry.isUsed !== true) continue;
-        if (entry.amountDepositedNative.toNumber() <= 0) continue;
+        if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0) continue;
         if (entry.votingMintConfigIdx !== 0) continue;
-        
+
         const lockupStart = entry.lockup.startTs.toNumber();
         const lockupEnd = entry.lockup.endTs.toNumber();
-        const now = Math.floor(Date.now() / 1000);
-        
-        // Check lockup timing: must have started but not ended
-        if (lockupStart >= now) continue; // Lockup hasn't started yet
-        if (lockupEnd <= now) continue;   // Lockup has ended
-        
-        // Calculate governance power
-        const multiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
-        const power = entry.amountDepositedNative.toNumber() * multiplier;
+        if (now < lockupStart || now >= lockupEnd) continue;
+
+        const baseMultiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
+        const totalDuration = lockupEnd - lockupStart;
+        const timeRemaining = lockupEnd - now;
+
+        let adjustedMultiplier = baseMultiplier;
+        if (totalDuration > 0) {
+          adjustedMultiplier = baseMultiplier * (timeRemaining / totalDuration);
+        }
+
+        const amount = entry.amountDepositedNative.toNumber();
+        const power = Math.floor(amount * adjustedMultiplier);
         nativePower += power;
       }
     }
@@ -89,16 +83,16 @@ app.get("/api/governance-power", async (req, res) => {
     return res.json({
       wallet,
       nativePower,
-      delegatedPower: 0, // We'll add this next
+      delegatedPower: 0,
       totalPower: nativePower,
     });
+
   } catch (err) {
     console.error("Governance power error:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to calculate governance power" });
+    return res.status(500).json({ error: "Failed to calculate governance power" });
   }
 });
+
 
 // TODO: Add routes for:
 // - GET /power/:wallet (from hybrid-vsr-calculator.js)
