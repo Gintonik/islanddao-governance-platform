@@ -47,14 +47,14 @@ async function fetchWalletNFTs(walletAddress) {
       const perksNfts = data.result.items.filter(nft => {
         return nft.grouping && nft.grouping.some(group => 
           group.group_key === 'collection' && 
-          group.group_value === 'RFc19GTmN7Q21TQj2vocNkmTRWtyCpqByyqh5ETtDvj'
+          group.group_value === '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8'
         );
       });
 
       return perksNfts.map(nft => ({
         mint: nft.id,
         name: nft.content?.metadata?.name || 'PERKS NFT',
-        image: nft.content?.files?.[0]?.uri || nft.content?.json_uri,
+        image: (nft.content?.files?.[0]?.uri || nft.content?.json_uri || '').replace('https://gateway.irys.xyz/', 'https://uploader.irys.xyz/'),
         collection: 'PERKS'
       }));
     }
