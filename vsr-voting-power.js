@@ -8,8 +8,8 @@ const fs = require('fs');
 // Constants
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
-const REALM_PK = new PublicKey('BnckRVMZCtNfrHmSYFQfKvYb1MnVQ8rSHWXo1aKksBK9');
-const GOVERNANCE_TOKEN_MINT = new PublicKey('J9BcrQfX4p9D1bvLzRNCbMDv8f3tSQHMUhasPW9dxePP');
+const REALM_PK = new PublicKey('5ygrKgExvphqC1kQyn6KbUChLpsXWuyF5cvqM8YwWqbe');
+const GOVERNANCE_TOKEN_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
 
 // Initialize connection and provider
 const connection = new Connection(HELIUS_RPC, 'confirmed');
