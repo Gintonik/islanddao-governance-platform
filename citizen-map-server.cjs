@@ -54,8 +54,18 @@ const server = http.createServer(async (req, res) => {
       
       const result = await pool.query(query);
       
+      // Convert coordinate strings to numbers for proper map rendering
+      const processedRows = result.rows.map(row => ({
+        ...row,
+        latitude: row.latitude ? parseFloat(row.latitude) : null,
+        longitude: row.longitude ? parseFloat(row.longitude) : null,
+        native_governance_power: row.native_governance_power ? parseFloat(row.native_governance_power) : 0,
+        delegated_governance_power: row.delegated_governance_power ? parseFloat(row.delegated_governance_power) : 0,
+        total_governance_power: row.total_governance_power ? parseInt(row.total_governance_power) : 0
+      }));
+      
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result.rows));
+      res.end(JSON.stringify(processedRows));
       
     } else if (urlPath.startsWith('/citizen-map/') || urlPath.startsWith('/islanddao-logo.png')) {
       // Serve static files
