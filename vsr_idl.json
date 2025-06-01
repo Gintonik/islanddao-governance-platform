@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "voter_stake_registry",
   "instructions": [],
   "accounts": [
@@ -8,38 +8,91 @@
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "authority", "type": "publicKey" },
-          { "name": "registrar", "type": "publicKey" },
           {
-            "name": "depositEntries",
+            "name": "voter_authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "registrar",
+            "type": "publicKey"
+          },
+          {
+            "name": "deposits",
             "type": {
               "array": [
                 {
-                  "defined": "VoterDepositEntry"
+                  "defined": "DepositEntry"
                 },
                 32
               ]
             }
           },
-          { "name": "bumpSeed", "type": "u8" }
+          {
+            "name": "voter_bump",
+            "type": "u8"
+          },
+          {
+            "name": "voter_weight_record_bump",
+            "type": "u8"
+          }
         ]
       }
     }
   ],
   "types": [
     {
-      "name": "VoterDepositEntry",
+      "name": "DepositEntry",
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "stake", "type": "u64" },
-          { "name": "votingPower", "type": "u64" },
-          { "name": "isUsed", "type": "bool" },
-          { "name": "startTs", "type": "i64" },
-          { "name": "endTs", "type": "i64" },
-          { "name": "kind", "type": { "defined": "LockupKind" } },
-          { "name": "amountDepositedNative", "type": "u64" },
-          { "name": "amountInitiallyLockedNative", "type": "u64" }
+          {
+            "name": "lockup",
+            "type": {
+              "defined": "Lockup"
+            }
+          },
+          {
+            "name": "amount_deposited_native",
+            "type": "u64"
+          },
+          {
+            "name": "amount_initially_locked_native",
+            "type": "u64"
+          },
+          {
+            "name": "is_used",
+            "type": "bool"
+          },
+          {
+            "name": "allow_clawback",
+            "type": "bool"
+          },
+          {
+            "name": "voting_mint_config_idx",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Lockup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "start_ts",
+            "type": "i64"
+          },
+          {
+            "name": "end_ts",
+            "type": "i64"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": "LockupKind"
+            }
+          }
         ]
       }
     },
@@ -48,30 +101,23 @@
       "type": {
         "kind": "enum",
         "variants": [
-          { "name": "none" },
           {
-            "name": "cliff",
-            "fields": [
-              { "name": "unixTimestamp", "type": "i64" }
-            ]
+            "name": "None"
           },
           {
-            "name": "constant",
-            "fields": [
-              { "name": "unixTimestamp", "type": "i64" }
-            ]
+            "name": "Daily"
           },
           {
-            "name": "daily",
-            "fields": [
-              { "name": "unixTimestamp", "type": "i64" }
-            ]
+            "name": "Monthly"
+          },
+          {
+            "name": "Cliff"
+          },
+          {
+            "name": "Constant"
           }
         ]
       }
     }
-  ],
-  "metadata": {
-    "address": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ"
-  }
+  ]
 }
