@@ -1,17 +1,11 @@
 // Integrated Citizen Map server with database connection
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const apiRoutes = require('./api-routes.js');
-const db = require('../db.js');
-const governanceCalculator = require('../governance-power-calculator.js');
-const completeDailySync = require('../complete-daily-sync.js');
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const apiRoutes = require('./api-routes');
+const db = require('../db');
+const governanceCalculator = require('../governance-power-calculator');
+const completeDailySync = require('../complete-daily-sync');
 
 // Constants
 const PORT = 5000;

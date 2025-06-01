@@ -1,9 +1,8 @@
 {
-  "name": "vsr-governance-api",
-  "type": "module",
+  "name": "workspace",
   "version": "1.0.0",
   "description": "A sophisticated decentralized governance platform that visualizes DAO members on an interactive global map, displaying authentic governance power extracted directly from Solana blockchain data.",
-  "main": "index.js",
+  "main": "daily-governance-sync.js",
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
     "@solana/spl-governance": "^0.3.28",
@@ -280,7 +279,7 @@
     "zod-to-json-schema": "^3.24.5"
   },
   "scripts": {
-    "start": "node vsr-api-server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",

@@ -2,7 +2,7 @@ modules = ["nodejs-20", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jq", "unzip"]
+packages = ["jq"]
 
 [workflows]
 runButton = "Project"
@@ -15,10 +15,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Citizen Map DB Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Citizens Map"
 
 [[workflows.workflow]]
 name = "Database Sync"
@@ -38,21 +34,8 @@ task = "shell.exec"
 args = "node citizen-map/db-integrated-server.js"
 waitForPort = 5000
 
-[[workflows.workflow]]
-name = "Citizens Map"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node citizen-map-server.cjs"
-waitForPort = 5000
-
 [deployment]
 run = ["sh", "-c", "npm install node-fetch && node index.js"]
-
-[[ports]]
-localPort = 3000
-externalPort = 3001
 
 [[ports]]
 localPort = 5000
