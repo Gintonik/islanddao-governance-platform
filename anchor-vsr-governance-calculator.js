@@ -239,16 +239,16 @@ function getLockupType(lockupKind) {
  */
 function calculateLockupMultiplier(deposit, votingMintConfig) {
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const lockupSecsRemaining = Math.max(0, deposit.lockup.endTs.toNumber() - currentTimestamp);
+  const lockupSecsRemaining = Math.max(0, Number(deposit.lockup.endTs.toString()) - currentTimestamp);
   
   if (lockupSecsRemaining <= 0) {
     return 1.0; // No bonus for expired lockups
   }
   
-  // Use voting mint config values or defaults
-  const baselineVoteWeightScaledFactor = votingMintConfig?.baselineVoteWeightScaledFactor?.toNumber() || 1000000000;
-  const maxExtraLockupVoteWeightScaledFactor = votingMintConfig?.maxExtraLockupVoteWeightScaledFactor?.toNumber() || 1000000000;
-  const lockupSaturationSecs = votingMintConfig?.lockupSaturationSecs?.toNumber() || (5 * 365 * 24 * 60 * 60);
+  // Use voting mint config values or defaults (safe BigInt handling)
+  const baselineVoteWeightScaledFactor = votingMintConfig?.baselineVoteWeightScaledFactor ? Number(votingMintConfig.baselineVoteWeightScaledFactor.toString()) : 1000000000;
+  const maxExtraLockupVoteWeightScaledFactor = votingMintConfig?.maxExtraLockupVoteWeightScaledFactor ? Number(votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toString()) : 1000000000;
+  const lockupSaturationSecs = votingMintConfig?.lockupSaturationSecs ? Number(votingMintConfig.lockupSaturationSecs.toString()) : (5 * 365 * 24 * 60 * 60);
   
   const lockupType = getLockupType(deposit.lockup.kind);
   const isVested = lockupType === 'monthly' || lockupType === 'daily';
@@ -391,26 +391,47 @@ async function calculateNativeGovernancePower(walletAddress) {
         }
       }
       
-      // Process deposits
+      // Process deposits with detailed logging
       for (let i = 0; i < account.deposits.length; i++) {
         const deposit = account.deposits[i];
         
-        // Skip unused or empty deposits
-        if (!deposit.isUsed || deposit.amountDepositedNative.toNumber() === 0) {
-          continue;
+        // Use BigInt for safe handling of large u64 values
+        const amountDeposited = Number(deposit.amountDepositedNative.toString());
+        const amountInitiallyLocked = Number(deposit.amountInitiallyLockedNative.toString());
+        const startTs = Number(deposit.lockup.startTs.toString());
+        const endTs = Number(deposit.lockup.endTs.toString());
+        const lockupType = getLockupType(deposit.lockup.kind);
+        const isUsed = deposit.isUsed;
+        
+        console.log(`\n  Deposit ${i}:`);
+        console.log(`    Amount Deposited: ${(amountDeposited / 1e6).toLocaleString()} ISLAND`);
+        console.log(`    Amount Initially Locked: ${(amountInitiallyLocked / 1e6).toLocaleString()} ISLAND`);
+        console.log(`    Is Used: ${isUsed}`);
+        console.log(`    Lockup Type: ${lockupType}`);
+        console.log(`    Start Time: ${new Date(startTs * 1000).toISOString()}`);
+        console.log(`    End Time: ${new Date(endTs * 1000).toISOString()}`);
+        console.log(`    Current Time: ${new Date(currentTimestamp * 1000).toISOString()}`);
+        
+        // Check each validation condition with detailed logging
+        let excluded = false;
+        let excludeReason = '';
+        
+        if (!isUsed) {
+          excluded = true;
+          excludeReason = 'Deposit is not marked as used';
+        } else if (amountDeposited === 0) {
+          excluded = true;
+          excludeReason = 'Deposit amount is zero';
+        } else if (endTs <= currentTimestamp) {
+          excluded = true;
+          excludeReason = `Deposit has expired (${new Date(endTs * 1000).toISOString()} <= ${new Date(currentTimestamp * 1000).toISOString()})`;
+        } else if (amountDeposited <= amountInitiallyLocked) {
+          excluded = true;
+          excludeReason = `Deposit appears withdrawn (deposited: ${(amountDeposited / 1e6).toLocaleString()} <= initially locked: ${(amountInitiallyLocked / 1e6).toLocaleString()})`;
         }
         
-        // Skip expired deposits
-        const endTs = deposit.lockup.endTs.toNumber();
-        if (endTs <= currentTimestamp) {
-          continue;
-        }
-        
-        // Skip withdrawn deposits (where deposited < initially locked)
-        const amountDeposited = deposit.amountDepositedNative.toNumber();
-        const amountInitiallyLocked = deposit.amountInitiallyLockedNative.toNumber();
-        
-        if (amountDeposited <= amountInitiallyLocked) {
+        if (excluded) {
+          console.log(`    ❌ EXCLUDED: ${excludeReason}`);
           continue;
         }
         
@@ -420,12 +441,9 @@ async function calculateNativeGovernancePower(walletAddress) {
         // Calculate voting power: amount * multiplier / 1e12 (VSR uses 1e12 scaling)
         const votingPower = (amountDeposited * multiplier) / 1e12;
         
-        console.log(`  Deposit ${i}:`);
-        console.log(`    Amount: ${(amountDeposited / 1e6).toLocaleString()} ISLAND`);
-        console.log(`    Lockup Type: ${getLockupType(deposit.lockup.kind)}`);
-        console.log(`    End Time: ${new Date(endTs * 1000).toISOString()}`);
+        console.log(`    Lockup Remaining: ${Math.round((endTs - currentTimestamp) / 86400)} days`);
         console.log(`    Multiplier: ${multiplier.toFixed(6)}x`);
-        console.log(`    Voting Power: ${votingPower.toLocaleString()} ISLAND`);
+        console.log(`    ✅ Voting Power: ${votingPower.toLocaleString()} ISLAND`);
         
         totalNativePower += votingPower;
         validDepositsCount++;
