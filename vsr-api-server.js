@@ -4,10 +4,12 @@
  * Uses authentic offset-based extraction from voter accounts
  */
 
-const express = require('express');
-const { Pool } = require('pg');
-const { Connection, PublicKey } = require('@solana/web3.js');
-const cors = require('cors');
+import express from 'express';
+import pkg from 'pg';
+import cors from 'cors';
+import { Connection, PublicKey } from '@solana/web3.js';
+
+const { Pool } = pkg;
 
 const app = express();
 const port = process.env.PORT || 5000;
