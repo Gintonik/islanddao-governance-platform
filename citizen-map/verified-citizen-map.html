@@ -2381,27 +2381,25 @@
                         cursor: pointer;
                         transition: color 0.2s ease;
                         text-align: left;
-                    " onclick="window.open('https://solscan.io/account/${citizen.wallet}', '_blank')" title="View on Solscan" onmouseover="this.style.color='#21E8A3'" onmouseout="this.style.color='#AFAFAF'">
-                        ${citizen.wallet.substring(0, 8)}...${citizen.wallet.substring(citizen.wallet.length - 6)}
+                    " onclick="window.open('https://solscan.io/account/${citizen.wallet_address}', '_blank')" title="View on Solscan" onmouseover="this.style.color='#21E8A3'" onmouseout="this.style.color='#AFAFAF'">
+                        ${citizen.wallet_address ? citizen.wallet_address.substring(0, 8) + '...' + citizen.wallet_address.substring(citizen.wallet_address.length - 6) : 'Unknown Wallet'}
                     </div>
                 </div>
             `;
             
-            const isVerified = citizen.wallet === currentWallet;
-            const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-            let imageUrl = 'https://via.placeholder.com/120';
-            let perkName = 'PERK NFT';
-            
-            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                imageUrl = citizen.nftMetadata[pfpNft].image;
-                perkName = citizen.nftMetadata[pfpNft].name || 'PERK NFT';
-            }
-
-            const citizenName = citizen.nickname || 
-                               (citizen.nftMetadata && citizen.nftMetadata[pfpNft] ? citizen.nftMetadata[pfpNft].name : null) || 
-                               'Anonymous Citizen';
-            
+            const isVerified = citizen.wallet_address === currentWallet;
+            const citizenName = citizen.nickname || 'Anonymous Citizen';
             const citizenBio = citizen.bio || 'No bio provided yet.';
+            
+            // Format governance power numbers
+            const formatPower = (power) => {
+                if (!power || power === 0) return '0';
+                return Number(power).toLocaleString();
+            };
+            
+            const nativePower = formatPower(citizen.native_governance_power);
+            const delegatedPower = formatPower(citizen.delegated_governance_power);
+            const totalPower = formatPower(citizen.total_governance_power);
 
 
 
@@ -2500,7 +2498,7 @@
                             ${citizenBio && citizenBio !== 'No bio provided yet.' ? `
                             <div style="text-align: center; margin-bottom: 12px;">
                                 <p style="margin: 0; color: #AFAFAF; font-size: 11px; line-height: 1.3; max-width: 200px; margin-left: auto; margin-right: auto; word-wrap: break-word;">
-                                    "${citizenBio.length > 280 ? citizenBio.substring(0, 280) + '...' : citizenBio}"
+                                    "${citizenBio && citizenBio.length > 280 ? citizenBio.substring(0, 280) + '...' : (citizenBio || '')}"
                                 </p>
                             </div>` : ''}
                             
