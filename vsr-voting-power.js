@@ -349,10 +349,19 @@ function calculateDepositVotingPower(deposit, registrar, realm) {
  */
 async function calculateNativeGovernancePower(walletAddress) {
   try {
+    console.log(`\n--- Processing wallet: ${walletAddress} ---`);
+    
     const connection = new Connection(process.env.HELIUS_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
+    console.log('Connection established');
+    
     const wallet = createDummyWallet();
+    console.log('Dummy wallet created');
+    
     const provider = new AnchorProvider(connection, wallet, {});
+    console.log('Provider created');
+    
     const program = new Program(VSR_IDL, VSR_PROGRAM_ID, provider);
+    console.log('Program initialized');
 
     // Get registrar PDA for IslandDAO
     const { registrar: registrarPk } = getRegistrarPDA(
@@ -365,13 +374,39 @@ async function calculateNativeGovernancePower(walletAddress) {
     const walletPubkey = new PublicKey(walletAddress);
     const { voter: voterPk } = getVoterPDA(registrarPk, walletPubkey, VSR_PROGRAM_ID);
 
-    // Fetch registrar and voter accounts
+    // Fetch registrar and voter accounts with detailed logging
     const [registrarAccount, voterAccount] = await Promise.all([
       program.account.registrar.fetchNullable(registrarPk),
       program.account.voter.fetchNullable(voterPk)
     ]);
 
-    if (!registrarAccount || !voterAccount) {
+    console.log(`Registrar account exists: ${!!registrarAccount}`);
+    console.log(`Voter account exists: ${!!voterAccount}`);
+    
+    if (!registrarAccount) {
+      console.log(`No registrar account found at ${registrarPk.toBase58()}`);
+      return 0;
+    }
+    
+    // Debug registrar structure
+    console.log(`Registrar structure:`, Object.keys(registrarAccount));
+    if (registrarAccount.votingMints) {
+      console.log(`Voting mints count: ${registrarAccount.votingMints.length}`);
+    } else {
+      console.log('No votingMints property found in registrar');
+    }
+    
+    if (!voterAccount) {
+      console.log(`No voter account found for ${walletAddress} at ${voterPk.toBase58()}`);
+      return 0;
+    }
+
+    // Debug voter account structure
+    console.log(`Voter authority: ${voterAccount.voterAuthority.toBase58()}`);
+    console.log(`Deposits array: ${voterAccount.deposits ? voterAccount.deposits.length : 'undefined'}`);
+    
+    if (!voterAccount.deposits) {
+      console.log('Voter account has no deposits array');
       return 0;
     }
 
