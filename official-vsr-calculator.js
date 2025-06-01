@@ -22,83 +22,129 @@ function readU64LE(buffer, offset) {
 }
 
 /**
- * Extract governance power from VSR account using proven methodology
+ * Parse DepositEntry using exact VSR struct layout
  */
-function extractGovernancePowerFromAccount(data, walletPubkey) {
+function parseDepositEntry(data, entryOffset) {
   try {
-    const walletBuffer = walletPubkey.toBuffer();
-    
-    // Check if wallet is referenced in this account
-    let walletFound = false;
-    for (let offset = 0; offset <= data.length - 32; offset += 8) {
-      if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
-        walletFound = true;
-        break;
-      }
+    if (entryOffset + 192 > data.length) {
+      return null;
     }
     
-    if (!walletFound) return 0;
+    // VSR DepositEntry struct (192 bytes):
+    // - amountDepositedNative: u64 (offset 0)
+    // - amountInitiallyLockedNative: u64 (offset 8)
+    // - lockup: Lockup struct (offset 16)
+    // - votingMultiplier: u64 (offset 32)
+    // - isUsed: u8 (offset 176)
     
-    // Extract governance power from known working offsets
-    let maxPower = 0;
-    const governanceOffsets = [104, 112];
+    const amountDepositedNative = readU64LE(data, entryOffset + 0);
+    const votingMultiplier = readU64LE(data, entryOffset + 32);
+    const isUsed = data.readUInt8(entryOffset + 176) === 1;
     
-    for (const offset of governanceOffsets) {
-      if (offset + 8 <= data.length) {
-        try {
-          const value = Number(data.readBigUInt64LE(offset)) / 1e6;
-          if (value > maxPower && value < 1e9) {
-            maxPower = value;
-          }
-        } catch (error) {
-          // Continue with next offset
-        }
-      }
+    if (!isUsed || amountDepositedNative === 0) {
+      return null;
     }
     
-    return maxPower;
+    return {
+      amountDepositedNative,
+      votingMultiplier,
+      isUsed
+    };
     
   } catch (error) {
-    return 0;
+    return null;
   }
 }
 
 /**
- * Load all VSR accounts for processing
+ * Parse all deposits from a Voter account
  */
-async function loadAllVSRAccounts() {
+function parseVoterDeposits(voterData, accountPubkey) {
+  const deposits = [];
+  let totalGovernancePower = 0;
+  
+  console.log(`    Processing Voter account ${accountPubkey.toString().substring(0, 8)}...`);
+  
+  // VSR Voter account structure:
+  // - discriminator: 8 bytes
+  // - authority: 32 bytes  
+  // - registrar: 32 bytes
+  // - deposits: array of 32 DepositEntry (192 bytes each)
+  
+  const depositsStartOffset = 72; // Skip discriminator + authority + registrar
+  
+  for (let i = 0; i < 32; i++) {
+    const entryOffset = depositsStartOffset + (i * 192);
+    const deposit = parseDepositEntry(voterData, entryOffset);
+    
+    if (deposit) {
+      const amountISLAND = deposit.amountDepositedNative / 1e6;
+      const multiplier = deposit.votingMultiplier / 1e6;
+      const governancePower = amountISLAND * multiplier;
+      
+      totalGovernancePower += governancePower;
+      
+      deposits.push({
+        index: i,
+        amountISLAND,
+        multiplier,
+        governancePower
+      });
+      
+      console.log(`      Deposit ${i}: ${amountISLAND.toLocaleString()} ISLAND × ${multiplier.toFixed(6)}x = ${governancePower.toLocaleString()} power`);
+    }
+  }
+  
+  console.log(`    Account total: ${totalGovernancePower.toLocaleString()} ISLAND power from ${deposits.length} deposits`);
+  
+  return {
+    totalGovernancePower,
+    deposits,
+    accountPubkey: accountPubkey.toString()
+  };
+}
+
+/**
+ * Find all Voter accounts for a wallet
+ */
+async function findVoterAccounts(walletPubkey) {
   try {
-    console.log('Loading all VSR accounts from blockchain...');
-    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-    console.log(`Loaded ${accounts.length} VSR accounts`);
+    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { memcmp: { offset: 8, bytes: walletPubkey.toBase58() } } // authority field at offset 8
+      ]
+    });
+    
     return accounts;
   } catch (error) {
-    console.error(`Error loading VSR accounts: ${error.message}`);
+    console.error(`Error finding voter accounts: ${error.message}`);
     return [];
   }
 }
 
 /**
- * Calculate total governance power for a wallet using proven methodology
+ * Calculate total governance power for a wallet
  */
-async function calculateWalletGovernancePower(walletAddress, allVSRAccounts) {
+async function calculateWalletGovernancePower(walletAddress) {
   try {
     const walletPubkey = new PublicKey(walletAddress);
-    let totalGovernancePower = 0;
-    let accountsFound = 0;
+    const voterAccounts = await findVoterAccounts(walletPubkey);
     
-    console.log(`  Processing ${allVSRAccounts.length} VSR accounts for wallet...`);
+    console.log(`  Found ${voterAccounts.length} Voter accounts`);
     
-    for (const account of allVSRAccounts) {
-      const power = extractGovernancePowerFromAccount(account.account.data, walletPubkey);
-      if (power > 0) {
-        totalGovernancePower += power;
-        accountsFound++;
-        console.log(`    Account ${account.pubkey.toString().substring(0, 8)}: ${power.toLocaleString()} ISLAND`);
-      }
+    if (voterAccounts.length === 0) {
+      return 0;
     }
     
-    console.log(`  Found ${accountsFound} accounts with governance power`);
+    let totalGovernancePower = 0;
+    const accountBreakdown = [];
+    
+    for (const voterAccount of voterAccounts) {
+      const result = parseVoterDeposits(voterAccount.account.data, voterAccount.pubkey);
+      totalGovernancePower += result.totalGovernancePower;
+      accountBreakdown.push(result);
+    }
+    
     return totalGovernancePower;
     
   } catch (error) {
@@ -151,14 +197,7 @@ async function updateCitizenGovernancePower(wallet, nativePower) {
  */
 async function runOfficialVSRCalculator() {
   console.log('\n=== OFFICIAL VSR GOVERNANCE CALCULATOR ===');
-  console.log('Using Proven Methodology - 100% On-Chain Data\n');
-  
-  // Load all VSR accounts once for efficiency
-  const allVSRAccounts = await loadAllVSRAccounts();
-  if (allVSRAccounts.length === 0) {
-    console.log('❌ No VSR accounts found');
-    return;
-  }
+  console.log('Using Exact Struct Layout Parsing - 100% On-Chain Data\n');
   
   const citizens = await getAllCitizens();
   console.log(`Processing ${citizens.length} citizens...\n`);
@@ -173,7 +212,7 @@ async function runOfficialVSRCalculator() {
     
     console.log(`[${i + 1}/${citizens.length}] ${displayName} (${citizen.wallet.substring(0, 8)}...):`);
     
-    const governancePower = await calculateWalletGovernancePower(citizen.wallet, allVSRAccounts);
+    const governancePower = await calculateWalletGovernancePower(citizen.wallet);
     
     // Update database
     await updateCitizenGovernancePower(citizen.wallet, governancePower);
@@ -185,13 +224,13 @@ async function runOfficialVSRCalculator() {
     });
     
     // Validation against expected values
-    if (displayName === 'Takisoul' && Math.abs(governancePower - 8700000) < 1000000) {
+    if (displayName === 'Takisoul' && Math.abs(governancePower - 8709019) < 1000000) {
       validationsPassed++;
       console.log('  ✅ Takisoul validation PASSED');
-    } else if (displayName === 'KO3' && Math.abs(governancePower - 1490000) < 200000) {
+    } else if (displayName === 'KO3' && Math.abs(governancePower - 1494582) < 200000) {
       validationsPassed++;
       console.log('  ✅ KO3 validation PASSED');
-    } else if (displayName === 'Moxie' && Math.abs(governancePower - 1070000) < 200000) {
+    } else if (displayName === 'Moxie' && Math.abs(governancePower - 1075969) < 200000) {
       validationsPassed++;
       console.log('  ✅ Moxie validation PASSED');
     } else if (citizen.wallet.startsWith('3PKhz') && governancePower < 10) {
@@ -209,7 +248,7 @@ async function runOfficialVSRCalculator() {
     console.log(`  Total: ${governancePower.toLocaleString()} ISLAND governance power\n`);
     
     // Rate limiting
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
   
   // Sort results by governance power
@@ -231,7 +270,7 @@ async function runOfficialVSRCalculator() {
   console.log(`Validations failed: ${validationsFailed}`);
   
   if (validationsPassed >= 3) {
-    console.log('\n🎯 Governance power extraction validated against known values');
+    console.log('\n🎯 Struct layout parsing validated against known values');
   }
 }
 
