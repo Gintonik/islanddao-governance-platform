@@ -18,11 +18,82 @@ app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
 });
 
-// API endpoint for citizens data
+// Function to fetch NFTs for a wallet using Helius API
+async function fetchWalletNFTs(walletAddress) {
+  try {
+    const heliusUrl = process.env.HELIUS_API_KEY;
+    
+    const response = await fetch(heliusUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'get-assets',
+        method: 'getAssetsByOwner',
+        params: {
+          ownerAddress: walletAddress,
+          page: 1,
+          limit: 1000
+        }
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.result && data.result.items) {
+      // Filter for PERKS collection NFTs
+      const perksNfts = data.result.items.filter(nft => {
+        return nft.grouping && nft.grouping.some(group => 
+          group.group_key === 'collection' && 
+          group.group_value === 'HYaQjyKJBqh4LbEhN85E3EYjbNsGYF1g3LYDQYUhXCLp'
+        );
+      });
+
+      return perksNfts.map(nft => ({
+        mint: nft.id,
+        name: nft.content?.metadata?.name || 'PERKS NFT',
+        image: nft.content?.files?.[0]?.uri || nft.content?.json_uri,
+        collection: 'PERKS'
+      }));
+    }
+
+    return [];
+  } catch (error) {
+    console.error(`Error fetching NFTs for ${walletAddress}:`, error);
+    return [];
+  }
+}
+
+// API endpoint for citizens data with NFT information
 app.get('/api/citizens', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM citizens ORDER BY native_governance_power DESC NULLS LAST');
-    res.json(result.rows);
+    const citizens = result.rows;
+    
+    // Add NFT data for each citizen
+    const citizensWithNfts = await Promise.all(citizens.map(async (citizen) => {
+      const nfts = await fetchWalletNFTs(citizen.wallet);
+      const nftMetadata = {};
+      const nftIds = [];
+      
+      nfts.forEach(nft => {
+        nftIds.push(nft.mint);
+        nftMetadata[nft.mint] = {
+          name: nft.name,
+          image: nft.image
+        };
+      });
+      
+      return {
+        ...citizen,
+        nfts: nftIds,
+        nftMetadata: nftMetadata
+      };
+    }));
+    
+    res.json(citizensWithNfts);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to fetch citizens' });

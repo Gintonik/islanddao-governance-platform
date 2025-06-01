@@ -2506,7 +2506,7 @@
                             <!-- PERKS collection - Always show space for at least 2 rows -->
                             <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px;">
                                 <h3 style="margin: 0 0 6px 0; color: #FAFAFA; font-size: 12px; font-weight: 600; text-align: center;">
-                                    PERKS Collection (${citizen.pfp_nft ? 1 : 0})
+                                    PERKS Collection (${citizen.nfts ? citizen.nfts.length : 0})
                                 </h3>
                                 <div class="nft-scroll-container" style="
                                     min-height: 240px; 
@@ -2519,7 +2519,7 @@
                                     display: flex;
                                     flex-direction: column;
                                 ">
-                                    ${citizen.pfp_nft && citizen.image_url ? createSingleNFTDisplay(citizen) : `
+                                    ${citizen.nfts && citizen.nfts.length > 0 ? createNFTGrid(citizen) : `
                                         <div style="
                                             height: 160px; 
                                             display: flex; 
