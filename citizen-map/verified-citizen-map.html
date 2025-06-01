@@ -2388,18 +2388,20 @@
             `;
             
             const isVerified = citizen.wallet_address === currentWallet;
-            const citizenName = citizen.nickname || 'Anonymous Citizen';
+            const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
+            let imageUrl = 'https://via.placeholder.com/120';
+            let perkName = 'PERK NFT';
+            
+            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+                imageUrl = citizen.nftMetadata[pfpNft].image;
+                perkName = citizen.nftMetadata[pfpNft].name || 'PERK NFT';
+            }
+
+            const citizenName = citizen.nickname || 
+                               (citizen.nftMetadata && citizen.nftMetadata[pfpNft] ? citizen.nftMetadata[pfpNft].name : null) || 
+                               'Anonymous Citizen';
+            
             const citizenBio = citizen.bio || 'No bio provided yet.';
-            
-            // Format governance power numbers
-            const formatPower = (power) => {
-                if (!power || power === 0) return '0';
-                return Number(power).toLocaleString();
-            };
-            
-            const nativePower = formatPower(citizen.native_governance_power);
-            const delegatedPower = formatPower(citizen.delegated_governance_power);
-            const totalPower = formatPower(citizen.total_governance_power);
 
 
 
