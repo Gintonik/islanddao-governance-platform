@@ -88,8 +88,8 @@ app.get("/api/governance-power", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Governance power error:", err);
-    return res.status(500).json({ error: "Failed to calculate governance power" });
+    console.error("Governance power error:\n", JSON.stringify(err, null, 2));
+    return res.status(500).json({ error: err.message || "Failed to calculate governance power" });
   }
 });
 
