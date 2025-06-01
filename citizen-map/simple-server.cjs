@@ -43,11 +43,11 @@ async function fetchWalletNFTs(walletAddress) {
     const data = await response.json();
     
     if (data.result && data.result.items) {
-      // Filter for PERKS collection NFTs
+      // Filter for PERKS collection NFTs - using the correct collection ID
       const perksNfts = data.result.items.filter(nft => {
         return nft.grouping && nft.grouping.some(group => 
           group.group_key === 'collection' && 
-          group.group_value === 'HYaQjyKJBqh4LbEhN85E3EYjbNsGYF1g3LYDQYUhXCLp'
+          group.group_value === 'RFc19GTmN7Q21TQj2vocNkmTRWtyCpqByyqh5ETtDvj'
         );
       });
 
