@@ -8,10 +8,8 @@ import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
 import fs from "fs/promises";
-
 import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { readFile } from "fs/promises";
 
 config(); // ✅ Load .env
 
@@ -25,14 +23,12 @@ const pool = new Pool({
 });
 
 // Solana connection
-const VSR_PROGRAM_ID = new PublicKey(
-  "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
-);
+const VSR_PROGRAM_ID = new PublicKey("vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ");
 const connection = new Connection(process.env.HELIUS_RPC_URL);
-
 
 app.use(cors());
 app.use(express.json());
+
 app.get("/api/governance-power", async (req, res) => {
   const wallet = req.query.wallet;
   if (!wallet) {
@@ -40,7 +36,16 @@ app.get("/api/governance-power", async (req, res) => {
   }
 
   try {
-    const provider = new AnchorProvider(connection, {}, AnchorProvider.defaultOptions());
+    // ✅ LOAD VSR IDL before usage
+    const voterStakeRegistryIdl = JSON.parse(
+      await fs.readFile("./vsr-idl.json", "utf-8")
+    );
+
+    const provider = new AnchorProvider(
+      connection,
+      {},
+      AnchorProvider.defaultOptions()
+    );
     const program = new Program(voterStakeRegistryIdl, VSR_PROGRAM_ID, provider);
     const walletKey = new PublicKey(wallet);
 
@@ -86,19 +91,13 @@ app.get("/api/governance-power", async (req, res) => {
       delegatedPower: 0,
       totalPower: nativePower,
     });
-
   } catch (err) {
-    console.error("Governance power error:\n", JSON.stringify(err, null, 2));
-    return res.status(500).json({ error: err.message || "Failed to calculate governance power" });
+    console.error("Governance power error:\n", err);
+    return res
+      .status(500)
+      .json({ error: err.message || "Failed to calculate governance power" });
   }
 });
-
-
-// TODO: Add routes for:
-// - GET /power/:wallet (from hybrid-vsr-calculator.js)
-// - GET /health
-// - POST /power/batch
-// - anything else you were running (NFT verification, etc.)
 
 app.listen(port, () => {
   console.log(`✅ VSR API Server running on port ${port}`);
