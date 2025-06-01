@@ -16,6 +16,10 @@ author = "agent"
 task = "workflow.run"
 args = "Citizen Map DB Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Citizen Map Server"
+
 [[workflows.workflow]]
 name = "Database Sync"
 author = 39093361
@@ -32,6 +36,15 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node citizen-map/db-integrated-server.js"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Citizen Map Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace/citizen-map && node simple-server.cjs"
 waitForPort = 5000
 
 [deployment]

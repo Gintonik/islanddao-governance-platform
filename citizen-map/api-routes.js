@@ -4,8 +4,8 @@
  * Centralizes all API endpoints for better organization and direct database access
  */
 
-const db = require('../db');
-const governanceCalculator = require('../governance-power-calculator');
+import db from '../db.js';
+import governanceCalculator from '../governance-power-calculator.js';
 
 /**
  * Get NFTs owned by a specific wallet address
@@ -316,7 +316,7 @@ async function getGovernanceStats() {
   }
 }
 
-module.exports = {
+export default {
   getWalletNfts,
   saveCitizenPin,
   getAllCitizens,

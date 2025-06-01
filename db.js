@@ -391,7 +391,7 @@ async function updateGovernancePowerBreakdown(walletAddress, nativePower, delega
   }
 }
 
-module.exports = {
+export default {
   pool,
   initializeDatabase,
   getAllNfts,
