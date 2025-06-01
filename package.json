@@ -1,0 +1,14 @@
+{
+  "name": "vsr-governance-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.77.1",
+    "@coral-xyz/anchor": "^0.28.0",
+    "express": "^4.18.2"
+  }
+}
