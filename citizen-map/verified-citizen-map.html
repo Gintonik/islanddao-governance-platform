@@ -2383,12 +2383,12 @@
             
             const isVerified = citizen.wallet === currentWallet;
             const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-            let imageUrl = 'https://via.placeholder.com/120';
+            let imageUrl = citizen.image_url || 'https://via.placeholder.com/120';
             let perkName = 'PERK NFT';
             
-            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                imageUrl = citizen.nftMetadata[pfpNft].image;
-                perkName = citizen.nftMetadata[pfpNft].name || 'PERK NFT';
+            // Use the actual image URL from database if available
+            if (citizen.image_url) {
+                imageUrl = citizen.image_url;
             }
 
             const citizenName = citizen.nickname || 
@@ -2506,7 +2506,7 @@
                             <!-- PERKS collection - Always show space for at least 2 rows -->
                             <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px;">
                                 <h3 style="margin: 0 0 6px 0; color: #FAFAFA; font-size: 12px; font-weight: 600; text-align: center;">
-                                    PERKS Collection (${citizen.nfts ? citizen.nfts.length : 0})
+                                    PERKS Collection (${citizen.pfp_nft ? 1 : 0})
                                 </h3>
                                 <div class="nft-scroll-container" style="
                                     min-height: 240px; 
