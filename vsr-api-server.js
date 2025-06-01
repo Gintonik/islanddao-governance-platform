@@ -72,9 +72,12 @@ app.get("/api/governance-power", async (req, res) => {
         // Skip entries where votingMintConfigIdx is not 0
         if (entry.votingMintConfigIdx !== 0) continue;
 
+        const lockupStart = entry.lockup.startTs.toNumber();
         const lockupEnd = entry.lockup.endTs.toNumber();
         const now = Math.floor(Date.now() / 1000);
-        if (lockupEnd <= now) continue; // Only count locked tokens
+        
+        // Only count deposits currently in lockup window (started but not ended)
+        if (now < lockupStart || now >= lockupEnd) continue;
 
         const multiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
         const power = Math.floor(
