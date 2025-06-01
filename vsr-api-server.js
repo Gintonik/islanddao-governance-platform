@@ -68,6 +68,9 @@ app.get("/api/governance-power", async (req, res) => {
       for (const entry of voter.depositEntries) {
         if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0)
           continue;
+        
+        // Skip entries where votingMintConfigIdx is not 0
+        if (entry.votingMintConfigIdx !== 0) continue;
 
         const lockupEnd = entry.lockup.endTs.toNumber();
         const now = Math.floor(Date.now() / 1000);
