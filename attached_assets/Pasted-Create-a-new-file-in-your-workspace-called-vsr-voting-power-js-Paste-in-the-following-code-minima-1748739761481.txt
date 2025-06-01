@@ -1,0 +1,92 @@
+Create a new file in your workspace called: vsr-voting-power.js
+
+Paste in the following code (minimal dependencies, pure JS version):
+
+// vsr-voting-power.js
+
+const { PublicKey } = require('@solana/web3.js')
+const BN = require('bn.js')
+
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ')
+
+function readU64LE(buffer, offset) {
+  const lower = buffer.readUInt32LE(offset)
+  const upper = buffer.readUInt32LE(offset + 4)
+  return new BN(upper).ushln(32).add(new BN(lower))
+}
+
+function parseDepositEntry(buffer, baseOffset) {
+  const amount = readU64LE(buffer, baseOffset)
+  const multiplierRaw = readU64LE(buffer, baseOffset + 8)
+  const isUsed = buffer.readUInt8(baseOffset + 176)
+
+  if (isUsed !== 1 || amount.isZero()) return null
+
+  const multiplier = multiplierRaw.toNumber() / 1e6
+  const power = amount.toNumber() / 1e6 * multiplier
+
+  return { amount: amount.toNumber(), multiplier, power }
+}
+
+async function getLockTokensVotingPowerPerWallet(wallets, connection) {
+  const results = {}
+
+  for (const wallet of wallets) {
+    const pubkey = new PublicKey(wallet)
+    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { memcmp: { offset: 8, bytes: pubkey.toBase58() } },
+      ],
+    })
+
+    let totalPower = 0
+    for (const account of accounts) {
+      const data = account.account.data
+      const depositsStart = 72
+      const depositSize = 192
+      for (let i = 0; i < 32; i++) {
+        const offset = depositsStart + i * depositSize
+        if (offset + depositSize > data.length) break
+
+        const parsed = parseDepositEntry(data, offset)
+        if (parsed) {
+          totalPower += parsed.power
+        }
+      }
+    }
+
+    results[wallet] = totalPower
+  }
+
+  return results
+}
+
+module.exports = { getLockTokensVotingPowerPerWallet }
+
+✅ Step 2: Use It In Your Main Script
+In official-vsr-calculator.js, add: const { getLockTokensVotingPowerPerWallet } = require('./vsr-voting-power')
+
+const { getLockTokensVotingPowerPerWallet } = require('./vsr-voting-power')
+And replace your entire VSR logic with:
+
+const wallets = allCitizens.map(c => c.wallet) // replace with your real query
+const results = await getLockTokensVotingPowerPerWallet(wallets, connection)
+
+for (const citizen of allCitizens) {
+  const wallet = citizen.wallet
+  const power = results[wallet] || 0
+
+  // Save to database (use your existing update query)
+  await updateGovernancePower(wallet, power)
+}
+
+✅ What This Does
+Fetches all Voter accounts for each wallet
+
+Reads 32 deposit entries per account
+
+Applies votingMultiplier correctly (offset 8, divide by 1e6)
+
+Only includes isUsed == 1
+
+Returns real governance power, no guessing

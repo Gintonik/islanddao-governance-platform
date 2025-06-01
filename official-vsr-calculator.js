@@ -6,6 +6,7 @@
 
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { Pool } = require('pg');
+const { getLockTokensVotingPowerPerWallet } = require('./vsr-voting-power');
 
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00';
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
@@ -167,17 +168,17 @@ async function updateCitizenGovernancePower(wallet, nativePower) {
  */
 async function runOfficialVSRCalculator() {
   console.log('\n=== OFFICIAL VSR GOVERNANCE CALCULATOR ===');
-  console.log('Using Proven Methodology - 100% On-Chain Data\n');
-  
-  // Load all VSR accounts once for efficiency
-  const allVSRAccounts = await loadAllVSRAccounts();
-  if (allVSRAccounts.length === 0) {
-    console.log('❌ No VSR accounts found');
-    return;
-  }
+  console.log('Using Exact Struct Layout - 100% On-Chain Data\n');
   
   const citizens = await getAllCitizens();
   console.log(`Processing ${citizens.length} citizens...\n`);
+  
+  // Extract all wallet addresses
+  const wallets = citizens.map(c => c.wallet);
+  
+  // Use the proven VSR methodology to get governance power for all wallets
+  console.log('Calculating governance power using proven VSR struct parsing...');
+  const powerResults = await getLockTokensVotingPowerPerWallet(wallets, connection);
   
   const results = [];
   let validationsPassed = 0;
@@ -186,10 +187,9 @@ async function runOfficialVSRCalculator() {
   for (let i = 0; i < citizens.length; i++) {
     const citizen = citizens[i];
     const displayName = citizen.nickname || 'Anonymous';
+    const governancePower = powerResults[citizen.wallet] || 0;
     
     console.log(`[${i + 1}/${citizens.length}] ${displayName} (${citizen.wallet.substring(0, 8)}...):`);
-    
-    const governancePower = await calculateWalletGovernancePower(citizen.wallet, allVSRAccounts);
     
     // Update database
     await updateCitizenGovernancePower(citizen.wallet, governancePower);
@@ -223,9 +223,6 @@ async function runOfficialVSRCalculator() {
     }
     
     console.log(`  Total: ${governancePower.toLocaleString()} ISLAND governance power\n`);
-    
-    // Rate limiting
-    await new Promise(resolve => setTimeout(resolve, 50));
   }
   
   // Sort results by governance power
@@ -247,7 +244,7 @@ async function runOfficialVSRCalculator() {
   console.log(`Validations failed: ${validationsFailed}`);
   
   if (validationsPassed >= 3) {
-    console.log('\n🎯 Governance power extraction validated against known values');
+    console.log('\n🎯 Struct layout parsing validated against known values');
   }
 }
 
