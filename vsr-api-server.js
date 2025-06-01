@@ -66,23 +66,22 @@ app.get("/api/governance-power", async (req, res) => {
 
     for (const { account: voter } of allVoterAccounts) {
       for (const entry of voter.depositEntries) {
-        if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0)
-          continue;
-        
-        // Skip entries where votingMintConfigIdx is not 0
+        // Check all required conditions
+        if (entry.isUsed !== true) continue;
+        if (entry.amountDepositedNative.toNumber() <= 0) continue;
         if (entry.votingMintConfigIdx !== 0) continue;
-
+        
         const lockupStart = entry.lockup.startTs.toNumber();
         const lockupEnd = entry.lockup.endTs.toNumber();
         const now = Math.floor(Date.now() / 1000);
         
-        // Only count deposits currently in lockup window (started but not ended)
-        if (now < lockupStart || now >= lockupEnd) continue;
-
+        // Check lockup timing: must have started but not ended
+        if (lockupStart >= now) continue; // Lockup hasn't started yet
+        if (lockupEnd <= now) continue;   // Lockup has ended
+        
+        // Calculate governance power
         const multiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
-        const power = Math.floor(
-          entry.amountDepositedNative.toNumber() * multiplier,
-        );
+        const power = entry.amountDepositedNative.toNumber() * multiplier;
         nativePower += power;
       }
     }
