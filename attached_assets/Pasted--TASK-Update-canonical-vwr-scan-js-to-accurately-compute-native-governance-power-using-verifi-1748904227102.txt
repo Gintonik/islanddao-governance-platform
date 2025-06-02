@@ -1,0 +1,44 @@
+🛠️ TASK:
+Update `canonical-vwr-scan.js` to accurately compute native governance power using verified on-chain data for IslandDAO. Use the Voter Stake Registry (VSR) program on Solana.
+
+📌 CONTEXT:
+We have 20 verified wallets that are known to hold active VSR governance deposits. Previous scans only found power for 2 wallets, but **at least 14 should show up**.
+
+🔍 STRATEGY:
+1. Scan all 176-byte VSR program accounts.
+   - Filter by `data.length === 176`
+   - Use `memcmp` to match wallet address at **offset 72**
+   - Read 8 bytes at **offset 104** as `u64` → convert to `ISLAND` (divide by 1e6)
+
+2. If no 176-byte account matches or `voterWeight` is zero:
+   - Fallback: Use Anchor-compatible IDL (`vsr-idl.json`) to deserialize the wallet’s `Voter` account
+   - Loop through `depositEntries[]`, include only those:
+     - `isUsed === true`
+     - `amountDepositedNative > 0`
+     - `isLocked()` returns true
+   - Apply the correct lockup multiplier and aggregate
+
+🧾 VERIFIED WALLETS:
+```js
+const wallets = [
+  "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+  "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+  "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+  "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+  "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+  "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+  "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+  "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+  "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+  "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+  "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+  "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+  "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+  "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+  "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+  "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+  "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+  "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+  "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+  "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC"
+];

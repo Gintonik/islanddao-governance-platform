@@ -16,26 +16,26 @@ const REGISTRAR = new PublicKey('F3xgZXtJ19F7Yk6gdZ2muwErg7wdGzbpjNQDD4rqFBLq');
 const REALM = new PublicKey('8reJkQsfbAZPNTixFLE2TYvCvULjv3o8VVdANs1YAUai');
 
 const WALLETS = [
+  "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+  "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+  "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
   "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+  "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+  "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+  "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+  "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+  "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+  "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+  "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+  "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+  "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+  "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+  "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+  "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+  "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+  "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
   "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
-  "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzWEHRo",
-  "C9UJ9H2ACqMMJ4xvXBMV9LzKZgHViFNPX5z7mKHKnMKW",
-  "8Rh1sy7vKpQhZcbb2cwSKRtQegVE3vnNYrcNAmHZ5WSd",
-  "7Jx45L2GhPh8sQ6r4pvJxgRiKVRs5DsQwN9jW9Zj43Mt",
-  "CSJKkYqEm9XYrCuL8Fg9DNDGLA2ZkUJDMVLaeUJmGJK5",
-  "CEpTX6QuD7qHTwFoQzRfSpRQ8vY94fZ3QQMgbK7YGbZg",
-  "FknAoDH1aytzsWPKm6YzZyyEKzZfBNnFAAMydWu3SYAf",
-  "8d8Z6GiYooZ1swZRHccA29XTxEQxM98Ty57c6ZQEV2rP",
-  "9ZBFwPV7fJrBYTZjvKRXLKDg3CkHik1snMgScXx1aT3G",
-  "5oykeWnU3RCGdvWxMBEnZNm6gHpQQfwFcEPBuGeKNXzU",
-  "5Ev8dRFe7oD3TYJjDkEERyk3QQzj1sVJ2vWdyTRGPuYz",
-  "AJ7p5ChZfdSYD8jXVy69q2n97wDQ6EMHhRha46c2cob5",
-  "9G3V1isDhf72fdFP9w6mXo8JBoNWem3LFmKCrpAaSkaB",
-  "D1AbzYoXB5oEU3xTPQZBPAqLhRj2o7sJDVJzz1gNKR3p",
-  "EXrzoTvmUutMB5B25qtbyWcymViKmMdwLMQv9kGJ4iQs",
-  "91kMo3JQrgkXZFVbkV8Jr3s8MRfFtLbMfXj6eT2gRCCn",
-  "BszUnfNqyeKvKRRbyXPoaV46Zfncv6vF1YeyxYuDJf3f",
-  "ChP3bm9yqjPtxS4Bz3xEkSbMbpZpUTKVEjc5a37pM8jU"
+  "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC"
 ];
 
 /**
@@ -54,7 +54,139 @@ function deriveVoterWeightRecordPDA(walletPubkey) {
 }
 
 /**
- * Fetch governance power for a single wallet using verified approach
+ * Parse deposit entry from Voter account data
+ */
+function parseDepositEntry(data, offset) {
+  try {
+    // Deposit entry structure based on VSR IDL
+    const isUsed = data[offset] === 1;
+    const allowClawback = data[offset + 1] === 1;
+    
+    // Read amounts as u64 (8 bytes each)
+    const votingMintConfigIdx = data[offset + 2];
+    const amountDepositedNative = Number(data.readBigUInt64LE(offset + 8));
+    const amountInitiallyLockedNative = Number(data.readBigUInt64LE(offset + 16));
+    
+    // Lockup information
+    const lockupKind = data[offset + 24]; // 0 = None, 1 = Cliff, 2 = Constant, 3 = Vested
+    const lockupStartTs = Number(data.readBigUInt64LE(offset + 32));
+    const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+    const lockupPeriods = Number(data.readBigUInt64LE(offset + 48));
+    
+    return {
+      isUsed,
+      allowClawback,
+      votingMintConfigIdx,
+      amountDepositedNative,
+      amountInitiallyLockedNative,
+      lockupKind,
+      lockupStartTs,
+      lockupEndTs,
+      lockupPeriods,
+      isLocked: () => {
+        const now = Math.floor(Date.now() / 1000);
+        return lockupKind > 0 && lockupEndTs > now;
+      }
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Calculate lockup multiplier based on time remaining
+ */
+function calculateLockupMultiplier(deposit, currentTimestamp) {
+  if (!deposit.isLocked() || deposit.lockupKind === 0) {
+    return 1.0; // No lockup = baseline multiplier
+  }
+  
+  const timeRemaining = Math.max(0, deposit.lockupEndTs - currentTimestamp);
+  const maxLockupPeriod = 4 * 365 * 24 * 60 * 60; // 4 years in seconds
+  
+  // VSR multiplier formula: baseline + (time_factor * max_extra)
+  // Using IslandDAO typical values: baseline=1, max_extra=4
+  const baseline = 1.0;
+  const maxExtra = 4.0;
+  const timeFactor = Math.min(timeRemaining / maxLockupPeriod, 1.0);
+  
+  return baseline + (timeFactor * maxExtra);
+}
+
+/**
+ * Analyze Voter account and extract governance power from deposits
+ */
+async function analyzeVoterAccount(walletAddress, verbose = false) {
+  try {
+    // Search for Voter accounts (typically 2728 bytes)
+    const voterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { dataSize: 2728 },
+        { memcmp: { offset: 40, bytes: walletAddress } }
+      ]
+    });
+    
+    if (voterAccounts.length === 0) {
+      return null;
+    }
+    
+    let totalGovernancePower = 0;
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const deposits = [];
+    
+    for (const { pubkey, account } of voterAccounts) {
+      const data = account.data;
+      
+      if (verbose) {
+        console.log(`   📊 Analyzing Voter account: ${pubkey.toBase58()}`);
+      }
+      
+      // Parse deposit entries (typically starts around offset 200, 72 bytes each)
+      for (let i = 0; i < 32; i++) { // Max 32 deposits
+        const depositOffset = 200 + (i * 72);
+        if (depositOffset + 72 > data.length) break;
+        
+        const deposit = parseDepositEntry(data, depositOffset);
+        if (!deposit || !deposit.isUsed || deposit.amountDepositedNative === 0) {
+          continue;
+        }
+        
+        const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
+        const power = (deposit.amountDepositedNative * multiplier) / 1e6;
+        
+        if (power > 0) {
+          totalGovernancePower += power;
+          deposits.push({
+            amount: deposit.amountDepositedNative / 1e6,
+            multiplier: multiplier,
+            power: power,
+            isLocked: deposit.isLocked(),
+            lockupKind: deposit.lockupKind
+          });
+          
+          if (verbose) {
+            console.log(`     💰 Deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)} = ${power.toLocaleString()} power`);
+          }
+        }
+      }
+    }
+    
+    return {
+      totalPower: totalGovernancePower,
+      deposits: deposits,
+      voterAccountCount: voterAccounts.length
+    };
+    
+  } catch (error) {
+    if (verbose) {
+      console.log(`     ❌ Voter analysis error: ${error.message}`);
+    }
+    return null;
+  }
+}
+
+/**
+ * Fetch governance power for a single wallet using comprehensive approach
  */
 async function fetchWalletGovernancePower(walletAddress, verbose = false) {
   try {
@@ -62,7 +194,7 @@ async function fetchWalletGovernancePower(walletAddress, verbose = false) {
       console.log(`🔍 ${walletAddress}`);
     }
     
-    // Use the verified approach: search 176-byte VSR accounts with wallet at offset 72
+    // Step 1: Try 176-byte VoterWeightRecord accounts first
     const voterWeightRecords = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
         { dataSize: 176 },
@@ -70,47 +202,74 @@ async function fetchWalletGovernancePower(walletAddress, verbose = false) {
       ]
     });
     
-    if (voterWeightRecords.length === 0) {
-      if (verbose) {
-        console.log(`   ⏭️  No VoterWeightRecord found`);
-      }
-      return {
-        wallet: walletAddress,
-        governancePower: 0,
-        source: "No VoterWeightRecord found",
-        vwrPDA: null
-      };
-    }
-    
-    let totalGovernancePower = 0;
-    const sources = [];
+    let vwrPower = 0;
+    const vwrSources = [];
     
     for (const { pubkey, account } of voterWeightRecords) {
       const data = account.data;
-      
-      // Read governance power from offset 104
       const powerRaw = Number(data.readBigUInt64LE(104));
       const power = powerRaw / 1e6;
       
       if (power > 0) {
-        totalGovernancePower += power;
-        sources.push({
+        vwrPower += power;
+        vwrSources.push({
           account: pubkey.toBase58(),
-          power: power
+          power: power,
+          rawValue: powerRaw
         });
         
         if (verbose) {
-          console.log(`   ✅ ${power.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
+          console.log(`   ✅ VWR: ${power.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
         }
       }
     }
     
+    // If VWR found valid power, use it
+    if (vwrPower > 0) {
+      return {
+        wallet: walletAddress,
+        governancePower: vwrPower,
+        source: "176-byte VWR account",
+        voterWeight: vwrSources.reduce((sum, s) => sum + s.rawValue, 0),
+        fallbackUsed: false,
+        vwrSources: vwrSources
+      };
+    }
+    
+    // Step 2: Fallback to Voter account analysis
+    if (verbose) {
+      console.log(`   🔄 No VWR power found, trying Voter account fallback...`);
+    }
+    
+    const voterAnalysis = await analyzeVoterAccount(walletAddress, verbose);
+    
+    if (voterAnalysis && voterAnalysis.totalPower > 0) {
+      if (verbose) {
+        console.log(`   ✅ Voter fallback: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${voterAnalysis.deposits.length} deposits`);
+      }
+      
+      return {
+        wallet: walletAddress,
+        governancePower: voterAnalysis.totalPower,
+        source: "Voter fallback",
+        voterWeight: Math.round(voterAnalysis.totalPower * 1e6),
+        fallbackUsed: true,
+        deposits: voterAnalysis.deposits,
+        voterAccountCount: voterAnalysis.voterAccountCount
+      };
+    }
+    
+    // Step 3: No power found
+    if (verbose) {
+      console.log(`   ⏭️  No governance power found in VWR or Voter accounts`);
+    }
+    
     return {
       wallet: walletAddress,
-      governancePower: totalGovernancePower,
-      source: totalGovernancePower > 0 ? "VoterWeightRecord" : "No governance power found",
-      sources: sources,
-      accountCount: voterWeightRecords.length
+      governancePower: 0,
+      source: "No match",
+      voterWeight: 0,
+      fallbackUsed: false
     };
     
   } catch (error) {
@@ -121,7 +280,8 @@ async function fetchWalletGovernancePower(walletAddress, verbose = false) {
       wallet: walletAddress,
       governancePower: 0,
       source: `Error: ${error.message}`,
-      sources: []
+      voterWeight: 0,
+      fallbackUsed: false
     };
   }
 }
