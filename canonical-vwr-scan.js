@@ -413,6 +413,8 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         
         delegationCount++;
         
+        console.log(`Delegation: ${authority} → ${voterAuthority} | ${voterAnalysis.totalPower.toLocaleString()} ISLAND`);
+        
         if (verbose) {
           console.log(`     ✅ Incoming delegation: from ${authority.substring(0,8)}... → ${voterAnalysis.totalPower.toLocaleString()} ISLAND`);
           console.log(`       Account: ${pubkey.toBase58()}`);
