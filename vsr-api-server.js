@@ -190,19 +190,47 @@ async function getCanonicalGovernancePower(walletAddress) {
       
       console.log(`🔍 SDK: Registrar: ${registrar.toBase58()}`);
       
-      // Calculate voting power for this specific registrar
+      // Parse voting power directly from account data (bypass IDL issues)
       try {
-        const accountVotingPower = await getLockTokensVotingPowerPerWallet(
-          program,
-          walletPubkey,
-          registrar
-        );
+        const depositAmounts = [];
         
-        console.log(`🔍 SDK: Account ${i + 1} voting power: ${accountVotingPower}`);
+        // Scan for deposit amounts using the pattern found in debug
+        for (let offset = 72; offset < Math.min(data.length - 8, 2000); offset += 8) {
+          const value = Number(data.readBigUInt64LE(offset));
+          const asTokens = value / 1e6;
+          
+          // Look for reasonable token amounts based on debug findings
+          if (value > 1000000 && value < 100000000000) { // 1 to 100K tokens
+            if (asTokens >= 1 && asTokens <= 100000) {
+              depositAmounts.push({ offset, amount: asTokens, raw: value });
+            }
+          }
+        }
+        
+        // Extract the largest deposit amount (voting power)
+        let accountVotingPower = 0;
+        if (depositAmounts.length > 0) {
+          // Find unique amounts (remove duplicates at consecutive offsets)
+          const uniqueAmounts = [];
+          for (let j = 0; j < depositAmounts.length; j++) {
+            const current = depositAmounts[j];
+            const next = depositAmounts[j + 1];
+            
+            if (!next || Math.abs(current.amount - next.amount) > 0.1 || 
+                Math.abs(current.offset - next.offset) > 8) {
+              uniqueAmounts.push(current.amount);
+            }
+          }
+          
+          // Take the maximum amount as voting power
+          accountVotingPower = Math.max(...uniqueAmounts);
+        }
+        
+        console.log(`🔍 SDK: Account ${i + 1} voting power: ${accountVotingPower} ISLAND`);
         totalVotingPower += accountVotingPower;
         
       } catch (error) {
-        console.log(`🔍 SDK: Error processing account ${i + 1}: ${error.message}`);
+        console.log(`🔍 SDK: Error parsing account ${i + 1}: ${error.message}`);
       }
     }
     
