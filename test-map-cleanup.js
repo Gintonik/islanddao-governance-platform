@@ -17,17 +17,19 @@ const PERKS_COLLECTION = '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8';
 
 async function hasValidNFTs(walletAddress) {
   try {
+    // Use collection query to get all PERKS NFTs, then filter by owner
     const response = await fetch(process.env.HELIUS_RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
-        id: `check-${walletAddress}`,
-        method: 'getAssetsByOwner',
+        id: `check-collection-${walletAddress}`,
+        method: 'getAssetsByGroup',
         params: {
-          ownerAddress: walletAddress,
+          groupKey: 'collection',
+          groupValue: PERKS_COLLECTION,
           page: 1,
-          limit: 100
+          limit: 1000
         }
       })
     });
@@ -35,17 +37,11 @@ async function hasValidNFTs(walletAddress) {
     const data = await response.json();
     
     if (data.result && data.result.items) {
-      const perksNFTs = data.result.items.filter(nft => {
-        if (nft.grouping) {
-          return nft.grouping.some(group => 
-            group.group_key === 'collection' && 
-            group.group_value === PERKS_COLLECTION
-          );
-        }
-        return nft.content?.metadata?.name?.includes('PERK');
-      });
+      const ownedNFTs = data.result.items.filter(nft => 
+        nft.ownership && nft.ownership.owner === walletAddress
+      );
 
-      return perksNFTs.length > 0;
+      return ownedNFTs.length > 0;
     }
 
     return false;

@@ -28,12 +28,44 @@ async function checkTakisoulNFTs() {
     const wallet = result.rows[0].wallet;
     console.log(`Checking NFTs for Takisoul: ${wallet}`);
     
+    // Check with collection filter
     const response = await fetch(process.env.HELIUS_RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
-        id: 'check-takisoul',
+        id: 'check-takisoul-collection',
+        method: 'getAssetsByGroup',
+        params: {
+          groupKey: 'collection',
+          groupValue: '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8',
+          page: 1,
+          limit: 1000
+        }
+      })
+    });
+
+    const collectionData = await response.json();
+    console.log('Collection check result:', collectionData.result ? `${collectionData.result.total} items in collection` : 'No collection data');
+    
+    if (collectionData.result && collectionData.result.items) {
+      const takisoulNFTs = collectionData.result.items.filter(nft => 
+        nft.ownership && nft.ownership.owner === wallet
+      );
+      
+      console.log(`Takisoul's PERKS from collection query: ${takisoulNFTs.length}`);
+      takisoulNFTs.forEach(nft => {
+        console.log(`  - ${nft.content?.metadata?.name || 'Unnamed'} (${nft.id})`);
+      });
+    }
+    
+    // Also check by owner
+    const ownerResponse = await fetch(process.env.HELIUS_RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'check-takisoul-owner',
         method: 'getAssetsByOwner',
         params: {
           ownerAddress: wallet,
@@ -43,7 +75,7 @@ async function checkTakisoulNFTs() {
       })
     });
 
-    const data = await response.json();
+    const data = await ownerResponse.json();
     
     if (data.result && data.result.items) {
       console.log(`Total assets found: ${data.result.items.length}`);
