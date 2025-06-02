@@ -57,19 +57,41 @@ app.get("/api/governance-power", async (req, res) => {
     );
     const walletKey = new PublicKey(wallet);
 
-    const allVoterAccounts = await program.account.voter.all([
-      {
-        memcmp: {
-          offset: 8, // authority
-          bytes: walletKey.toBase58(),
+    // Use getProgramAccounts to fetch all voter accounts
+    console.log(`🔍 Fetching voter accounts for wallet: ${wallet}`);
+    const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        {
+          dataSize: 1376, // VSR Voter account size
         },
-      },
-    ]);
+      ],
+    });
+
+    console.log(`📊 Found ${allVoterAccountInfos.length} total voter accounts`);
+
+    // Filter and deserialize accounts for this wallet
+    const relevantVoterAccounts = [];
+    for (const accountInfo of allVoterAccountInfos) {
+      try {
+        // Deserialize using Anchor
+        const voter = program.coder.accounts.decode("voter", accountInfo.account.data);
+        
+        // Check if authority matches our wallet
+        if (voter.authority.toString() === walletKey.toString()) {
+          relevantVoterAccounts.push({ account: voter, publicKey: accountInfo.pubkey });
+        }
+      } catch (deserializeError) {
+        // Skip accounts that can't be deserialized as voter accounts
+        continue;
+      }
+    }
+
+    console.log(`🎯 Found ${relevantVoterAccounts.length} voter accounts for wallet ${wallet}`);
 
     let nativePower = 0;
     const now = Math.floor(Date.now() / 1000);
 
-    for (const { account: voter } of allVoterAccounts) {
+    for (const { account: voter } of relevantVoterAccounts) {
       for (const entry of voter.depositEntries) {
         if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0)
           continue;
@@ -91,8 +113,12 @@ app.get("/api/governance-power", async (req, res) => {
         const amount = entry.amountDepositedNative.toNumber();
         const power = Math.floor(amount * adjustedMultiplier);
         nativePower += power;
+
+        console.log(`💪 Found deposit: ${amount} tokens, multiplier: ${adjustedMultiplier}, power: ${power}`);
       }
     }
+
+    console.log(`🏆 Total native power for ${wallet}: ${nativePower}`);
 
     return res.json({
       wallet,
