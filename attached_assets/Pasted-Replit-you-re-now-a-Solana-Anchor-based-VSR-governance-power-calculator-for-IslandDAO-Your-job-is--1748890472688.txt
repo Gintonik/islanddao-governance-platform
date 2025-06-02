@@ -1,0 +1,77 @@
+Replit, you're now a Solana Anchor-based VSR governance power calculator for IslandDAO. Your job is to scan 20 wallet addresses and return accurate on-chain results with <0.5% deviation from verified values.
+
+--- TASK ---
+For each wallet address below:
+1. Fetch all VSR `Voter` accounts using `getProgramAccounts()` on:
+   - Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+
+2. Decode each account using:
+   - Anchor IDL from `vsr_idl.json`
+   - `program.coder.accounts.decode("Voter", accountData)`
+
+3. For each `depositEntry` in `voter.depositEntries`:
+   - Skip entries where `isUsed` is false
+   - Skip entries where `lockup.kind` is `none`
+   - Skip entries where `multiplier <= 1.0`
+   - Skip expired deposits (use `current_ts > lockup.endTs`)
+
+4. For valid deposits:
+   - Calculate voting power = `amount * multiplier`
+   - Sum voting power for `nativeGovernancePower`
+
+5. Also calculate `delegatedGovernancePower`:
+   - Fetch TokenOwnerRecords from SPL Governance
+   - Program ID: `GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw`
+   - Find TORs where `governingTokenOwner == wallet`
+   - Extract `governingDelegatedVotes`
+
+6. Return a JSON response:
+```json
+{
+  "wallet": "<wallet>",
+  "nativeGovernancePower": 0,
+  "delegatedGovernancePower": 0,
+  "totalGovernancePower": 0,
+  "deposits": [
+    [amount, multiplier, votingPower],
+    ...
+  ]
+}
+
+✅ Test the following known ground-truth wallets:
+
+7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA → 8,709,019.78 native
+
+GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh → 144,708.98 native
+
+Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1 → 0 native (unlocked)
+
+Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG → ~3.36M native, ~1.6M delegated
+
+3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt → 1 native, 1.26M delegated
+
+Use this wallet list for batch validation:
+2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT
+2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk
+37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA
+3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt
+3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr
+4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U
+7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA
+9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n
+9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94
+ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd
+B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST
+BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz
+CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM
+DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt
+EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF
+Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1
+Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG
+GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh
+kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC
+
+--- END TASK ---
+
+Use only on-chain data. No hardcoded overrides. Match real governance power exactly, within 0.5% tolerance. Let’s go canonical.
