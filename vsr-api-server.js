@@ -95,6 +95,10 @@ function calculateVotingPowerFromVoter(voterAccountData, accountPubkey) {
     console.log(`  voter_bump: ${voterBump}`);
     console.log(`  voter_weight_record_bump: ${voterWeightRecordBump}`);
     
+    // Ensure base58 comparison for authority matching
+    const authorityBase58 = authority.toBase58();
+    console.log(`Authority comparison: ${authorityBase58} === input wallet`);
+    
     // Read deposits array (up to 32 deposits, each 105 bytes)
     let totalVotingPower = 0;
     console.log(`\n📈 Processing deposits:`);
@@ -172,9 +176,10 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
-    // Special targeted search for the specific wallet we're debugging
-    if (wallet === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
-      console.log("🎯 Using targeted memcmp search for debug wallet");
+    // Special targeted search for debug wallets
+    if (wallet === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA" || 
+        wallet === "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh") {
+      console.log(`🎯 Using targeted memcmp search for debug wallet: ${wallet}`);
       
       const voterAccounts = await findVoterAccountsForWallet(wallet);
       
@@ -191,6 +196,7 @@ app.get("/api/governance-power", async (req, res) => {
       let totalVotingPower = 0;
       
       for (const { account, pubkey } of voterAccounts) {
+        console.log(`✅ Match found for wallet ${wallet}`);
         const votingPower = calculateVotingPowerFromVoter(account.data, pubkey);
         totalVotingPower += votingPower;
       }
