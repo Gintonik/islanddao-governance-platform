@@ -40,43 +40,46 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
-    // Direct blockchain approach: Find VSR accounts by scanning program accounts
-    const vsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        {
-          memcmp: {
-            offset: 40, // Authority field offset in Voter account
-            bytes: wallet,
-          },
-        },
-      ],
-    });
-
-    console.log(`Found ${vsrAccounts.length} VSR accounts for wallet`);
+    // Get all VSR accounts and scan for wallet matches
+    const allVsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+    console.log(`Scanning ${allVsrAccounts.length} total VSR accounts`);
 
     let maxGovernancePower = 0;
+    let foundAccounts = 0;
 
-    // Extract governance power from each VSR account
-    for (const accountInfo of vsrAccounts) {
+    // Scan all VSR accounts for this wallet
+    for (const accountInfo of allVsrAccounts) {
       try {
         const data = accountInfo.account.data;
         
-        // Read voter_weight field at offset 232 (8 bytes, little endian)
-        const voterWeightBytes = data.slice(232, 240);
-        const voterWeight = Number(
-          voterWeightBytes.readBigUInt64LE(0)
-        );
-
-        console.log(`VSR account ${accountInfo.pubkey.toBase58()}: voter_weight = ${voterWeight}`);
+        // Extract authority field (32 bytes starting at offset 40)
+        const authorityBytes = data.slice(40, 72);
+        const authority = new PublicKey(authorityBytes).toBase58();
         
-        // Take the maximum governance power across all accounts
-        if (voterWeight > maxGovernancePower) {
-          maxGovernancePower = voterWeight;
+        if (authority === wallet) {
+          foundAccounts++;
+          
+          // Read voter_weight field at offset 232 (8 bytes, little endian)
+          const voterWeightBytes = data.slice(232, 240);
+          const voterWeight = Number(
+            voterWeightBytes.readBigUInt64LE(0)
+          );
+
+          console.log(`Found VSR account ${accountInfo.pubkey.toBase58()}: voter_weight = ${voterWeight}`);
+          
+          // Take the maximum governance power across all accounts
+          if (voterWeight > maxGovernancePower) {
+            maxGovernancePower = voterWeight;
+          }
         }
       } catch (err) {
-        console.error(`Error parsing VSR account ${accountInfo.pubkey.toBase58()}:`, err.message);
+        // Skip accounts that can't be parsed
+        continue;
       }
     }
+
+    console.log(`Found ${foundAccounts} VSR accounts for wallet`);
+    console.log(`Max governance power: ${maxGovernancePower}`);
 
     console.log(`Final governance power: ${maxGovernancePower}`);
 
