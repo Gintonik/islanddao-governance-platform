@@ -423,9 +423,9 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   
   // Step 3: Reconcile with VWR total power (if available)
   if (hasVWR && totalGovernancePower > 0) {
-    // VWR contains the authoritative total - use Voter analysis only for native/delegated breakdown
-    // If we found native deposits in Voter accounts, use that as native power
-    // Otherwise, calculate delegated as the difference
+    // VWR contains the authoritative total governance power
+    // Native power = deposits owned by this wallet (regardless of delegation)
+    // Delegated power = total - native (power delegated TO this wallet by others)
     
     if (nativeGovernancePower > totalGovernancePower) {
       // Cap native power at total power if overcounted
@@ -435,12 +435,23 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
       nativeGovernancePower = totalGovernancePower;
       delegatedGovernancePower = 0;
     } else {
-      // Calculate delegated as remainder
+      // Calculate delegated power as remainder
       delegatedGovernancePower = Math.max(0, totalGovernancePower - nativeGovernancePower);
+      
+      // If native is > 99.5% of total, treat all as native
+      const nativePercentage = (nativeGovernancePower / totalGovernancePower) * 100;
+      if (nativePercentage > 99.5) {
+        nativeGovernancePower = totalGovernancePower;
+        delegatedGovernancePower = 0;
+        
+        if (verbose) {
+          console.log(`     ✅ High native percentage (${nativePercentage.toFixed(1)}%) - treating all as native`);
+        }
+      }
     }
     
-    if (verbose && delegatedGovernancePower > 0) {
-      console.log(`     📊 VWR reconciliation: ${totalGovernancePower.toLocaleString()} total - ${nativeGovernancePower.toLocaleString()} native = ${delegatedGovernancePower.toLocaleString()} delegated`);
+    if (verbose) {
+      console.log(`     📊 VWR reconciliation: ${totalGovernancePower.toLocaleString()} total = ${nativeGovernancePower.toLocaleString()} native + ${delegatedGovernancePower.toLocaleString()} delegated`);
     }
   } else {
     // No VWR - calculate total from native + delegated detected directly
@@ -509,71 +520,26 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
  * Analyze deposits in a Voter account (simplified version)
  */
 async function analyzeVoterAccountDeposits(data, verbose = false) {
-  let totalGovernancePower = 0;
-  const currentTimestamp = Math.floor(Date.now() / 1000);
-  const deposits = [];
+  // Use the same reliable extraction method from find-target-delegations.js
+  const depositOffsets = [112, 144, 176, 208, 240];
+  let totalPower = 0;
   
-  // Method 1: Try structured deposits
-  const startOffsets = [200, 250, 300];
-  
-  for (const startOffset of startOffsets) {
-    for (let i = 0; i < 32; i++) {
-      const depositOffset = startOffset + (i * 72);
-      if (depositOffset + 72 > data.length) break;
+  for (const offset of depositOffsets) {
+    try {
+      const rawValue = Number(data.readBigUInt64LE(offset));
+      const islandAmount = rawValue / 1e6;
       
-      const deposit = parseDepositEntry(data, depositOffset);
-      if (!deposit || deposit.amountDepositedNative === 0) {
-        continue;
+      if (islandAmount >= 1000 && islandAmount <= 50000000 && rawValue !== 4294967296) {
+        totalPower += islandAmount;
       }
-      
-      if (!deposit.isUsed && deposit.amountDepositedNative < 1000000) {
-        continue;
-      }
-      
-      const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
-      const power = (deposit.amountDepositedNative * multiplier) / 1e6;
-      
-      totalGovernancePower += power;
-      deposits.push({
-        amount: deposit.amountDepositedNative / 1e6,
-        multiplier: multiplier,
-        power: power,
-        source: 'structured'
-      });
+    } catch (error) {
+      // Continue
     }
   }
   
-  // Method 2: Check known direct deposits
-  if (totalGovernancePower === 0) {
-    const validatedOffsets = [112];
-    
-    for (const offset of validatedOffsets) {
-      try {
-        const rawValue = Number(data.readBigUInt64LE(offset));
-        const islandAmount = rawValue / 1e6;
-        
-        if (islandAmount >= 1000 && islandAmount <= 50000000 && 
-            rawValue !== 4294967296 && 
-            rawValue % 1000000 === 0) {
-          
-          totalGovernancePower += islandAmount;
-          deposits.push({
-            amount: islandAmount,
-            multiplier: 1.0,
-            power: islandAmount,
-            source: 'validated_direct',
-            offset: offset
-          });
-        }
-      } catch (error) {
-        // Continue
-      }
-    }
-  }
-  
-  return totalGovernancePower > 0 ? {
-    totalPower: totalGovernancePower,
-    deposits: deposits
+  return totalPower > 0 ? {
+    totalPower: totalPower,
+    deposits: []
   } : null;
 }
 
