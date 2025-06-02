@@ -48,14 +48,33 @@ const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
 /**
- * Get canonical governance power using both TokenOwnerRecord and VSR
+ * Get canonical governance power using SDK-style VSR calculation and TokenOwnerRecord
  */
 async function getCanonicalGovernancePower(walletAddress) {
   const walletPubkey = new PublicKey(walletAddress);
   
   console.log(`🏛️ Getting canonical governance power for: ${walletAddress}`);
   
-  // First check for TokenOwnerRecord
+  // First check for VSR governance power using SDK approach
+  const vsrPower = await getLockTokensVotingPowerPerWallet({
+    connection,
+    walletAddress: walletPubkey,
+    registrar: ISLAND_DAO_REGISTRAR
+  });
+  
+  if (vsrPower > 0) {
+    return {
+      nativeGovernancePower: vsrPower,
+      delegatedGovernancePower: 0,
+      totalGovernancePower: vsrPower,
+      source: "vsr",
+      details: {
+        vsrDeposits: "Calculated using VSR SDK methodology"
+      }
+    };
+  }
+  
+  // Check for TokenOwnerRecord if no VSR
   const torResult = await getTokenOwnerRecord(walletPubkey);
   if (torResult.governingTokenDepositAmount > 0) {
     return {
@@ -69,12 +88,6 @@ async function getCanonicalGovernancePower(walletAddress) {
         mint: torResult.governingTokenMint
       }
     };
-  }
-  
-  // Check for VSR lockups
-  const vsrResult = await getVSRGovernancePower(walletPubkey);
-  if (vsrResult.nativeGovernancePower > 0) {
-    return vsrResult;
   }
   
   // Return zero power if neither found

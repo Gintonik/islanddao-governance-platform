@@ -1,0 +1,28 @@
+{
+    "name": "governance-idl-sdk",
+    "version": "0.0.4",
+    "description": "",
+    "main": "dist/index.js",
+    "scripts": {
+        "test": "mocha tests/**/*.ts --timeout 600000",
+        "build": "tsup"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@coral-xyz/anchor": "^0.29.0",
+        "@solana/web3.js": "^1.89.1",
+        "bn.js": "^5.2.1"
+    },
+    "devDependencies": {
+        "@types/bn.js": "^5.1.5",
+        "@types/chai": "^4.3.14",
+        "@types/mocha": "^10.0.6",
+        "chai": "^5.1.0",
+        "mocha": "^10.4.0",
+        "tsup": "^8.0.2",
+        "tsx": "^4.7.1",
+        "typescript": "^5.4.5"
+    }
+}
