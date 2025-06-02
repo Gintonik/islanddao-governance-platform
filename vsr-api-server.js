@@ -8,6 +8,8 @@ import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey } from "@solana/web3.js";
+import governancePkg from "governance-idl-sdk";
+const { getLockTokensVotingPowerPerWallet } = governancePkg;
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
@@ -54,6 +56,23 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
+    // Method 1: Try governance SDK first
+    try {
+      const sdkPower = await getLockTokensVotingPowerPerWallet(connection, [wallet]);
+      if (sdkPower > 0) {
+        console.log(`SDK governance power: ${sdkPower}`);
+        return res.json({
+          wallet,
+          nativePower: sdkPower,
+          delegatedPower: 0,
+          totalPower: sdkPower,
+        });
+      }
+    } catch (sdkError) {
+      console.log(`SDK method failed: ${sdkError.message}`);
+    }
+    
+    // Method 2: Fallback to direct blockchain parsing
     const allVSRAccounts = await loadVSRAccounts();
     console.log(`Scanning ${allVSRAccounts.length} VSR accounts`);
 
