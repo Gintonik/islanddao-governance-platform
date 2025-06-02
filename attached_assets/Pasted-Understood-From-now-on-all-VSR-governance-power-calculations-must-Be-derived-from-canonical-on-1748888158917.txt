@@ -1,0 +1,87 @@
+Understood. From now on, all VSR governance power calculations must:
+
+✅ Be derived from canonical on-chain deserialization (no heuristics or fallbacks)
+
+✅ Match known correct values within 0.5% tolerance
+
+✅ Be verified against this reference set of wallets:
+
+3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt
+
+GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh
+
+Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG
+
+Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1
+
+4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+
+7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA
+
+Next step: I'll generate the full Replit AI prompt to test and validate governance power for all of the above.
+
+Here’s the Replit AI prompt for testing:
+
+🧠 Prompt for Replit AI
+
+I need to validate the governance power calculations for the IslandDAO Citizen Map.
+
+Use the existing canonical VSR deserialization logic to fetch native governance power from Voter accounts.
+
+Only include deposits with multiplier > 1.0.
+
+Use exact per-deposit stored multipliers (deserialized from Anchor-compatible layout).
+
+Validate the calculated values against the following expected outputs (must be accurate within 0.5%):
+
+js
+Copy
+Edit
+const testWallets = [
+  {
+    wallet: "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+    expectedNative: 1,
+    expectedDelegated: 1268162,
+    notes: "All tokens withdrawn, 1 expired lockup, only delegation remains",
+  },
+  {
+    wallet: "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+    expectedNative: 144708.98,
+    expectedDelegated: 0,
+    notes: "Four deposits with known lockups and multipliers",
+  },
+  {
+    wallet: "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+    expectedNative: 3361730.15,
+    expectedDelegated: 1598919.1,
+    expectedTotal: 4960649.25,
+    notes: "Reported by user, total must match",
+  },
+  {
+    wallet: "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+    expectedNative: 200000,
+    expectedDelegated: 0,
+    notes: "Single unlocked deposit with multiplier = 1.0 (should be skipped)",
+  },
+  {
+    wallet: "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+    expectedNative: 12625.58,
+    notes: "User never locked up, only delegated from CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
+  },
+  {
+    wallet: "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+    expectedNative: 8709019.78,
+    notes: "Canonical test case, all deposits must match to this exact amount",
+  }
+];
+For each wallet:
+
+Print each deposit: amount, multiplier, and votingPower
+
+Show nativeGovernancePower, delegatedGovernancePower, totalGovernancePower
+
+Highlight ✅ if all values are within 0.5% of expected, or ❌ with details if off
+
+Do not hardcode expected values. All logic must decode from actual VSR account data using Anchor-compatible struct layout.
+
+Goal: All governance power results must be accurate, real, on-chain, and decode correctly even as new citizens join the map.
