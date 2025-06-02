@@ -191,26 +191,45 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       const depositAmounts = [];
       for (let offset = 0; offset < data.length - 8; offset += 8) {
         const value = Number(data.readBigUInt64LE(offset));
-        // Look for values in VSR deposit range (normalized to 1B scale factor)
-        if (value > 1000000000000 && value < 100000000000000000) { // 1M to 100B in nano-units
-          const normalizedAmount = value / 1_000_000_000; // Apply VSR normalization
-          if (normalizedAmount >= 1000 && normalizedAmount <= 100000000) { // 1K to 100M ISLAND
-            depositAmounts.push({ offset, amount: normalizedAmount, raw: value });
+        
+        // Look for ISLAND amounts in micro-lamports (1e6 scale)
+        if (value > 1000000000 && value < 100000000000000) { // 1K to 100M ISLAND in micro-units
+          const asTokens = value / 1e6; // Convert micro-lamports to ISLAND tokens
+          if (asTokens >= 1000 && asTokens <= 100000000) { // 1K to 100M ISLAND
+            depositAmounts.push({ offset, amount: asTokens, raw: value });
+          }
+        }
+        
+        // Also look for smaller unlocked deposits (like 12.6K range)
+        if (value > 10000000000 && value <= 100000000000) { // 10K to 100K ISLAND in micro-units
+          const asTokens = value / 1e6;
+          if (asTokens >= 10000 && asTokens <= 100000) { // 10K to 100K ISLAND
+            depositAmounts.push({ offset, amount: asTokens, raw: value });
           }
         }
       }
       
-      // Take conservative estimate (smallest reasonable amount to avoid overcounting)
-      if (depositAmounts.length > 0) {
-        const amounts = depositAmounts.map(d => d.amount);
-        const estimatedAmount = Math.min(...amounts); // Take minimum to avoid overcounting
+      // Remove duplicate values at adjacent offsets and get unique amounts
+      const uniqueAmounts = [];
+      for (let j = 0; j < depositAmounts.length; j++) {
+        const current = depositAmounts[j];
+        const next = depositAmounts[j + 1];
         
-        // Apply baseline multiplier for raw parsing (conservative approach)
-        const baselineMultiplier = 1.0;
-        const estimatedVotingPower = estimatedAmount * baselineMultiplier;
+        // Skip if next value is very similar and at adjacent offset (likely duplicate)
+        if (next && Math.abs(current.amount - next.amount) < 0.01 && 
+            Math.abs(current.offset - next.offset) <= 8) {
+          continue;
+        }
         
-        totalGovernancePower += estimatedVotingPower;
-        console.log(`🔄 Raw parsing: ${estimatedAmount.toLocaleString()} × ${baselineMultiplier} = ${estimatedVotingPower.toLocaleString()} ISLAND (conservative estimate)`);
+        uniqueAmounts.push(current.amount);
+      }
+      
+      // For unlocked deposits, take the largest single deposit to avoid overcounting
+      if (uniqueAmounts.length > 0) {
+        const maxDeposit = Math.max(...uniqueAmounts);
+        
+        totalGovernancePower += maxDeposit;
+        console.log(`🔄 Raw parsing: detected ${uniqueAmounts.length} deposits, using largest: ${maxDeposit.toLocaleString()} ISLAND (unlocked)`);
       }
     }
   }
