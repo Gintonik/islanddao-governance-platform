@@ -1,0 +1,40 @@
+I want you to finalize the canonical governance power calculation for SPL Governance using the Voter Stake Registry (VSR) on Solana.
+
+Objective:
+Implement an accurate `nativeGovernancePower` calculator that matches Realms UI, using canonical on-chain data from the VSR program.
+
+Requirements:
+- File: `vsr-api-server.js`
+- Use direct deserialization from VSR Voter accounts. No fallback guesses, no hardcoded values.
+- For each Voter account belonging to a wallet:
+  1. Parse `depositEntries[]` (up to 32 entries).
+  2. For each entry:
+     - Skip if `isUsed != 1`.
+     - Extract:
+       - `amountDepositedNative` (bytes 8–16, BigUInt64LE)
+       - `multiplier` (bytes 72–80, Float64LE)
+     - Only count if multiplier > 1.0 (i.e., locked deposits).
+     - Compute: `votingPower = amount × multiplier`
+  3. Use a `Set` or other method to prevent duplicate amounts from being double-counted across accounts or entries.
+  4. Sum total governance power for the wallet.
+
+Response JSON should include:
+- `nativeGovernancePower` (number)
+- Optional: `breakdown`: array of entries like `[amount, multiplier, votingPower]`
+
+Test wallets and expected results:
+1. `7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA` (Takisoul) → `8709019.78 ISLAND`
+2. `Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1` → `200000 ISLAND`  
+   (Only one unlocked deposit, should be ignored due to multiplier 1.0)
+3. `Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG` → `3361730.15 ISLAND` native, `1590000` delegated
+   (Return only native for now)
+4. `GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh` → `144708.98 ISLAND`
+5. `4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4` → `12625.58 ISLAND`
+
+Do not rely on fallback strategies. This calculator must:
+✓ Work for any wallet
+✓ Return correct numbers based on real on-chain VSR data
+✓ Avoid double-counting and apply exact per-deposit multipliers
+✓ Be extensible to support delegated power later
+
+This code will be used to populate a public dashboard. Accuracy must be 100%.

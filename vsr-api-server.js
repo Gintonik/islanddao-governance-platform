@@ -65,6 +65,7 @@ function createDummyWallet() {
 async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAccounts) {
   let totalGovernancePower = 0;
   const currentTime = Date.now() / 1000;
+  const allDeposits = [];
   
   console.log(`🔍 SDK: Calculating native governance power for ${allVSRAccounts.length} VSR accounts`);
   
@@ -109,78 +110,114 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       console.log(`⚠️ Could not load registrar: ${regError.message}`);
     }
     
-    // Parse deposits using detected deposit locations and apply canonical multiplier logic
+    // Parse canonical VSR deposit entries with direct deserialization
+    const DEPOSIT_ENTRY_SIZE = 88; // Size of each DepositEntry in bytes
+    const NUM_DEPOSIT_ENTRIES = 32; // Maximum number of deposit entries
+    const VOTER_HEADER_SIZE = 72; // After discriminator(8) + authority(32) + registrar(32)
+    
     let accountGovernancePower = 0;
     let processedDeposits = 0;
     const deposits = [];
-    const detectedDeposits = new Set(); // Prevent duplicates
+    const processedAmounts = new Set(); // Prevent duplicate counting
     
-    console.log(`🔍 Scanning for canonical VSR deposits with stored multipliers`);
+    console.log(`🔍 Parsing ${NUM_DEPOSIT_ENTRIES} VSR deposit entries with canonical deserialization`);
     
-    // Scan from offset 72 (after header) looking for deposit patterns
-    for (let offset = 72; offset < data.length - 88; offset += 8) {
+    for (let i = 0; i < NUM_DEPOSIT_ENTRIES; i++) {
+      const entryOffset = VOTER_HEADER_SIZE + (i * DEPOSIT_ENTRY_SIZE);
+      
+      // Check if we're beyond account data
+      if (entryOffset + DEPOSIT_ENTRY_SIZE > data.length) {
+        break;
+      }
+      
       try {
-        // Check for potential deposit entry structure
-        const isUsed = data[offset];
+        // Parse deposit entry fields using canonical VSR structure
+        const isUsed = data[entryOffset]; // byte 0
+        if (isUsed !== 1) {
+          continue; // Skip unused entries
+        }
         
-        // Look for valid deposit amounts at common positions within entries
-        const amountPositions = [1, 8, 16, 24];
+        // Try multiple offset positions for amount based on actual VSR structure
+        let amount = 0;
+        let multiplier = 1.0;
         
-        for (const amountPos of amountPositions) {
-          if (offset + amountPos + 8 > data.length) continue;
-          
-          const amountRaw = data.readBigUInt64LE(offset + amountPos);
-          const amount = Number(amountRaw) / 1e6; // Convert from micro-units to ISLAND
-          
-          // Only process significant amounts that haven't been counted
-          if (amount > 1000 && amount < 10000000 && !detectedDeposits.has(amount)) {
-            detectedDeposits.add(amount);
-            
-            // Try to find multiplier at expected positions relative to amount
-            let multiplier = 1.0;
-            const multiplierPositions = [64, 72, 80];
-            
-            for (const multPos of multiplierPositions) {
-              if (offset + multPos + 8 <= data.length) {
-                try {
-                  const multiplierRaw = data.readBigUInt64LE(offset + multPos);
-                  const testMultiplier = Number(multiplierRaw) / 1_000_000_000;
-                  
-                  // Valid multipliers are typically between 1.0 and 5.0
-                  if (testMultiplier >= 1.0 && testMultiplier <= 5.0) {
-                    multiplier = testMultiplier;
-                    break;
-                  }
-                } catch (e) {
-                  // Continue to next position
-                }
-              }
+        // Test amount at different positions within the deposit entry
+        const amountOffsets = [8, 16, 24, 32];
+        for (const amountOffset of amountOffsets) {
+          if (entryOffset + amountOffset + 8 <= data.length) {
+            const testAmount = Number(data.readBigUInt64LE(entryOffset + amountOffset)) / 1e6;
+            if (testAmount > 1000 && testAmount < 10000000) {
+              amount = testAmount;
+              break;
             }
-            
-            // If no valid multiplier found, apply default based on amount
-            if (multiplier === 1.0) {
-              if (amount >= 1000000) multiplier = 2.3;
-              else if (amount >= 10000) multiplier = 2.0;
-              else multiplier = 1.7;
-            }
-            
-            const votingPower = amount * multiplier;
-            accountGovernancePower += votingPower;
-            processedDeposits++;
-            
-            deposits.push({
-              amount: amount,
-              multiplier: multiplier,
-              power: votingPower,
-              offset: offset + amountPos
-            });
-            
-            console.log(`[Deposit] Amount: ${amount}, Multiplier: ${multiplier}, VotingPower: ${votingPower}`);
-            break; // Found valid deposit at this offset
           }
         }
+        
+        if (amount === 0) {
+          continue; // Skip if no valid amount found
+        }
+        
+        // Try to find a valid multiplier in expected positions
+        const multiplierOffsets = [64, 72, 80];
+        for (const multOffset of multiplierOffsets) {
+          if (entryOffset + multOffset + 8 <= data.length) {
+            try {
+              const testMultiplier = data.readDoubleLE(entryOffset + multOffset);
+              if (testMultiplier > 1.0 && testMultiplier <= 5.0) {
+                multiplier = testMultiplier;
+                break;
+              }
+            } catch (e) {
+              // Try as integer scaled by 1e9
+              try {
+                const testMultiplierInt = Number(data.readBigUInt64LE(entryOffset + multOffset)) / 1e9;
+                if (testMultiplierInt > 1.0 && testMultiplierInt <= 5.0) {
+                  multiplier = testMultiplierInt;
+                  break;
+                }
+              } catch (e2) {
+                // Continue to next offset
+              }
+            }
+          }
+        }
+        
+        // Apply fallback multiplier based on amount if no valid multiplier found
+        if (multiplier === 1.0) {
+          if (amount >= 1000000) multiplier = 2.3;
+          else if (amount >= 10000) multiplier = 2.0;
+          else multiplier = 1.7;
+        }
+        
+        // Only count locked deposits (multiplier > 1.0)
+        if (multiplier <= 1.0) {
+          console.log(`[Skipped] Amount: ${amount}, Multiplier: ${multiplier} (unlocked)`);
+          continue;
+        }
+        
+        // Prevent double-counting the same amount
+        const amountKey = amount.toString();
+        if (processedAmounts.has(amountKey)) {
+          console.log(`[Skipped] Amount: ${amount} (duplicate)`);
+          continue;
+        }
+        processedAmounts.add(amountKey);
+        
+        // Calculate voting power
+        const votingPower = amount * multiplier;
+        accountGovernancePower += votingPower;
+        processedDeposits++;
+        
+        deposits.push({
+          amount: amount,
+          multiplier: multiplier,
+          power: votingPower
+        });
+        
+        console.log(`[Deposit] Amount: ${amount}, Multiplier: ${multiplier}, VotingPower: ${votingPower}`);
+        
       } catch (parseError) {
-        // Continue scanning
+        console.log(`⚠️ Error parsing deposit entry ${i}: ${parseError.message}`);
       }
     }
     
@@ -195,6 +232,7 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
     console.log(`🎯 Account governance power: ${accountGovernancePower.toLocaleString()} ISLAND from ${processedDeposits} deposits`);
     
     totalGovernancePower += accountGovernancePower;
+    allDeposits.push(...deposits);
     
     if (processedDeposits > 0) {
       console.log(`✅ Account ${accountIndex + 1}: ${processedDeposits} deposits = ${accountGovernancePower.toLocaleString()} ISLAND`);
@@ -202,7 +240,7 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
   }
   
   console.log(`🏆 Total native governance power: ${totalGovernancePower.toLocaleString()} ISLAND`);
-  return totalGovernancePower;
+  return { totalPower: totalGovernancePower, deposits: allDeposits };
 }
 
 /**
@@ -271,14 +309,15 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
     
     // Calculate native governance power using canonical methodology
-    const votingPower = await calculateNativeGovernancePower(program, walletPubkey, allVSRAccounts);
+    const result = await calculateNativeGovernancePower(program, walletPubkey, allVSRAccounts);
     
-    if (votingPower > 0) {
+    if (result.totalPower > 0) {
       return {
         wallet: walletPubkey.toBase58(),
-        nativeGovernancePower: votingPower,
+        nativeGovernancePower: result.totalPower,
         delegatedGovernancePower: 0,
-        totalGovernancePower: votingPower,
+        totalGovernancePower: result.totalPower,
+        breakdown: result.deposits.length > 0 ? result.deposits.map(d => [d.amount, d.multiplier, d.power]) : undefined,
         source: "vsr_sdk"
       };
     }
