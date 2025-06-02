@@ -94,19 +94,23 @@ function parseDepositEntry(data, offset) {
 }
 
 /**
- * Calculate lockup multiplier based on time remaining
+ * Calculate lockup multiplier based on lockup configuration
  */
 function calculateLockupMultiplier(deposit, currentTimestamp) {
-  if (!deposit.isLocked() || deposit.lockupKind === 0) {
-    return 1.0; // No lockup = baseline multiplier
+  // Always apply baseline multiplier of 1.0 for all deposits
+  const baseline = 1.0;
+  
+  // If no lockup or unlocked, use baseline multiplier
+  if (deposit.lockupKind === 0 || !deposit.isLocked()) {
+    return baseline;
   }
   
+  // For locked deposits, calculate time-based multiplier
   const timeRemaining = Math.max(0, deposit.lockupEndTs - currentTimestamp);
   const maxLockupPeriod = 4 * 365 * 24 * 60 * 60; // 4 years in seconds
   
   // VSR multiplier formula: baseline + (time_factor * max_extra)
   // Using IslandDAO typical values: baseline=1, max_extra=4
-  const baseline = 1.0;
   const maxExtra = 4.0;
   const timeFactor = Math.min(timeRemaining / maxLockupPeriod, 1.0);
   
@@ -118,13 +122,32 @@ function calculateLockupMultiplier(deposit, currentTimestamp) {
  */
 async function analyzeVoterAccount(walletAddress, verbose = false) {
   try {
-    // Search for Voter accounts (typically 2728 bytes)
-    const voterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        { dataSize: 2728 },
-        { memcmp: { offset: 40, bytes: walletAddress } }
-      ]
-    });
+    // Search for Voter accounts (typically 2728 bytes) at different offsets
+    let voterAccounts = [];
+    
+    // Try multiple common offsets where wallet addresses are stored
+    const offsets = [8, 40, 72]; // Most common offsets for wallet addresses
+    
+    for (const offset of offsets) {
+      try {
+        const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+          filters: [
+            { dataSize: 2728 },
+            { memcmp: { offset: offset, bytes: walletAddress } }
+          ]
+        });
+        
+        if (accounts.length > 0) {
+          voterAccounts = accounts;
+          if (verbose) {
+            console.log(`   📍 Found Voter account at offset ${offset}`);
+          }
+          break;
+        }
+      } catch (error) {
+        // Continue with next offset
+      }
+    }
     
     if (voterAccounts.length === 0) {
       return null;
@@ -151,22 +174,22 @@ async function analyzeVoterAccount(walletAddress, verbose = false) {
           continue;
         }
         
+        // Include ALL valid deposits - both locked and unlocked
         const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
         const power = (deposit.amountDepositedNative * multiplier) / 1e6;
         
-        if (power > 0) {
-          totalGovernancePower += power;
-          deposits.push({
-            amount: deposit.amountDepositedNative / 1e6,
-            multiplier: multiplier,
-            power: power,
-            isLocked: deposit.isLocked(),
-            lockupKind: deposit.lockupKind
-          });
-          
-          if (verbose) {
-            console.log(`     💰 Deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)} = ${power.toLocaleString()} power`);
-          }
+        totalGovernancePower += power;
+        deposits.push({
+          amount: deposit.amountDepositedNative / 1e6,
+          multiplier: multiplier,
+          power: power,
+          isLocked: deposit.isLocked(),
+          lockupKind: deposit.lockupKind
+        });
+        
+        if (verbose) {
+          const lockStatus = deposit.isLocked() ? "locked" : "unlocked";
+          console.log(`     💰 Deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)} = ${power.toLocaleString()} power (${lockStatus})`);
         }
       }
     }
@@ -254,6 +277,9 @@ async function fetchWalletGovernancePower(walletAddress, verbose = false) {
         source: "Voter fallback",
         voterWeight: Math.round(voterAnalysis.totalPower * 1e6),
         fallbackUsed: true,
+        totalDeposits: voterAnalysis.deposits.length,
+        totalPowerFromVoter: voterAnalysis.totalPower,
+        unlockedIncluded: true,
         deposits: voterAnalysis.deposits,
         voterAccountCount: voterAnalysis.voterAccountCount
       };
