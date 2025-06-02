@@ -737,9 +737,10 @@ app.get("/api/governance-power", async (req, res) => {
       if (votingPower > 0) {
         return res.json({
           wallet,
-          nativePower: votingPower,
+          nativeGovernancePower: votingPower,
           delegatedPower: 0,
           totalPower: votingPower,
+          source: "vsr_lockup"
         });
       }
       
@@ -758,9 +759,10 @@ app.get("/api/governance-power", async (req, res) => {
 
     return res.json({
       wallet,
-      nativePower: maxGovernancePower,
+      nativeGovernancePower: maxGovernancePower,
       delegatedPower: 0,
       totalPower: maxGovernancePower,
+      source: "vsr_account"
     });
   } catch (err) {
     console.error("Governance power error:", err);
