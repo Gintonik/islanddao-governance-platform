@@ -8,6 +8,10 @@ import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey } from "@solana/web3.js";
+import fs from "fs";
+
+// Load VSR IDL for proper deserialization
+const vsrIdl = JSON.parse(fs.readFileSync("vsr_idl.json", "utf8"));
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
@@ -27,6 +31,120 @@ const VSR_PROGRAM_ID = new PublicKey(
 );
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
+
+/**
+ * Find Voter accounts for a specific wallet using targeted memcmp search
+ */
+async function findVoterAccountsForWallet(walletAddress) {
+  try {
+    const walletPubkey = new PublicKey(walletAddress);
+    
+    console.log(`🔍 Searching for Voter accounts with authority: ${walletAddress}`);
+    
+    // Use getProgramAccounts with memcmp filter at offset 40 (8-byte discriminator + 32-byte registrar)
+    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        {
+          memcmp: {
+            offset: 40, // authority field offset
+            bytes: walletPubkey.toBase58(),
+          },
+        },
+      ],
+    });
+    
+    console.log(`Found ${accounts.length} Voter accounts for ${walletAddress}`);
+    return accounts;
+  } catch (error) {
+    console.error(`Error finding voter accounts: ${error.message}`);
+    return [];
+  }
+}
+
+/**
+ * Calculate voting power from Voter account using Anchor IDL deserialization
+ */
+function calculateVotingPowerFromVoter(voterAccountData, accountPubkey) {
+  try {
+    const data = voterAccountData;
+    console.log(`\n📊 Deserializing Voter account: ${accountPubkey.toBase58()}`);
+    console.log(`Data length: ${data.length} bytes`);
+    
+    // Parse Voter struct manually based on IDL
+    let offset = 8; // Skip discriminator
+    
+    // Read registrar (32 bytes)
+    const registrar = new PublicKey(data.slice(offset, offset + 32));
+    offset += 32;
+    
+    // Read authority (32 bytes)
+    const authority = new PublicKey(data.slice(offset, offset + 32));
+    offset += 32;
+    
+    // Read voter_bump (1 byte)
+    const voterBump = data[offset];
+    offset += 1;
+    
+    // Read voter_weight_record_bump (1 byte)
+    const voterWeightRecordBump = data[offset];
+    offset += 1;
+    
+    console.log(`Voter struct:`);
+    console.log(`  registrar: ${registrar.toBase58()}`);
+    console.log(`  authority: ${authority.toBase58()}`);
+    console.log(`  voter_bump: ${voterBump}`);
+    console.log(`  voter_weight_record_bump: ${voterWeightRecordBump}`);
+    
+    // Read deposits array (up to 32 deposits, each 105 bytes)
+    let totalVotingPower = 0;
+    console.log(`\n📈 Processing deposits:`);
+    
+    for (let i = 0; i < 32; i++) {
+      const depositOffset = offset + (i * 105);
+      
+      if (data.length < depositOffset + 105) {
+        console.log(`Reached end of data at deposit ${i}`);
+        break;
+      }
+      
+      // Parse DepositEntry
+      const isUsed = data[depositOffset] === 1;
+      
+      if (!isUsed) continue;
+      
+      // Read amount_deposited_native (8 bytes)
+      const amountBytes = data.slice(depositOffset + 1, depositOffset + 9);
+      const amountDepositedNative = Number(amountBytes.readBigUInt64LE(0));
+      
+      // Read rate_idx (2 bytes)
+      const rateIdx = data.readUInt16LE(depositOffset + 9);
+      
+      // Read lockup (varies by type, but voting_multiplier is at specific offset)
+      // For now, read voting_multiplier directly at offset +81 (8 bytes)
+      const multiplierBytes = data.slice(depositOffset + 81, depositOffset + 89);
+      const votingMultiplier = Number(multiplierBytes.readBigUInt64LE(0));
+      
+      // Calculate voting power for this deposit
+      const depositVotingPower = amountDepositedNative * votingMultiplier / 1e18; // Adjust for precision
+      
+      console.log(`  Deposit ${i}:`);
+      console.log(`    isUsed: ${isUsed}`);
+      console.log(`    amountDepositedNative: ${amountDepositedNative}`);
+      console.log(`    rateIdx: ${rateIdx}`);
+      console.log(`    votingMultiplier: ${votingMultiplier}`);
+      console.log(`    calculatedVotingPower: ${depositVotingPower}`);
+      
+      totalVotingPower += depositVotingPower;
+    }
+    
+    console.log(`\n🎯 Total voting power: ${totalVotingPower}`);
+    return totalVotingPower;
+    
+  } catch (error) {
+    console.error(`Error calculating voting power: ${error.message}`);
+    return 0;
+  }
+}
 
 app.use(cors());
 app.use(express.json());
@@ -54,6 +172,40 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
+    // Special targeted search for the specific wallet we're debugging
+    if (wallet === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
+      console.log("🎯 Using targeted memcmp search for debug wallet");
+      
+      const voterAccounts = await findVoterAccountsForWallet(wallet);
+      
+      if (voterAccounts.length === 0) {
+        console.log("❌ No Voter accounts found using targeted search");
+        return res.json({
+          wallet,
+          nativePower: 0,
+          delegatedPower: 0,
+          totalPower: 0,
+        });
+      }
+      
+      let totalVotingPower = 0;
+      
+      for (const { account, pubkey } of voterAccounts) {
+        const votingPower = calculateVotingPowerFromVoter(account.data, pubkey);
+        totalVotingPower += votingPower;
+      }
+      
+      console.log(`\n🏁 Final total voting power: ${totalVotingPower}`);
+      
+      return res.json({
+        wallet,
+        nativePower: totalVotingPower,
+        delegatedPower: 0,
+        totalPower: totalVotingPower,
+      });
+    }
+    
+    // Fallback to existing method for other wallets
     const allVSRAccounts = await loadVSRAccounts();
     console.log(`Scanning ${allVSRAccounts.length} VSR accounts`);
 
