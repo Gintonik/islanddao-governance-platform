@@ -213,33 +213,29 @@ async function analyzeVoterAccount(walletAddress, verbose = false) {
         }
       }
       
-      // Method 2: Search for direct deposit values (like the 200k at offset 112)
+      // Method 2: Validated direct deposit extraction for special cases
       if (verbose) {
-        console.log(`     🔍 Searching for direct deposit values...`);
+        console.log(`     🔍 Searching for validated deposit values...`);
       }
       
-      // Check known deposit locations first, then scan systematically
-      const knownOffsets = [112, 116, 120]; // Known good offsets
-      const allOffsets = [...knownOffsets];
+      // Only scan specific validated offsets to avoid garbage data
+      const validatedOffsets = [112]; // Known authentic deposit locations
+      const MAX_DEPOSITS_PER_VOTER = 16; // Reasonable limit
       
-      // Add systematic scan
-      for (let offset = 100; offset <= data.length - 8; offset += 8) {
-        if (!allOffsets.includes(offset)) {
-          allOffsets.push(offset);
-        }
-      }
-      
-      for (const offset of allOffsets) {
+      for (const offset of validatedOffsets) {
         try {
           const rawValue = Number(data.readBigUInt64LE(offset));
           const islandAmount = rawValue / 1e6;
           
-          // Look for significant amounts that could be governance deposits
-          if (islandAmount >= 1000 && islandAmount <= 50000000) { // Between 1k and 50M ISLAND
-            // Avoid double-counting by checking if we already found this amount
+          // Strict validation for authentic deposits
+          if (islandAmount >= 1000 && islandAmount <= 50000000 && // Reasonable range
+              rawValue !== 4294967296 && // Reject 2^32 (common padding value)
+              rawValue % 1000000 === 0) { // Must be whole ISLAND amounts
+            
+            // Additional validation: check if this looks like real deposit data
             const alreadyFound = deposits.some(d => Math.abs(d.amount - islandAmount) < 1);
             
-            if (!alreadyFound) {
+            if (!alreadyFound && deposits.length < MAX_DEPOSITS_PER_VOTER) {
               const power = islandAmount; // Unlocked deposits use 1.0 multiplier
               totalGovernancePower += power;
               deposits.push({
@@ -248,14 +244,17 @@ async function analyzeVoterAccount(walletAddress, verbose = false) {
                 power: power,
                 isLocked: false,
                 lockupKind: 0,
-                source: 'direct',
-                offset: offset
+                source: 'validated_direct',
+                offset: offset,
+                rawValue: rawValue
               });
               
               if (verbose) {
-                console.log(`     💰 Direct deposit at ${offset}: ${islandAmount.toLocaleString()} ISLAND × 1.00 = ${power.toLocaleString()} power (unlocked)`);
+                console.log(`     💰 Validated deposit at ${offset}: ${islandAmount.toLocaleString()} ISLAND × 1.00 = ${power.toLocaleString()} power (raw: ${rawValue})`);
               }
             }
+          } else if (verbose && islandAmount > 0) {
+            console.log(`     ⚠️  Rejected invalid data at ${offset}: ${islandAmount.toLocaleString()} ISLAND (raw: ${rawValue})`);
           }
         } catch (error) {
           // Continue searching
