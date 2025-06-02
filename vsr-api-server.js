@@ -55,27 +55,61 @@ app.get("/api/governance-power", async (req, res) => {
       VSR_PROGRAM_ID,
       provider,
     );
-    const walletKey = new PublicKey(wallet);
 
-    // Use getProgramAccounts to fetch all voter accounts
-    console.log(`Fetching voter accounts for wallet: ${wallet}`);
+    // Fetch all VSR accounts with no memcmp filters
+    console.log(`Fetching all VSR accounts for wallet: ${wallet}`);
     const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID);
 
-    console.log(`Scanned ${allVoterAccountInfos.length} total accounts from VSR program`);
+    console.log(`Total VSR accounts fetched: ${allVoterAccountInfos.length}`);
 
-    // Filter and deserialize accounts for this wallet
-    const relevantVoterAccounts = [];
+    // Scan all accounts and find matches for this wallet
     let matchedAccounts = 0;
+    let nativePower = 0;
+    const now = Math.floor(Date.now() / 1000);
     
     for (const accountInfo of allVoterAccountInfos) {
       try {
         // Deserialize using Anchor
         const decoded = program.coder.accounts.decode("voter", accountInfo.account.data);
         
-        // Check if authority matches our wallet
+        // Filter only those where authority matches the wallet exactly
         if (decoded.authority.toBase58() === wallet) {
-          relevantVoterAccounts.push({ account: decoded, publicKey: accountInfo.pubkey });
           matchedAccounts++;
+          
+          // Loop over depositEntries for this voter
+          for (const entry of decoded.depositEntries) {
+            // Skip if entry is not used or has no deposited amount
+            if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0) {
+              continue;
+            }
+            
+            // Skip if not voting mint config index 0
+            if (entry.votingMintConfigIdx !== 0) {
+              continue;
+            }
+            
+            const lockupStart = entry.lockup.startTs.toNumber();
+            const lockupEnd = entry.lockup.endTs.toNumber();
+            
+            // Skip if current time is before startTs or after endTs
+            if (now < lockupStart || now >= lockupEnd) {
+              continue;
+            }
+
+            // Calculate multiplier with time decay
+            const baseMultiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
+            const totalDuration = lockupEnd - lockupStart;
+            const timeRemaining = lockupEnd - now;
+
+            let adjustedMultiplier = baseMultiplier;
+            if (totalDuration > 0) {
+              adjustedMultiplier = baseMultiplier * (timeRemaining / totalDuration);
+            }
+
+            const amount = entry.amountDepositedNative.toNumber();
+            const power = Math.floor(amount * adjustedMultiplier);
+            nativePower += power;
+          }
         }
       } catch (deserializeError) {
         // Skip accounts that can't be deserialized as voter accounts
@@ -83,39 +117,8 @@ app.get("/api/governance-power", async (req, res) => {
       }
     }
 
-    console.log(`Found ${matchedAccounts} voter accounts matching wallet ${wallet}`);
-
-    let nativePower = 0;
-    const now = Math.floor(Date.now() / 1000);
-
-    for (const { account: voter } of relevantVoterAccounts) {
-      for (const entry of voter.depositEntries) {
-        if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0)
-          continue;
-        if (entry.votingMintConfigIdx !== 0) continue;
-
-        const lockupStart = entry.lockup.startTs.toNumber();
-        const lockupEnd = entry.lockup.endTs.toNumber();
-        if (now < lockupStart || now >= lockupEnd) continue;
-
-        const baseMultiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
-        const totalDuration = lockupEnd - lockupStart;
-        const timeRemaining = lockupEnd - now;
-
-        let adjustedMultiplier = baseMultiplier;
-        if (totalDuration > 0) {
-          adjustedMultiplier = baseMultiplier * (timeRemaining / totalDuration);
-        }
-
-        const amount = entry.amountDepositedNative.toNumber();
-        const power = Math.floor(amount * adjustedMultiplier);
-        nativePower += power;
-
-        console.log(`💪 Found deposit: ${amount} tokens, multiplier: ${adjustedMultiplier}, power: ${power}`);
-      }
-    }
-
-    console.log(`🏆 Total native power for ${wallet}: ${nativePower}`);
+    console.log(`How many matched the wallet: ${matchedAccounts}`);
+    console.log(`Final governance power calculated: ${nativePower}`);
 
     return res.json({
       wallet,
