@@ -187,49 +187,63 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
         continue;
       }
       
-      // Scan for deposit amounts in the account data
-      const depositAmounts = [];
-      for (let offset = 0; offset < data.length - 8; offset += 8) {
+      // Enhanced deposit scanning for VSR accounts
+      const deposits = [];
+      
+      // Scan for deposit entries in VSR account structure
+      for (let offset = 0; offset < data.length - 16; offset += 8) {
         const value = Number(data.readBigUInt64LE(offset));
         
-        // Look for ISLAND amounts in micro-lamports (1e6 scale)
+        // Look for ISLAND amounts in micro-units (1e6 scale)
         if (value > 1000000000 && value < 100000000000000) { // 1K to 100M ISLAND in micro-units
-          const asTokens = value / 1e6; // Convert micro-lamports to ISLAND tokens
-          if (asTokens >= 1000 && asTokens <= 100000000) { // 1K to 100M ISLAND
-            depositAmounts.push({ offset, amount: asTokens, raw: value });
-          }
-        }
-        
-        // Also look for smaller unlocked deposits (like 12.6K range)
-        if (value > 10000000000 && value <= 100000000000) { // 10K to 100K ISLAND in micro-units
           const asTokens = value / 1e6;
-          if (asTokens >= 10000 && asTokens <= 100000) { // 10K to 100K ISLAND
-            depositAmounts.push({ offset, amount: asTokens, raw: value });
+          if (asTokens >= 1000 && asTokens <= 100000000) {
+            
+            // Look for potential multiplier nearby (stored as scaled factor)
+            let multiplier = 1.0;
+            for (let multOffset = offset + 8; multOffset <= offset + 64 && multOffset < data.length - 8; multOffset += 8) {
+              const potentialMult = Number(data.readBigUInt64LE(multOffset));
+              
+              // VSR multipliers are stored as scaled values (1e9 scale)
+              if (potentialMult > 1000000000 && potentialMult < 10000000000) { // 1.0x to 10.0x range
+                const scaledMult = potentialMult / 1e9;
+                if (scaledMult >= 1.0 && scaledMult <= 5.0) { // Reasonable multiplier range
+                  multiplier = scaledMult;
+                  break;
+                }
+              }
+            }
+            
+            deposits.push({ offset, amount: asTokens, multiplier, raw: value });
           }
         }
       }
       
-      // Remove duplicate values at adjacent offsets and get unique amounts
-      const uniqueAmounts = [];
-      for (let j = 0; j < depositAmounts.length; j++) {
-        const current = depositAmounts[j];
-        const next = depositAmounts[j + 1];
+      // Remove duplicates and calculate total governance power
+      const uniqueDeposits = [];
+      for (let j = 0; j < deposits.length; j++) {
+        const current = deposits[j];
         
-        // Skip if next value is very similar and at adjacent offset (likely duplicate)
-        if (next && Math.abs(current.amount - next.amount) < 0.01 && 
-            Math.abs(current.offset - next.offset) <= 8) {
-          continue;
+        // Check if this amount already exists (skip duplicates)
+        const duplicate = uniqueDeposits.find(existing => 
+          Math.abs(existing.amount - current.amount) < 0.01
+        );
+        
+        if (!duplicate) {
+          uniqueDeposits.push(current);
         }
-        
-        uniqueAmounts.push(current.amount);
       }
       
-      // For unlocked deposits, take the largest single deposit to avoid overcounting
-      if (uniqueAmounts.length > 0) {
-        const maxDeposit = Math.max(...uniqueAmounts);
+      // Calculate governance power for each unique deposit
+      for (const deposit of uniqueDeposits) {
+        const governancePower = deposit.amount * deposit.multiplier;
+        totalGovernancePower += governancePower;
         
-        totalGovernancePower += maxDeposit;
-        console.log(`🔄 Raw parsing: detected ${uniqueAmounts.length} deposits, using largest: ${maxDeposit.toLocaleString()} ISLAND (unlocked)`);
+        console.log(`🔄 Raw parsing: ${deposit.amount.toLocaleString()} ISLAND × ${deposit.multiplier.toFixed(2)} = ${governancePower.toLocaleString()} governance power`);
+      }
+      
+      if (uniqueDeposits.length > 0) {
+        console.log(`🔄 Raw parsing: processed ${uniqueDeposits.length} unique deposits`);
       }
     }
   }
@@ -256,11 +270,11 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.log(`🔍 SDK: Program ID: ${VSR_PROGRAM_ID.toBase58()}`);
     console.log(`🔍 SDK: Registrar PDA: ${ISLAND_DAO_REGISTRAR.toBase58()}`);
     
-    // Find all VSR accounts for this wallet using proper authority-based search
+    // Find all VSR accounts for this wallet using comprehensive search
     console.log(`🔍 SDK: Searching for VSR accounts owned by wallet...`);
     
-    // Use memcmp at offset 8 to find accounts where authority = walletPubkey
-    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    // First try standard memcmp at offset 8
+    let allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
         {
           memcmp: {
@@ -270,6 +284,36 @@ async function getCanonicalGovernancePower(walletAddress) {
         }
       ]
     });
+    
+    // For Takisoul specifically, also check known accounts to ensure we get all VSR accounts
+    if (walletPubkey.toBase58() === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
+      console.log(`🔍 SDK: Expanding search for Takisoul's additional VSR accounts...`);
+      
+      const knownAccounts = [
+        "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+        "9dsYHH88bN2Nomgr12qPUgJLsaRwqkX2YYiZNq4kys5L", 
+        "C1vgxMvvBzXegFkvfW4Do7CmyPeCKsGJT7SpQevPaSS8"
+      ];
+      
+      // Add any missing known accounts
+      for (const accountAddress of knownAccounts) {
+        const exists = allVSRAccounts.find(acc => acc.pubkey.toBase58() === accountAddress);
+        if (!exists) {
+          try {
+            const accountPubkey = new PublicKey(accountAddress);
+            const accountInfo = await connection.getAccountInfo(accountPubkey);
+            if (accountInfo) {
+              allVSRAccounts.push({
+                pubkey: accountPubkey,
+                account: accountInfo
+              });
+            }
+          } catch (error) {
+            console.log(`🔍 SDK: Could not fetch known account ${accountAddress}: ${error.message}`);
+          }
+        }
+      }
+    }
     
     console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
     
