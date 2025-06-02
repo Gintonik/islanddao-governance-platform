@@ -97,71 +97,60 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
         console.log(`⚠️ Could not load registrar config: ${regError.message}`);
       }
       
-      // Process each deposit entry
-      for (let i = 0; i < voterAccount.deposits.length; i++) {
+      // Process all 32 deposit entries
+      for (let i = 0; i < 32; i++) {
+        if (i >= voterAccount.deposits.length) {
+          break; // No more deposits
+        }
+        
         const deposit = voterAccount.deposits[i];
         
-        // Check if deposit is used and not withdrawn
+        // Skip if deposit is not used
         if (!deposit.isUsed) {
-          console.log(`⏭️ Skipping deposit ${i}: not used`);
           continue;
         }
         
-        // Extract deposit amounts
         const amountDeposited = deposit.amountDepositedNative.toNumber();
-        const amountInitiallyLocked = deposit.amountInitiallyLockedNative ? deposit.amountInitiallyLockedNative.toNumber() : 0;
-        
         if (amountDeposited === 0) {
-          console.log(`⏭️ Skipping deposit ${i}: no amount deposited`);
           continue;
         }
         
-        // Calculate multiplier
-        let multiplier = 1.0; // Baseline
+        let multiplier = 1.0; // Default for unlocked deposits
+        let depositType = "UNLOCKED";
+        let isLocked = false;
         
-        if (registrarAccount && deposit.votingMintConfigIdx < registrarAccount.votingMints.length) {
-          const votingMintConfig = registrarAccount.votingMints[deposit.votingMintConfigIdx];
+        // Check if deposit has a lockup
+        if (deposit.lockup) {
+          // Check lockup kind and expiration
+          const hasActiveLockup = deposit.lockup.endTs && deposit.lockup.endTs.toNumber() > currentTime;
+          const isNoneLockup = deposit.lockup.kind && deposit.lockup.kind.none;
           
-          if (deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime) {
-            const lockupSecs = deposit.lockup.endTs.toNumber() - currentTime;
-            const saturationSecs = votingMintConfig.lockupSaturationSecs.toNumber();
-            const lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
-            
-            const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
-            const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
-            
-            multiplier = (baselineWeight + (lockupFactor * maxExtraWeight)) / 1_000_000_000;
-          } else {
-            // No active lockup, use baseline weight
-            const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
-            multiplier = baselineWeight / 1_000_000_000;
-          }
-        }
-        
-        let votingPowerAmount = 0;
-        let depositType = "";
-        
-        // Apply VSR logic: locked vs unlocked deposits
-        if (amountInitiallyLocked === 0) {
-          // Unlocked deposit: use full amountDeposited
-          votingPowerAmount = amountDeposited / 1_000_000_000; // Normalize
-          depositType = "UNLOCKED";
-        } else {
-          // Locked deposit: use currentlyLocked amount
-          // For locked deposits, check if still locked
-          if (deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime) {
-            votingPowerAmount = amountDeposited / 1_000_000_000; // Use deposited amount for locked
+          if (!isNoneLockup && hasActiveLockup) {
+            isLocked = true;
             depositType = "LOCKED";
-          } else {
-            console.log(`⏭️ Skipping deposit ${i}: lockup expired`);
-            continue;
+            
+            // Calculate lockup multiplier
+            if (registrarAccount && deposit.votingMintConfigIdx < registrarAccount.votingMints.length) {
+              const votingMintConfig = registrarAccount.votingMints[deposit.votingMintConfigIdx];
+              
+              const lockupSecs = deposit.lockup.endTs.toNumber() - currentTime;
+              const saturationSecs = votingMintConfig.lockupSaturationSecs.toNumber();
+              const lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
+              
+              const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
+              const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
+              
+              multiplier = (baselineWeight + (lockupFactor * maxExtraWeight)) / 1_000_000_000;
+            }
           }
         }
         
-        const depositVotingPower = votingPowerAmount * multiplier;
+        // Calculate voting power: amountDepositedNative * multiplier
+        const amountInTokens = amountDeposited / 1e6; // Convert from micro-units to ISLAND
+        const depositVotingPower = amountInTokens * multiplier;
         totalGovernancePower += depositVotingPower;
         
-        console.log(`📊 Deposit ${i} (${depositType}): ${votingPowerAmount.toLocaleString()} × ${multiplier.toFixed(6)} = ${depositVotingPower.toLocaleString()} governance power`);
+        console.log(`📊 Deposit ${i} (${depositType}): ${amountInTokens.toLocaleString()} ISLAND × ${multiplier.toFixed(6)} = ${depositVotingPower.toLocaleString()} governance power`);
       }
       
     } catch (anchorError) {
