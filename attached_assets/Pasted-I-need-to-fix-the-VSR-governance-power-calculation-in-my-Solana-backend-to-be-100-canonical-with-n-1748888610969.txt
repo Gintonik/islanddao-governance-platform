@@ -1,0 +1,115 @@
+I need to fix the VSR governance power calculation in my Solana backend to be 100% canonical, with no guessing, no fallback byte offsets, and with exact deserialization from on-chain Voter accounts.
+
+🎯 Goal:
+Calculate **native** and **delegated** governance power for any wallet in the IslandDAO governance program with accuracy better than **0.5%** error margin using the Voter Stake Registry (VSR) canonical Anchor layout.
+
+📦 Data source:
+- VSR Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+- Governance Program ID: `GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw`
+- Anchor IDL: Already loaded from `vsr-idl.json`
+- Environment: Node.js using `@coral-xyz/anchor`, `@solana/web3.js`, and Express
+
+✅ Requirements:
+1. For every wallet in `citizens` table, fetch all associated `Voter` accounts from the VSR program
+2. For each deposit entry inside `voter.depositEntries`, apply these rules:
+
+```ts
+// canonical deposit entry filter logic:
+if (!entry.isUsed) return;                            // skip if not used
+if (entry.amount === 0) return;                       // skip if zeroed
+if (entry.lockup.endTs.toNumber() < now) return;      // skip if expired
+if (entry.lockup.multiplier.toNumber() <= 1.0) return; // skip if unlocked
+
+Calculate votingPower = amount * multiplier using Anchor-deserialized values:
+
+Use .toNumber() or .toBigInt() where appropriate
+
+Multipliers are stored as fixed-point decimals in Anchor's layout
+
+Sum voting power from all valid deposit entries across all voter accounts owned by the wallet
+
+Prevent double-counting: deduplicate deposits by [mint + startTs] or some other unique key
+
+Implement delegated governance power:
+
+Use getProgramAccounts on SPL Governance program ID
+
+Find TokenOwnerRecord accounts with governingTokenOwner == wallet
+
+For each, extract delegated governance amount (if any) from VSR side
+
+🧪 Test Reference Wallets:
+Please validate final results against these known accurate values:
+
+[
+  {
+    wallet: "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+    native: 1,
+    delegated: 1268162
+  },
+  {
+    wallet: "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+    native: 144708.981722,
+    delegated: 0
+  },
+  {
+    wallet: "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+    native: 3361730.15,
+    delegated: 1598919.1
+  },
+  {
+    wallet: "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+    native: 200000,
+    delegated: 0
+  },
+  {
+    wallet: "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+    native: 12625.580931
+  },
+  {
+    wallet: "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+    native: 8709019.78
+  }
+]
+
+🧼 Clean Output:
+The API should return this shape:
+
+{
+  wallet: "XYZ",
+  nativeGovernancePower: number,
+  delegatedGovernancePower: number,
+  totalGovernancePower: number,
+  deposits: [
+    {
+      amount: number,
+      multiplier: number,
+      votingPower: number,
+      lockupKind: string,
+      endTs: number
+    }
+  ]
+}
+
+❌ Do not use:
+
+Byte scanning
+
+Heuristics for multipliers
+
+Guessing offset positions
+
+Any hardcoded override values
+
+Only use:
+
+Anchor layout from vsr-idl.json
+
+Canonical decoding of Voter accounts and lockups
+
+Real endTs, isUsed, and multiplier logic
+
+📌 Final Objective:
+We need this to be production-grade. The governance power must match Realms UI or known values with <0.5% error, or the dashboard cannot be trusted. Always re-test against the 6 reference wallets.
+
+Make these changes in vsr-api-server.js, then restart the server and validate.
