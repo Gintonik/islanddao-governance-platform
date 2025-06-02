@@ -162,12 +162,51 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.log(`🔍 SDK: Program ID: ${VSR_PROGRAM_ID.toBase58()}`);
     console.log(`🔍 SDK: Registrar PDA: ${ISLAND_DAO_REGISTRAR.toBase58()}`);
     
-    // Use exact function signature as requested
-    const votingPower = await getLockTokensVotingPowerPerWallet(
-      program,
-      walletPubkey,
-      ISLAND_DAO_REGISTRAR
-    );
+    // Search for all VSR accounts for this wallet across all registrars
+    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        {
+          memcmp: {
+            offset: 8, // Authority field offset
+            bytes: walletPubkey.toBase58()
+          }
+        }
+      ]
+    });
+    
+    console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
+    
+    let totalVotingPower = 0;
+    
+    for (let i = 0; i < allVSRAccounts.length; i++) {
+      const account = allVSRAccounts[i];
+      const data = account.account.data;
+      
+      console.log(`🔍 SDK: Processing VSR account ${i + 1}: ${account.pubkey.toBase58()}`);
+      
+      // Parse registrar from account data
+      const registrarBytes = data.slice(40, 72);
+      const registrar = new PublicKey(registrarBytes);
+      
+      console.log(`🔍 SDK: Registrar: ${registrar.toBase58()}`);
+      
+      // Calculate voting power for this specific registrar
+      try {
+        const accountVotingPower = await getLockTokensVotingPowerPerWallet(
+          program,
+          walletPubkey,
+          registrar
+        );
+        
+        console.log(`🔍 SDK: Account ${i + 1} voting power: ${accountVotingPower}`);
+        totalVotingPower += accountVotingPower;
+        
+      } catch (error) {
+        console.log(`🔍 SDK: Error processing account ${i + 1}: ${error.message}`);
+      }
+    }
+    
+    const votingPower = totalVotingPower;
     
     if (votingPower > 0) {
       return {
