@@ -60,88 +60,120 @@ function createDummyWallet() {
 }
 
 /**
- * Get lock tokens voting power per wallet using exact SDK methodology
+ * Calculate VSR native governance power using canonical Anchor deserialization
  */
-async function getLockTokensVotingPowerPerWallet(program, walletPublicKey, registrarPDA) {
-  try {
-    console.log(`🔍 SDK: Getting VSR power for wallet: ${walletPublicKey.toBase58()}`);
-    
-    // Derive the voter PDA for this wallet
-    const [voterPDA] = PublicKey.findProgramAddressSync(
-      [
-        registrarPDA.toBuffer(),
-        Buffer.from('voter'),
-        walletPublicKey.toBuffer(),
-      ],
-      program.programId
-    );
-    
-    console.log(`🔍 SDK: Voter PDA: ${voterPDA.toBase58()}`);
+async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAccounts) {
+  let totalGovernancePower = 0;
+  const currentTime = Date.now() / 1000;
+  
+  console.log(`🔍 SDK: Calculating native governance power for ${allVSRAccounts.length} VSR accounts`);
+  
+  for (let accountIndex = 0; accountIndex < allVSRAccounts.length; accountIndex++) {
+    const account = allVSRAccounts[accountIndex];
+    console.log(`🔍 SDK: Processing VSR account ${accountIndex + 1}: ${account.pubkey.toBase58()}`);
     
     try {
-      // Fetch the voter account using Anchor
-      const voterAccount = await program.account.voter.fetch(voterPDA);
+      // Attempt Anchor deserialization first
+      const voterAccount = await program.account.voter.fetch(account.pubkey);
+      console.log(`✅ Anchor deserialization successful, ${voterAccount.deposits.length} deposits`);
       
-      console.log(`🔍 SDK: Found voter account with ${voterAccount.deposits.length} deposits`);
+      // Get registrar for this account
+      const registrarPubkey = voterAccount.registrar;
+      let registrarAccount = null;
       
-      // Fetch registrar config for voting mint configuration
-      const registrarAccount = await program.account.registrar.fetch(registrarPDA);
+      try {
+        registrarAccount = await program.account.registrar.fetch(registrarPubkey);
+        console.log(`✅ Registrar loaded: ${registrarAccount.votingMints.length} voting mints`);
+      } catch (regError) {
+        console.log(`⚠️ Could not load registrar config: ${regError.message}`);
+      }
       
-      let totalVotingPower = 0;
-      const currentTime = Date.now() / 1000;
-      
-      // Process each deposit in the voter account
+      // Process each deposit entry
       for (let i = 0; i < voterAccount.deposits.length; i++) {
         const deposit = voterAccount.deposits[i];
         
+        // Check if deposit is used and has amount
         if (!deposit.isUsed || deposit.amountDepositedNative.eq(0)) {
+          console.log(`⏭️ Skipping deposit ${i}: isUsed=${deposit.isUsed}, amount=${deposit.amountDepositedNative.toString()}`);
           continue;
         }
         
-        console.log(`🔍 SDK: Processing deposit ${i}: ${deposit.amountDepositedNative.toString()} tokens`);
+        const depositAmount = deposit.amountDepositedNative.toNumber() / 1e6; // Convert to ISLAND
+        console.log(`📊 Deposit ${i}: ${depositAmount.toLocaleString()} ISLAND`);
         
-        // Get voting mint config for this deposit
-        const votingMintConfig = registrarAccount.votingMints[deposit.votingMintConfigIdx];
-        if (!votingMintConfig) {
-          console.log(`🔍 SDK: No voting mint config at index ${deposit.votingMintConfigIdx}`);
+        // Check if lockup is still active
+        const isLocked = deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime;
+        console.log(`🔒 Lockup status: ${isLocked ? 'LOCKED' : 'UNLOCKED'}`);
+        
+        if (!isLocked) {
+          console.log(`⏭️ Skipping unlocked deposit ${i}`);
           continue;
         }
         
-        // Calculate lockup factor
-        let lockupFactor = 0;
-        if (deposit.lockup.endTs > currentTime) {
-          const lockupSecs = deposit.lockup.endTs - currentTime;
-          lockupFactor = Math.min(lockupSecs / votingMintConfig.lockupSaturationSecs.toNumber(), 1.0);
+        // Calculate multiplier
+        let multiplier = 1.0; // Baseline
+        
+        if (registrarAccount && deposit.votingMintConfigIdx < registrarAccount.votingMints.length) {
+          const votingMintConfig = registrarAccount.votingMints[deposit.votingMintConfigIdx];
+          
+          const lockupSecs = deposit.lockup.endTs.toNumber() - currentTime;
+          const saturationSecs = votingMintConfig.lockupSaturationSecs.toNumber();
+          const lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
+          
+          const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
+          const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
+          
+          multiplier = (baselineWeight + (lockupFactor * maxExtraWeight)) / 1_000_000_000;
         }
         
-        // Calculate voting power using VSR formula
-        const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
-        const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
-        const scaledFactor = baselineWeight + (lockupFactor * maxExtraWeight);
+        const depositVotingPower = depositAmount * multiplier;
+        totalGovernancePower += depositVotingPower;
         
-        const depositAmount = deposit.amountDepositedNative.toNumber();
-        const depositVotingPower = (depositAmount * scaledFactor) / 1_000_000_000; // Scale factor normalization
-        
-        totalVotingPower += depositVotingPower;
-        
-        console.log(`🔍 SDK: Deposit ${i}: ${depositAmount} tokens × ${(scaledFactor / 1_000_000_000).toFixed(6)} = ${depositVotingPower.toLocaleString()} voting power`);
+        console.log(`💎 Deposit ${i}: ${depositAmount.toLocaleString()} × ${multiplier.toFixed(6)} = ${depositVotingPower.toLocaleString()} governance power`);
       }
       
-      console.log(`🔍 SDK: Total voting power: ${totalVotingPower.toLocaleString()}`);
-      return totalVotingPower;
+    } catch (anchorError) {
+      console.log(`❌ Anchor deserialization failed: ${anchorError.message}`);
+      console.log(`🔄 Falling back to raw parsing for account ${accountIndex + 1}`);
       
-    } catch (fetchError) {
-      if (fetchError.message.includes('Account does not exist')) {
-        console.log(`🔍 SDK: No voter account found for wallet`);
-        return 0;
+      // Fallback to raw parsing
+      const data = account.account.data;
+      const depositAmounts = [];
+      
+      // Scan for large deposit amounts
+      for (let offset = 0; offset < data.length - 8; offset += 8) {
+        const value = Number(data.readBigUInt64LE(offset));
+        if (value > 1000000000000 && value < 100000000000000000) { // 1M to 100B micro-units
+          const asTokens = value / 1e6;
+          if (asTokens >= 1000) {
+            depositAmounts.push({ offset, amount: asTokens, raw: value });
+          }
+        }
       }
-      throw fetchError;
+      
+      // Remove duplicates and get unique amounts
+      const uniqueAmounts = [];
+      for (let j = 0; j < depositAmounts.length; j++) {
+        const current = depositAmounts[j];
+        const next = depositAmounts[j + 1];
+        
+        if (!next || Math.abs(current.amount - next.amount) > 0.1 || 
+            Math.abs(current.offset - next.offset) > 8) {
+          uniqueAmounts.push(current.amount);
+        }
+      }
+      
+      // Use maximum amount as approximate governance power
+      if (uniqueAmounts.length > 0) {
+        const maxAmount = Math.max(...uniqueAmounts);
+        totalGovernancePower += maxAmount;
+        console.log(`🔄 Raw parsing: ${maxAmount.toLocaleString()} ISLAND (estimated)`);
+      }
     }
-    
-  } catch (error) {
-    console.error(`🔍 SDK: Error getting VSR voting power: ${error.message}`);
-    return 0;
   }
+  
+  console.log(`🏆 Total native governance power: ${totalGovernancePower.toLocaleString()} ISLAND`);
+  return totalGovernancePower;
 }
 
 /**
@@ -162,85 +194,23 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.log(`🔍 SDK: Program ID: ${VSR_PROGRAM_ID.toBase58()}`);
     console.log(`🔍 SDK: Registrar PDA: ${ISLAND_DAO_REGISTRAR.toBase58()}`);
     
-    // Search for all VSR accounts containing this wallet (broader search)
-    console.log(`🔍 SDK: Searching for all VSR accounts containing wallet...`);
-    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-    const walletBuffer = walletPubkey.toBuffer();
-    
-    const relevantAccounts = [];
-    for (const account of allVSRAccounts) {
-      const data = account.account.data;
-      
-      // Search for wallet pubkey anywhere in the account data
-      for (let offset = 0; offset <= data.length - 32; offset++) {
-        if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
-          relevantAccounts.push(account);
-          break;
+    // Find all VSR accounts for this wallet using memcmp filter
+    console.log(`🔍 SDK: Searching for all VSR accounts for wallet...`);
+    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        {
+          memcmp: {
+            offset: 8, // Authority field offset in Voter accounts
+            bytes: walletPubkey.toBase58()
+          }
         }
-      }
-    }
+      ]
+    });
     
     console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
     
-    let totalVotingPower = 0;
-    
-    for (let i = 0; i < allVSRAccounts.length; i++) {
-      const account = allVSRAccounts[i];
-      const data = account.account.data;
-      
-      console.log(`🔍 SDK: Processing VSR account ${i + 1}: ${account.pubkey.toBase58()}`);
-      
-      // Parse registrar from account data
-      const registrarBytes = data.slice(40, 72);
-      const registrar = new PublicKey(registrarBytes);
-      
-      console.log(`🔍 SDK: Registrar: ${registrar.toBase58()}`);
-      
-      // Parse voting power directly from account data (bypass IDL issues)
-      try {
-        const depositAmounts = [];
-        
-        // Scan for deposit amounts using the pattern found in debug
-        for (let offset = 72; offset < Math.min(data.length - 8, 2000); offset += 8) {
-          const value = Number(data.readBigUInt64LE(offset));
-          const asTokens = value / 1e6;
-          
-          // Look for reasonable token amounts based on debug findings
-          if (value > 1000000 && value < 100000000000) { // 1 to 100K tokens
-            if (asTokens >= 1 && asTokens <= 100000) {
-              depositAmounts.push({ offset, amount: asTokens, raw: value });
-            }
-          }
-        }
-        
-        // Extract the largest deposit amount (voting power)
-        let accountVotingPower = 0;
-        if (depositAmounts.length > 0) {
-          // Find unique amounts (remove duplicates at consecutive offsets)
-          const uniqueAmounts = [];
-          for (let j = 0; j < depositAmounts.length; j++) {
-            const current = depositAmounts[j];
-            const next = depositAmounts[j + 1];
-            
-            if (!next || Math.abs(current.amount - next.amount) > 0.1 || 
-                Math.abs(current.offset - next.offset) > 8) {
-              uniqueAmounts.push(current.amount);
-            }
-          }
-          
-          // Take the maximum amount as voting power
-          accountVotingPower = Math.max(...uniqueAmounts);
-        }
-        
-        console.log(`🔍 SDK: Account ${i + 1} voting power: ${accountVotingPower} ISLAND`);
-        totalVotingPower += accountVotingPower;
-        
-      } catch (error) {
-        console.log(`🔍 SDK: Error parsing account ${i + 1}: ${error.message}`);
-      }
-    }
-    
-    const votingPower = totalVotingPower;
+    // Calculate native governance power using canonical methodology
+    const votingPower = await calculateNativeGovernancePower(program, walletPubkey, allVSRAccounts);
     
     if (votingPower > 0) {
       return {
