@@ -1,10 +1,12 @@
 {
-  "scanDate": "2025-06-02T23:01:52.494Z",
+  "scanDate": "2025-06-02T23:17:25.643Z",
   "summary": {
     "totalWallets": 20,
-    "walletsWithPower": 13,
-    "totalGovernancePower": 26304660.530975003,
-    "averagePowerPerActiveWallet": 2023435.4254596157
+    "walletsWithPower": 12,
+    "totalNativePower": 26104660.530975003,
+    "totalDelegatedPower": 0,
+    "totalGovernancePower": 26104660.530975003,
+    "averagePowerPerActiveWallet": 2175388.3775812504
   },
   "configuration": {
     "vsrProgram": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
@@ -15,263 +17,303 @@
   "results": [
     {
       "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
-      "governancePower": 11271548.09398,
-      "source": "176-byte VWR account",
-      "voterWeight": 11271548093980,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 11271548.09398,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 11271548.09398,
+      "sources": [
+        "VWR",
+        "VWR",
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "2QqyEyU1pjj1YXR3aUGV5feBDUDwHvxoFgnAhMNvyibb",
           "power": 1000,
-          "rawValue": 1000000000
+          "type": "VWR"
         },
         {
           "account": "7YMyAEU3vJ9iPQmJiK7U9JyPMXghChkAmHNFXXdvb4CN",
           "power": 10353648.013,
-          "rawValue": 10353648013000
+          "type": "VWR"
         },
         {
           "account": "GMb1DmHWxg163Yy3EdfArzTkhpGSqVWPeVNEXYWR7aWM",
           "power": 916900.08098,
-          "rawValue": 916900080980
+          "type": "VWR"
         }
-      ]
+      ],
+      "delegatedSources": []
     },
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "governancePower": 8639094.589543,
-      "source": "176-byte VWR account",
-      "voterWeight": 8639094589543,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 8639094.589543,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 8639094.589543,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "C1vgxMvvBzXegFkvfW4Do7CmyPeCKsGJT7SpQevPaSS8",
           "power": 8639094.589543,
-          "rawValue": 8639094589543
+          "type": "VWR"
         }
-      ]
+      ],
+      "delegatedSources": []
     },
     {
       "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
-      "governancePower": 3374735.150474,
-      "source": "176-byte VWR account",
-      "voterWeight": 3374735150474,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 3374735.150474,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 3374735.150474,
+      "sources": [
+        "VWR",
+        "VWR",
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "2xxKfdUuDfh5vVjC7AN57Wk6kTnEbdQx8Paygiuej8XX",
           "power": 11005,
-          "rawValue": 11005000000
+          "type": "VWR"
         },
         {
           "account": "37P3wwPyd6wgUFhpYfP89gkTnffFhbVAMf73EzRGX8t2",
           "power": 2000,
-          "rawValue": 2000000000
+          "type": "VWR"
         },
         {
           "account": "9HtuMo2HwZFxa2ipMRGPnooNKeJ5Aj8zQxUqV1kxKpnD",
           "power": 3361730.150474,
-          "rawValue": 3361730150474
+          "type": "VWR"
         }
-      ]
+      ],
+      "delegatedSources": []
     },
     {
       "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
-      "governancePower": 1368236.699457,
-      "source": "176-byte VWR account",
-      "voterWeight": 1368236699457,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 1368236.699457,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 1368236.699457,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "7udRqrKsYCtqfLjUuitqriB1PSwmyTNQRcQsQWczR26w",
           "power": 1368236.699457,
-          "rawValue": 1368236699457
+          "type": "VWR"
         }
-      ]
+      ],
+      "delegatedSources": []
     },
     {
       "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
-      "governancePower": 556309.05886,
-      "source": "176-byte VWR account",
-      "voterWeight": 556309058860,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 556309.05886,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 556309.05886,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "B2RXmfAZpe7NrXMi8WbM5RGMFFLmodj8iEaWzQy9UB5N",
           "power": 556309.05886,
-          "rawValue": 556309058860
+          "type": "VWR"
         }
-      ]
+      ],
+      "delegatedSources": []
     },
     {
       "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
-      "governancePower": 383487.296852,
-      "source": "176-byte VWR account",
-      "voterWeight": 383487296852,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 383487.296852,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 383487.296852,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "4HpoA1Ax3KobxKJvUmkf5pPYkNLcThnJNafRsazPLKEE",
           "power": 383487.296852,
-          "rawValue": 383487296852
+          "type": "VWR"
         }
-      ]
+      ],
+      "delegatedSources": []
     },
     {
       "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
-      "governancePower": 320254.400268,
-      "source": "176-byte VWR account",
-      "voterWeight": 320254400268,
-      "fallbackUsed": false,
-      "vwrSources": [
+      "nativeGovernancePower": 320254.400268,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 320254.400268,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
         {
           "account": "83iKwdkDzjN2ogG9DpHZk3ZSRikQKzGNt61Rk52pqTLd",
           "power": 320254.400268,
-          "rawValue": 320254400268
+          "type": "VWR"
         }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "nativeGovernancePower": 143918.195927,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 143918.195927,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
+        {
+          "account": "jxEg5KWhwvoWBzUZnAXkgnegDV3m1WMUwjcGU6QKyhR",
+          "power": 143918.195927,
+          "type": "VWR"
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "nativeGovernancePower": 29484.464683,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 29484.464683,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
+        {
+          "account": "8t4F39hxmTzPcaHqq2Pq9TZwZWTxMuwQm4uZfKMjioJx",
+          "power": 29484.464683,
+          "type": "VWR"
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "nativeGovernancePower": 12625.580931,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 12625.580931,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
+        {
+          "account": "FaRu1b8yqshnnkUCGAbMDixWgghe7xHXoFVymMHE8nki",
+          "power": 12625.580931,
+          "type": "VWR"
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "nativeGovernancePower": 4879,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 4879,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
+        {
+          "account": "9MAitMo8GsxFuZX2ppY2ysoBnr1ryn2fUaAJJw4zxG91",
+          "power": 4879,
+          "type": "VWR"
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "nativeGovernancePower": 88,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 88,
+      "sources": [
+        "VWR"
+      ],
+      "nativeSources": [
+        {
+          "account": "6EnHgSoTCvbRo2QpFWb2THPQrSEHeG9VftRbxVcm2v1V",
+          "power": 88,
+          "type": "VWR"
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
+      ]
+    },
+    {
+      "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
+      ]
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
+      ]
+    },
+    {
+      "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
+      ]
+    },
+    {
+      "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
+      ]
+    },
+    {
+      "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
+      ]
+    },
+    {
+      "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
       ]
     },
     {
       "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
-      "governancePower": 200000,
-      "source": "Voter fallback",
-      "voterWeight": 200000000000,
-      "fallbackUsed": true,
-      "totalDeposits": 1,
-      "totalPowerFromVoter": 200000,
-      "unlockedIncluded": true,
-      "deposits": [
-        {
-          "amount": 200000,
-          "multiplier": 1,
-          "power": 200000,
-          "isLocked": false,
-          "lockupKind": 0,
-          "source": "validated_direct",
-          "offset": 112,
-          "rawValue": 200000000000
-        }
-      ],
-      "voterAccountCount": 1
-    },
-    {
-      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
-      "governancePower": 143918.195927,
-      "source": "176-byte VWR account",
-      "voterWeight": 143918195927,
-      "fallbackUsed": false,
-      "vwrSources": [
-        {
-          "account": "jxEg5KWhwvoWBzUZnAXkgnegDV3m1WMUwjcGU6QKyhR",
-          "power": 143918.195927,
-          "rawValue": 143918195927
-        }
+      "nativeGovernancePower": 0,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 0,
+      "sources": [
+        "No match"
       ]
-    },
-    {
-      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
-      "governancePower": 29484.464683,
-      "source": "176-byte VWR account",
-      "voterWeight": 29484464683,
-      "fallbackUsed": false,
-      "vwrSources": [
-        {
-          "account": "8t4F39hxmTzPcaHqq2Pq9TZwZWTxMuwQm4uZfKMjioJx",
-          "power": 29484.464683,
-          "rawValue": 29484464683
-        }
-      ]
-    },
-    {
-      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
-      "governancePower": 12625.580931,
-      "source": "176-byte VWR account",
-      "voterWeight": 12625580931,
-      "fallbackUsed": false,
-      "vwrSources": [
-        {
-          "account": "FaRu1b8yqshnnkUCGAbMDixWgghe7xHXoFVymMHE8nki",
-          "power": 12625.580931,
-          "rawValue": 12625580931
-        }
-      ]
-    },
-    {
-      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
-      "governancePower": 4879,
-      "source": "176-byte VWR account",
-      "voterWeight": 4879000000,
-      "fallbackUsed": false,
-      "vwrSources": [
-        {
-          "account": "9MAitMo8GsxFuZX2ppY2ysoBnr1ryn2fUaAJJw4zxG91",
-          "power": 4879,
-          "rawValue": 4879000000
-        }
-      ]
-    },
-    {
-      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
-      "governancePower": 88,
-      "source": "176-byte VWR account",
-      "voterWeight": 88000000,
-      "fallbackUsed": false,
-      "vwrSources": [
-        {
-          "account": "6EnHgSoTCvbRo2QpFWb2THPQrSEHeG9VftRbxVcm2v1V",
-          "power": 88,
-          "rawValue": 88000000
-        }
-      ]
-    },
-    {
-      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
     }
   ]
 }
