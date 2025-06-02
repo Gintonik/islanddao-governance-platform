@@ -65,13 +65,13 @@ var __async = (__this, __arguments, generator) => {
 };
 
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
   DEFAULT_CHAT_PROGRAM_ID: () => DEFAULT_CHAT_PROGRAM_ID,
   DEFAULT_PROGRAM_ID: () => DEFAULT_PROGRAM_ID,
   SplGovernance: () => SplGovernance
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
 var import_web37 = require("@solana/web3.js");
 var import_anchor2 = require("@coral-xyz/anchor");
 var import_bn7 = __toESM(require("bn.js"));
