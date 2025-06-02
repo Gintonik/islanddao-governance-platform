@@ -162,17 +162,23 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.log(`🔍 SDK: Program ID: ${VSR_PROGRAM_ID.toBase58()}`);
     console.log(`🔍 SDK: Registrar PDA: ${ISLAND_DAO_REGISTRAR.toBase58()}`);
     
-    // Search for all VSR accounts for this wallet across all registrars
-    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        {
-          memcmp: {
-            offset: 8, // Authority field offset
-            bytes: walletPubkey.toBase58()
-          }
+    // Search for all VSR accounts containing this wallet (broader search)
+    console.log(`🔍 SDK: Searching for all VSR accounts containing wallet...`);
+    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+    const walletBuffer = walletPubkey.toBuffer();
+    
+    const relevantAccounts = [];
+    for (const account of allVSRAccounts) {
+      const data = account.account.data;
+      
+      // Search for wallet pubkey anywhere in the account data
+      for (let offset = 0; offset <= data.length - 32; offset++) {
+        if (data.subarray(offset, offset + 32).equals(walletBuffer)) {
+          relevantAccounts.push(account);
+          break;
         }
-      ]
-    });
+      }
+    }
     
     console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
     
