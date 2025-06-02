@@ -376,22 +376,26 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     const voterAnalysis = await analyzeVoterAccountDeposits(data, verbose && (authority === walletAddress || voterAuthority === walletAddress));
     
     if (voterAnalysis && voterAnalysis.totalPower > 0) {
-      // Case 1: Native power - wallet owns deposits and hasn't delegated
-      if (authority === walletAddress && voterAuthority === walletAddress) {
+      // Native power: wallet owns these deposits (regardless of delegation)
+      if (authority === walletAddress) {
         nativeGovernancePower += voterAnalysis.totalPower;
         nativeSources.push({
           account: pubkey.toBase58(),
           power: voterAnalysis.totalPower,
           type: 'Voter-native',
-          authority: authority
+          authority: authority,
+          delegatedTo: voterAuthority !== authority ? voterAuthority : null
         });
         
         if (verbose) {
-          console.log(`     ✅ Native Voter: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
+          const delegationNote = voterAuthority !== authority ? 
+            ` (delegated to ${voterAuthority.substring(0,8)}...)` : '';
+          console.log(`     ✅ Native Voter: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${pubkey.toBase58()}${delegationNote}`);
         }
       }
-      // Case 2: Delegated power - someone else's deposits delegated to this wallet
-      else if (voterAuthority === walletAddress && authority !== walletAddress) {
+      
+      // Delegated power: someone else's deposits delegated to this wallet
+      if (voterAuthority === walletAddress && authority !== walletAddress) {
         delegatedGovernancePower += voterAnalysis.totalPower;
         delegatedSources.push({
           account: pubkey.toBase58(),
@@ -405,13 +409,6 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
           console.log(`     ✅ Delegated: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${authority.substring(0,8)}... → ${walletAddress.substring(0,8)}...`);
           console.log(`       Account: ${pubkey.toBase58()}`);
         }
-      }
-      // Case 3: Wallet delegated their power away (don't count as native)
-      else if (authority === walletAddress && voterAuthority !== walletAddress) {
-        if (verbose) {
-          console.log(`     ⚠️  Delegated away: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${walletAddress.substring(0,8)}... → ${voterAuthority.substring(0,8)}...`);
-        }
-        // This power belongs to the delegatee, not the delegator
       }
     }
   }
