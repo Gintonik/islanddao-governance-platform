@@ -1,0 +1,68 @@
+🛠️ TASK:
+Update or create `canonical-vwr-scan.js` to compute governance power for each wallet using `VoterWeightRecord` accounts as the source of truth.
+
+🔍 CONTEXT:
+- Each wallet has a `VoterWeightRecord` PDA derived with:
+  ['voter-weight-record', registrar, realm, wallet]
+- IslandDAO Registrar: `F3xgZXtJ19F7Yk6gdZ2muwErg7wdGzbpjNQDD4rqFBLq`
+- Realm: `8reJkQsfbAZPNTixFLE2TYvCvULjv3o8VVdANs1YAUai`
+- VSR Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+- The `voterWeight` value is stored as a `u64` at byte offset 104
+
+📥 WALLET LIST:
+```js
+const wallets = [
+  "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+  "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+  "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzWEHRo",
+  "C9UJ9H2ACqMMJ4xvXBMV9LzKZgHViFNPX5z7mKHKnMKW",
+  "8Rh1sy7vKpQhZcbb2cwSKRtQegVE3vnNYrcNAmHZ5WSd",
+  "7Jx45L2GhPh8sQ6r4pvJxgRiKVRs5DsQwN9jW9Zj43Mt",
+  "CSJKkYqEm9XYrCuL8Fg9DNDGLA2ZkUJDMVLaeUJmGJK5",
+  "CEpTX6QuD7qHTwFoQzRfSpRQ8vY94fZ3QQMgbK7YGbZg",
+  "FknAoDH1aytzsWPKm6YzZyyEKzZfBNnFAAMydWu3SYAf",
+  "8d8Z6GiYooZ1swZRHccA29XTxEQxM98Ty57c6ZQEV2rP",
+  "9ZBFwPV7fJrBYTZjvKRXLKDg3CkHik1snMgScXx1aT3G",
+  "5oykeWnU3RCGdvWxMBEnZNm6gHpQQfwFcEPBuGeKNXzU",
+  "5Ev8dRFe7oD3TYJjDkEERyk3QQzj1sVJ2vWdyTRGPuYz",
+  "AJ7p5ChZfdSYD8jXVy69q2n97wDQ6EMHhRha46c2cob5",
+  "9G3V1isDhf72fdFP9w6mXo8JBoNWem3LFmKCrpAaSkaB",
+  "D1AbzYoXB5oEU3xTPQZBPAqLhRj2o7sJDVJzz1gNKR3p",
+  "EXrzoTvmUutMB5B25qtbyWcymViKmMdwLMQv9kGJ4iQs",
+  "91kMo3JQrgkXZFVbkV8Jr3s8MRfFtLbMfXj6eT2gRCCn",
+  "BszUnfNqyeKvKRRbyXPoaV46Zfncv6vF1YeyxYuDJf3f",
+  "ChP3bm9yqjPtxS4Bz3xEkSbMbpZpUTKVEjc5a37pM8jU"
+];
+✅ WHAT TO DO FOR EACH WALLET:
+
+Compute the VoterWeightRecord PDA using the seeds above
+
+Fetch the account using Helius RPC
+
+Read 8 bytes from offset 104 as a u64
+
+Store results in:
+
+ts
+Copy
+Edit
+{
+  wallet,
+  governancePower: voterWeightParsed,
+  source: "VoterWeightRecord"
+}
+If no record is found or parsing fails, return:
+
+ts
+Copy
+Edit
+{
+  wallet,
+  governancePower: 0,
+  source: "No VoterWeightRecord found"
+}
+📤 Save the results to a local JSON file or log them to the console in a formatted summary.
+
+🚫 Do NOT use cached data or fallback logic from old Voter accounts unless explicitly added later as a secondary validation step.
+
+🧪 Optional: Add a CLI flag like --verbose to show skipped records or debugging logs.

@@ -1,0 +1,157 @@
+{
+  "scanDate": "2025-06-02T22:33:55.208Z",
+  "summary": {
+    "totalWallets": 20,
+    "walletsWithPower": 2,
+    "totalGovernancePower": 11415466.289907,
+    "averagePowerPerActiveWallet": 5707733.1449535
+  },
+  "configuration": {
+    "vsrProgram": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
+    "registrar": "F3xgZXtJ19F7Yk6gdZ2muwErg7wdGzbpjNQDD4rqFBLq",
+    "realm": "8reJkQsfbAZPNTixFLE2TYvCvULjv3o8VVdANs1YAUai",
+    "rpcEndpoint": "Configured"
+  },
+  "results": [
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "governancePower": 11271548.09398,
+      "source": "VoterWeightRecord",
+      "sources": [
+        {
+          "account": "2QqyEyU1pjj1YXR3aUGV5feBDUDwHvxoFgnAhMNvyibb",
+          "power": 1000
+        },
+        {
+          "account": "7YMyAEU3vJ9iPQmJiK7U9JyPMXghChkAmHNFXXdvb4CN",
+          "power": 10353648.013
+        },
+        {
+          "account": "GMb1DmHWxg163Yy3EdfArzTkhpGSqVWPeVNEXYWR7aWM",
+          "power": 916900.08098
+        }
+      ],
+      "accountCount": 6
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "governancePower": 143918.195927,
+      "source": "VoterWeightRecord",
+      "sources": [
+        {
+          "account": "jxEg5KWhwvoWBzUZnAXkgnegDV3m1WMUwjcGU6QKyhR",
+          "power": 143918.195927
+        }
+      ],
+      "accountCount": 1
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzWEHRo",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "C9UJ9H2ACqMMJ4xvXBMV9LzKZgHViFNPX5z7mKHKnMKW",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "8Rh1sy7vKpQhZcbb2cwSKRtQegVE3vnNYrcNAmHZ5WSd",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "7Jx45L2GhPh8sQ6r4pvJxgRiKVRs5DsQwN9jW9Zj43Mt",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "CSJKkYqEm9XYrCuL8Fg9DNDGLA2ZkUJDMVLaeUJmGJK5",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "CEpTX6QuD7qHTwFoQzRfSpRQ8vY94fZ3QQMgbK7YGbZg",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "FknAoDH1aytzsWPKm6YzZyyEKzZfBNnFAAMydWu3SYAf",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "8d8Z6GiYooZ1swZRHccA29XTxEQxM98Ty57c6ZQEV2rP",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "9ZBFwPV7fJrBYTZjvKRXLKDg3CkHik1snMgScXx1aT3G",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "5oykeWnU3RCGdvWxMBEnZNm6gHpQQfwFcEPBuGeKNXzU",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "5Ev8dRFe7oD3TYJjDkEERyk3QQzj1sVJ2vWdyTRGPuYz",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "AJ7p5ChZfdSYD8jXVy69q2n97wDQ6EMHhRha46c2cob5",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "9G3V1isDhf72fdFP9w6mXo8JBoNWem3LFmKCrpAaSkaB",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "D1AbzYoXB5oEU3xTPQZBPAqLhRj2o7sJDVJzz1gNKR3p",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "EXrzoTvmUutMB5B25qtbyWcymViKmMdwLMQv9kGJ4iQs",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "91kMo3JQrgkXZFVbkV8Jr3s8MRfFtLbMfXj6eT2gRCCn",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "BszUnfNqyeKvKRRbyXPoaV46Zfncv6vF1YeyxYuDJf3f",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    },
+    {
+      "wallet": "ChP3bm9yqjPtxS4Bz3xEkSbMbpZpUTKVEjc5a37pM8jU",
+      "governancePower": 0,
+      "source": "No VoterWeightRecord found",
+      "vwrPDA": null
+    }
+  ]
+}
