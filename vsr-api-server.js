@@ -10,6 +10,7 @@ import { config } from "dotenv";
 import { Connection, PublicKey } from "@solana/web3.js";
 import fs from "fs";
 import { SplGovernance } from "./governance-sdk/dist/index.js";
+import { getTokenOwnerRecordAddress } from "@solana/spl-governance";
 
 // Load VSR IDL for proper deserialization
 const vsrIdl = JSON.parse(fs.readFileSync("vsr_idl.json", "utf8"));
@@ -44,6 +45,53 @@ const ISLAND_DAO_REGISTRAR = new PublicKey(
 );
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
+
+/**
+ * Get Token Owner Record (TOR) for wallets without VSR lockups
+ */
+async function getTokenOwnerRecord(walletAddress) {
+  try {
+    const walletPubkey = new PublicKey(walletAddress);
+    
+    // Derive TOR PDA using SPL Governance
+    const torAddress = await getTokenOwnerRecordAddress(
+      SPL_GOVERNANCE_PROGRAM_ID,
+      ISLAND_DAO_REALM,
+      ISLAND_GOVERNANCE_MINT,
+      walletPubkey
+    );
+    
+    // Fetch the account data
+    const accountInfo = await connection.getAccountInfo(torAddress);
+    
+    if (!accountInfo || !accountInfo.data) {
+      return { governingTokenDepositAmount: 0, governanceDelegate: null };
+    }
+    
+    // Use SPL Governance SDK to decode the account
+    try {
+      const governance = new SplGovernance(connection);
+      const torAccount = await governance.getTokenOwnerRecord(torAddress);
+      
+      if (torAccount) {
+        return {
+          governingTokenDepositAmount: torAccount.account.governingTokenDepositAmount?.toNumber() || 0,
+          governanceDelegate: torAccount.account.governanceDelegate?.toBase58() || null,
+          realm: torAccount.account.realm?.toBase58(),
+          governingTokenMint: torAccount.account.governingTokenMint?.toBase58()
+        };
+      }
+    } catch (decodeError) {
+      console.log(`TOR decode error for ${walletAddress}:`, decodeError.message);
+    }
+    
+    return { governingTokenDepositAmount: 0, governanceDelegate: null };
+    
+  } catch (error) {
+    console.error(`TOR lookup error for ${walletAddress}:`, error.message);
+    return { governingTokenDepositAmount: 0, governanceDelegate: null };
+  }
+}
 
 /**
  * Find Voter accounts for a specific wallet using targeted memcmp search
@@ -511,13 +559,15 @@ app.get("/api/governance-power", async (req, res) => {
         
         // Fallback to Token Owner Record calculation
         console.log("🔄 Falling back to Token Owner Record calculation");
-        const tokenOwnerPower = await calculateTokenOwnerRecordPower(wallet);
+        const torData = await getTokenOwnerRecord(wallet);
         
         return res.json({
           wallet,
-          nativePower: tokenOwnerPower.nativePower,
-          delegatedPower: tokenOwnerPower.delegatedPower,
-          totalPower: tokenOwnerPower.totalPower,
+          nativeGovernancePower: torData.governingTokenDepositAmount,
+          delegatedPower: 0,
+          totalPower: torData.governingTokenDepositAmount,
+          governanceDelegate: torData.governanceDelegate,
+          source: "token_owner_record"
         });
       }
       
@@ -694,13 +744,15 @@ app.get("/api/governance-power", async (req, res) => {
       }
       
       console.log("🔄 No VSR power found, falling back to Token Owner Record calculation");
-      const tokenOwnerPower = await calculateTokenOwnerRecordPower(wallet);
+      const torData = await getTokenOwnerRecord(wallet);
       
       return res.json({
         wallet,
-        nativePower: tokenOwnerPower.nativePower,
-        delegatedPower: tokenOwnerPower.delegatedPower,
-        totalPower: tokenOwnerPower.totalPower,
+        nativeGovernancePower: torData.governingTokenDepositAmount,
+        delegatedPower: 0,
+        totalPower: torData.governingTokenDepositAmount,
+        governanceDelegate: torData.governanceDelegate,
+        source: "token_owner_record"
       });
     }
 
