@@ -74,11 +74,50 @@ app.get("/api/governance-power", async (req, res) => {
         
         const authority = new PublicKey(authorityBytes).toBase58();
         
-        // Log all non-matching voters for debugging
-        if (authority !== wallet) {
-          if (totalChecked <= 20) { // Only log first 20 for debugging
-            console.log(`Non-matching voter: ${authority}`);
+        // Debug: Log every voter authority
+        console.log(`Voter authority: ${authority}`);
+        
+        // Special debug for target wallet
+        if (authority === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
+          console.log(`🎯 FOUND TARGET WALLET: ${authority}`);
+          console.log(`Account pubkey: ${pubkey.toBase58()}`);
+          console.log(`Data length: ${data.length}`);
+          
+          // Log full voter struct for target wallet
+          try {
+            const registrarBytes = data.slice(8, 40);
+            const authorityBytes = data.slice(40, 72);
+            const voterBump = data[72];
+            const voterWeightRecordBump = data[73];
+            const voterWeightBytes = data.slice(74, 82);
+            
+            console.log(`Full Voter Struct:`);
+            console.log(`  registrar: ${new PublicKey(registrarBytes).toBase58()}`);
+            console.log(`  authority: ${new PublicKey(authorityBytes).toBase58()}`);
+            console.log(`  voter_bump: ${voterBump}`);
+            console.log(`  voter_weight_record_bump: ${voterWeightRecordBump}`);
+            console.log(`  voter_weight: ${Number(voterWeightBytes.readBigUInt64LE(0))}`);
+            
+            // Parse deposits
+            console.log(`Deposits:`);
+            for (let i = 0; i < 32; i++) {
+              const entryOffset = 82 + (i * 105);
+              if (data.length < entryOffset + 105) break;
+              
+              const isUsed = data[entryOffset] === 1;
+              if (isUsed) {
+                const amountBytes = data.slice(entryOffset + 1, entryOffset + 9);
+                const amount = Number(amountBytes.readBigUInt64LE(0));
+                console.log(`  Deposit ${i}: amount=${amount}, used=${isUsed}`);
+              }
+            }
+          } catch (e) {
+            console.log(`Error parsing target voter struct: ${e.message}`);
           }
+        }
+        
+        // Continue processing only if this is the requested wallet
+        if (authority !== wallet) {
           continue;
         }
         
