@@ -58,27 +58,24 @@ app.get("/api/governance-power", async (req, res) => {
     const walletKey = new PublicKey(wallet);
 
     // Use getProgramAccounts to fetch all voter accounts
-    console.log(`🔍 Fetching voter accounts for wallet: ${wallet}`);
-    const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        {
-          dataSize: 1376, // VSR Voter account size
-        },
-      ],
-    });
+    console.log(`Fetching voter accounts for wallet: ${wallet}`);
+    const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID);
 
-    console.log(`📊 Found ${allVoterAccountInfos.length} total voter accounts`);
+    console.log(`Scanned ${allVoterAccountInfos.length} total accounts from VSR program`);
 
     // Filter and deserialize accounts for this wallet
     const relevantVoterAccounts = [];
+    let matchedAccounts = 0;
+    
     for (const accountInfo of allVoterAccountInfos) {
       try {
         // Deserialize using Anchor
-        const voter = program.coder.accounts.decode("voter", accountInfo.account.data);
+        const decoded = program.coder.accounts.decode("voter", accountInfo.account.data);
         
         // Check if authority matches our wallet
-        if (voter.authority.toString() === walletKey.toString()) {
-          relevantVoterAccounts.push({ account: voter, publicKey: accountInfo.pubkey });
+        if (decoded.authority.toBase58() === wallet) {
+          relevantVoterAccounts.push({ account: decoded, publicKey: accountInfo.pubkey });
+          matchedAccounts++;
         }
       } catch (deserializeError) {
         // Skip accounts that can't be deserialized as voter accounts
@@ -86,7 +83,7 @@ app.get("/api/governance-power", async (req, res) => {
       }
     }
 
-    console.log(`🎯 Found ${relevantVoterAccounts.length} voter accounts for wallet ${wallet}`);
+    console.log(`Found ${matchedAccounts} voter accounts matching wallet ${wallet}`);
 
     let nativePower = 0;
     const now = Math.floor(Date.now() / 1000);
