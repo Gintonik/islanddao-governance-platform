@@ -220,6 +220,11 @@ async function getVSRGovernancePower(walletPubkey) {
         // Parse authority from Voter struct (offset 40)
         const authority = new PublicKey(data.slice(40, 72));
         
+        // Debug for Takisoul specifically
+        if (walletPubkey.toBase58() === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
+          console.log(`Checking account ${pubkey.toBase58()}: authority=${authority.toBase58()}`);
+        }
+        
         if (authority.equals(walletPubkey)) {
           console.log(`Found Voter account at: ${pubkey.toBase58()}`);
           voterAccount = account;
