@@ -12,6 +12,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 
 config(); // ✅ Load .env
+console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
 
 const { Pool } = pkg;
 const app = express();
@@ -26,7 +27,7 @@ const pool = new Pool({
 const VSR_PROGRAM_ID = new PublicKey(
   "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
 );
-const connection = new Connection(process.env.HELIUS_API_KEY);
+const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
 app.use(cors());
