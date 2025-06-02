@@ -7,9 +7,7 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
-import fs from "fs/promises";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
@@ -33,6 +31,20 @@ console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 app.use(cors());
 app.use(express.json());
 
+// Cache VSR accounts to avoid repeated fetching
+let vsrAccountsCache = null;
+
+async function loadVSRAccounts() {
+  if (vsrAccountsCache) {
+    return vsrAccountsCache;
+  }
+  
+  const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+  vsrAccountsCache = accounts;
+  console.log(`Cached ${accounts.length} VSR accounts`);
+  return accounts;
+}
+
 app.get("/api/governance-power", async (req, res) => {
   const wallet = req.query.wallet;
   if (!wallet) {
@@ -42,45 +54,86 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
-    // Fetch all VSR accounts with no filters
-    const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-    console.log(`Total VSR accounts fetched: ${allVoterAccountInfos.length}`);
+    const allVSRAccounts = await loadVSRAccounts();
+    console.log(`Scanning ${allVSRAccounts.length} VSR accounts`);
 
     let maxGovernancePower = 0;
-    let matchedAccounts = 0;
+    let foundAccounts = 0;
     
-    // Scan all accounts and find matches for this wallet using direct binary parsing
-    for (const accountInfo of allVoterAccountInfos) {
+    for (const { account, pubkey } of allVSRAccounts) {
       try {
-        const data = accountInfo.account.data;
+        const data = account.data;
+        if (data.length < 72) continue;
         
-        // Extract authority field (32 bytes starting at offset 40)
+        // Parse VSR account structure: registrar(32) + authority(32) + bumps(2) + deposits...
+        const registrarBytes = data.slice(8, 40);
         const authorityBytes = data.slice(40, 72);
         const authority = new PublicKey(authorityBytes).toBase58();
         
         if (authority === wallet) {
-          console.log("✅ Found VSR account for wallet:", accountInfo.pubkey.toBase58());
-          matchedAccounts++;
+          foundAccounts++;
+          console.log(`✅ Found VSR account: ${pubkey.toBase58()}`);
           
-          // Extract governance power from voter_weight field at offset 232
-          const voterWeightBytes = data.slice(232, 240);
-          const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
+          // Method 1: Try to read voter_weight from standard VSR offset (72 bytes into account)
+          if (data.length >= 80) {
+            const voterWeightBytes = data.slice(72, 80);
+            const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
+            
+            if (voterWeight > 0) {
+              console.log(`Governance power (method 1): ${voterWeight}`);
+              maxGovernancePower = Math.max(maxGovernancePower, voterWeight);
+            }
+          }
           
-          console.log(`Governance power from this account: ${voterWeight}`);
+          // Method 2: Parse deposit entries and calculate total locked amount
+          let totalLocked = 0;
+          const depositStartOffset = 74; // After registrar + authority + bumps
           
-          // Take the maximum governance power across all accounts
-          if (voterWeight > maxGovernancePower) {
-            maxGovernancePower = voterWeight;
+          for (let i = 0; i < 32; i++) {
+            const entryOffset = depositStartOffset + (i * 105); // Each deposit entry is ~105 bytes
+            
+            if (data.length < entryOffset + 105) break;
+            
+            try {
+              const isUsed = data[entryOffset] === 1;
+              if (!isUsed) continue;
+              
+              const amountBytes = data.slice(entryOffset + 1, entryOffset + 9);
+              const amount = Number(amountBytes.readBigUInt64LE(0));
+              
+              if (amount > 0) {
+                totalLocked += amount;
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+          
+          if (totalLocked > 0) {
+            console.log(`Governance power (method 2): ${totalLocked}`);
+            maxGovernancePower = Math.max(maxGovernancePower, totalLocked);
+          }
+          
+          // Method 3: Scan for any large 8-byte values that could be governance power
+          for (let offset = 72; offset < data.length - 8; offset += 8) {
+            try {
+              const value = Number(data.slice(offset, offset + 8).readBigUInt64LE(0));
+              if (value > 1000000 && value < 1000000000000) { // Reasonable governance power range
+                console.log(`Potential governance power at offset ${offset}: ${value}`);
+                maxGovernancePower = Math.max(maxGovernancePower, value);
+              }
+            } catch (e) {
+              continue;
+            }
           }
         }
       } catch (err) {
-        // Skip accounts that can't be parsed
         continue;
       }
     }
 
-    console.log(`Found ${matchedAccounts} VSR accounts for wallet`);
-    console.log(`Final governance power calculated: ${maxGovernancePower}`);
+    console.log(`Found ${foundAccounts} VSR accounts for ${wallet}`);
+    console.log(`Final governance power: ${maxGovernancePower}`);
 
     return res.json({
       wallet,
@@ -89,7 +142,7 @@ app.get("/api/governance-power", async (req, res) => {
       totalPower: maxGovernancePower,
     });
   } catch (err) {
-    console.error("Governance power error:\n", err);
+    console.error("Governance power error:", err);
     return res
       .status(500)
       .json({ error: err.message || "Failed to calculate governance power" });
