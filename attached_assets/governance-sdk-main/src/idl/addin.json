@@ -1,0 +1,149 @@
+{
+    "version": "0.1.4",
+    "name": "spl_governance_addin_api",
+    "instructions": [],
+    "accounts": [
+      {
+        "name": "maxVoterWeightRecord",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "accountDiscriminator",
+              "type": {
+                "array": [
+                  "u8",
+                  8
+                ]
+              }
+            },
+            {
+              "name": "realm",
+              "type": "publicKey"
+            },
+            {
+              "name": "governingTokenMint",
+              "type": "publicKey"
+            },
+            {
+              "name": "maxVoterWeight",
+              "type": "u64"
+            },
+            {
+              "name": "maxVoterWeightExpiry",
+              "type": {
+                "option": {
+                  "defined": "Slot"
+                }
+              }
+            },
+            {
+              "name": "reserved",
+              "type": {
+                "array": [
+                  "u8",
+                  8
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "voterWeightRecord",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "accountDiscriminator",
+              "type": {
+                "array": [
+                  "u8",
+                  8
+                ]
+              }
+            },
+            {
+              "name": "realm",
+              "type": "publicKey"
+            },
+            {
+              "name": "governingTokenMint",
+              "type": "publicKey"
+            },
+            {
+              "name": "governingTokenOwner",
+              "type": "publicKey"
+            },
+            {
+              "name": "voterWeight",
+              "type": "u64"
+            },
+            {
+              "name": "voterWeightExpiry",
+              "type": {
+                "option": {
+                  "defined": "Slot"
+                }
+              }
+            },
+            {
+              "name": "weightAction",
+              "type": {
+                "option": {
+                  "defined": "VoterWeightAction"
+                }
+              }
+            },
+            {
+              "name": "weightActionTarget",
+              "type": {
+                "option": "publicKey"
+              }
+            },
+            {
+              "name": "reserved",
+              "type": {
+                "array": [
+                  "u8",
+                  8
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "types": [
+      {
+        "name": "VoterWeightAction",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "CastVote"
+            },
+            {
+              "name": "CommentProposal"
+            },
+            {
+              "name": "CreateGovernance"
+            },
+            {
+              "name": "CreateProposal"
+            },
+            {
+              "name": "SignOffProposal"
+            }
+          ]
+        }
+      },
+      {
+        "name": "Slot",
+        "type": {
+            "kind": "alias",
+            "value": "u64"
+        }
+      }
+    ]
+  }

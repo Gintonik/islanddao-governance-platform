@@ -1,0 +1,193 @@
+{
+    "version": "0.2.9",
+    "name": "spl_governance_chat",
+    "instructions": [
+      {
+        "name": "postMessage",
+        "accounts": [
+          {
+            "name": "governanceProgramId",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "realmAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "governanceAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "proposalAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "tokenOwnerRecord",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "governanceAuthority",
+            "isMut": false,
+            "isSigner": true,
+            "docs": [
+              "token owner or governance delegate"
+            ]
+          },
+          {
+            "name": "chatMessage",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "payer",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "replyToMessage",
+            "isMut": false,
+            "isSigner": false,
+            "isOptional": true
+          },
+          {
+            "name": "realmConfigAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "voterWeightRecord",
+            "isMut": false,
+            "isSigner": false,
+            "isOptional": true
+          }
+        ],
+        "args": [
+          {
+            "name": "body",
+            "type": {
+              "defined": "MessageBody"
+            }
+          },
+          {
+            "name": "isReply",
+            "type": "bool"
+          }
+        ],
+        "discriminant": {
+          "type": "u8",
+          "value": 0
+        }
+      }
+    ],
+    "accounts": [
+      {
+        "name": "chatMessage",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "accountType",
+              "type": {
+                "defined": "GovernanceChatAccountType"
+              }
+            },
+            {
+              "name": "proposal",
+              "type": "publicKey"
+            },
+            {
+              "name": "author",
+              "type": "publicKey"
+            },
+            {
+              "name": "postedAt",
+              "type": {
+                "defined": "UnixTimestamp"
+              }
+            },
+            {
+              "name": "replyTo",
+              "type": {
+                "option": "publicKey"
+              }
+            },
+            {
+              "name": "body",
+              "type": {
+                "defined": "MessageBody"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "types": [
+      {
+        "name": "GovernanceChatAccountType",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Uninitialized"
+            },
+            {
+              "name": "ChatMessage"
+            }
+          ]
+        }
+      },
+      {
+        "name": "MessageBody",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Text",
+              "fields": [
+                "string"
+              ]
+            },
+            {
+              "name": "Reaction",
+              "fields": [
+                "string"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "UnixTimestamp",
+        "type": {
+            "kind": "alias",
+            "value": "i64"
+        }
+      }
+    ],
+    "errors": [
+      {
+        "code": 900,
+        "name": "NotEnoughTokensToCommentProposal",
+        "msg": "Owner doesn't have enough governing tokens to comment on Proposal"
+      },
+      {
+        "code": 901,
+        "name": "AccountAlreadyInitialized",
+        "msg": "Account already initialized"
+      }
+    ],
+    "metadata": {
+      "origin": "shank",
+      "address": "gCHAtYKrUUktTVzE4hEnZdLV4LXrdBf6Hh9qMaJALET"
+    }
+  }
