@@ -94,6 +94,14 @@ function parseDepositsManually(data, voterPubkey) {
   
   console.log(`📊 Found ${deposits.length} valid deposits in standard layout`);
   
+  // Final validation and summary
+  if (deposits.length === 0) {
+    console.log(`⚠️ No deposits found - account may be inactive or all deposits expired`);
+  } else {
+    const totalVotingPower = deposits.reduce((sum, d) => sum + d.votingPower, 0);
+    console.log(`🏆 Account total voting power: ${totalVotingPower.toLocaleString()} ISLAND`);
+  }
+  
   return deposits.slice(0, 12); // Limit to 12 deposits max
 }
 
