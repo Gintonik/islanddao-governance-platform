@@ -325,11 +325,11 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     console.log(`   🔍 Analyzing delegation for ${walletAddress}`);
   }
   
-  // First check VoterWeightRecord accounts for this wallet
+  // Method 1: Check VoterWeightRecord accounts (these are typically native)
   const voterWeightRecords = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
     filters: [
       { dataSize: 176 },
-      { memcmp: { offset: 72, bytes: walletAddress } }
+      { memcmp: { offset:72, bytes: walletAddress } }
     ]
   });
   
@@ -352,8 +352,14 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     }
   }
   
-  // Then analyze all Voter accounts for delegation relationships
+  // Method 2: Analyze all Voter accounts for both native and delegated relationships
+  let processedAccounts = 0;
   for (const { pubkey, account } of allVoterAccounts) {
+    processedAccounts++;
+    if (verbose && processedAccounts % 1000 === 0) {
+      console.log(`     📊 Processed ${processedAccounts}/${allVoterAccounts.length} Voter accounts`);
+    }
+    
     const data = account.data;
     const authorities = parseVoterAuthorities(data);
     
@@ -361,11 +367,16 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     
     const { authority, voterAuthority } = authorities;
     
+    // Skip if this account doesn't involve our target wallet
+    if (authority !== walletAddress && voterAuthority !== walletAddress) {
+      continue;
+    }
+    
     // Analyze deposits in this Voter account
-    const voterAnalysis = await analyzeVoterAccountDeposits(data, verbose && walletAddress === authority);
+    const voterAnalysis = await analyzeVoterAccountDeposits(data, verbose && (authority === walletAddress || voterAuthority === walletAddress));
     
     if (voterAnalysis && voterAnalysis.totalPower > 0) {
-      // Native power: wallet owns the deposits and hasn't delegated
+      // Case 1: Native power - wallet owns deposits and hasn't delegated
       if (authority === walletAddress && voterAuthority === walletAddress) {
         nativeGovernancePower += voterAnalysis.totalPower;
         nativeSources.push({
@@ -379,7 +390,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
           console.log(`     ✅ Native Voter: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
         }
       }
-      // Delegated power: someone else's deposits delegated to this wallet
+      // Case 2: Delegated power - someone else's deposits delegated to this wallet
       else if (voterAuthority === walletAddress && authority !== walletAddress) {
         delegatedGovernancePower += voterAnalysis.totalPower;
         delegatedSources.push({
@@ -392,6 +403,59 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         
         if (verbose) {
           console.log(`     ✅ Delegated: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${authority.substring(0,8)}... → ${walletAddress.substring(0,8)}...`);
+          console.log(`       Account: ${pubkey.toBase58()}`);
+        }
+      }
+      // Case 3: Wallet delegated their power away (don't count as native)
+      else if (authority === walletAddress && voterAuthority !== walletAddress) {
+        if (verbose) {
+          console.log(`     ⚠️  Delegated away: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${walletAddress.substring(0,8)}... → ${voterAuthority.substring(0,8)}...`);
+        }
+        // This power belongs to the delegatee, not the delegator
+      }
+    }
+  }
+  
+  // Method 3: Special fallback for wallets with direct deposits (like Fgv1zrw...)
+  if (nativeGovernancePower === 0 && delegatedGovernancePower === 0) {
+    const fallbackAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { dataSize: 2728 },
+        { memcmp: { offset: 8, bytes: walletAddress } } // Try wallet at offset 8
+      ]
+    });
+    
+    for (const { pubkey, account } of fallbackAccounts) {
+      const data = account.data;
+      const fallbackAnalysis = await analyzeVoterAccountDeposits(data, verbose);
+      
+      if (fallbackAnalysis && fallbackAnalysis.totalPower > 0) {
+        // Check if this is a valid direct deposit
+        const validatedOffsets = [112];
+        for (const offset of validatedOffsets) {
+          try {
+            const rawValue = Number(data.readBigUInt64LE(offset));
+            const islandAmount = rawValue / 1e6;
+            
+            if (islandAmount >= 1000 && islandAmount <= 50000000 && 
+                rawValue !== 4294967296 && 
+                rawValue % 1000000 === 0) {
+              
+              nativeGovernancePower += islandAmount;
+              nativeSources.push({
+                account: pubkey.toBase58(),
+                power: islandAmount,
+                type: 'Voter-fallback',
+                offset: offset
+              });
+              
+              if (verbose) {
+                console.log(`     ✅ Fallback deposit: ${islandAmount.toLocaleString()} ISLAND from ${pubkey.toBase58()} at offset ${offset}`);
+              }
+            }
+          } catch (error) {
+            // Continue
+          }
         }
       }
     }

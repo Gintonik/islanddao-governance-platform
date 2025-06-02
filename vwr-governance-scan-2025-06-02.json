@@ -1,12 +1,12 @@
 {
-  "scanDate": "2025-06-02T23:17:25.643Z",
+  "scanDate": "2025-06-02T23:20:31.839Z",
   "summary": {
     "totalWallets": 20,
-    "walletsWithPower": 12,
-    "totalNativePower": 26104660.530975003,
+    "walletsWithPower": 13,
+    "totalNativePower": 26304660.530975003,
     "totalDelegatedPower": 0,
-    "totalGovernancePower": 26104660.530975003,
-    "averagePowerPerActiveWallet": 2175388.3775812504
+    "totalGovernancePower": 26304660.530975003,
+    "averagePowerPerActiveWallet": 2023435.4254596157
   },
   "configuration": {
     "vsrProgram": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
@@ -159,6 +159,24 @@
       "delegatedSources": []
     },
     {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "nativeGovernancePower": 200000,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 200000,
+      "sources": [
+        "Voter-fallback"
+      ],
+      "nativeSources": [
+        {
+          "account": "xGW423w6m34PkGfFsCF6eWzP8LbEAYMHFYp9dvvV2br",
+          "power": 200000,
+          "type": "Voter-fallback",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
       "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
       "nativeGovernancePower": 143918.195927,
       "delegatedGovernancePower": 0,
@@ -299,15 +317,6 @@
     },
     {
       "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "sources": [
-        "No match"
-      ]
-    },
-    {
-      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
       "nativeGovernancePower": 0,
       "delegatedGovernancePower": 0,
       "totalGovernancePower": 0,
