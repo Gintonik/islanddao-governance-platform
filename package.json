@@ -114,7 +114,6 @@
     "gl-matrix": "^3.4.3",
     "globe.gl": "^2.41.4",
     "gopd": "^1.2.0",
-    "governance-idl-sdk": "github:Mythic-Project/governance-sdk",
     "grid-index": "^1.1.0",
     "h3-js": "^4.2.1",
     "has-flag": "^4.0.0",

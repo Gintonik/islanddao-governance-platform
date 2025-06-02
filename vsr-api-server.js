@@ -8,8 +8,6 @@ import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey } from "@solana/web3.js";
-import governancePkg from "governance-idl-sdk";
-const { getLockTokensVotingPowerPerWallet } = governancePkg;
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
@@ -56,33 +54,19 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
-    // Method 1: Try governance SDK first
-    try {
-      const sdkPower = await getLockTokensVotingPowerPerWallet(connection, [wallet]);
-      if (sdkPower > 0) {
-        console.log(`SDK governance power: ${sdkPower}`);
-        return res.json({
-          wallet,
-          nativePower: sdkPower,
-          delegatedPower: 0,
-          totalPower: sdkPower,
-        });
-      }
-    } catch (sdkError) {
-      console.log(`SDK method failed: ${sdkError.message}`);
-    }
-    
-    // Method 2: Fallback to direct blockchain parsing
     const allVSRAccounts = await loadVSRAccounts();
     console.log(`Scanning ${allVSRAccounts.length} VSR accounts`);
 
     let maxGovernancePower = 0;
     let foundAccounts = 0;
+    let totalChecked = 0;
     
     for (const { account, pubkey } of allVSRAccounts) {
       try {
         const data = account.data;
         if (data.length < 72) continue;
+        
+        totalChecked++;
         
         // Parse VSR account structure: discriminator(8) + registrar(32) + authority(32) + bumps(2) + data...
         const authorityBytes = data.slice(40, 72);
@@ -90,67 +74,73 @@ app.get("/api/governance-power", async (req, res) => {
         
         const authority = new PublicKey(authorityBytes).toBase58();
         
-        if (authority === wallet) {
-          foundAccounts++;
-          console.log(`✅ Found VSR account: ${pubkey.toBase58()}`);
-          
-          // Method 1: Extract governance power from voter_weight at offset 72
-          if (data.length >= 80) {
-            try {
-              const voterWeightBytes = data.slice(72, 80);
-              const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
-              
-              if (voterWeight > 0) {
-                console.log(`Direct voter weight: ${voterWeight}`);
-                maxGovernancePower = Math.max(maxGovernancePower, voterWeight);
-              }
-            } catch (e) {
-              // Continue with other methods
-            }
+        // Log all non-matching voters for debugging
+        if (authority !== wallet) {
+          if (totalChecked <= 20) { // Only log first 20 for debugging
+            console.log(`Non-matching voter: ${authority}`);
           }
-          
-          // Method 2: Scan for large values that could be governance power
-          for (let offset = 72; offset <= data.length - 8; offset += 8) {
-            try {
-              const value = Number(data.slice(offset, offset + 8).readBigUInt64LE(0));
-              // Look for values in reasonable governance power range (1M to 100B)
-              if (value >= 1000000 && value <= 100000000000) {
-                console.log(`Potential governance power at offset ${offset}: ${value}`);
-                maxGovernancePower = Math.max(maxGovernancePower, value);
-              }
-            } catch (e) {
-              continue;
-            }
-          }
-          
-          // Method 3: Parse deposit entries manually
+          continue;
+        }
+        
+        foundAccounts++;
+        console.log(`✅ Found VSR account: ${pubkey.toBase58()}`);
+        
+        // Method 1: Extract governance power from voter_weight at offset 72
+        if (data.length >= 80) {
           try {
-            const depositStartOffset = 74; // After registrar + authority + bumps
-            let totalDeposited = 0;
+            const voterWeightBytes = data.slice(72, 80);
+            const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
             
-            for (let i = 0; i < 32; i++) {
-              const entryOffset = depositStartOffset + (i * 105);
-              
-              if (data.length < entryOffset + 105) break;
-              
-              const isUsed = data[entryOffset] === 1;
-              if (!isUsed) continue;
-              
-              const amountBytes = data.slice(entryOffset + 1, entryOffset + 9);
-              const amount = Number(amountBytes.readBigUInt64LE(0));
-              
-              if (amount > 0) {
-                totalDeposited += amount;
-              }
-            }
-            
-            if (totalDeposited > 0) {
-              console.log(`Total deposited amount: ${totalDeposited}`);
-              maxGovernancePower = Math.max(maxGovernancePower, totalDeposited);
+            if (voterWeight > 0) {
+              console.log(`Direct voter weight: ${voterWeight}`);
+              maxGovernancePower = Math.max(maxGovernancePower, voterWeight);
             }
           } catch (e) {
-            // Continue without deposit parsing
+            // Continue with other methods
           }
+        }
+        
+        // Method 2: Scan for large values that could be governance power
+        for (let offset = 72; offset <= data.length - 8; offset += 8) {
+          try {
+            const value = Number(data.slice(offset, offset + 8).readBigUInt64LE(0));
+            // Look for values in reasonable governance power range (1M to 100B)
+            if (value >= 1000000 && value <= 100000000000) {
+              console.log(`Potential governance power at offset ${offset}: ${value}`);
+              maxGovernancePower = Math.max(maxGovernancePower, value);
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+        
+        // Method 3: Parse deposit entries manually
+        try {
+          const depositStartOffset = 74; // After registrar + authority + bumps
+          let totalDeposited = 0;
+          
+          for (let i = 0; i < 32; i++) {
+            const entryOffset = depositStartOffset + (i * 105);
+            
+            if (data.length < entryOffset + 105) break;
+            
+            const isUsed = data[entryOffset] === 1;
+            if (!isUsed) continue;
+            
+            const amountBytes = data.slice(entryOffset + 1, entryOffset + 9);
+            const amount = Number(amountBytes.readBigUInt64LE(0));
+            
+            if (amount > 0) {
+              totalDeposited += amount;
+            }
+          }
+          
+          if (totalDeposited > 0) {
+            console.log(`Total deposited amount: ${totalDeposited}`);
+            maxGovernancePower = Math.max(maxGovernancePower, totalDeposited);
+          }
+        } catch (e) {
+          // Continue without deposit parsing
         }
       } catch (err) {
         continue;
