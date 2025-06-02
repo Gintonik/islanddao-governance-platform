@@ -61,6 +61,7 @@ function createDummyWallet() {
 
 /**
  * Calculate VSR native governance power using canonical Anchor deserialization
+ * Only counts deposits from accounts owned by the target wallet
  */
 async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAccounts) {
   let totalGovernancePower = 0;
@@ -77,6 +78,14 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       const voterAccount = await program.account.voter.fetch(account.pubkey);
       console.log(`✅ Anchor deserialization successful, ${voterAccount.deposits.length} deposits`);
       
+      // CRITICAL: Only process accounts owned by the target wallet
+      if (!voterAccount.authority.equals(walletPublicKey)) {
+        console.log(`⏭️ Skipping account - authority ${voterAccount.authority.toBase58()} != target wallet ${walletPublicKey.toBase58()}`);
+        continue;
+      }
+      
+      console.log(`✅ Account authority matches target wallet`);
+      
       // Get registrar for this account
       const registrarPubkey = voterAccount.registrar;
       let registrarAccount = null;
@@ -92,21 +101,28 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       for (let i = 0; i < voterAccount.deposits.length; i++) {
         const deposit = voterAccount.deposits[i];
         
-        // Check if deposit is used and has amount
-        if (!deposit.isUsed || deposit.amountDepositedNative.eq(0)) {
-          console.log(`⏭️ Skipping deposit ${i}: isUsed=${deposit.isUsed}, amount=${deposit.amountDepositedNative.toString()}`);
+        // Check if deposit is used and has currently locked amount
+        if (!deposit.isUsed) {
+          console.log(`⏭️ Skipping deposit ${i}: not used`);
           continue;
         }
         
-        const depositAmount = deposit.amountDepositedNative.toNumber() / 1e6; // Convert to ISLAND
-        console.log(`📊 Deposit ${i}: ${depositAmount.toLocaleString()} ISLAND`);
+        // Use amountDepositedNative as currently locked amount proxy
+        const currentlyLocked = deposit.amountDepositedNative.toNumber();
+        if (currentlyLocked === 0) {
+          console.log(`⏭️ Skipping deposit ${i}: no currently locked amount`);
+          continue;
+        }
+        
+        const depositAmount = currentlyLocked / 1e6; // Convert to ISLAND
+        console.log(`📊 Deposit ${i}: ${depositAmount.toLocaleString()} ISLAND currently locked`);
         
         // Check if lockup is still active
         const isLocked = deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime;
         console.log(`🔒 Lockup status: ${isLocked ? 'LOCKED' : 'UNLOCKED'}`);
         
         if (!isLocked) {
-          console.log(`⏭️ Skipping unlocked deposit ${i}`);
+          console.log(`⏭️ Skipping expired lockup deposit ${i}`);
           continue;
         }
         
@@ -136,38 +152,43 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       console.log(`❌ Anchor deserialization failed: ${anchorError.message}`);
       console.log(`🔄 Falling back to raw parsing for account ${accountIndex + 1}`);
       
-      // Fallback to raw parsing
+      // Fallback to raw parsing with authority check
       const data = account.account.data;
-      const depositAmounts = [];
       
-      // Scan for large deposit amounts
+      // Check authority at offset 8 (32 bytes)
+      try {
+        const authorityBytes = data.slice(8, 40);
+        const authority = new PublicKey(authorityBytes);
+        
+        if (!authority.equals(walletPublicKey)) {
+          console.log(`⏭️ Raw parsing: authority ${authority.toBase58()} != target wallet ${walletPublicKey.toBase58()}`);
+          continue;
+        }
+        
+        console.log(`✅ Raw parsing: authority matches target wallet`);
+      } catch (authError) {
+        console.log(`⚠️ Raw parsing: could not parse authority, skipping account`);
+        continue;
+      }
+      
+      // Scan for deposit amounts (conservative estimate)
+      const depositAmounts = [];
       for (let offset = 0; offset < data.length - 8; offset += 8) {
         const value = Number(data.readBigUInt64LE(offset));
-        if (value > 1000000000000 && value < 100000000000000000) { // 1M to 100B micro-units
+        if (value > 10000000000 && value < 100000000000000) { // 10K to 100M ISLAND in micro-units
           const asTokens = value / 1e6;
-          if (asTokens >= 1000) {
+          if (asTokens >= 1000 && asTokens <= 100000000) { // 1K to 100M ISLAND
             depositAmounts.push({ offset, amount: asTokens, raw: value });
           }
         }
       }
       
-      // Remove duplicates and get unique amounts
-      const uniqueAmounts = [];
-      for (let j = 0; j < depositAmounts.length; j++) {
-        const current = depositAmounts[j];
-        const next = depositAmounts[j + 1];
-        
-        if (!next || Math.abs(current.amount - next.amount) > 0.1 || 
-            Math.abs(current.offset - next.offset) > 8) {
-          uniqueAmounts.push(current.amount);
-        }
-      }
-      
-      // Use maximum amount as approximate governance power
-      if (uniqueAmounts.length > 0) {
-        const maxAmount = Math.max(...uniqueAmounts);
-        totalGovernancePower += maxAmount;
-        console.log(`🔄 Raw parsing: ${maxAmount.toLocaleString()} ISLAND (estimated)`);
+      // Take conservative estimate (smallest reasonable amount)
+      if (depositAmounts.length > 0) {
+        const amounts = depositAmounts.map(d => d.amount);
+        const estimatedAmount = Math.min(...amounts); // Take minimum to avoid overcounting
+        totalGovernancePower += estimatedAmount;
+        console.log(`🔄 Raw parsing: ${estimatedAmount.toLocaleString()} ISLAND (conservative estimate)`);
       }
     }
   }
@@ -194,48 +215,20 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.log(`🔍 SDK: Program ID: ${VSR_PROGRAM_ID.toBase58()}`);
     console.log(`🔍 SDK: Registrar PDA: ${ISLAND_DAO_REGISTRAR.toBase58()}`);
     
-    // Find all VSR accounts for this wallet using comprehensive search
-    console.log(`🔍 SDK: Searching for all VSR accounts for wallet...`);
+    // Find all VSR accounts for this wallet using proper authority-based search
+    console.log(`🔍 SDK: Searching for VSR accounts owned by wallet...`);
     
-    // First try memcmp at offset 8 (standard voter authority location)
-    let allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    // Use memcmp at offset 8 to find accounts where authority = walletPubkey
+    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
         {
           memcmp: {
-            offset: 8,
+            offset: 8, // Authority field offset in Voter accounts
             bytes: walletPubkey.toBase58()
           }
         }
       ]
     });
-    
-    // For Takisoul specifically, use known account addresses to ensure we get all accounts
-    if (walletPubkey.toBase58() === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
-      console.log(`🔍 SDK: Using known accounts for Takisoul wallet...`);
-      
-      // Use known account addresses for Takisoul from previous debugging
-      const knownAccounts = [
-        "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-        "9dsYHH88bN2Nomgr12qPUgJLsaRwqkX2YYiZNq4kys5L", 
-        "C1vgxMvvBzXegFkvfW4Do7CmyPeCKsGJT7SpQevPaSS8"
-      ];
-      
-      allVSRAccounts = [];
-      for (const accountAddress of knownAccounts) {
-        try {
-          const accountPubkey = new PublicKey(accountAddress);
-          const accountInfo = await connection.getAccountInfo(accountPubkey);
-          if (accountInfo) {
-            allVSRAccounts.push({
-              pubkey: accountPubkey,
-              account: accountInfo
-            });
-          }
-        } catch (error) {
-          console.log(`🔍 SDK: Could not fetch account ${accountAddress}: ${error.message}`);
-        }
-      }
-    }
     
     console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
     
