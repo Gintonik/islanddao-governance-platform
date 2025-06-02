@@ -176,63 +176,98 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
         continue;
       }
       
-      // Enhanced deposit scanning for VSR accounts
-      const deposits = [];
+      // Parse Voter account structure manually (fallback when Anchor fails)
+      // Voter account layout: discriminator(8) + authority(32) + registrar(32) + deposits(32 * deposit_size)
       
-      // Scan for deposit entries in VSR account structure
-      for (let offset = 0; offset < data.length - 16; offset += 8) {
-        const value = Number(data.readBigUInt64LE(offset));
-        
-        // Look for ISLAND amounts in micro-units (1e6 scale)
-        if (value > 1000000000 && value < 100000000000000) { // 1K to 100M ISLAND in micro-units
-          const asTokens = value / 1e6;
-          if (asTokens >= 1000 && asTokens <= 100000000) {
-            
-            // Look for potential multiplier nearby (stored as scaled factor)
-            let multiplier = 1.0;
-            for (let multOffset = offset + 8; multOffset <= offset + 64 && multOffset < data.length - 8; multOffset += 8) {
-              const potentialMult = Number(data.readBigUInt64LE(multOffset));
-              
-              // VSR multipliers are stored as scaled values (1e9 scale)
-              if (potentialMult > 1000000000 && potentialMult < 10000000000) { // 1.0x to 10.0x range
-                const scaledMult = potentialMult / 1e9;
-                if (scaledMult >= 1.0 && scaledMult <= 5.0) { // Reasonable multiplier range
-                  multiplier = scaledMult;
-                  break;
-                }
-              }
-            }
-            
-            deposits.push({ offset, amount: asTokens, multiplier, raw: value });
+      const DEPOSIT_SIZE = 184; // Size of each DepositEntry in bytes
+      const DEPOSITS_OFFSET = 72; // Offset where deposits array starts
+      
+      // Get registrar from account data
+      let registrarAccount = null;
+      try {
+        const registrarBytes = data.slice(40, 72);
+        const registrarPubkey = new PublicKey(registrarBytes);
+        registrarAccount = await connection.getAccountInfo(registrarPubkey);
+        if (registrarAccount) {
+          // Try to deserialize registrar using program
+          try {
+            registrarAccount = await program.account.registrar.fetch(registrarPubkey);
+            console.log(`✅ Raw parsing: loaded registrar with ${registrarAccount.votingMints.length} voting mints`);
+          } catch (deserError) {
+            console.log(`⚠️ Raw parsing: registrar exists but could not deserialize: ${deserError.message}`);
+            registrarAccount = null;
           }
         }
+      } catch (regError) {
+        console.log(`⚠️ Raw parsing: could not load registrar: ${regError.message}`);
       }
       
-      // Remove duplicates and calculate total governance power
-      const uniqueDeposits = [];
-      for (let j = 0; j < deposits.length; j++) {
-        const current = deposits[j];
+      // Parse all 32 deposit entries
+      for (let i = 0; i < 32; i++) {
+        const depositOffset = DEPOSITS_OFFSET + (i * DEPOSIT_SIZE);
         
-        // Check if this amount already exists (skip duplicates)
-        const duplicate = uniqueDeposits.find(existing => 
-          Math.abs(existing.amount - current.amount) < 0.01
-        );
-        
-        if (!duplicate) {
-          uniqueDeposits.push(current);
+        if (depositOffset + DEPOSIT_SIZE > data.length) {
+          break; // Beyond account data
         }
-      }
-      
-      // Calculate governance power for each unique deposit
-      for (const deposit of uniqueDeposits) {
-        const governancePower = deposit.amount * deposit.multiplier;
-        totalGovernancePower += governancePower;
         
-        console.log(`🔄 Raw parsing: ${deposit.amount.toLocaleString()} ISLAND × ${deposit.multiplier.toFixed(2)} = ${governancePower.toLocaleString()} governance power`);
-      }
-      
-      if (uniqueDeposits.length > 0) {
-        console.log(`🔄 Raw parsing: processed ${uniqueDeposits.length} unique deposits`);
+        try {
+          // Parse deposit entry fields
+          const isUsed = data[depositOffset] === 1;
+          if (!isUsed) {
+            continue;
+          }
+          
+          // Parse amount deposited (8 bytes, little endian)
+          const amountDeposited = Number(data.readBigUInt64LE(depositOffset + 8));
+          if (amountDeposited === 0) {
+            continue;
+          }
+          
+          // Convert to ISLAND tokens for logging
+          const tokenAmount = amountDeposited / 1e6;
+          
+          // Parse voting mint config index (1 byte)
+          const votingMintConfigIdx = data[depositOffset + 16];
+          
+          // Parse lockup information (starts at offset + 24)
+          const lockupStartTs = Number(data.readBigUInt64LE(depositOffset + 24));
+          const lockupEndTs = Number(data.readBigUInt64LE(depositOffset + 32));
+          const lockupKind = data[depositOffset + 40]; // 0=none, 1=cliff, 2=vested
+          
+          // Check if deposit is locked
+          const isLocked = lockupKind !== 0 && lockupEndTs > currentTime;
+          
+          console.log(`🔍 Raw parsing deposit ${i}: amount=${tokenAmount.toLocaleString()}, lockupKind=${lockupKind}, endTs=${lockupEndTs}, isLocked=${isLocked}`);
+          
+          // For now, include both locked and unlocked deposits to see what we find
+          // if (!isLocked) {
+          //   continue; // Skip unlocked deposits for now
+          // }
+          
+          // Calculate multiplier using registrar config
+          let multiplier = 1.0;
+          if (registrarAccount && votingMintConfigIdx < registrarAccount.votingMints.length) {
+            const votingMintConfig = registrarAccount.votingMints[votingMintConfigIdx];
+            
+            const lockupSecs = lockupEndTs - currentTime;
+            const saturationSecs = votingMintConfig.lockupSaturationSecs.toNumber();
+            const lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
+            
+            const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
+            const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
+            
+            multiplier = (baselineWeight + (lockupFactor * maxExtraWeight)) / 1_000_000_000;
+          }
+          
+          // Calculate voting power
+          const votingPower = tokenAmount * multiplier;
+          totalGovernancePower += votingPower;
+          
+          console.log(`🔄 Raw parsing deposit ${i}: ${tokenAmount.toLocaleString()} ISLAND × ${multiplier.toFixed(6)} = ${votingPower.toLocaleString()} governance power`);
+          
+        } catch (parseError) {
+          console.log(`⚠️ Raw parsing: error parsing deposit ${i}: ${parseError.message}`);
+        }
       }
     }
   }
