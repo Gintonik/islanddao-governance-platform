@@ -229,16 +229,13 @@ async function calculateTokenOwnerRecordPower(walletAddress) {
     
     console.log(`🏛️ Calculating Token Owner Record power for: ${walletAddress}`);
     
-    // Find Token Owner Record PDA for this wallet
-    const [tokenOwnerRecordPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("token-owner-record"),
-        ISLAND_DAO_REALM.toBuffer(),
-        ISLAND_GOVERNANCE_MINT.toBuffer(),
-        walletPubkey.toBuffer(),
-      ],
-      SPL_GOVERNANCE_PROGRAM_ID
-    );
+    // Find Token Owner Record PDA for this wallet using exact derivation
+    const [tokenOwnerRecordPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("token-owner-record"),
+      new PublicKey("F9VL4wo49aUe8FufjMbU6uhdfyDRqKY54WpzdpncUSk9").toBuffer(), // realm
+      new PublicKey("Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a").toBuffer(), // governance mint
+      walletPubkey.toBuffer(), // wallet
+    ], new PublicKey("GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw")); // governance program
     
     console.log(`Token Owner Record PDA: ${tokenOwnerRecordPDA.toBase58()}`);
     
