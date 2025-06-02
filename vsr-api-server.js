@@ -101,28 +101,18 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       for (let i = 0; i < voterAccount.deposits.length; i++) {
         const deposit = voterAccount.deposits[i];
         
-        // Check if deposit is used and has currently locked amount
+        // Check if deposit is used and not withdrawn
         if (!deposit.isUsed) {
           console.log(`⏭️ Skipping deposit ${i}: not used`);
           continue;
         }
         
-        // Use amountDepositedNative as currently locked amount proxy
-        const currentlyLocked = deposit.amountDepositedNative.toNumber();
-        if (currentlyLocked === 0) {
-          console.log(`⏭️ Skipping deposit ${i}: no currently locked amount`);
-          continue;
-        }
+        // Extract deposit amounts
+        const amountDeposited = deposit.amountDepositedNative.toNumber();
+        const amountInitiallyLocked = deposit.amountInitiallyLockedNative ? deposit.amountInitiallyLockedNative.toNumber() : 0;
         
-        const depositAmount = currentlyLocked / 1e6; // Convert to ISLAND
-        console.log(`📊 Deposit ${i}: ${depositAmount.toLocaleString()} ISLAND currently locked`);
-        
-        // Check if lockup is still active
-        const isLocked = deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime;
-        console.log(`🔒 Lockup status: ${isLocked ? 'LOCKED' : 'UNLOCKED'}`);
-        
-        if (!isLocked) {
-          console.log(`⏭️ Skipping expired lockup deposit ${i}`);
+        if (amountDeposited === 0) {
+          console.log(`⏭️ Skipping deposit ${i}: no amount deposited`);
           continue;
         }
         
@@ -132,20 +122,46 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
         if (registrarAccount && deposit.votingMintConfigIdx < registrarAccount.votingMints.length) {
           const votingMintConfig = registrarAccount.votingMints[deposit.votingMintConfigIdx];
           
-          const lockupSecs = deposit.lockup.endTs.toNumber() - currentTime;
-          const saturationSecs = votingMintConfig.lockupSaturationSecs.toNumber();
-          const lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
-          
-          const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
-          const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
-          
-          multiplier = (baselineWeight + (lockupFactor * maxExtraWeight)) / 1_000_000_000;
+          if (deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime) {
+            const lockupSecs = deposit.lockup.endTs.toNumber() - currentTime;
+            const saturationSecs = votingMintConfig.lockupSaturationSecs.toNumber();
+            const lockupFactor = Math.min(lockupSecs / saturationSecs, 1.0);
+            
+            const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
+            const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
+            
+            multiplier = (baselineWeight + (lockupFactor * maxExtraWeight)) / 1_000_000_000;
+          } else {
+            // No active lockup, use baseline weight
+            const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
+            multiplier = baselineWeight / 1_000_000_000;
+          }
         }
         
-        const depositVotingPower = depositAmount * multiplier;
+        let votingPowerAmount = 0;
+        let depositType = "";
+        
+        // Apply VSR logic: locked vs unlocked deposits
+        if (amountInitiallyLocked === 0) {
+          // Unlocked deposit: use full amountDeposited
+          votingPowerAmount = amountDeposited / 1_000_000_000; // Normalize
+          depositType = "UNLOCKED";
+        } else {
+          // Locked deposit: use currentlyLocked amount
+          // For locked deposits, check if still locked
+          if (deposit.lockup && deposit.lockup.endTs.toNumber() > currentTime) {
+            votingPowerAmount = amountDeposited / 1_000_000_000; // Use deposited amount for locked
+            depositType = "LOCKED";
+          } else {
+            console.log(`⏭️ Skipping deposit ${i}: lockup expired`);
+            continue;
+          }
+        }
+        
+        const depositVotingPower = votingPowerAmount * multiplier;
         totalGovernancePower += depositVotingPower;
         
-        console.log(`💎 Deposit ${i}: ${depositAmount.toLocaleString()} × ${multiplier.toFixed(6)} = ${depositVotingPower.toLocaleString()} governance power`);
+        console.log(`📊 Deposit ${i} (${depositType}): ${votingPowerAmount.toLocaleString()} × ${multiplier.toFixed(6)} = ${depositVotingPower.toLocaleString()} governance power`);
       }
       
     } catch (anchorError) {
@@ -171,24 +187,30 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
         continue;
       }
       
-      // Scan for deposit amounts (conservative estimate)
+      // Scan for deposit amounts in the account data
       const depositAmounts = [];
       for (let offset = 0; offset < data.length - 8; offset += 8) {
         const value = Number(data.readBigUInt64LE(offset));
-        if (value > 10000000000 && value < 100000000000000) { // 10K to 100M ISLAND in micro-units
-          const asTokens = value / 1e6;
-          if (asTokens >= 1000 && asTokens <= 100000000) { // 1K to 100M ISLAND
-            depositAmounts.push({ offset, amount: asTokens, raw: value });
+        // Look for values in VSR deposit range (normalized to 1B scale factor)
+        if (value > 1000000000000 && value < 100000000000000000) { // 1M to 100B in nano-units
+          const normalizedAmount = value / 1_000_000_000; // Apply VSR normalization
+          if (normalizedAmount >= 1000 && normalizedAmount <= 100000000) { // 1K to 100M ISLAND
+            depositAmounts.push({ offset, amount: normalizedAmount, raw: value });
           }
         }
       }
       
-      // Take conservative estimate (smallest reasonable amount)
+      // Take conservative estimate (smallest reasonable amount to avoid overcounting)
       if (depositAmounts.length > 0) {
         const amounts = depositAmounts.map(d => d.amount);
         const estimatedAmount = Math.min(...amounts); // Take minimum to avoid overcounting
-        totalGovernancePower += estimatedAmount;
-        console.log(`🔄 Raw parsing: ${estimatedAmount.toLocaleString()} ISLAND (conservative estimate)`);
+        
+        // Apply baseline multiplier for raw parsing (conservative approach)
+        const baselineMultiplier = 1.0;
+        const estimatedVotingPower = estimatedAmount * baselineMultiplier;
+        
+        totalGovernancePower += estimatedVotingPower;
+        console.log(`🔄 Raw parsing: ${estimatedAmount.toLocaleString()} × ${baselineMultiplier} = ${estimatedVotingPower.toLocaleString()} ISLAND (conservative estimate)`);
       }
     }
   }
