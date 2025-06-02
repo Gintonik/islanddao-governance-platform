@@ -41,7 +41,7 @@ function parseDepositsManually(data, voterPubkey) {
   console.log(`🔄 Fallback: Manual deserialization for ${voterPubkey} (STRICT_MODE: ${STRICT_MODE})`);
   
   // Known-good range of isUsed values observed from real deposits
-  const validIsUsed = STRICT_MODE ? [1, 0x01] : [1, 0x01, 0x03, 0x04, 0x09, 0x20, 0x24, 0x40, 0x80, 0xb0, 0xf0];
+  const validIsUsed = STRICT_MODE ? [1, 0x01] : [1, 0x01, 0x03, 0x04, 0x09, 0x20, 0x24, 0x3e, 0x40, 0x80, 0x83, 0xb0, 0xb6, 0xf0];
   
   let foundStandardDeposits = false;
   let entriesWithData = 0;
