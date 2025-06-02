@@ -9,6 +9,7 @@ import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey } from "@solana/web3.js";
 import fs from "fs";
+import { SplGovernance } from "./governance-sdk/dist/index.js";
 
 // Load VSR IDL for proper deserialization
 const vsrIdl = JSON.parse(fs.readFileSync("vsr_idl.json", "utf8"));
@@ -163,49 +164,33 @@ function calculateVotingPowerFromVoter(voterAccountData, accountPubkey) {
 }
 
 /**
- * Custom implementation of getLockTokensVotingPowerPerWallet functionality
+ * Calculate governance power using the provided governance SDK
  */
 async function getLockTokensVotingPowerPerWallet({ connection, walletAddress, registrar }) {
   try {
-    console.log(`📊 Getting lock tokens voting power for: ${walletAddress.toBase58()}`);
-    console.log(`Using registrar: ${registrar.toBase58()}`);
+    console.log(`📊 Getting governance power using SDK for: ${walletAddress.toBase58()}`);
     
-    // Derive Voter PDA using the registrar
-    const [voterPDA] = PublicKey.findProgramAddressSync(
-      [
-        registrar.toBuffer(),
-        Buffer.from("voter"),
-        walletAddress.toBuffer(),
-      ],
-      VSR_PROGRAM_ID
+    // Initialize the governance SDK
+    const splGov = new SplGovernance(connection);
+    
+    // Get token owner record for the wallet
+    const tokenOwnerRecord = await splGov.getTokenOwnerRecord(
+      ISLAND_DAO_REALM,
+      walletAddress,
+      ISLAND_GOVERNANCE_MINT
     );
     
-    console.log(`Voter PDA: ${voterPDA.toBase58()}`);
-    
-    // Fetch the Voter account
-    const accountInfo = await connection.getAccountInfo(voterPDA);
-    
-    if (accountInfo && accountInfo.data) {
-      console.log(`Found Voter account, data length: ${accountInfo.data.length}`);
-      
-      // Parse Voter account structure to get voter_weight
-      const data = accountInfo.data;
-      let offset = 8 + 32 + 32 + 1 + 1; // Skip discriminator + registrar + authority + bumps
-      
-      // Read voter_weight (8 bytes)
-      if (data.length >= offset + 8) {
-        const voterWeightBytes = data.slice(offset, offset + 8);
-        const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
-        console.log(`Lock tokens voting power: ${voterWeight}`);
-        return voterWeight;
-      }
+    if (tokenOwnerRecord && tokenOwnerRecord.governingTokenDepositAmount) {
+      const governancePower = Number(tokenOwnerRecord.governingTokenDepositAmount);
+      console.log(`SDK governance power: ${governancePower}`);
+      return governancePower;
     }
     
-    console.log(`No Voter account found or insufficient data`);
+    console.log(`No governance power found via SDK`);
     return 0;
     
   } catch (error) {
-    console.error(`Error getting lock tokens voting power: ${error.message}`);
+    console.error(`Error getting governance power via SDK: ${error.message}`);
     return 0;
   }
 }
