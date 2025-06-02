@@ -4,19 +4,15 @@
   "instructions": [],
   "accounts": [
     {
-      "name": "Voter",
+      "name": "voter",
       "type": {
         "kind": "struct",
         "fields": [
           { "name": "registrar", "type": "publicKey" },
           { "name": "authority", "type": "publicKey" },
-          { "name": "votingPower", "type": "u64" },
-          { "name": "votingPowerBaseline", "type": "u64" },
-          { "name": "votingPowerTimestamp", "type": "i64" },
-          {
-            "name": "depositEntries",
-            "type": { "array": [{ "defined": "DepositEntry" }, 32] }
-          }
+          { "name": "voterBump", "type": "u8" },
+          { "name": "voterWeightRecordBump", "type": "u8" },
+          { "name": "depositEntries", "type": { "array": [{ "defined": "DepositEntry" }, 32] } }
         ]
       }
     }

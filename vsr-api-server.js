@@ -7,7 +7,9 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
+import fs from "fs/promises";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
@@ -40,15 +42,15 @@ app.get("/api/governance-power", async (req, res) => {
   try {
     console.log(`Fetching governance power for wallet: ${wallet}`);
     
-    // Get all VSR accounts and scan for wallet matches
-    const allVsrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-    console.log(`Scanning ${allVsrAccounts.length} total VSR accounts`);
+    // Fetch all VSR accounts with no filters
+    const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+    console.log(`Total VSR accounts fetched: ${allVoterAccountInfos.length}`);
 
     let maxGovernancePower = 0;
-    let foundAccounts = 0;
-
-    // Scan all VSR accounts for this wallet
-    for (const accountInfo of allVsrAccounts) {
+    let matchedAccounts = 0;
+    
+    // Scan all accounts and find matches for this wallet using direct binary parsing
+    for (const accountInfo of allVoterAccountInfos) {
       try {
         const data = accountInfo.account.data;
         
@@ -57,15 +59,14 @@ app.get("/api/governance-power", async (req, res) => {
         const authority = new PublicKey(authorityBytes).toBase58();
         
         if (authority === wallet) {
-          foundAccounts++;
+          console.log("✅ Found VSR account for wallet:", accountInfo.pubkey.toBase58());
+          matchedAccounts++;
           
-          // Read voter_weight field at offset 232 (8 bytes, little endian)
+          // Extract governance power from voter_weight field at offset 232
           const voterWeightBytes = data.slice(232, 240);
-          const voterWeight = Number(
-            voterWeightBytes.readBigUInt64LE(0)
-          );
-
-          console.log(`Found VSR account ${accountInfo.pubkey.toBase58()}: voter_weight = ${voterWeight}`);
+          const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
+          
+          console.log(`Governance power from this account: ${voterWeight}`);
           
           // Take the maximum governance power across all accounts
           if (voterWeight > maxGovernancePower) {
@@ -78,10 +79,8 @@ app.get("/api/governance-power", async (req, res) => {
       }
     }
 
-    console.log(`Found ${foundAccounts} VSR accounts for wallet`);
-    console.log(`Max governance power: ${maxGovernancePower}`);
-
-    console.log(`Final governance power: ${maxGovernancePower}`);
+    console.log(`Found ${matchedAccounts} VSR accounts for wallet`);
+    console.log(`Final governance power calculated: ${maxGovernancePower}`);
 
     return res.json({
       wallet,

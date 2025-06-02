@@ -1,0 +1,80 @@
+🛠️ TASK: Final fix for the IslandDAO VSR governance power API
+
+Please open `vsr-api-server.js` and do all of the following:
+
+---
+
+✅ 1. Replace getProgramAccounts filter:
+
+Currently, you're using a memcmp filter with offset 40 to fetch only voter accounts owned by a specific wallet. This skips valid accounts. Please replace:
+
+```js
+const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+  filters: [
+    {
+      memcmp: {
+        offset: 40,
+        bytes: wallet,
+      },
+    },
+  ],
+});
+
+With:
+
+const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+
+Then manually decode and filter using:
+
+for (const { account } of accounts) {
+  try {
+    const decoded = program.coder.accounts.decode("voter", account.data);
+    const authority = decoded.authority.toBase58();
+    console.log("Decoded authority:", authority);
+    if (authority === wallet) {
+      // accumulate governance power from this voter account
+    } else {
+      console.log("⛔️ Authority does NOT match:", authority);
+    }
+  } catch (err) {
+    console.log("❌ Failed to decode account:", err.message);
+  }
+}
+
+Use the exact logic from before to calculate governance power from deposit entries.
+
+
+✅ 2. Fix port usage:
+
+Make sure the server is started with a flexible port:
+
+const port = process.env.PORT || 3001;
+app.listen(port, () => {
+  console.log(`✅ VSR API Server running on port ${port}`);
+});
+
+✅ 3. Check for hardcoded ports:
+
+Scan all files (especially calculate-governance-power.js, .replit, citizen-map/db-integrated-server.js, etc.) and make sure:
+
+❌ No ports like 10000 or 3001 are hardcoded anywhere
+
+✅ Any request to the API uses relative paths or environment-based ports
+
+✅ 4. Preserve the following:
+
+PostgreSQL connection and logic
+
+Express server and middleware
+
+NFT + Citizen Map logic
+
+JSON output shape: { wallet, nativePower, delegatedPower, totalPower }
+
+💡 WHY this is important:
+
+You are currently missing voter accounts like the one belonging to wallet 3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt which has multiple deposits across VSRs and >5M $ISLAND locked. By scanning everything and decoding properly, we ensure governance power is always accurate.
+
+Once you make the changes, deploy the server and confirm logs show matched voter authorities and decoded governance power for wallets like 3PKhz....
+
+✅ No SDK needed, no hardcoding, no skipped accounts.
