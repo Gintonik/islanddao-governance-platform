@@ -1,0 +1,108 @@
+🛠️ TASK:
+Fix two critical issues in `canonical-vwr-scan.js` so the scanner correctly separates native and delegated governance power without overcounting, and reflects live on-chain data.
+
+📌 CONTEXT:
+The current version:
+- Preserves native power for delegators ✅
+- Scans all Voter accounts ✅
+- Still fails to detect **incoming delegation** ❌
+- Incorrectly **overcounts** power for some wallets (e.g. GJdRQcsyz... shows 844M ISLAND)
+
+🎯 OBJECTIVE:
+1. Ensure accurate native and delegated governance power per wallet
+2. Eliminate double-counting (especially VWR + fallback)
+3. Detect and apply real delegation relationships
+4. Use only live Solana on-chain data from the VSR program
+
+✅ FIX #1: ELIMINATE OVERCOUNTING
+
+Problem: The scanner adds together the `voterWeight` from the VoterWeightRecord *and* the parsed deposits from the Voter account. This causes massive inflation.
+
+Solution:
+- For any wallet that has a valid **VoterWeightRecord**, use that **exclusively**
+- Only fall back to parsing the Voter account if **no VWR is found**
+```ts
+if (hasVWR(wallet)) {
+  use voterWeight from VWR (offset 104 of 176-byte account)
+} else {
+  parse voter.depositEntries using IDL
+}
+
+✅ FIX #2: DETECT INCOMING DELEGATION
+
+Problem: We're scanning Voter accounts but failing to detect which accounts delegated to a target wallet.
+
+Solution:
+
+For each Voter account:
+const authority = voter.account.authority.toBase58();
+const voterAuthority = voter.account.voterAuthority.toBase58();
+
+Then for each wallet in our scan:
+
+if (authority === wallet && voterAuthority === wallet) {
+  // native power
+  wallet.nativeGovernancePower += parsedDepositPower
+}
+
+if (voterAuthority === wallet && authority !== wallet) {
+  // incoming delegation
+  wallet.delegatedGovernancePower += parsedDepositPower
+}
+
+These two conditions are independent and both should be counted
+
+💡 Remember: Do not remove native power from the delegator. Delegation in Realms adds power to the delegatee but does not subtract from the original owner.
+
+✅ FIX #3: NO HARDCODING
+
+Please ensure:
+
+No governance power values are hardcoded or estimated
+
+All values must come from live queries using getProgramAccounts() from the VSR program ID: vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ
+
+✅ LOGGING:
+Log delegation events for verification:
+
+Delegation: from <authority> to <voterAuthority> → <amount> ISLAND
+
+Also log:
+
+Number of deposits parsed
+
+Fallbacks used
+
+Whether VWR or Voter was the data source
+
+✅ EXPECTED TEST CASES:
+
+Wallet 3PKhzE9...
+
+native: ~10.35M
+
+delegated: ~1.27M
+
+total: ~11.62M
+
+Wallet Fywb7YDC...
+
+native: ~3.36M
+
+delegated: ~1.6M
+
+total: ~4.96M
+
+🎯 FINAL GOAL:
+Return per-wallet governance data like this:
+
+{
+  wallet: "wallet address",
+  nativeGovernancePower: <float>,
+  delegatedGovernancePower: <float>,
+  totalGovernancePower: native + delegated,
+  source: "VWR" | "Voter fallback"
+}
+
+The output must reflect real, canonical on-chain Solana data with no duplication or assumptions. This will be used for a production governance leaderboard and must match Realms-calculated totals within 0.5% margin of error.
+
