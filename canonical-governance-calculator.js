@@ -26,50 +26,90 @@ function createDummyWallet() {
   };
 }
 
+// Configuration
+const STRICT_MODE = false;
+
 /**
- * Strict manual deserialization fallback with canonical rules
+ * Enhanced manual deserialization fallback with adaptive rules
  */
 function parseDepositsManually(data, voterPubkey) {
   const currentTime = Date.now() / 1000;
   const deposits = [];
   const processedEntries = new Set();
+  const skippedReasons = new Map();
   
-  console.log(`🔄 Fallback: Strict manual deserialization for ${voterPubkey}`);
+  console.log(`🔄 Fallback: Manual deserialization for ${voterPubkey} (STRICT_MODE: ${STRICT_MODE})`);
   
-  // First try standard VSR layout (88-byte entries from offset 72)
+  // Known-good range of isUsed values observed from real deposits
+  const validIsUsed = STRICT_MODE ? [1, 0x01] : [1, 0x01, 0x03, 0x04, 0x09, 0x20, 0x24, 0x40, 0x80, 0xb0, 0xf0];
+  
   let foundStandardDeposits = false;
+  let entriesWithData = 0;
   
   for (let i = 0; i < 32; i++) {
     const entryOffset = 72 + (i * 88);
     if (entryOffset + 88 > data.length) break;
     
     try {
-      // Strict isUsed check - must be exactly 0x01
-      const isUsed = data[entryOffset] === 1;
-      if (!isUsed) continue;
+      const isUsed = data[entryOffset];
+      
+      // Check if this entry has any data (not all zeros)
+      const hasData = !data.slice(entryOffset, entryOffset + 88).every(b => b === 0);
+      if (hasData) entriesWithData++;
+      
+      // Log isUsed values we're skipping for analysis
+      if (!validIsUsed.includes(isUsed)) {
+        const reason = `isUsed=${isUsed}(0x${isUsed.toString(16)})`;
+        skippedReasons.set(reason, (skippedReasons.get(reason) || 0) + 1);
+        if (hasData) {
+          console.log(`[Entry ${i}] Skipped - ${reason}, hasData: ${hasData}`);
+        }
+        continue;
+      }
       
       // Parse amount (8 bytes at offset +1)
       const amountRaw = Number(data.readBigUInt64LE(entryOffset + 1));
       const amount = amountRaw / 1e6;
-      if (amount === 0 || amount > 100000000) continue;
+      if (amount === 0) {
+        skippedReasons.set('zero amount', (skippedReasons.get('zero amount') || 0) + 1);
+        continue;
+      }
+      if (amount > 100000000) {
+        skippedReasons.set('unrealistic amount', (skippedReasons.get('unrealistic amount') || 0) + 1);
+        continue;
+      }
       
       // Parse lockup start timestamp (8 bytes at offset +25)
       const startTs = Number(data.readBigUInt64LE(entryOffset + 25));
-      if (startTs < 1600000000 || startTs > 2000000000) continue;
+      if (startTs < 1600000000 || startTs > 2000000000) {
+        skippedReasons.set('invalid startTs', (skippedReasons.get('invalid startTs') || 0) + 1);
+        continue;
+      }
       
       // Parse lockup end timestamp (8 bytes at offset +33)
       const endTs = Number(data.readBigUInt64LE(entryOffset + 33));
-      if (endTs < 1600000000 || endTs > 2000000000) continue;
+      if (endTs < 1600000000 || endTs > 2000000000) {
+        skippedReasons.set('invalid endTs', (skippedReasons.get('invalid endTs') || 0) + 1);
+        continue;
+      }
       
       // Validate that now < endTs (deposit not expired)
-      if (endTs <= currentTime) continue;
+      if (endTs <= currentTime) {
+        skippedReasons.set('expired', (skippedReasons.get('expired') || 0) + 1);
+        continue;
+      }
       
       // Parse multiplier (8 bytes at offset +72, scaled by 1e9)
       const multiplierRaw = Number(data.readBigUInt64LE(entryOffset + 72));
       const multiplier = multiplierRaw / 1e9;
       
-      // Strict multiplier validation
-      if (multiplier <= 1.0 || multiplier > 6.0) continue;
+      // Multiplier validation - stricter in strict mode
+      const minMult = STRICT_MODE ? 1.0 : 0.5;
+      const maxMult = STRICT_MODE ? 6.0 : 10.0;
+      if (multiplier <= minMult || multiplier > maxMult) {
+        skippedReasons.set(`invalid multiplier (${multiplier.toFixed(3)})`, (skippedReasons.get(`invalid multiplier (${multiplier.toFixed(3)})`) || 0) + 1);
+        continue;
+      }
       
       foundStandardDeposits = true;
       
@@ -80,7 +120,10 @@ function parseDepositsManually(data, voterPubkey) {
       
       // Deduplicate using strict key
       const uniqueKey = `${amount.toFixed(6)}|${startTs}|${lockupKind}|${duration}`;
-      if (processedEntries.has(uniqueKey)) continue;
+      if (processedEntries.has(uniqueKey)) {
+        skippedReasons.set('duplicate', (skippedReasons.get('duplicate') || 0) + 1);
+        continue;
+      }
       processedEntries.add(uniqueKey);
       
       const votingPower = amount * multiplier;
@@ -96,16 +139,33 @@ function parseDepositsManually(data, voterPubkey) {
       };
       
       deposits.push(depositEntry);
-      console.log(`[Standard ${i}] ${JSON.stringify(depositEntry)}`);
+      console.log(`[Valid ${i}] ${JSON.stringify(depositEntry)}`);
       
     } catch (parseError) {
-      // Continue to next entry
+      skippedReasons.set('parse error', (skippedReasons.get('parse error') || 0) + 1);
     }
   }
   
-  // If no standard deposits found, the account has no valid VSR deposits
+  // Log comprehensive analysis
+  console.log(`📊 Analysis for ${voterPubkey}:`);
+  console.log(`   Entries with data: ${entriesWithData}/32`);
+  console.log(`   Valid deposits found: ${deposits.length}`);
+  
+  if (skippedReasons.size > 0) {
+    console.log(`   Skip reasons:`);
+    for (const [reason, count] of skippedReasons.entries()) {
+      console.log(`     ${reason}: ${count}`);
+    }
+  }
+  
+  // Log when deposits exist but were filtered out
+  if (deposits.length === 0 && entriesWithData > 0) {
+    console.log(`🛑 Voter ${voterPubkey} had ${entriesWithData} entries with data, but none passed filters`);
+  }
+  
+  // If no standard deposits found
   if (!foundStandardDeposits) {
-    console.log(`⚠️ No valid VSR deposits found in standard layout - account may be inactive or use different format`);
+    console.log(`⚠️ No valid VSR deposits found in standard layout - account may be inactive or expired`);
   }
   
   // If >12 deposits, skip as invalid
