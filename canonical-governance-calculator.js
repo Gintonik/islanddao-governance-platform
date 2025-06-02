@@ -27,115 +27,87 @@ function createDummyWallet() {
 }
 
 /**
- * Enhanced manual deserialization fallback with strict deduplication
+ * Strict manual deserialization fallback with canonical rules
  */
-function parseDepositsManually(data) {
+function parseDepositsManually(data, voterPubkey) {
   const currentTime = Date.now() / 1000;
   const deposits = [];
   const processedEntries = new Set();
   
-  console.log(`🔄 Manual deserialization fallback`);
+  console.log(`🔄 Fallback: Strict manual deserialization for ${voterPubkey}`);
   
-  // Enhanced scanning approach - scan for significant amounts and their multipliers
-  for (let offset = 72; offset < data.length - 16; offset += 8) {
+  // Parse deposit entries starting at offset 72 (88 bytes each, max 32 entries)
+  for (let i = 0; i < 32; i++) {
+    const entryOffset = 72 + (i * 88);
+    if (entryOffset + 88 > data.length) break;
+    
     try {
-      const value = Number(data.readBigUInt64LE(offset));
-      const tokens = value / 1e6;
+      // Strict isUsed check - must be exactly 0x01
+      const isUsed = data[entryOffset] === 1;
+      if (!isUsed) continue;
       
-      // Look for amounts between 1K and 10M ISLAND that could be deposits
-      if (tokens >= 1000 && tokens <= 10000000) {
-        // Search for a corresponding multiplier within reasonable range
-        let bestMultiplier = 1.0;
-        let multiplierFound = false;
-        let bestStartTs = currentTime;
-        let bestEndTs = currentTime + (365 * 24 * 3600); // Default 1 year
-        
-        // Check common relative offsets for multipliers and timestamps
-        const searchOffsets = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, -8, -16, -24, -32, -40];
-        
-        for (const relOffset of searchOffsets) {
-          const multPos = offset + relOffset;
-          if (multPos >= 0 && multPos + 8 <= data.length) {
-            try {
-              // Try as scaled integer (1e9)
-              const intMult = Number(data.readBigUInt64LE(multPos)) / 1e9;
-              if (intMult > 1.0 && intMult <= 5.0) {
-                bestMultiplier = intMult;
-                multiplierFound = true;
-                
-                // Look for timestamps around this position
-                for (const tsOffset of [-32, -24, -16, -8, 8, 16, 24, 32]) {
-                  const tsPos = multPos + tsOffset;
-                  if (tsPos >= 0 && tsPos + 8 <= data.length) {
-                    try {
-                      const ts = Number(data.readBigUInt64LE(tsPos));
-                      if (ts > 1600000000 && ts < 2000000000) { // Valid timestamp range
-                        if (ts > currentTime) {
-                          bestEndTs = ts;
-                        } else {
-                          bestStartTs = ts;
-                        }
-                      }
-                    } catch (e) {}
-                  }
-                }
-                break;
-              }
-            } catch (e) {}
-            
-            try {
-              // Try as double float
-              const floatMult = data.readDoubleLE(multPos);
-              if (floatMult > 1.0 && floatMult <= 5.0 && !isNaN(floatMult)) {
-                bestMultiplier = floatMult;
-                multiplierFound = true;
-                break;
-              }
-            } catch (e) {}
-          }
-        }
-        
-        // Only include locked deposits with valid multipliers
-        if (multiplierFound && bestMultiplier > 1.0 && bestEndTs > currentTime) {
-          // Create unique key for deduplication: amount|startTs|endTs
-          const uniqueKey = `${tokens.toFixed(6)}|${bestStartTs}|${bestEndTs}`;
-          if (!processedEntries.has(uniqueKey)) {
-            processedEntries.add(uniqueKey);
-            
-            const votingPower = tokens * bestMultiplier;
-            
-            deposits.push({
-              amount: tokens,
-              multiplier: bestMultiplier,
-              votingPower: votingPower,
-              startTs: bestStartTs,
-              endTs: bestEndTs
-            });
-            
-            console.log(`[Manual] Amount: ${tokens.toLocaleString()}, Multiplier: ${bestMultiplier.toFixed(6)}, VotingPower: ${votingPower.toLocaleString()}`);
-          }
-        }
-      }
-    } catch (e) {
-      // Continue scanning
+      // Parse amount (8 bytes at offset +1)
+      const amountRaw = Number(data.readBigUInt64LE(entryOffset + 1));
+      const amount = amountRaw / 1e6;
+      if (amount === 0 || amount > 100000000) continue; // Skip zero or unrealistic amounts
+      
+      // Parse lockup start timestamp (8 bytes at offset +25)
+      const startTs = Number(data.readBigUInt64LE(entryOffset + 25));
+      if (startTs < 1600000000 || startTs > 2000000000) continue; // Invalid timestamp range
+      
+      // Parse lockup end timestamp (8 bytes at offset +33)
+      const endTs = Number(data.readBigUInt64LE(entryOffset + 33));
+      if (endTs < 1600000000 || endTs > 2000000000) continue; // Invalid timestamp range
+      
+      // Validate that now < endTs (deposit not expired)
+      if (endTs <= currentTime) continue;
+      
+      // Parse multiplier (8 bytes at offset +72, scaled by 1e9)
+      const multiplierRaw = Number(data.readBigUInt64LE(entryOffset + 72));
+      const multiplier = multiplierRaw / 1e9;
+      
+      // Strict multiplier validation - ignore outliers
+      if (multiplier <= 1.0 || multiplier > 6.0) continue;
+      
+      // Calculate duration for lockup kind estimation
+      const duration = endTs - startTs;
+      const lockupKind = duration > (4 * 365 * 24 * 3600) ? 'cliff' : 
+                        duration > (365 * 24 * 3600) ? 'constant' : 'vested';
+      
+      // Deduplicate using strict key: amount|startTs|lockup.kind|duration
+      const uniqueKey = `${amount.toFixed(6)}|${startTs}|${lockupKind}|${duration}`;
+      if (processedEntries.has(uniqueKey)) continue;
+      processedEntries.add(uniqueKey);
+      
+      // Calculate voting power
+      const votingPower = amount * multiplier;
+      
+      const depositEntry = {
+        amount: amount.toString(),
+        multiplier: multiplier,
+        startTs: startTs,
+        endTs: endTs,
+        isUsed: isUsed,
+        votingPower: votingPower,
+        lockupKind: lockupKind
+      };
+      
+      deposits.push(depositEntry);
+      
+      console.log(`[Fallback ${i}] ${JSON.stringify(depositEntry)}`);
+      
+    } catch (parseError) {
+      // Continue to next entry
     }
   }
   
-  // Sort by voting power and remove duplicates by amount
-  deposits.sort((a, b) => b.votingPower - a.votingPower);
-  
-  const uniqueDeposits = [];
-  const seenAmounts = new Set();
-  
-  for (const deposit of deposits) {
-    const amountKey = Math.round(deposit.amount * 1000);
-    if (!seenAmounts.has(amountKey)) {
-      seenAmounts.add(amountKey);
-      uniqueDeposits.push(deposit);
-    }
+  // If >12 fallback-parsed deposits, skip as invalid
+  if (deposits.length > 12) {
+    console.log(`⚠️ Too many fallback deposits (${deposits.length}), skipping account as invalid`);
+    return [];
   }
   
-  return uniqueDeposits;
+  return deposits;
 }
 
 /**
@@ -178,44 +150,78 @@ async function calculateNativeGovernancePower(walletAddress) {
       let accountDeposits = [];
       
       try {
-        // Try Anchor IDL decoding first using proper method
+        // Try Anchor IDL decoding first - always attempt and log clearly
+        console.log(`🔍 Attempting Anchor decode for voter: ${accountInfo.pubkey.toBase58()}`);
         const voter = await program.account.voter.fetch(accountInfo.pubkey);
         console.log(`✅ Anchor decode successful - Found ${voter.deposits.length} deposit entries`);
         
-        // Process deposits using Anchor data
+        // Process deposits using Anchor data with strict validation
         for (let i = 0; i < voter.deposits.length; i++) {
           const deposit = voter.deposits[i];
           
           // Only include deposits with isUsed = true
-          if (!deposit.isUsed) continue;
+          if (!deposit.isUsed) {
+            console.log(`[Anchor ${i}] Skipped - not used`);
+            continue;
+          }
           
           const amount = deposit.amountDepositedNative.toNumber() / 1e6;
-          if (amount === 0) continue;
+          if (amount === 0 || amount > 100000000) {
+            console.log(`[Anchor ${i}] Skipped - invalid amount: ${amount}`);
+            continue;
+          }
           
           const startTs = deposit.lockup.startTs.toNumber();
           const endTs = deposit.lockup.endTs.toNumber();
           
-          // Skip expired deposits
-          if (endTs < currentTime) continue;
+          // Validate that now < endTs (deposit not expired)
+          if (endTs <= currentTime) {
+            console.log(`[Anchor ${i}] Skipped - expired (endTs: ${endTs}, now: ${currentTime})`);
+            continue;
+          }
           
           // Skip deposits with no lockup (kind.none)
-          if (deposit.lockup.kind.none) continue;
+          if (deposit.lockup.kind.none) {
+            console.log(`[Anchor ${i}] Skipped - no lockup (kind.none)`);
+            continue;
+          }
           
-          // Get multiplier
+          // Get multiplier with strict validation
           let multiplier = 1.0;
           if (deposit.lockup.multiplier) {
             multiplier = deposit.lockup.multiplier.toNumber() / 1e9;
           }
           
-          // Skip unlocked deposits (multiplier <= 1.0)
-          if (multiplier <= 1.0) continue;
+          // Ignore outliers - multiplier must be between 1.0 and 6.0
+          if (multiplier <= 1.0 || multiplier > 6.0) {
+            console.log(`[Anchor ${i}] Skipped - invalid multiplier: ${multiplier}`);
+            continue;
+          }
           
-          // Deduplicate using key: amount|startTs|endTs
-          const uniqueKey = `${amount.toFixed(6)}|${startTs}|${endTs}`;
-          if (globalProcessedEntries.has(uniqueKey)) continue;
+          // Calculate duration for lockup kind
+          const duration = endTs - startTs;
+          const lockupKind = deposit.lockup.kind.cliff ? 'cliff' : 
+                            deposit.lockup.kind.constant ? 'constant' : 'vested';
+          
+          // Deduplicate using strict key: amount|startTs|lockup.kind|duration
+          const uniqueKey = `${amount.toFixed(6)}|${startTs}|${lockupKind}|${duration}`;
+          if (globalProcessedEntries.has(uniqueKey)) {
+            console.log(`[Anchor ${i}] Skipped - duplicate entry`);
+            continue;
+          }
           globalProcessedEntries.add(uniqueKey);
           
           const votingPower = amount * multiplier;
+          
+          const depositEntry = {
+            amount: amount.toString(),
+            multiplier: multiplier,
+            startTs: startTs,
+            endTs: endTs,
+            isUsed: deposit.isUsed,
+            votingPower: votingPower,
+            lockupKind: lockupKind
+          };
           
           accountDeposits.push({
             amount: amount,
@@ -223,22 +229,26 @@ async function calculateNativeGovernancePower(walletAddress) {
             votingPower: votingPower
           });
           
-          console.log(`[Anchor ${i}] Amount: ${amount.toLocaleString()}, Multiplier: ${multiplier.toFixed(6)}, VotingPower: ${votingPower.toLocaleString()}`);
+          console.log(`[Anchor ${i}] ${JSON.stringify(depositEntry)}`);
         }
         
       } catch (anchorError) {
         console.log(`⚠️ Anchor decode failed: ${anchorError.message}`);
-        console.log(`🔄 Falling back to enhanced manual deserialization`);
+        console.log(`🔄 Falling back to strict manual deserialization`);
         
-        // Fallback to manual deserialization
-        const manualDeposits = parseDepositsManually(accountInfo.account.data);
+        // Fallback to strict manual deserialization
+        const manualDeposits = parseDepositsManually(accountInfo.account.data, accountInfo.pubkey.toBase58());
         
-        // Apply global deduplication
+        // Apply global deduplication with strict keys
         for (const deposit of manualDeposits) {
-          const uniqueKey = `${deposit.amount.toFixed(6)}|${deposit.startTs}|${deposit.endTs}`;
+          const uniqueKey = `${parseFloat(deposit.amount).toFixed(6)}|${deposit.startTs}|${deposit.lockupKind}|${deposit.endTs - deposit.startTs}`;
           if (!globalProcessedEntries.has(uniqueKey)) {
             globalProcessedEntries.add(uniqueKey);
-            accountDeposits.push(deposit);
+            accountDeposits.push({
+              amount: parseFloat(deposit.amount),
+              multiplier: deposit.multiplier,
+              votingPower: deposit.votingPower
+            });
           }
         }
       }
@@ -366,12 +376,12 @@ async function validateAllWallets() {
     'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC'
   ];
   
-  // Expected ground truth values
+  // Expected ground truth values with precise references
   const expectedValues = {
-    '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA': { native: 8700000, name: 'Takisoul' },
-    'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh': { native: 144700, name: 'GJdR' },
+    '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA': { native: 8709019.78, name: 'Takisoul' },
+    'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh': { native: 144708.98, name: 'GJdR' },
     'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1': { native: 0, name: 'Fgv1' },
-    '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4': { native: 12600, name: '4pT6' }
+    '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4': { native: 12625.58, name: '4pT6' }
   };
   
   console.log('🧪 Validating All 20 Wallet Addresses\n');
