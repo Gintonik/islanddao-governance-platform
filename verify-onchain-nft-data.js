@@ -21,12 +21,12 @@ async function testBlockchainAccess() {
   try {
     console.log('Testing blockchain API access...');
     
-    if (!process.env.HELIUS_API_KEY) {
-      console.error('No HELIUS_API_KEY found in environment');
+    if (!process.env.HELIUS_RPC_URL) {
+      console.error('No HELIUS_RPC_URL found in environment');
       return false;
     }
     
-    const heliusUrl = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
+    const heliusUrl = process.env.HELIUS_RPC_URL;
     
     // Test with a known wallet that has NFTs
     const testWallet = '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt'; // DeanMachine
@@ -103,7 +103,7 @@ async function verifyFreshOwnershipData() {
       try {
         console.log(`Checking ${citizen.nickname || citizen.wallet.slice(0, 8)}...`);
         
-        const heliusUrl = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
+        const heliusUrl = process.env.HELIUS_RPC_URL;
         
         const response = await fetch(heliusUrl, {
           method: 'POST',
