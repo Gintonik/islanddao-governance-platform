@@ -7,9 +7,8 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
-import fs from "fs/promises";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { getLockTokensVotingPowerPerWallet } from "governance-idl-sdk";
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
@@ -34,96 +33,21 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/governance-power", async (req, res) => {
-  const voterStakeRegistryIdl = JSON.parse(
-    await fs.readFile("./vsr-idl.json", "utf-8"),
-  );
-
   const wallet = req.query.wallet;
   if (!wallet) {
     return res.status(400).json({ error: "Missing wallet parameter" });
   }
 
   try {
-    const provider = new AnchorProvider(
-      connection,
-      {},
-      AnchorProvider.defaultOptions(),
-    );
-
-    const program = new Program(
-      voterStakeRegistryIdl,
-      VSR_PROGRAM_ID,
-      provider,
-    );
-
-    // Fetch all VSR accounts with no memcmp filters
-    console.log(`Fetching all VSR accounts for wallet: ${wallet}`);
-    const allVoterAccountInfos = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-
-    console.log(`Total VSR accounts fetched: ${allVoterAccountInfos.length}`);
-
-    // Scan all accounts and find matches for this wallet
-    let matchedAccounts = 0;
-    let nativePower = 0;
-    const now = Math.floor(Date.now() / 1000);
+    console.log(`Fetching governance power for wallet: ${wallet}`);
     
-    for (const accountInfo of allVoterAccountInfos) {
-      try {
-        // Deserialize using Anchor
-        const decoded = program.coder.accounts.decode("voter", accountInfo.account.data);
-        const decodedAuthority = decoded.authority.toBase58();
-        console.log(`Decoded authority: ${decodedAuthority}`);
-        
-        // Filter only those where authority matches the wallet exactly
-        if (decodedAuthority === wallet) {
-          console.log("✅ Authority matched wallet");
-          matchedAccounts++;
-          
-          // Loop over depositEntries for this voter
-          for (const entry of decoded.depositEntries) {
-            // Skip if entry is not used or has no deposited amount
-            if (!entry.isUsed || entry.amountDepositedNative.toNumber() === 0) {
-              continue;
-            }
-            
-            // Skip if not voting mint config index 0
-            if (entry.votingMintConfigIdx !== 0) {
-              continue;
-            }
-            
-            const lockupStart = entry.lockup.startTs.toNumber();
-            const lockupEnd = entry.lockup.endTs.toNumber();
-            
-            // Skip if current time is before startTs or after endTs
-            if (now < lockupStart || now >= lockupEnd) {
-              continue;
-            }
+    // Use Mythic SDK to get lock tokens voting power
+    const nativePower = await getLockTokensVotingPowerPerWallet(
+      connection,
+      [wallet] // Pass wallet addresses as array
+    );
 
-            // Calculate multiplier with time decay
-            const baseMultiplier = entry.lockup.kind.multiplier.toNumber() / 10000;
-            const totalDuration = lockupEnd - lockupStart;
-            const timeRemaining = lockupEnd - now;
-
-            let adjustedMultiplier = baseMultiplier;
-            if (totalDuration > 0) {
-              adjustedMultiplier = baseMultiplier * (timeRemaining / totalDuration);
-            }
-
-            const amount = entry.amountDepositedNative.toNumber();
-            const power = Math.floor(amount * adjustedMultiplier);
-            nativePower += power;
-          }
-        } else {
-          console.log("⛔️ Authority did NOT match wallet");
-        }
-      } catch (e) {
-        console.error("❌ Failed to decode account:", e);
-        continue;
-      }
-    }
-
-    console.log(`How many matched the wallet: ${matchedAccounts}`);
-    console.log(`Final governance power calculated: ${nativePower}`);
+    console.log(`Native governance power calculated: ${nativePower}`);
 
     return res.json({
       wallet,
