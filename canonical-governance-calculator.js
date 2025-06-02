@@ -36,7 +36,9 @@ function parseDepositsManually(data, voterPubkey) {
   
   console.log(`🔄 Fallback: Strict manual deserialization for ${voterPubkey}`);
   
-  // Parse deposit entries starting at offset 72 (88 bytes each, max 32 entries)
+  // First try standard VSR layout (88-byte entries from offset 72)
+  let foundStandardDeposits = false;
+  
   for (let i = 0; i < 32; i++) {
     const entryOffset = 72 + (i * 88);
     if (entryOffset + 88 > data.length) break;
@@ -49,15 +51,15 @@ function parseDepositsManually(data, voterPubkey) {
       // Parse amount (8 bytes at offset +1)
       const amountRaw = Number(data.readBigUInt64LE(entryOffset + 1));
       const amount = amountRaw / 1e6;
-      if (amount === 0 || amount > 100000000) continue; // Skip zero or unrealistic amounts
+      if (amount === 0 || amount > 100000000) continue;
       
       // Parse lockup start timestamp (8 bytes at offset +25)
       const startTs = Number(data.readBigUInt64LE(entryOffset + 25));
-      if (startTs < 1600000000 || startTs > 2000000000) continue; // Invalid timestamp range
+      if (startTs < 1600000000 || startTs > 2000000000) continue;
       
       // Parse lockup end timestamp (8 bytes at offset +33)
       const endTs = Number(data.readBigUInt64LE(entryOffset + 33));
-      if (endTs < 1600000000 || endTs > 2000000000) continue; // Invalid timestamp range
+      if (endTs < 1600000000 || endTs > 2000000000) continue;
       
       // Validate that now < endTs (deposit not expired)
       if (endTs <= currentTime) continue;
@@ -66,20 +68,21 @@ function parseDepositsManually(data, voterPubkey) {
       const multiplierRaw = Number(data.readBigUInt64LE(entryOffset + 72));
       const multiplier = multiplierRaw / 1e9;
       
-      // Strict multiplier validation - ignore outliers
+      // Strict multiplier validation
       if (multiplier <= 1.0 || multiplier > 6.0) continue;
+      
+      foundStandardDeposits = true;
       
       // Calculate duration for lockup kind estimation
       const duration = endTs - startTs;
       const lockupKind = duration > (4 * 365 * 24 * 3600) ? 'cliff' : 
                         duration > (365 * 24 * 3600) ? 'constant' : 'vested';
       
-      // Deduplicate using strict key: amount|startTs|lockup.kind|duration
+      // Deduplicate using strict key
       const uniqueKey = `${amount.toFixed(6)}|${startTs}|${lockupKind}|${duration}`;
       if (processedEntries.has(uniqueKey)) continue;
       processedEntries.add(uniqueKey);
       
-      // Calculate voting power
       const votingPower = amount * multiplier;
       
       const depositEntry = {
@@ -93,17 +96,21 @@ function parseDepositsManually(data, voterPubkey) {
       };
       
       deposits.push(depositEntry);
-      
-      console.log(`[Fallback ${i}] ${JSON.stringify(depositEntry)}`);
+      console.log(`[Standard ${i}] ${JSON.stringify(depositEntry)}`);
       
     } catch (parseError) {
       // Continue to next entry
     }
   }
   
-  // If >12 fallback-parsed deposits, skip as invalid
+  // If no standard deposits found, the account has no valid VSR deposits
+  if (!foundStandardDeposits) {
+    console.log(`⚠️ No valid VSR deposits found in standard layout - account may be inactive or use different format`);
+  }
+  
+  // If >12 deposits, skip as invalid
   if (deposits.length > 12) {
-    console.log(`⚠️ Too many fallback deposits (${deposits.length}), skipping account as invalid`);
+    console.log(`⚠️ Too many deposits (${deposits.length}), skipping account as invalid`);
     return [];
   }
   

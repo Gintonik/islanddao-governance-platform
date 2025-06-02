@@ -136,17 +136,21 @@ async function debugReferenceWallet() {
       }
     }
     
-    console.log(`\n🔍 Standard deposit entry analysis (88-byte entries from offset 72):`);
+    console.log(`\n🔍 All deposit entry analysis (88-byte entries from offset 72):`);
     
     for (let i = 0; i < 32; i++) {
       const entryOffset = 72 + (i * 88);
       if (entryOffset + 88 > data.length) break;
       
       const isUsed = data[entryOffset];
-      if (isUsed !== 1) continue;
       
       console.log(`\n📦 Deposit Entry ${i} at offset ${entryOffset}:`);
-      console.log(`   isUsed: ${isUsed}`);
+      console.log(`   isUsed: ${isUsed} (0x${isUsed.toString(16)})`);
+      
+      if (isUsed !== 1) {
+        console.log(`   ⏭️ Skipping unused entry`);
+        continue;
+      }
       
       try {
         const amount = Number(data.readBigUInt64LE(entryOffset + 1)) / 1e6;
@@ -154,12 +158,29 @@ async function debugReferenceWallet() {
         const endTs = Number(data.readBigUInt64LE(entryOffset + 33));
         const multiplierRaw = Number(data.readBigUInt64LE(entryOffset + 72));
         const multiplier = multiplierRaw / 1e9;
+        const currentTime = Date.now() / 1000;
         
         console.log(`   amount: ${amount} ISLAND`);
         console.log(`   startTs: ${startTs} (${new Date(startTs * 1000).toISOString()})`);
         console.log(`   endTs: ${endTs} (${new Date(endTs * 1000).toISOString()})`);
         console.log(`   multiplier: ${multiplier}`);
+        console.log(`   currentTime: ${currentTime}`);
+        console.log(`   expired: ${endTs <= currentTime ? 'YES' : 'NO'}`);
         console.log(`   votingPower: ${amount * multiplier}`);
+        
+        // Check if this passes our strict filters
+        let reasons = [];
+        if (amount === 0 || amount > 100000000) reasons.push('invalid amount');
+        if (startTs < 1600000000 || startTs > 2000000000) reasons.push('invalid startTs');
+        if (endTs < 1600000000 || endTs > 2000000000) reasons.push('invalid endTs');
+        if (endTs <= currentTime) reasons.push('expired');
+        if (multiplier <= 1.0 || multiplier > 6.0) reasons.push('invalid multiplier');
+        
+        if (reasons.length === 0) {
+          console.log(`   ✅ PASSES ALL FILTERS - Would be included!`);
+        } else {
+          console.log(`   ❌ Filtered out: ${reasons.join(', ')}`);
+        }
         
         if (Math.abs(amount - 144708.98) < 1000) {
           console.log(`   🎯 CLOSE TO TARGET AMOUNT!`);
@@ -167,6 +188,37 @@ async function debugReferenceWallet() {
       } catch (e) {
         console.log(`   ❌ Parse error: ${e.message}`);
       }
+    }
+    
+    console.log(`\n🔍 Alternative parsing - scan for 144,708.98 pattern anywhere:`);
+    
+    // Look for the target amount in different interpretations
+    const targetAmount = 144708.98;
+    const targetRaw = BigInt(Math.round(targetAmount * 1e6));
+    
+    for (let offset = 0; offset < data.length - 8; offset++) {
+      try {
+        const value = data.readBigUInt64LE(offset);
+        const tokens = Number(value) / 1e6;
+        
+        if (Math.abs(tokens - targetAmount) < 10) {
+          console.log(`💰 Found ${tokens} ISLAND at offset ${offset}`);
+          
+          // Check for multiplier patterns around this offset
+          const searchRange = 200;
+          for (let multOffset = Math.max(0, offset - searchRange); multOffset < Math.min(data.length - 8, offset + searchRange); multOffset += 8) {
+            try {
+              const multValue = Number(data.readBigUInt64LE(multOffset));
+              const asMultiplier = multValue / 1e9;
+              
+              if (asMultiplier > 1.0 && asMultiplier < 6.0) {
+                const votingPower = tokens * asMultiplier;
+                console.log(`   🔢 Potential multiplier ${asMultiplier} at offset ${multOffset} (relative: ${multOffset - offset}) → VP: ${votingPower}`);
+              }
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
     }
     
     console.log(`\n${'='.repeat(80)}\n`);
