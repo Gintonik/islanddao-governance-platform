@@ -29,6 +29,15 @@ const pool = new Pool({
 const VSR_PROGRAM_ID = new PublicKey(
   "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
 );
+const SPL_GOVERNANCE_PROGRAM_ID = new PublicKey(
+  "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw",
+);
+const ISLAND_DAO_REALM = new PublicKey(
+  "Gh7FG6KqV6M4SYjAAQKJY8nVnJQhtxpyJGKftGHLCe8S",
+);
+const ISLAND_GOVERNANCE_MINT = new PublicKey(
+  "DMNDKqygEN3WXKVrAD4ofkYBc4CKNRhFUbXP4VK7a944",
+);
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
@@ -150,6 +159,135 @@ function calculateVotingPowerFromVoter(voterAccountData, accountPubkey) {
   }
 }
 
+/**
+ * Calculate governance power from SPL Token Owner Records
+ */
+async function calculateTokenOwnerRecordPower(walletAddress) {
+  try {
+    const walletPubkey = new PublicKey(walletAddress);
+    
+    console.log(`🏛️ Calculating Token Owner Record power for: ${walletAddress}`);
+    
+    // Find Token Owner Record PDA for this wallet
+    const [tokenOwnerRecordPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("token-owner-record"),
+        ISLAND_DAO_REALM.toBuffer(),
+        ISLAND_GOVERNANCE_MINT.toBuffer(),
+        walletPubkey.toBuffer(),
+      ],
+      SPL_GOVERNANCE_PROGRAM_ID
+    );
+    
+    console.log(`Token Owner Record PDA: ${tokenOwnerRecordPDA.toBase58()}`);
+    
+    let nativePower = 0;
+    let delegatedPower = 0;
+    
+    // Fetch the Token Owner Record account
+    try {
+      const accountInfo = await connection.getAccountInfo(tokenOwnerRecordPDA);
+      
+      if (accountInfo && accountInfo.data) {
+        console.log(`Found Token Owner Record account, data length: ${accountInfo.data.length}`);
+        
+        // Parse TokenOwnerRecord structure
+        // Skip discriminator (8 bytes) + realm (32 bytes) + governing_token_mint (32 bytes) + governing_token_owner (32 bytes)
+        let offset = 8 + 32 + 32 + 32;
+        
+        // Read governing_token_deposit_amount (8 bytes)
+        if (accountInfo.data.length >= offset + 8) {
+          const depositBytes = accountInfo.data.slice(offset, offset + 8);
+          nativePower = Number(depositBytes.readBigUInt64LE(0));
+          console.log(`Native governance power: ${nativePower}`);
+        }
+      } else {
+        console.log(`No Token Owner Record found for wallet`);
+      }
+    } catch (error) {
+      console.log(`Token Owner Record not found: ${error.message}`);
+    }
+    
+    // Find delegated power - look for other Token Owner Records that delegate to this wallet
+    console.log(`🔍 Searching for delegated governance power...`);
+    
+    try {
+      // Get all Token Owner Records for this realm and governance mint
+      const allTokenOwnerRecords = await connection.getProgramAccounts(
+        SPL_GOVERNANCE_PROGRAM_ID,
+        {
+          filters: [
+            {
+              memcmp: {
+                offset: 8, // After discriminator
+                bytes: ISLAND_DAO_REALM.toBase58(),
+              },
+            },
+            {
+              memcmp: {
+                offset: 8 + 32, // After discriminator + realm
+                bytes: ISLAND_GOVERNANCE_MINT.toBase58(),
+              },
+            },
+          ],
+        }
+      );
+      
+      console.log(`Found ${allTokenOwnerRecords.length} Token Owner Records`);
+      
+      for (const { account } of allTokenOwnerRecords) {
+        try {
+          const data = account.data;
+          if (data.length < 8 + 32 + 32 + 32 + 8 + 1) continue;
+          
+          let offset = 8 + 32 + 32 + 32 + 8; // Skip to governance_delegate field
+          
+          // Check if has_governance_delegate (1 byte)
+          const hasDelegate = data[offset] === 1;
+          offset += 1;
+          
+          if (hasDelegate) {
+            // Read governance_delegate (32 bytes)
+            const delegateBytes = data.slice(offset, offset + 32);
+            const delegate = new PublicKey(delegateBytes);
+            
+            if (delegate.toBase58() === walletAddress) {
+              // This record delegates to our wallet - add its deposit amount
+              const depositOffset = 8 + 32 + 32 + 32;
+              const depositBytes = data.slice(depositOffset, depositOffset + 8);
+              const delegatedAmount = Number(depositBytes.readBigUInt64LE(0));
+              
+              delegatedPower += delegatedAmount;
+              console.log(`Found delegation: ${delegatedAmount} tokens`);
+            }
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+    } catch (error) {
+      console.log(`Error searching for delegations: ${error.message}`);
+    }
+    
+    console.log(`📊 Final Token Owner Record power - Native: ${nativePower}, Delegated: ${delegatedPower}`);
+    
+    return {
+      nativePower,
+      delegatedPower,
+      totalPower: nativePower + delegatedPower,
+    };
+    
+  } catch (error) {
+    console.error(`Error calculating Token Owner Record power: ${error.message}`);
+    return {
+      nativePower: 0,
+      delegatedPower: 0,
+      totalPower: 0,
+    };
+  }
+}
+
 app.use(cors());
 app.use(express.json());
 
@@ -185,11 +323,16 @@ app.get("/api/governance-power", async (req, res) => {
       
       if (voterAccounts.length === 0) {
         console.log("❌ No Voter accounts found using targeted search");
+        
+        // Fallback to Token Owner Record calculation
+        console.log("🔄 Falling back to Token Owner Record calculation");
+        const tokenOwnerPower = await calculateTokenOwnerRecordPower(wallet);
+        
         return res.json({
           wallet,
-          nativePower: 0,
-          delegatedPower: 0,
-          totalPower: 0,
+          nativePower: tokenOwnerPower.nativePower,
+          delegatedPower: tokenOwnerPower.delegatedPower,
+          totalPower: tokenOwnerPower.totalPower,
         });
       }
       
@@ -346,6 +489,19 @@ app.get("/api/governance-power", async (req, res) => {
 
     console.log(`Found ${foundAccounts} VSR accounts for ${wallet}`);
     console.log(`Final governance power: ${maxGovernancePower}`);
+
+    // If no VSR governance power found, try Token Owner Record calculation
+    if (maxGovernancePower === 0) {
+      console.log("🔄 No VSR power found, falling back to Token Owner Record calculation");
+      const tokenOwnerPower = await calculateTokenOwnerRecordPower(wallet);
+      
+      return res.json({
+        wallet,
+        nativePower: tokenOwnerPower.nativePower,
+        delegatedPower: tokenOwnerPower.delegatedPower,
+        totalPower: tokenOwnerPower.totalPower,
+      });
+    }
 
     return res.json({
       wallet,
