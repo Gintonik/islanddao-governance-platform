@@ -8,14 +8,15 @@ import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getLockTokensVotingPowerPerWallet } from "governance-idl-sdk";
+import governanceSdk from "governance-idl-sdk";
+const { getLockTokensVotingPowerPerWallet } = governanceSdk;
 
 config(); // ✅ Load .env
 console.log("✅ Loaded ENV - Helius RPC URL:", `"${process.env.HELIUS_RPC_URL}"`);
 
 const { Pool } = pkg;
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3001;
 
 // Database connection
 const pool = new Pool({
