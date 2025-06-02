@@ -5,7 +5,6 @@
  */
 
 import db from '../db.js';
-import governanceCalculator from '../governance-power-calculator.js';
 
 /**
  * Get NFTs owned by a specific wallet address

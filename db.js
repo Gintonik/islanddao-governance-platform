@@ -1,5 +1,6 @@
 // Database connection and utilities
-const { Pool } = require('pg');
+import pkg from 'pg';
+const { Pool } = pkg;
 
 // Create a pool for managing database connections
 const pool = new Pool({
