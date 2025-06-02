@@ -229,15 +229,11 @@ async function getAllCitizensGovernancePower() {
     const depositEntriesOffset = 72;
     let accountPower = 0;
     
-    // Parse deposit entries
-    for (let i = 0; i < 32; i++) {
-      const entryOffset = depositEntriesOffset + (i * 88);
-      if (entryOffset + 88 > data.length) break;
-      
-      const deposit = parseDepositEntry(data, entryOffset);
-      if (deposit) {
-        accountPower += deposit.governancePower;
-      }
+    // Parse deposits using actual account structure
+    const deposits = parseDepositsFromAccount(data);
+    
+    for (const deposit of deposits) {
+      accountPower += deposit.governancePower;
     }
     
     if (accountPower > 0) {
