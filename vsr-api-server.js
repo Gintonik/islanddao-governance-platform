@@ -33,10 +33,10 @@ const SPL_GOVERNANCE_PROGRAM_ID = new PublicKey(
   "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw",
 );
 const ISLAND_DAO_REALM = new PublicKey(
-  "Gh7FG6KqV6M4SYjAAQKJY8nVnJQhtxpyJGKftGHLCe8S",
+  "F9VL4wo49aUe8FufjMbU6uhdfyDRqKY54WpzdpncUSk9",
 );
 const ISLAND_GOVERNANCE_MINT = new PublicKey(
-  "DMNDKqygEN3WXKVrAD4ofkYBc4CKNRhFUbXP4VK7a944",
+  "Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a",
 );
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
@@ -186,20 +186,33 @@ async function calculateTokenOwnerRecordPower(walletAddress) {
     
     // Fetch the Token Owner Record account
     try {
-      const accountInfo = await connection.getAccountInfo(tokenOwnerRecordPDA);
+      const accountInfo = await connection.getParsedAccountInfo(tokenOwnerRecordPDA);
       
-      if (accountInfo && accountInfo.data) {
-        console.log(`Found Token Owner Record account, data length: ${accountInfo.data.length}`);
+      if (accountInfo && accountInfo.value && accountInfo.value.data) {
+        console.log(`Found Token Owner Record account`);
         
-        // Parse TokenOwnerRecord structure
-        // Skip discriminator (8 bytes) + realm (32 bytes) + governing_token_mint (32 bytes) + governing_token_owner (32 bytes)
-        let offset = 8 + 32 + 32 + 32;
-        
-        // Read governing_token_deposit_amount (8 bytes)
-        if (accountInfo.data.length >= offset + 8) {
-          const depositBytes = accountInfo.data.slice(offset, offset + 8);
-          nativePower = Number(depositBytes.readBigUInt64LE(0));
-          console.log(`Native governance power: ${nativePower}`);
+        // Try parsed data first
+        if (typeof accountInfo.value.data === 'object' && accountInfo.value.data.parsed) {
+          const parsed = accountInfo.value.data.parsed;
+          if (parsed.info && parsed.info.governingTokenDepositAmount) {
+            nativePower = Number(parsed.info.governingTokenDepositAmount);
+            console.log(`Native governance power (parsed): ${nativePower}`);
+          }
+        } else if (Buffer.isBuffer(accountInfo.value.data)) {
+          // Fallback to manual parsing
+          const data = accountInfo.value.data;
+          console.log(`Manual parsing, data length: ${data.length}`);
+          
+          // Parse TokenOwnerRecord structure
+          // Skip discriminator (8 bytes) + realm (32 bytes) + governing_token_mint (32 bytes) + governing_token_owner (32 bytes)
+          let offset = 8 + 32 + 32 + 32;
+          
+          // Read governing_token_deposit_amount (8 bytes)
+          if (data.length >= offset + 8) {
+            const depositBytes = data.slice(offset, offset + 8);
+            nativePower = Number(depositBytes.readBigUInt64LE(0));
+            console.log(`Native governance power (manual): ${nativePower}`);
+          }
         }
       } else {
         console.log(`No Token Owner Record found for wallet`);
