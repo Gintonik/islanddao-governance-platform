@@ -318,6 +318,7 @@ function parseVoterAuthorities(data) {
 async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts, verbose = false) {
   let nativeGovernancePower = 0;
   let delegatedGovernancePower = 0;
+  let totalGovernancePower = 0;
   const nativeSources = [];
   const delegatedSources = [];
   
@@ -325,7 +326,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     console.log(`   🔍 Analyzing delegation for ${walletAddress}`);
   }
   
-  // Step 1: Check if wallet has VoterWeightRecord accounts
+  // Step 1: Get total governance power from VoterWeightRecord (if exists)
   const voterWeightRecords = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
     filters: [
       { dataSize: 176 },
@@ -333,16 +334,8 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     ]
   });
   
-  const hasVWR = voterWeightRecords.length > 0 && voterWeightRecords.some(({ account }) => {
-    const powerRaw = Number(account.data.readBigUInt64LE(104));
-    return powerRaw > 0;
-  });
+  const hasVWR = voterWeightRecords.length > 0;
   
-  if (verbose) {
-    console.log(`     📋 VWR found: ${hasVWR ? 'Yes' : 'No'} (${voterWeightRecords.length} accounts)`);
-  }
-  
-  // Step 2: If wallet has VWR, use it exclusively for native power
   if (hasVWR) {
     for (const { pubkey, account } of voterWeightRecords) {
       const data = account.data;
@@ -350,21 +343,20 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
       const power = powerRaw / 1e6;
       
       if (power > 0) {
-        nativeGovernancePower += power;
-        nativeSources.push({
-          account: pubkey.toBase58(),
-          power: power,
-          type: 'VWR'
-        });
+        totalGovernancePower += power;
         
         if (verbose) {
-          console.log(`     ✅ Native VWR: ${power.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
+          console.log(`     📊 Total VWR Power: ${power.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
         }
       }
     }
   }
   
-  // Step 3: Scan all Voter accounts for delegation relationships
+  if (verbose) {
+    console.log(`     📋 VWR found: ${hasVWR ? 'Yes' : 'No'} (Total power: ${totalGovernancePower.toLocaleString()} ISLAND)`);
+  }
+  
+  // Step 2: Scan all Voter accounts to determine native vs delegated breakdown
   let processedAccounts = 0;
   let delegationCount = 0;
   
@@ -390,8 +382,8 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     const voterAnalysis = await analyzeVoterAccountDeposits(data, verbose && (authority === walletAddress || voterAuthority === walletAddress));
     
     if (voterAnalysis && voterAnalysis.totalPower > 0) {
-      // Case 1: Native power (only if no VWR found)
-      if (authority === walletAddress && !hasVWR) {
+      // Case 1: Native deposits (wallet owns these deposits, regardless of delegation)
+      if (authority === walletAddress) {
         nativeGovernancePower += voterAnalysis.totalPower;
         nativeSources.push({
           account: pubkey.toBase58(),
@@ -404,11 +396,11 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         if (verbose) {
           const delegationNote = voterAuthority !== authority ? 
             ` (delegated to ${voterAuthority.substring(0,8)}...)` : '';
-          console.log(`     ✅ Native Voter: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${pubkey.toBase58()}${delegationNote}`);
+          console.log(`     ✅ Native deposit: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${pubkey.toBase58()}${delegationNote}`);
         }
       }
       
-      // Case 2: Delegated power (always check for incoming delegation)
+      // Case 2: Incoming delegation (someone else's deposits delegated to this wallet)
       if (voterAuthority === walletAddress && authority !== walletAddress) {
         delegatedGovernancePower += voterAnalysis.totalPower;
         delegatedSources.push({
@@ -422,15 +414,41 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         delegationCount++;
         
         if (verbose) {
-          console.log(`     ✅ Delegation: from ${authority.substring(0,8)}... to ${walletAddress.substring(0,8)}... → ${voterAnalysis.totalPower.toLocaleString()} ISLAND`);
+          console.log(`     ✅ Incoming delegation: from ${authority.substring(0,8)}... → ${voterAnalysis.totalPower.toLocaleString()} ISLAND`);
           console.log(`       Account: ${pubkey.toBase58()}`);
         }
       }
     }
   }
   
-  // Step 4: Fallback for wallets with no VWR and no Voter accounts
-  if (!hasVWR && nativeGovernancePower === 0 && delegatedGovernancePower === 0) {
+  // Step 3: Reconcile with VWR total power (if available)
+  if (hasVWR && totalGovernancePower > 0) {
+    // VWR contains the authoritative total - use Voter analysis only for native/delegated breakdown
+    // If we found native deposits in Voter accounts, use that as native power
+    // Otherwise, calculate delegated as the difference
+    
+    if (nativeGovernancePower > totalGovernancePower) {
+      // Cap native power at total power if overcounted
+      if (verbose) {
+        console.log(`     ⚠️  Native power capped: ${nativeGovernancePower.toLocaleString()} → ${totalGovernancePower.toLocaleString()} ISLAND`);
+      }
+      nativeGovernancePower = totalGovernancePower;
+      delegatedGovernancePower = 0;
+    } else {
+      // Calculate delegated as remainder
+      delegatedGovernancePower = Math.max(0, totalGovernancePower - nativeGovernancePower);
+    }
+    
+    if (verbose && delegatedGovernancePower > 0) {
+      console.log(`     📊 VWR reconciliation: ${totalGovernancePower.toLocaleString()} total - ${nativeGovernancePower.toLocaleString()} native = ${delegatedGovernancePower.toLocaleString()} delegated`);
+    }
+  } else {
+    // No VWR - calculate total from native + delegated detected directly
+    totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+  }
+  
+  // Step 4: Fallback for wallets with no VWR and no detected power
+  if (!hasVWR && totalGovernancePower === 0) {
     const fallbackAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       filters: [
         { dataSize: 2728 },
@@ -453,6 +471,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
               rawValue % 1000000 === 0) {
             
             nativeGovernancePower += islandAmount;
+            totalGovernancePower += islandAmount;
             nativeSources.push({
               account: pubkey.toBase58(),
               power: islandAmount,
@@ -472,14 +491,14 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   }
   
   if (verbose) {
-    console.log(`     📊 Summary: ${nativeGovernancePower.toLocaleString()} native + ${delegatedGovernancePower.toLocaleString()} delegated = ${(nativeGovernancePower + delegatedGovernancePower).toLocaleString()} total`);
-    console.log(`     📊 Delegation relationships found: ${delegationCount}`);
+    console.log(`     📊 Final: ${nativeGovernancePower.toLocaleString()} native + ${delegatedGovernancePower.toLocaleString()} delegated = ${totalGovernancePower.toLocaleString()} total`);
+    console.log(`     📊 Direct delegation relationships found: ${delegationCount}`);
   }
   
   return {
     nativeGovernancePower,
     delegatedGovernancePower,
-    totalGovernancePower: nativeGovernancePower + delegatedGovernancePower,
+    totalGovernancePower,
     nativeSources,
     delegatedSources,
     source: hasVWR ? 'VWR' : (nativeSources.length > 0 ? 'Voter fallback' : 'No match')

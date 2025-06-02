@@ -1,0 +1,36 @@
+Update the canonical VSR governance scanner (`canonical-vwr-scan.js`) to correctly distinguish between native and delegated governance power for each wallet. The current logic incorrectly assumes that `voterWeight` from VoterWeightRecord (VWR) accounts is entirely "native", but in Solana Realms + VSR, that is not the case.
+
+Here's the correct model to implement:
+
+1. For each wallet, fetch its 176-byte VoterWeightRecord account (if it exists). Treat this as the **total governance power** of that wallet.
+   - voterWeight / 1e6 = totalGovernancePower
+   - Do not label this as “native” power
+
+2. Separately, scan all Voter accounts (from all 6,000+ accounts in the VSR program).
+   - For each `Voter` account, loop through `depositEntries[]`
+     - If `authority === voterAuthority === wallet`, the deposit is **native** (add to nativeGovernancePower)
+     - If `voterAuthority === wallet && authority !== wallet`, it's an **incoming delegation** (add to delegatedGovernancePower)
+
+3. Now update the result model for each wallet:
+   - If a VWR was found:
+     - totalGovernancePower = voterWeight / 1e6
+     - nativeGovernancePower = sum of native deposits from Voter accounts (step 2)
+     - delegatedGovernancePower = totalGovernancePower - nativeGovernancePower
+     - Ensure no negatives; clamp delegatedGovernancePower to 0 if needed
+   - If no VWR exists:
+     - totalGovernancePower = nativeGovernancePower + delegatedGovernancePower (calculated directly from Voter fallback)
+
+4. Do not allow double-counting between VWR and Voter. Voter accounts should only be scanned to extract deposit details and delegation structure. Use VWR for total power when present.
+
+5. Preserve the existing fallback logic for wallets without a VWR. In those cases, calculate native and delegated power fully from the Voter deposits and relationships.
+
+6. Update the summary output (console and JSON) to clearly show:
+   - nativeGovernancePower
+   - delegatedGovernancePower
+   - totalGovernancePower
+
+7. Fix any runtime errors that arise from inconsistent account sizes or optional fields in Voter records. You can ignore garbage values and zeroed-out deposits.
+
+Goal: For wallets like `3PKhzE9wu...` or `Fywb7YDC...`, ensure their delegated power is **not misclassified as native**, and that total power reflects on-chain delegation relationships correctly.
+
+This update must run a fresh on-chain scan every time without caching, using Helius RPC.
