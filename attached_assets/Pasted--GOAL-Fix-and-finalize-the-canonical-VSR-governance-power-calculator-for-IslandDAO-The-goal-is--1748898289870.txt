@@ -1,0 +1,62 @@
+🔧 GOAL:
+Fix and finalize the canonical VSR governance power calculator for IslandDAO. The goal is to produce accurate, reproducible governance power numbers for a list of wallet addresses using only authentic Solana on-chain data.
+
+📌 CONTEXT:
+- We're reading Voter Stake Registry (VSR) accounts using `getProgramAccounts()` from the `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ` program ID.
+- We're using Anchor IDL decoding, but many accounts fail to decode cleanly (`Cannot read properties of null`).
+- We’ve added a fallback manual parser, but current values either return 0 or are significantly off.
+- We suspect that isUsed and layout offsets differ between deposits, and need to refine the byte scanner.
+
+✅ STEP 1: Create a file `hex-dump-vsr-account.js`
+This script should:
+- Accept a wallet address as input
+- Fetch all VSR accounts owned by that wallet (authority filter at offset 8)
+- Dump each account's data in hex
+- Attempt to find deposit-like structures every 1 byte (`for i = 0; i < data.length - 88; i++`)
+- Log suspected:
+  - depositAmount (u64)
+  - lockup kind (u8)
+  - multiplier (2 x u32 numerator/denominator)
+  - startTs (u64)
+  - endTs (u64)
+  - voting power = amount × (multiplierNum / multiplierDen)
+- For each suspected entry, output:
+  - Byte offset
+  - Voting power
+  - Reason for inclusion or exclusion
+
+✅ STEP 2: Enhance the canonical fallback parser in `canonical-governance-calculator.js`
+Replace the rigid `88-byte fixed offset` loop with a **sliding byte window** loop that:
+- Reads 64–88 byte chunks across the entire data blob
+- Uses heuristics:
+  - Only count entries where amount > 0
+  - Multiplier within [1.01x – 6.0x]
+  - Dates are plausible (startTs < endTs, within last 5 years)
+  - Skip duplicate deposits (same amount + startTs + lockup.kind)
+
+✅ STEP 3: Add per-wallet debug logging
+For each wallet:
+- Print wallet pubkey
+- Total governance power
+- Breakdown of accepted vs skipped entries
+- Reasons why each entry was excluded (e.g., isUsed invalid, amount 0, expired)
+
+✅ STEP 4: Test against these known wallets
+Use these 4 wallets for benchmark testing:
+- Takisoul: `7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA` → Expected native: 8.7M
+- GJdR: `GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh` → Expected native: 144K
+- 4pT6: `4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4` → Expected native: 12.6K
+- Fgv1: `Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1` → Expected native: 0
+
+✅ STEP 5: Use the existing `.env` variable for RPC
+- Use the `HELIUS_RPC_URL` from `.env`
+- DO NOT hardcode the RPC anywhere
+- Ensure Replit loads it via `dotenv.config()` at the top
+
+🎯 GOAL SUCCESS CRITERIA:
+- Match all 4 benchmark wallets within <0.5% accuracy
+- Accurately explain any deposit that's skipped or counted
+- Return breakdown per wallet with [amount, multiplier, power] per deposit
+
+No synthetic data, no hardcoded multipliers, no guesswork. This must be a canonical, auditable implementation.
+

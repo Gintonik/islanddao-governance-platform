@@ -1,20 +1,18 @@
 /**
  * Hex Dump VSR Account for Manual Analysis
- * Exports raw hex data for external byte viewer analysis
+ * Scans for deposit-like structures using sliding byte window
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
+import dotenv from 'dotenv';
 
-const connection = new Connection(process.env.HELIUS_API_KEY);
+dotenv.config();
+
+const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
-async function hexDumpVSRAccount() {
-  // GJdR wallet that should have 144,708.98 ISLAND governance power
-  const walletAddress = 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh';
-  const expectedVotingPower = 144708.98;
-  
-  console.log(`🔍 Hex dump analysis for ${walletAddress}`);
-  console.log(`Expected voting power: ${expectedVotingPower} ISLAND\n`);
+async function hexDumpVSRAccount(walletAddress = 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh') {
+  console.log(`🔍 VSR Account Analysis for ${walletAddress}\n`);
   
   // Find VSR account
   const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
@@ -97,35 +95,103 @@ async function hexDumpVSRAccount() {
     }
   }
   
-  console.log('\n🔍 Pattern Search for 144,708.98:');
-  console.log('==================================');
+  console.log('\n🔍 Sliding Byte Window Analysis:');
+  console.log('=================================');
   
-  // Search for the expected amount as different encodings
-  const targetRaw = BigInt(Math.round(expectedVotingPower * 1e6));
+  const currentTime = Date.now() / 1000;
+  const fiveYearsAgo = currentTime - (5 * 365 * 24 * 3600);
+  let suspectedDeposits = [];
   
-  for (let offset = 0; offset < data.length - 8; offset++) {
+  // Scan for deposit-like structures every 1 byte
+  for (let i = 0; i < data.length - 88; i++) {
     try {
-      const value = data.readBigUInt64LE(offset);
-      const asTokens = Number(value) / 1e6;
+      // Try to parse as deposit entry
+      const depositAmount = Number(data.readBigUInt64LE(i)) / 1e6;
       
-      if (Math.abs(asTokens - expectedVotingPower) < 10) {
-        console.log(`💰 Found ${asTokens} at offset ${offset} (0x${offset.toString(16)})`);
+      // Only proceed if amount looks reasonable
+      if (depositAmount > 0 && depositAmount < 100000000) {
         
-        // Show context around this value
-        const contextStart = Math.max(0, offset - 32);
-        const contextEnd = Math.min(data.length, offset + 40);
-        console.log(`   Context:`);
-        
-        for (let i = contextStart; i < contextEnd; i += 8) {
-          const val = Number(data.readBigUInt64LE(i));
-          const marker = (i === offset) ? ' <-- TARGET' : '';
-          console.log(`     +${i}: ${val} (0x${val.toString(16)})${marker}`);
+        // Look for timestamps within reasonable range
+        for (let tsOffset = 8; tsOffset <= 80; tsOffset += 8) {
+          if (i + tsOffset + 16 > data.length) continue;
+          
+          const startTs = Number(data.readBigUInt64LE(i + tsOffset));
+          const endTs = Number(data.readBigUInt64LE(i + tsOffset + 8));
+          
+          // Check if timestamps are plausible
+          if (startTs > fiveYearsAgo && startTs < currentTime && 
+              endTs > startTs && endTs < currentTime + (10 * 365 * 24 * 3600)) {
+            
+            // Look for multiplier (as fraction)
+            for (let multOffset = tsOffset + 16; multOffset <= 80; multOffset += 8) {
+              if (i + multOffset + 8 > data.length) continue;
+              
+              const multNum = Number(data.readBigUInt64LE(i + multOffset));
+              const multDen = Number(data.readBigUInt64LE(i + multOffset + 8));
+              
+              if (multDen > 0 && multNum > multDen) {
+                const multiplier = multNum / multDen;
+                
+                if (multiplier >= 1.01 && multiplier <= 6.0) {
+                  const votingPower = depositAmount * multiplier;
+                  
+                  const entry = {
+                    offset: i,
+                    amount: depositAmount,
+                    startTs: startTs,
+                    endTs: endTs,
+                    multiplierNum: multNum,
+                    multiplierDen: multDen,
+                    multiplier: multiplier,
+                    votingPower: votingPower,
+                    expired: endTs < currentTime
+                  };
+                  
+                  suspectedDeposits.push(entry);
+                  
+                  const status = entry.expired ? 'EXPIRED' : 'ACTIVE';
+                  console.log(`📦 Suspected deposit at offset ${i}:`);
+                  console.log(`   Amount: ${depositAmount.toLocaleString()} ISLAND`);
+                  console.log(`   Multiplier: ${multiplier.toFixed(6)} (${multNum}/${multDen})`);
+                  console.log(`   Start: ${new Date(startTs * 1000).toISOString()}`);
+                  console.log(`   End: ${new Date(endTs * 1000).toISOString()}`);
+                  console.log(`   Voting Power: ${votingPower.toLocaleString()} ISLAND`);
+                  console.log(`   Status: ${status}\n`);
+                }
+              }
+            }
+          }
         }
       }
     } catch (e) {
       // Continue scanning
     }
   }
+  
+  // Summary
+  console.log(`🎯 Summary:`);
+  console.log(`   Total suspected deposits: ${suspectedDeposits.length}`);
+  const activeDeposits = suspectedDeposits.filter(d => !d.expired);
+  const totalActivePower = activeDeposits.reduce((sum, d) => sum + d.votingPower, 0);
+  console.log(`   Active deposits: ${activeDeposits.length}`);
+  console.log(`   Total active voting power: ${totalActivePower.toLocaleString()} ISLAND`);
 }
 
-hexDumpVSRAccount().catch(console.error);
+// Test with known wallets
+const testWallets = [
+  { address: '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA', name: 'Takisoul', expected: 8700000 },
+  { address: 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh', name: 'GJdR', expected: 144000 },
+  { address: '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4', name: '4pT6', expected: 12600 },
+  { address: 'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1', name: 'Fgv1', expected: 0 }
+];
+
+async function analyzeAllTestWallets() {
+  for (const wallet of testWallets) {
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`Testing ${wallet.name} (Expected: ${wallet.expected.toLocaleString()} ISLAND)`);
+    console.log(`${'='.repeat(80)}`);
+    await hexDumpVSRAccount(wallet.address);
+  }
+}
+
+analyzeAllTestWallets().catch(console.error);
