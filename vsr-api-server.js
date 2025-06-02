@@ -71,9 +71,12 @@ app.get("/api/governance-power", async (req, res) => {
       try {
         // Deserialize using Anchor
         const decoded = program.coder.accounts.decode("voter", accountInfo.account.data);
+        const decodedAuthority = decoded.authority.toBase58();
+        console.log(`Decoded authority: ${decodedAuthority}`);
         
         // Filter only those where authority matches the wallet exactly
-        if (decoded.authority.toBase58() === wallet) {
+        if (decodedAuthority === wallet) {
+          console.log("✅ Authority matched wallet");
           matchedAccounts++;
           
           // Loop over depositEntries for this voter
@@ -110,9 +113,11 @@ app.get("/api/governance-power", async (req, res) => {
             const power = Math.floor(amount * adjustedMultiplier);
             nativePower += power;
           }
+        } else {
+          console.log("⛔️ Authority did NOT match wallet");
         }
-      } catch (deserializeError) {
-        // Skip accounts that can't be deserialized as voter accounts
+      } catch (e) {
+        console.error("❌ Failed to decode account:", e);
         continue;
       }
     }
