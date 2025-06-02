@@ -1,0 +1,69 @@
+I want you to run a fresh, canonical governance power scan for the following 20 wallet addresses using only on-chain data from Solana mainnet.
+
+🏗️ Objective:
+- Fetch **native governance power** (no delegation) from the Voter Stake Registry (VSR) using canonical `Voter` account parsing.
+
+📡 Use:
+- Helius RPC from `process.env.HELIUS_RPC_URL`
+- VSR Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+
+📁 Wallets to fetch (native power only, no delegation yet):
+```js
+[
+  "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzjs9SE",
+  "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+  "Fgv1yAgxAg9m3X4zPRFajYDPaA3EujjAZeyuTYCQ9AfJ",
+  "4pT6a8yyYrPoDWAKW5Xc6f6T1jsFbZVA97sAgxyq1FtK",
+  "5xVWFXrMuCwEqS2RTVUg5mrd2fsHKY7azpGuXnR9xG6M",
+  "EWBHZK3vA8jN3mXYtwZ9yxV73DFmB2GDApprQ1K1eWcT",
+  "XhXE8EJWS4oMaPXUtTxfGmGSHFf5ZTbZNd6rfqr3FD3",
+  "A6e3XdvNMGHYMLqZbtaNCHewZcAcJQLXKcGBnYQ4S9Yo",
+  "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+  "7NN9To5g5MCEmYMJBEU3jY3SopB6e1oU9JYVEBh1G8Ar",
+  "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+  "3zJf1XqFoUUNzRzjx6w3QZz7aEo9xNEfqKN2UdGhspLA",
+  "B5eCZnStWCh25Vi7DMYZF9yy8r8MyjcKxtvFvdiZxNsD",
+  "HhPrJST8p1NZ3DoBuAf1pC6UqkpLsfPeHXP7EBjCFgNK",
+  "HgAp2HgZjL7DQE2A1GiEG7iXz9fGDu2Py9VLjScLAdWq",
+  "7QZqHLzYMH3iJx7ABgph5TvJopD5HX3pErd3ZWpiUtHF",
+  "HYRheghxGfqZ1qN2qEzk6qACSK3cYdkEV1Z9cpWdpR7h",
+  "DeS8QoZDX59Eqc3TZhFsmCBN3w7qbYcABcA5yr5j7vn8",
+  "2RxX3mDCN1u7YqFZGbKj86AZFwBqESdbRHw3rWx8Rbf2",
+  "HR3P7ZykZGQQxBzR2WZcdLCHT3Kr3xLHVj6ZYAvQMdRQ"
+]
+
+✅ Requirements:
+
+No use of cached values — all data must be pulled fresh from on-chain VSR Voter accounts.
+
+For each wallet, find all Voter accounts (they may have multiple).
+
+Deserialize using VSR IDL or byte offset method, then:
+
+Check each deposit’s isUsed flag
+
+Confirm tokens are not unlocked or withdrawn
+
+Apply the correct lockup multiplier formula
+
+Sum amount * multiplier for total native governance power
+
+Return a full summary for each wallet:
+
+wallet
+
+nativeGovernancePower (in ISLAND)
+
+depositsFound
+
+Any errors if applicable
+
+📌 Notes:
+
+Use only verified on-chain data
+
+Print console.log() for each wallet result with totals and matching status
+
+Print a final accuracy score if known reference values are included
+
+🚀 Let's run this now and compare with previously known benchmarks.
