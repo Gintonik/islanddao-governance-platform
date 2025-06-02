@@ -38,6 +38,9 @@ const ISLAND_DAO_REALM = new PublicKey(
 const ISLAND_GOVERNANCE_MINT = new PublicKey(
   "Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a",
 );
+const ISLAND_DAO_REGISTRAR = new PublicKey(
+  "5sGLEKcJ35UGdbHtSWMtGbhLqRycQJSCaUAyEpnz6TA2",
+);
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
@@ -155,6 +158,64 @@ function calculateVotingPowerFromVoter(voterAccountData, accountPubkey) {
     
   } catch (error) {
     console.error(`Error calculating voting power: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
+ * Calculate VSR governance power using IslandDAO registrar
+ */
+async function calculateVSRGovernancePower(walletAddress) {
+  try {
+    const walletPubkey = new PublicKey(walletAddress);
+    
+    console.log(`🏝️ Calculating VSR governance power using IslandDAO registrar for: ${walletAddress}`);
+    
+    // Derive Voter PDA using IslandDAO registrar
+    const [voterPDA] = PublicKey.findProgramAddressSync(
+      [
+        ISLAND_DAO_REGISTRAR.toBuffer(),
+        Buffer.from("voter"),
+        walletPubkey.toBuffer(),
+      ],
+      VSR_PROGRAM_ID
+    );
+    
+    console.log(`Voter PDA: ${voterPDA.toBase58()}`);
+    
+    // Fetch the Voter account
+    try {
+      const accountInfo = await connection.getAccountInfo(voterPDA);
+      
+      if (accountInfo && accountInfo.data) {
+        console.log(`Found Voter account, data length: ${accountInfo.data.length}`);
+        
+        // Parse Voter account structure
+        const data = accountInfo.data;
+        let offset = 8; // Skip discriminator
+        
+        // Skip registrar (32 bytes) + authority (32 bytes) + voter_bump (1 byte) + voter_weight_record_bump (1 byte)
+        offset = 8 + 32 + 32 + 1 + 1;
+        
+        // Read voter_weight (8 bytes)
+        if (data.length >= offset + 8) {
+          const voterWeightBytes = data.slice(offset, offset + 8);
+          const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
+          console.log(`VSR governance power: ${voterWeight}`);
+          
+          return voterWeight;
+        }
+      } else {
+        console.log(`No Voter account found for wallet`);
+      }
+    } catch (error) {
+      console.log(`Voter account not found: ${error.message}`);
+    }
+    
+    return 0;
+    
+  } catch (error) {
+    console.error(`Error calculating VSR governance power: ${error.message}`);
     return 0;
   }
 }
@@ -337,6 +398,19 @@ app.get("/api/governance-power", async (req, res) => {
       if (voterAccounts.length === 0) {
         console.log("❌ No Voter accounts found using targeted search");
         
+        // Try VSR governance power calculation
+        console.log("🔄 Trying VSR governance power calculation");
+        const vsrPower = await calculateVSRGovernancePower(wallet);
+        
+        if (vsrPower > 0) {
+          return res.json({
+            wallet,
+            nativePower: vsrPower,
+            delegatedPower: 0,
+            totalPower: vsrPower,
+          });
+        }
+        
         // Fallback to Token Owner Record calculation
         console.log("🔄 Falling back to Token Owner Record calculation");
         const tokenOwnerPower = await calculateTokenOwnerRecordPower(wallet);
@@ -503,8 +577,20 @@ app.get("/api/governance-power", async (req, res) => {
     console.log(`Found ${foundAccounts} VSR accounts for ${wallet}`);
     console.log(`Final governance power: ${maxGovernancePower}`);
 
-    // If no VSR governance power found, try Token Owner Record calculation
+    // If no VSR governance power found, try VSR registrar calculation
     if (maxGovernancePower === 0) {
+      console.log("🔄 No VSR power found, trying VSR registrar calculation");
+      const vsrPower = await calculateVSRGovernancePower(wallet);
+      
+      if (vsrPower > 0) {
+        return res.json({
+          wallet,
+          nativePower: vsrPower,
+          delegatedPower: 0,
+          totalPower: vsrPower,
+        });
+      }
+      
       console.log("🔄 No VSR power found, falling back to Token Owner Record calculation");
       const tokenOwnerPower = await calculateTokenOwnerRecordPower(wallet);
       
