@@ -1,0 +1,79 @@
+You're implementing a **canonical Solana VSR (Voter Stake Registry)** governance power calculator.
+
+The goal is to return the **accurate, real-time native governance power** for any wallet by reading their **on-chain locked deposits** from the VSR program. Your implementation must work using only **on-chain data**, no hardcoded values or estimates.
+
+---
+
+### TECH SPECS:
+
+- Network: Solana mainnet
+- RPC: Use `process.env.HELIUS_RPC_URL` (do not hardcode)
+- Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+- Target: VSR `Voter` accounts (dataSize = 2728 bytes)
+- Anchor decoding often fails. Use **byte-level manual parsing** as fallback.
+
+---
+
+### 🔍 WHAT TO PARSE FROM EACH VOTER ACCOUNT
+
+There are **up to 32 deposit entries** per voter account.
+Each deposit entry starts at offset `72 + (i * 88)`.
+
+For each entry:
+
+- `isUsed` = byte at offset `0` inside each entry (value must be > 0)
+- `amount` = u64 at offset `8`
+- `multiplier` = u64 numerator at offset `48`, u64 denominator at offset `56`
+
+### ✅ Multiply `amount` × `multiplierNumerator / multiplierDenominator`
+
+**Example** (from Takisoul's real account):
+
+- amount: `3,682,784.632186 ISLAND`
+- multiplier: `1.35x`
+- voting power: `≈ 4,971,759.25 ISLAND`
+
+---
+
+### ✅ OUTPUT FORMAT
+
+Your script should accept a wallet address, find all its VSR voter accounts, and return:
+
+```json
+{
+  "wallet": "<input wallet>",
+  "nativeGovernancePower": <total>,
+  "deposits": [
+    {
+      "amount": 3682784.632186,
+      "multiplier": 1.35,
+      "votingPower": 4971759.25,
+      "startTs": 1680000000,
+      "endTs": 1730000000,
+      "lockupKind": "cliff"
+    },
+    ...
+  ]
+}
+
+✅ REQUIREMENTS
+Use @solana/web3.js for connections
+
+Use bs58 or buffer to decode bytes
+
+Use u64 and float64le decoding where appropriate
+
+Use a Set to deduplicate deposits (use amount|startTs|endTs as key)
+
+Don't count expired deposits if the multiplier = 1.0
+
+Skip empty or unused entries (isUsed === 0)
+
+✅ TARGET WALLETS TO TEST (ground truth)
+7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA → Native: 8,709,019.78
+
+GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh → Native: 144,708.98
+
+4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4 → Native: 12,625.58
+
+Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1 → Native: 200,000 (unlocked, should be counted with multiplier = 1.0)
