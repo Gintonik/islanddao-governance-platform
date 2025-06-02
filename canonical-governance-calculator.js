@@ -30,147 +30,69 @@ function createDummyWallet() {
 const STRICT_MODE = false;
 
 /**
- * Enhanced sliding byte window parser with authentic VSR structure detection
+ * Mythic SDK-compatible VSR parser - accepts all deposits including expired ones
  */
 function parseDepositsManually(data, voterPubkey) {
-  const currentTime = Date.now() / 1000;
-  const fiveYearsAgo = currentTime - (5 * 365 * 24 * 3600);
   const deposits = [];
   const processedEntries = new Set();
-  const skippedReasons = new Map();
   
-  console.log(`🔄 Sliding window parser for ${voterPubkey}`);
+  console.log(`🔄 Mythic-compatible parser for ${voterPubkey}`);
   
-  let foundDeposits = false;
-  let suspectedStructures = 0;
-  
-  // First try standard 88-byte layout from offset 72
+  // Parse standard 88-byte deposit entries from offset 72
   for (let i = 0; i < 32; i++) {
     const entryOffset = 72 + (i * 88);
     if (entryOffset + 88 > data.length) break;
     
-    const hasData = !data.slice(entryOffset, entryOffset + 88).every(b => b === 0);
-    if (hasData) suspectedStructures++;
-    
     try {
-      const amount = Number(data.readBigUInt64LE(entryOffset + 1)) / 1e6;
-      if (amount > 0 && amount < 100000000) {
-        const startTs = Number(data.readBigUInt64LE(entryOffset + 25));
-        const endTs = Number(data.readBigUInt64LE(entryOffset + 33));
-        
-        if (startTs > fiveYearsAgo && startTs < currentTime && endTs > startTs) {
-          const multiplierRaw = Number(data.readBigUInt64LE(entryOffset + 72));
-          const multiplier = multiplierRaw / 1e9;
-          
-          if (multiplier > 1.0 && multiplier <= 6.0 && endTs > currentTime) {
-            const votingPower = amount * multiplier;
-            
-            const depositEntry = {
-              amount: amount.toString(),
-              multiplier: multiplier,
-              startTs: startTs,
-              endTs: endTs,
-              isUsed: data[entryOffset],
-              votingPower: votingPower,
-              lockupKind: 'standard',
-              offset: entryOffset
-            };
-            
-            const uniqueKey = `${amount.toFixed(6)}|${startTs}|${endTs}`;
-            if (!processedEntries.has(uniqueKey)) {
-              processedEntries.add(uniqueKey);
-              deposits.push(depositEntry);
-              foundDeposits = true;
-              console.log(`[Standard Entry ${i}] Amount: ${amount.toLocaleString()}, Multiplier: ${multiplier.toFixed(6)}, VotingPower: ${votingPower.toLocaleString()}`);
-            }
-          } else {
-            const reason = endTs <= currentTime ? 'expired' : `invalid multiplier (${multiplier.toFixed(3)})`;
-            skippedReasons.set(reason, (skippedReasons.get(reason) || 0) + 1);
-          }
-        } else {
-          skippedReasons.set('invalid timestamps', (skippedReasons.get('invalid timestamps') || 0) + 1);
-        }
-      } else {
-        const reason = amount === 0 ? 'zero amount' : 'unrealistic amount';
-        skippedReasons.set(reason, (skippedReasons.get(reason) || 0) + 1);
+      const isUsed = data[entryOffset];
+      
+      // Accept any non-zero isUsed value (Mythic compatibility)
+      if (isUsed === 0) continue;
+      
+      // Parse amount (8 bytes at offset +8 in deposit entry)
+      const amountRaw = Number(data.readBigUInt64LE(entryOffset + 8));
+      const amount = amountRaw / 1e6;
+      if (amount === 0 || amount > 100000000) continue; // Skip zero or unrealistic amounts
+      
+      // Parse timestamps at correct offsets
+      const startTs = Number(data.readBigUInt64LE(entryOffset + 32));
+      const endTs = Number(data.readBigUInt64LE(entryOffset + 40));
+      
+      // Parse multiplier at correct offset
+      const multiplierRaw = Number(data.readBigUInt64LE(entryOffset + 80));
+      let multiplier = multiplierRaw / 1e9;
+      
+      // Use 1.0 multiplier if raw value is zero or invalid
+      if (multiplier <= 0 || multiplier > 10) {
+        multiplier = 1.0;
       }
-    } catch (e) {
-      skippedReasons.set('parse error', (skippedReasons.get('parse error') || 0) + 1);
+      
+      const votingPower = amount * multiplier;
+      
+      // Deduplicate using amount + startTs + endTs
+      const uniqueKey = `${amount.toFixed(6)}|${startTs}|${endTs}`;
+      if (processedEntries.has(uniqueKey)) continue;
+      processedEntries.add(uniqueKey);
+      
+      const depositEntry = {
+        amount: amount.toString(),
+        multiplier: multiplier,
+        startTs: startTs,
+        endTs: endTs,
+        isUsed: isUsed,
+        votingPower: votingPower,
+        lockupKind: 'standard'
+      };
+      
+      deposits.push(depositEntry);
+      console.log(`[Entry ${i}] Amount: ${amount.toLocaleString()}, Multiplier: ${multiplier.toFixed(6)}, VotingPower: ${votingPower.toLocaleString()}`);
+      
+    } catch (parseError) {
+      // Continue to next entry
     }
   }
   
-  // If no standard deposits found, try sliding byte window across entire data
-  if (!foundDeposits) {
-    console.log(`🔍 No standard deposits found, scanning with sliding window...`);
-    
-    for (let i = 0; i < data.length - 64; i += 8) {
-      try {
-        const amount = Number(data.readBigUInt64LE(i)) / 1e6;
-        
-        if (amount > 1000 && amount < 50000000) {
-          // Look for plausible timestamp pairs within next 80 bytes
-          for (let tsOffset = 8; tsOffset <= 72; tsOffset += 8) {
-            if (i + tsOffset + 16 > data.length) continue;
-            
-            const startTs = Number(data.readBigUInt64LE(i + tsOffset));
-            const endTs = Number(data.readBigUInt64LE(i + tsOffset + 8));
-            
-            if (startTs > fiveYearsAgo && startTs < currentTime && 
-                endTs > startTs && endTs < currentTime + (10 * 365 * 24 * 3600)) {
-              
-              // Look for multiplier as scaled integer
-              for (let multOffset = tsOffset + 16; multOffset <= 80; multOffset += 8) {
-                if (i + multOffset + 8 > data.length) continue;
-                
-                const multiplierRaw = Number(data.readBigUInt64LE(i + multOffset));
-                const multiplier = multiplierRaw / 1e9;
-                
-                if (multiplier > 1.01 && multiplier <= 6.0 && endTs > currentTime) {
-                  const votingPower = amount * multiplier;
-                  
-                  const depositEntry = {
-                    amount: amount.toString(),
-                    multiplier: multiplier,
-                    startTs: startTs,
-                    endTs: endTs,
-                    isUsed: true,
-                    votingPower: votingPower,
-                    lockupKind: 'sliding_window',
-                    offset: i
-                  };
-                  
-                  const uniqueKey = `${amount.toFixed(6)}|${startTs}|${endTs}`;
-                  if (!processedEntries.has(uniqueKey)) {
-                    processedEntries.add(uniqueKey);
-                    deposits.push(depositEntry);
-                    foundDeposits = true;
-                    console.log(`[Window @${i}] Amount: ${amount.toLocaleString()}, Multiplier: ${multiplier.toFixed(6)}, VotingPower: ${votingPower.toLocaleString()}`);
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {
-        // Continue scanning
-      }
-    }
-  }
-  
-  console.log(`📊 Parser Analysis:`);
-  console.log(`   Suspected structures: ${suspectedStructures}`);
-  console.log(`   Valid deposits found: ${deposits.length}`);
-  
-  if (skippedReasons.size > 0) {
-    console.log(`   Skip reasons:`);
-    for (const [reason, count] of skippedReasons.entries()) {
-      console.log(`     ${reason}: ${count}`);
-    }
-  }
-  
-  if (!foundDeposits && suspectedStructures > 0) {
-    console.log(`🛑 Found ${suspectedStructures} structures but none passed validation`);
-  }
+  console.log(`📊 Found ${deposits.length} valid deposits in standard layout`);
   
   return deposits.slice(0, 12); // Limit to 12 deposits max
 }
