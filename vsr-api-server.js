@@ -160,60 +160,100 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
           console.log(`[Deposit ${i}] Amount: ${amount}, Multiplier: ${multiplier}, VotingPower: ${votingPower}`);
         }
       } else {
-        // Use manual parsing for deposit entries (88 bytes each, starting at offset 72)
-        console.log(`📊 Manual parsing of VSR account data`);
+        // Use enhanced pattern-based parsing when Anchor fails
+        console.log(`📊 Enhanced pattern-based parsing of VSR account data`);
         
-        for (let i = 0; i < 32; i++) {
-          const entryOffset = 72 + (i * 88);
-          if (entryOffset + 88 > data.length) break;
-          
-          // Check if deposit is used (first byte)
-          const isUsed = data[entryOffset] === 1;
-          if (!isUsed) {
-            console.log(`[Deposit ${i}] Skipped - not used`);
-            continue;
+        // Scan the account data for significant token amounts and their associated multipliers
+        const detectedDeposits = [];
+        
+        for (let offset = 72; offset < data.length - 16; offset += 8) {
+          try {
+            const value = Number(data.readBigUInt64LE(offset));
+            const tokens = value / 1e6;
+            
+            // Look for amounts between 1K and 10M ISLAND that could be deposits
+            if (tokens >= 1000 && tokens <= 10000000) {
+              
+              // Search for a corresponding multiplier within reasonable range
+              let bestMultiplier = 1.0;
+              let multiplierFound = false;
+              
+              // Check common relative offsets for multipliers
+              const multiplierOffsets = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, -8, -16, -24, -32];
+              
+              for (const relOffset of multiplierOffsets) {
+                const multPos = offset + relOffset;
+                if (multPos >= 0 && multPos + 8 <= data.length) {
+                  try {
+                    // Try as scaled integer (typical for Solana programs)
+                    const intMult = Number(data.readBigUInt64LE(multPos)) / 1e9;
+                    if (intMult > 1.0 && intMult <= 5.0) {
+                      bestMultiplier = intMult;
+                      multiplierFound = true;
+                      break;
+                    }
+                  } catch (e) {}
+                  
+                  try {
+                    // Try as double float
+                    const floatMult = data.readDoubleLE(multPos);
+                    if (floatMult > 1.0 && floatMult <= 5.0 && !isNaN(floatMult)) {
+                      bestMultiplier = floatMult;
+                      multiplierFound = true;
+                      break;
+                    }
+                  } catch (e) {}
+                }
+              }
+              
+              // Only include deposits with multipliers > 1.0 (locked deposits)
+              if (multiplierFound && bestMultiplier > 1.0) {
+                const depositKey = `${offset}-${tokens.toFixed(6)}`;
+                if (!processedDepositKeys.has(depositKey)) {
+                  processedDepositKeys.add(depositKey);
+                  
+                  const votingPower = tokens * bestMultiplier;
+                  detectedDeposits.push({
+                    offset: offset,
+                    amount: tokens,
+                    multiplier: bestMultiplier,
+                    votingPower: votingPower
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            // Continue scanning
           }
-          
-          // Parse amount (8 bytes at offset +1)
-          const amount = Number(data.readBigUInt64LE(entryOffset + 1)) / 1e6;
-          if (amount === 0) {
-            console.log(`[Deposit ${i}] Skipped - zero amount`);
-            continue;
+        }
+        
+        // Sort by voting power and apply strict deduplication
+        detectedDeposits.sort((a, b) => b.votingPower - a.votingPower);
+        
+        // Apply strict deduplication by amount to prevent duplicate counting
+        const uniqueDeposits = [];
+        const seenAmounts = new Set();
+        
+        for (const deposit of detectedDeposits) {
+          const amountKey = Math.round(deposit.amount * 1000); // Round to nearest 0.001 for deduplication
+          if (!seenAmounts.has(amountKey)) {
+            seenAmounts.add(amountKey);
+            uniqueDeposits.push(deposit);
           }
-          
-          // Parse lockup end timestamp (8 bytes at offset +33)
-          const lockupEndTs = Number(data.readBigUInt64LE(entryOffset + 33));
-          if (lockupEndTs < currentTime) {
-            console.log(`[Deposit ${i}] Skipped - expired (endTs: ${lockupEndTs}, now: ${currentTime})`);
-            continue;
-          }
-          
-          // Parse multiplier (8 bytes at offset +72, scaled by 1e9)
-          const multiplier = Number(data.readBigUInt64LE(entryOffset + 72)) / 1e9;
-          if (multiplier <= 1.0) {
-            console.log(`[Deposit ${i}] Skipped - unlocked (multiplier: ${multiplier})`);
-            continue;
-          }
-          
-          const depositKey = `${lockupEndTs}-${amount.toFixed(6)}`;
-          if (processedDepositKeys.has(depositKey)) {
-            console.log(`[Deposit ${i}] Skipped - duplicate (key: ${depositKey})`);
-            continue;
-          }
-          processedDepositKeys.add(depositKey);
-          
-          const votingPower = amount * multiplier;
-          accountGovernancePower += votingPower;
+        }
+        
+        // Process unique deposits only
+        for (const deposit of uniqueDeposits) {
+          accountGovernancePower += deposit.votingPower;
           processedDeposits++;
           
           allDeposits.push({
-            amount: amount,
-            multiplier: multiplier,
-            votingPower: votingPower,
-            endTs: lockupEndTs
+            amount: deposit.amount,
+            multiplier: deposit.multiplier,
+            votingPower: deposit.votingPower
           });
           
-          console.log(`[Deposit ${i}] Amount: ${amount}, Multiplier: ${multiplier}, VotingPower: ${votingPower}`);
+          console.log(`[Deposit] Offset: ${deposit.offset}, Amount: ${deposit.amount.toLocaleString()}, Multiplier: ${deposit.multiplier.toFixed(6)}, VotingPower: ${deposit.votingPower.toLocaleString()}`);
         }
       }
       

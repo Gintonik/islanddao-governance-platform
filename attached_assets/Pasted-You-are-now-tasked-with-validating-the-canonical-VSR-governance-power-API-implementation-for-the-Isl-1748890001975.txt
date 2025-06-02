@@ -1,0 +1,44 @@
+You are now tasked with validating the canonical VSR governance power API implementation for the IslandDAO Citizens Map. Please perform the following steps for all the 20 wallet addresses listed below:
+
+WALLETS TO TEST:
+- 2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT
+- 2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk
+- 37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA
+- 3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt
+- 3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr
+- 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+- 6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U
+- 7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA
+- 9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n
+- 9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94
+- ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd
+- B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST
+- BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz
+- CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM
+- DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt
+- EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF
+- Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1
+- Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG
+- GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh
+- kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC
+
+TASK:
+1. For each wallet:
+    - Fetch the governance power via:  
+      `curl "http://localhost:3001/api/governance-power?wallet=<WALLET>"`
+    - Store the returned values:
+      - `nativeGovernancePower`
+      - `delegatedGovernancePower`
+      - `totalGovernancePower`
+      - Breakdown of `[amount, multiplier, votingPower]` from deposit entries (if present)
+
+2. Make sure the logic follows canonical rules:
+    - ✅ Uses Anchor IDL deserialization of VSR Voter accounts
+    - ✅ Filters only `isUsed: true` entries
+    - ✅ Skips expired and unlocked lockups (multiplier = 1.0)
+    - ✅ Calculates delegated power from TokenOwnerRecord accounts under SPL Governance
+    - ✅ Prevents duplicate deposit counting
+    - ✅ Returns accurate governance power values within 0.5% of ground truth where applicable
+
+3. Output a summary like this:
+
