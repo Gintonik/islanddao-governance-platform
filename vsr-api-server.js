@@ -171,6 +171,7 @@ async function getCanonicalGovernancePower(walletAddress) {
     
     if (votingPower > 0) {
       return {
+        wallet: walletPubkey.toBase58(),
         nativeGovernancePower: votingPower,
         delegatedGovernancePower: 0,
         totalGovernancePower: votingPower,
