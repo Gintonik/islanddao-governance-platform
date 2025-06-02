@@ -11,6 +11,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import fs from "fs";
 import { SplGovernance } from "./governance-sdk/dist/index.js";
 import { getTokenOwnerRecordAddress } from "@solana/spl-governance";
+import { Program, AnchorProvider, Wallet } from "@coral-xyz/anchor";
 
 // Load VSR IDL for proper deserialization
 const vsrIdl = JSON.parse(fs.readFileSync("vsr_idl.json", "utf8"));
@@ -47,13 +48,51 @@ const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
 /**
- * Get Token Owner Record (TOR) for wallets without VSR lockups
+ * Get canonical governance power using both TokenOwnerRecord and VSR
  */
-async function getTokenOwnerRecord(walletAddress) {
+async function getCanonicalGovernancePower(walletAddress) {
+  const walletPubkey = new PublicKey(walletAddress);
+  
+  console.log(`🏛️ Getting canonical governance power for: ${walletAddress}`);
+  
+  // First check for TokenOwnerRecord
+  const torResult = await getTokenOwnerRecord(walletPubkey);
+  if (torResult.governingTokenDepositAmount > 0) {
+    return {
+      nativeGovernancePower: torResult.governingTokenDepositAmount,
+      delegatedGovernancePower: 0,
+      totalGovernancePower: torResult.governingTokenDepositAmount,
+      source: "token_owner_record",
+      governanceDelegate: torResult.governanceDelegate,
+      details: {
+        depositAmount: torResult.governingTokenDepositAmount,
+        mint: torResult.governingTokenMint
+      }
+    };
+  }
+  
+  // Check for VSR lockups
+  const vsrResult = await getVSRGovernancePower(walletPubkey);
+  if (vsrResult.nativeGovernancePower > 0) {
+    return vsrResult;
+  }
+  
+  // Return zero power if neither found
+  return {
+    nativeGovernancePower: 0,
+    delegatedGovernancePower: 0,
+    totalGovernancePower: 0,
+    source: "none",
+    details: {}
+  };
+}
+
+/**
+ * Get Token Owner Record by scanning all accounts if PDA fails
+ */
+async function getTokenOwnerRecord(walletPubkey) {
   try {
-    const walletPubkey = new PublicKey(walletAddress);
-    
-    // Derive TOR PDA using SPL Governance
+    // First try canonical PDA derivation
     const torAddress = await getTokenOwnerRecordAddress(
       SPL_GOVERNANCE_PROGRAM_ID,
       ISLAND_DAO_REALM,
@@ -61,35 +100,315 @@ async function getTokenOwnerRecord(walletAddress) {
       walletPubkey
     );
     
-    // Fetch the account data
-    const accountInfo = await connection.getAccountInfo(torAddress);
+    console.log(`TOR PDA: ${torAddress.toBase58()}`);
     
-    if (!accountInfo || !accountInfo.data) {
-      return { governingTokenDepositAmount: 0, governanceDelegate: null };
+    const accountInfo = await connection.getAccountInfo(torAddress);
+    if (accountInfo && accountInfo.data) {
+      return parseTokenOwnerRecord(accountInfo.data, torAddress);
     }
     
-    // Use SPL Governance SDK to decode the account
-    try {
-      const governance = new SplGovernance(connection);
-      const torAccount = await governance.getTokenOwnerRecord(torAddress);
+    // If PDA not found, scan all TokenOwnerRecord accounts
+    console.log(`PDA not found, scanning all TokenOwnerRecord accounts...`);
+    
+    const accounts = await connection.getProgramAccounts(SPL_GOVERNANCE_PROGRAM_ID, {
+      filters: [{ dataSize: 404 }], // TokenOwnerRecord size
+    });
+    
+    console.log(`Scanning ${accounts.length} TokenOwnerRecord accounts`);
+    
+    for (const { account, pubkey } of accounts) {
+      const data = account.data;
       
-      if (torAccount) {
-        return {
-          governingTokenDepositAmount: torAccount.account.governingTokenDepositAmount?.toNumber() || 0,
-          governanceDelegate: torAccount.account.governanceDelegate?.toBase58() || null,
-          realm: torAccount.account.realm?.toBase58(),
-          governingTokenMint: torAccount.account.governingTokenMint?.toBase58()
-        };
+      // Parse basic structure to check if it matches our wallet
+      const realm = new PublicKey(data.slice(0, 32));
+      const governingTokenMint = new PublicKey(data.slice(32, 64));
+      const governingTokenOwner = new PublicKey(data.slice(64, 96));
+      
+      if (realm.equals(ISLAND_DAO_REALM) && 
+          governingTokenMint.equals(ISLAND_GOVERNANCE_MINT) && 
+          governingTokenOwner.equals(walletPubkey)) {
+        
+        console.log(`Found TokenOwnerRecord at: ${pubkey.toBase58()}`);
+        return parseTokenOwnerRecord(data, pubkey);
       }
-    } catch (decodeError) {
-      console.log(`TOR decode error for ${walletAddress}:`, decodeError.message);
     }
     
     return { governingTokenDepositAmount: 0, governanceDelegate: null };
     
   } catch (error) {
-    console.error(`TOR lookup error for ${walletAddress}:`, error.message);
+    console.error(`TokenOwnerRecord lookup error: ${error.message}`);
     return { governingTokenDepositAmount: 0, governanceDelegate: null };
+  }
+}
+
+/**
+ * Parse TokenOwnerRecord account data
+ */
+function parseTokenOwnerRecord(data, pubkey) {
+  try {
+    // TokenOwnerRecord structure:
+    // 0-32: realm
+    // 32-64: governing_token_mint
+    // 64-96: governing_token_owner
+    // 96-104: governing_token_deposit_amount (u64)
+    // 104-105: has_governance_delegate (bool)
+    // 105-137: governance_delegate (optional Pubkey)
+    
+    const realm = new PublicKey(data.slice(0, 32));
+    const governingTokenMint = new PublicKey(data.slice(32, 64));
+    const governingTokenOwner = new PublicKey(data.slice(64, 96));
+    const governingTokenDepositAmount = Number(data.readBigUInt64LE(96));
+    
+    let governanceDelegate = null;
+    if (data.length > 104 && data[104] === 1) {
+      governanceDelegate = new PublicKey(data.slice(105, 137)).toBase58();
+    }
+    
+    console.log(`TokenOwnerRecord parsed:`);
+    console.log(`  Address: ${pubkey.toBase58()}`);
+    console.log(`  Deposit Amount: ${governingTokenDepositAmount}`);
+    console.log(`  Governance Delegate: ${governanceDelegate || 'None'}`);
+    
+    return {
+      governingTokenDepositAmount,
+      governanceDelegate,
+      realm: realm.toBase58(),
+      governingTokenMint: governingTokenMint.toBase58(),
+      governingTokenOwner: governingTokenOwner.toBase58()
+    };
+    
+  } catch (error) {
+    console.error(`Error parsing TokenOwnerRecord: ${error.message}`);
+    return { governingTokenDepositAmount: 0, governanceDelegate: null };
+  }
+}
+
+/**
+ * Get VSR governance power with detailed lockup analysis
+ */
+async function getVSRGovernancePower(walletPubkey) {
+  try {
+    console.log(`🗳️ Getting VSR governance power for: ${walletPubkey.toBase58()}`);
+    
+    // First try PDA derivation
+    const [voterPDA] = PublicKey.findProgramAddressSync(
+      [
+        ISLAND_DAO_REGISTRAR.toBuffer(),
+        Buffer.from("voter"),
+        walletPubkey.toBuffer(),
+      ],
+      VSR_PROGRAM_ID
+    );
+    
+    console.log(`Voter PDA: ${voterPDA.toBase58()}`);
+    
+    let voterAccount = await connection.getAccountInfo(voterPDA);
+    let voterAddress = voterPDA;
+    
+    // If PDA not found, scan all Voter accounts
+    if (!voterAccount || !voterAccount.data) {
+      console.log(`PDA not found, scanning all Voter accounts...`);
+      
+      const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
+      
+      console.log(`Scanning ${accounts.length} Voter accounts`);
+      
+      for (const { account, pubkey } of accounts) {
+        const data = account.data;
+        if (data.length < 72) continue;
+        
+        // Parse authority from Voter struct (offset 40)
+        const authority = new PublicKey(data.slice(40, 72));
+        
+        if (authority.equals(walletPubkey)) {
+          console.log(`Found Voter account at: ${pubkey.toBase58()}`);
+          voterAccount = account;
+          voterAddress = pubkey;
+          break;
+        }
+      }
+    }
+    
+    if (!voterAccount || !voterAccount.data) {
+      return {
+        nativeGovernancePower: 0,
+        delegatedGovernancePower: 0,
+        totalGovernancePower: 0,
+        source: "vsr",
+        details: {}
+      };
+    }
+    
+    // Parse Voter account using VSR IDL structure
+    return parseVoterAccount(voterAccount.data, voterAddress);
+    
+  } catch (error) {
+    console.error(`VSR governance power error: ${error.message}`);
+    return {
+      nativeGovernancePower: 0,
+      delegatedGovernancePower: 0,
+      totalGovernancePower: 0,
+      source: "vsr",
+      details: {}
+    };
+  }
+}
+
+/**
+ * Parse Voter account using VSR IDL structure
+ */
+function parseVoterAccount(data, pubkey) {
+  try {
+    console.log(`Parsing Voter account: ${pubkey.toBase58()}`);
+    
+    // Voter struct layout:
+    // 0-8: discriminator
+    // 8-40: registrar
+    // 40-72: authority
+    // 72: voter_bump
+    // 73: voter_weight_record_bump
+    // 74-82: voter_weight (u64)
+    // 82+: deposit_entries (array of DepositEntry, 32 max)
+    
+    const registrar = new PublicKey(data.slice(8, 40));
+    const authority = new PublicKey(data.slice(40, 72));
+    const voterWeight = Number(data.readBigUInt64LE(74));
+    
+    console.log(`Voter details:`);
+    console.log(`  Registrar: ${registrar.toBase58()}`);
+    console.log(`  Authority: ${authority.toBase58()}`);
+    console.log(`  Voter Weight: ${voterWeight}`);
+    
+    // Parse deposit entries starting at offset 82
+    const depositEntries = [];
+    let totalVotingPower = 0;
+    
+    for (let i = 0; i < 32; i++) {
+      const entryOffset = 82 + (i * 105); // DepositEntry is 105 bytes
+      
+      if (data.length < entryOffset + 105) break;
+      
+      const isUsed = data[entryOffset] === 1;
+      if (!isUsed) continue;
+      
+      const entry = parseDepositEntry(data, entryOffset, i);
+      if (entry && entry.amount > 0) {
+        depositEntries.push(entry);
+        totalVotingPower += entry.votingPower;
+        
+        console.log(`Deposit ${i}: ${entry.lockupKind}, amount=${entry.amount}, multiplier=${entry.multiplier}, power=${entry.votingPower}`);
+      }
+    }
+    
+    return {
+      nativeGovernancePower: totalVotingPower,
+      delegatedGovernancePower: 0,
+      totalGovernancePower: totalVotingPower,
+      source: "vsr",
+      details: depositEntries.reduce((acc, entry, idx) => {
+        acc[`deposit${idx + 1}`] = {
+          type: entry.lockupKind,
+          amount: entry.amount,
+          multiplier: entry.multiplier,
+          votingPower: entry.votingPower,
+          lockupExpiration: entry.lockupExpiration
+        };
+        return acc;
+      }, {})
+    };
+    
+  } catch (error) {
+    console.error(`Error parsing Voter account: ${error.message}`);
+    return {
+      nativeGovernancePower: 0,
+      delegatedGovernancePower: 0,
+      totalGovernancePower: 0,
+      source: "vsr",
+      details: {}
+    };
+  }
+}
+
+/**
+ * Parse individual DepositEntry from Voter account
+ */
+function parseDepositEntry(data, offset, index) {
+  try {
+    // DepositEntry layout:
+    // 0: is_used (1 byte)
+    // 1-9: amount_deposited_native (u64)
+    // 9-17: amount_initially_locked_native (u64)
+    // 17: lockup_kind (1 byte: 0=None, 1=Cliff, 2=Constant, 3=Vested)
+    // 18-26: lockup_start_ts (i64)
+    // 26-34: lockup_duration_seconds (u64)
+    // 34-42: lockup_cooldown_seconds (u64)
+    // 42+: additional fields...
+    
+    const amount = Number(data.readBigUInt64LE(offset + 1));
+    const amountLocked = Number(data.readBigUInt64LE(offset + 9));
+    const lockupKindByte = data[offset + 17];
+    const lockupStartTs = Number(data.readBigInt64LE(offset + 18));
+    const lockupDuration = Number(data.readBigUInt64LE(offset + 26));
+    
+    const lockupKinds = ['none', 'cliff', 'constant', 'vested'];
+    const lockupKind = lockupKinds[lockupKindByte] || 'unknown';
+    
+    // Calculate lockup expiration
+    const lockupExpiration = lockupStartTs + lockupDuration;
+    const currentTime = Math.floor(Date.now() / 1000);
+    const remainingSeconds = Math.max(0, lockupExpiration - currentTime);
+    
+    // Calculate multiplier based on lockup type and remaining time
+    const multiplier = calculateLockupMultiplier(lockupKind, remainingSeconds, lockupDuration);
+    const votingPower = Math.floor(amount * multiplier);
+    
+    return {
+      amount,
+      amountLocked,
+      lockupKind,
+      lockupStartTs,
+      lockupDuration,
+      lockupExpiration,
+      remainingSeconds,
+      multiplier,
+      votingPower
+    };
+    
+  } catch (error) {
+    console.error(`Error parsing deposit entry ${index}: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Calculate lockup multiplier based on IslandDAO VSR configuration
+ */
+function calculateLockupMultiplier(lockupKind, remainingSeconds, originalDuration) {
+  // IslandDAO VSR multiplier configuration (approximate)
+  const BASELINE_MULTIPLIER = 1.0;
+  const MAX_MULTIPLIER = 5.0;
+  const YEAR_SECONDS = 365 * 24 * 60 * 60;
+  
+  if (lockupKind === 'none' || remainingSeconds <= 0) {
+    return BASELINE_MULTIPLIER;
+  }
+  
+  // Calculate years remaining
+  const yearsRemaining = remainingSeconds / YEAR_SECONDS;
+  
+  // Apply multiplier based on lockup type
+  switch (lockupKind) {
+    case 'cliff':
+    case 'constant':
+      // Linear scaling: 1x for 0 years, up to 5x for 4+ years
+      return Math.min(BASELINE_MULTIPLIER + (yearsRemaining * 1.0), MAX_MULTIPLIER);
+    
+    case 'vested':
+      // Slightly lower multiplier for vested tokens
+      return Math.min(BASELINE_MULTIPLIER + (yearsRemaining * 0.8), MAX_MULTIPLIER);
+    
+    default:
+      return BASELINE_MULTIPLIER;
   }
 }
 
@@ -528,247 +847,24 @@ app.get("/api/governance-power", async (req, res) => {
   }
 
   try {
-    console.log(`Fetching governance power for wallet: ${wallet}`);
+    console.log(`\n🏛️ === Canonical Governance Power Calculation ===`);
+    console.log(`Wallet: ${wallet}`);
     
-    // Special targeted search for debug wallets
-    if (wallet === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA" || 
-        wallet === "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh") {
-      console.log(`🎯 Using targeted memcmp search for debug wallet: ${wallet}`);
-      
-      const voterAccounts = await findVoterAccountsForWallet(wallet);
-      
-      if (voterAccounts.length === 0) {
-        console.log("❌ No Voter accounts found using targeted search");
-        
-        // Try VSR SDK-style governance power calculation
-        console.log("🔄 Trying VSR SDK-style governance power calculation");
-        const votingPower = await getLockTokensVotingPowerPerWallet({
-          connection,
-          walletAddress: new PublicKey(wallet),
-          registrar: ISLAND_DAO_REGISTRAR
-        });
-        
-        if (votingPower > 0) {
-          return res.json({
-            wallet,
-            nativePower: votingPower,
-            delegatedPower: 0,
-            totalPower: votingPower,
-          });
-        }
-        
-        // Fallback to Token Owner Record calculation
-        console.log("🔄 Falling back to Token Owner Record calculation");
-        const torData = await getTokenOwnerRecord(wallet);
-        
-        return res.json({
-          wallet,
-          nativeGovernancePower: torData.governingTokenDepositAmount,
-          delegatedPower: 0,
-          totalPower: torData.governingTokenDepositAmount,
-          governanceDelegate: torData.governanceDelegate,
-          source: "token_owner_record"
-        });
-      }
-      
-      let totalVotingPower = 0;
-      
-      for (const { account, pubkey } of voterAccounts) {
-        console.log(`✅ Match found for wallet ${wallet}`);
-        const votingPower = calculateVotingPowerFromVoter(account.data, pubkey);
-        totalVotingPower += votingPower;
-      }
-      
-      console.log(`\n🏁 Final total voting power: ${totalVotingPower}`);
-      
-      return res.json({
-        wallet,
-        nativePower: totalVotingPower,
-        delegatedPower: 0,
-        totalPower: totalVotingPower,
-      });
-    }
+    const result = await getCanonicalGovernancePower(wallet);
     
-    // Fallback to existing method for other wallets
-    const allVSRAccounts = await loadVSRAccounts();
-    console.log(`Scanning ${allVSRAccounts.length} VSR accounts`);
-
-    let maxGovernancePower = 0;
-    let foundAccounts = 0;
-    let totalChecked = 0;
+    console.log(`\n📊 Final Result:`);
+    console.log(`  Native Power: ${result.nativeGovernancePower}`);
+    console.log(`  Total Power: ${result.totalGovernancePower}`);
+    console.log(`  Source: ${result.source}`);
     
-    for (const { account, pubkey } of allVSRAccounts) {
-      try {
-        const data = account.data;
-        if (data.length < 72) continue;
-        
-        totalChecked++;
-        
-        // Parse VSR account structure: discriminator(8) + registrar(32) + authority(32) + bumps(2) + data...
-        const authorityBytes = data.slice(40, 72);
-        if (authorityBytes.length !== 32) continue;
-        
-        const authority = new PublicKey(authorityBytes).toBase58();
-        
-        // Debug: Log every voter authority
-        console.log(`Voter authority: ${authority}`);
-        
-        // Special debug for target wallet
-        if (authority === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
-          console.log(`🎯 FOUND TARGET WALLET: ${authority}`);
-          console.log(`Account pubkey: ${pubkey.toBase58()}`);
-          console.log(`Data length: ${data.length}`);
-          
-          // Log full voter struct for target wallet
-          try {
-            const registrarBytes = data.slice(8, 40);
-            const authorityBytes = data.slice(40, 72);
-            const voterBump = data[72];
-            const voterWeightRecordBump = data[73];
-            const voterWeightBytes = data.slice(74, 82);
-            
-            console.log(`Full Voter Struct:`);
-            console.log(`  registrar: ${new PublicKey(registrarBytes).toBase58()}`);
-            console.log(`  authority: ${new PublicKey(authorityBytes).toBase58()}`);
-            console.log(`  voter_bump: ${voterBump}`);
-            console.log(`  voter_weight_record_bump: ${voterWeightRecordBump}`);
-            console.log(`  voter_weight: ${Number(voterWeightBytes.readBigUInt64LE(0))}`);
-            
-            // Parse deposits
-            console.log(`Deposits:`);
-            for (let i = 0; i < 32; i++) {
-              const entryOffset = 82 + (i * 105);
-              if (data.length < entryOffset + 105) break;
-              
-              const isUsed = data[entryOffset] === 1;
-              if (isUsed) {
-                const amountBytes = data.slice(entryOffset + 1, entryOffset + 9);
-                const amount = Number(amountBytes.readBigUInt64LE(0));
-                console.log(`  Deposit ${i}: amount=${amount}, used=${isUsed}`);
-              }
-            }
-          } catch (e) {
-            console.log(`Error parsing target voter struct: ${e.message}`);
-          }
-        }
-        
-        // Continue processing only if this is the requested wallet
-        if (authority !== wallet) {
-          continue;
-        }
-        
-        foundAccounts++;
-        console.log(`✅ Found VSR account: ${pubkey.toBase58()}`);
-        
-        // Method 1: Extract governance power from voter_weight at offset 72
-        if (data.length >= 80) {
-          try {
-            const voterWeightBytes = data.slice(72, 80);
-            const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
-            
-            if (voterWeight > 0) {
-              console.log(`Direct voter weight: ${voterWeight}`);
-              maxGovernancePower = Math.max(maxGovernancePower, voterWeight);
-            }
-          } catch (e) {
-            // Continue with other methods
-          }
-        }
-        
-        // Method 2: Scan for large values that could be governance power
-        for (let offset = 72; offset <= data.length - 8; offset += 8) {
-          try {
-            const value = Number(data.slice(offset, offset + 8).readBigUInt64LE(0));
-            // Look for values in reasonable governance power range (1M to 100B)
-            if (value >= 1000000 && value <= 100000000000) {
-              console.log(`Potential governance power at offset ${offset}: ${value}`);
-              maxGovernancePower = Math.max(maxGovernancePower, value);
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-        
-        // Method 3: Parse deposit entries manually
-        try {
-          const depositStartOffset = 74; // After registrar + authority + bumps
-          let totalDeposited = 0;
-          
-          for (let i = 0; i < 32; i++) {
-            const entryOffset = depositStartOffset + (i * 105);
-            
-            if (data.length < entryOffset + 105) break;
-            
-            const isUsed = data[entryOffset] === 1;
-            if (!isUsed) continue;
-            
-            const amountBytes = data.slice(entryOffset + 1, entryOffset + 9);
-            const amount = Number(amountBytes.readBigUInt64LE(0));
-            
-            if (amount > 0) {
-              totalDeposited += amount;
-            }
-          }
-          
-          if (totalDeposited > 0) {
-            console.log(`Total deposited amount: ${totalDeposited}`);
-            maxGovernancePower = Math.max(maxGovernancePower, totalDeposited);
-          }
-        } catch (e) {
-          // Continue without deposit parsing
-        }
-      } catch (err) {
-        continue;
-      }
-    }
-
-    console.log(`Found ${foundAccounts} VSR accounts for ${wallet}`);
-    console.log(`Final governance power: ${maxGovernancePower}`);
-
-    // If no VSR governance power found, try VSR registrar calculation
-    if (maxGovernancePower === 0) {
-      console.log("🔄 No VSR power found, trying SDK-style calculation");
-      const votingPower = await getLockTokensVotingPowerPerWallet({
-        connection,
-        walletAddress: new PublicKey(wallet),
-        registrar: ISLAND_DAO_REGISTRAR
-      });
-      
-      if (votingPower > 0) {
-        return res.json({
-          wallet,
-          nativeGovernancePower: votingPower,
-          delegatedPower: 0,
-          totalPower: votingPower,
-          source: "vsr_lockup"
-        });
-      }
-      
-      console.log("🔄 No VSR power found, falling back to Token Owner Record calculation");
-      const torData = await getTokenOwnerRecord(wallet);
-      
-      return res.json({
-        wallet,
-        nativeGovernancePower: torData.governingTokenDepositAmount,
-        delegatedPower: 0,
-        totalPower: torData.governingTokenDepositAmount,
-        governanceDelegate: torData.governanceDelegate,
-        source: "token_owner_record"
-      });
-    }
-
-    return res.json({
-      wallet,
-      nativeGovernancePower: maxGovernancePower,
-      delegatedPower: 0,
-      totalPower: maxGovernancePower,
-      source: "vsr_account"
+    return res.json(result);
+    
+  } catch (error) {
+    console.error("Canonical governance power error:", error.message);
+    return res.status(500).json({ 
+      error: "Failed to calculate governance power",
+      details: error.message 
     });
-  } catch (err) {
-    console.error("Governance power error:", err);
-    return res
-      .status(500)
-      .json({ error: err.message || "Failed to calculate governance power" });
   }
 });
 
