@@ -1,0 +1,47 @@
+Use the Mythic governance SDK already uploaded in ./governance-sdk-local.
+
+Goal:
+Use the canonical function getLockTokensVotingPowerPerWallet() to fetch accurate governance power from Voter Stake Registry for any wallet.
+
+Here’s what to do:
+
+1. Ensure you’re using:
+   - `programId = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ')`
+   - `registrar = new PublicKey('5sGLEKcJ35UGdbHtSWMtGbhLqRycQJSCaUAyEpnz6TA2')` // IslandDAO registrar
+
+2. Inside vsr-api-server.js (or equivalent API handler), replace any fake or broken VSR logic with:
+
+```ts
+import { getLockTokensVotingPowerPerWallet } from '../governance-sdk-local/src/voterStakeRegistry/getLockTokensVotingPowerPerWallet';
+import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
+import { Connection, PublicKey } from '@solana/web3.js';
+import vsrIdl from '../governance-sdk-local/src/idl/voter_stake_registry.json';
+
+const connection = new Connection(process.env.HELIUS_RPC_URL, 'confirmed');
+const wallet = new Wallet(Keypair.generate()); // dummy wallet for provider
+const provider = new AnchorProvider(connection, wallet, {});
+const program = new Program(vsrIdl, new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ'), provider);
+
+// In the handler
+const walletPublicKey = new PublicKey(req.query.wallet);
+const registrar = new PublicKey('5sGLEKcJ35UGdbHtSWMtGbhLqRycQJSCaUAyEpnz6TA2');
+
+const votingPower = await getLockTokensVotingPowerPerWallet(program, walletPublicKey, registrar);
+
+// Return this structure in the response
+res.json({
+  wallet: walletPublicKey.toBase58(),
+  nativeGovernancePower: votingPower.native,
+  delegatedGovernancePower: votingPower.delegated,
+  totalGovernancePower: votingPower.total,
+  source: 'vsr_sdk'
+});
+Confirm that the API works with known wallets like:
+
+7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA (Takisoul)
+
+4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4 (your wallet with ~12,625)
+
+Once verified, use this endpoint in the backend CRON job to update daily governance stats for each wallet in the citizens table.
+
+Make no approximations, no byte guesses, no fallback logic — this is the canonical way to calculate governance power.

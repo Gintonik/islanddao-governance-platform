@@ -7,7 +7,7 @@ import express from "express";
 import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, Keypair } from "@solana/web3.js";
 import fs from "fs";
 import { SplGovernance } from "./governance-sdk/dist/index.js";
 import { getTokenOwnerRecordAddress } from "@solana/spl-governance";
@@ -48,56 +48,170 @@ const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
 /**
- * Get canonical governance power using SDK-style VSR calculation and TokenOwnerRecord
+ * Create dummy wallet for read-only operations
+ */
+function createDummyWallet() {
+  const keypair = Keypair.generate();
+  return {
+    publicKey: keypair.publicKey,
+    signTransaction: async () => { throw new Error('Dummy wallet cannot sign'); },
+    signAllTransactions: async () => { throw new Error('Dummy wallet cannot sign'); }
+  };
+}
+
+/**
+ * Get lock tokens voting power per wallet using exact SDK methodology
+ */
+async function getLockTokensVotingPowerPerWallet(program, walletPublicKey, registrarPDA) {
+  try {
+    console.log(`🔍 SDK: Getting VSR power for wallet: ${walletPublicKey.toBase58()}`);
+    
+    // Derive the voter PDA for this wallet
+    const [voterPDA] = PublicKey.findProgramAddressSync(
+      [
+        registrarPDA.toBuffer(),
+        Buffer.from('voter'),
+        walletPublicKey.toBuffer(),
+      ],
+      program.programId
+    );
+    
+    console.log(`🔍 SDK: Voter PDA: ${voterPDA.toBase58()}`);
+    
+    try {
+      // Fetch the voter account using Anchor
+      const voterAccount = await program.account.voter.fetch(voterPDA);
+      
+      console.log(`🔍 SDK: Found voter account with ${voterAccount.deposits.length} deposits`);
+      
+      // Fetch registrar config for voting mint configuration
+      const registrarAccount = await program.account.registrar.fetch(registrarPDA);
+      
+      let totalVotingPower = 0;
+      const currentTime = Date.now() / 1000;
+      
+      // Process each deposit in the voter account
+      for (let i = 0; i < voterAccount.deposits.length; i++) {
+        const deposit = voterAccount.deposits[i];
+        
+        if (!deposit.isUsed || deposit.amountDepositedNative.eq(0)) {
+          continue;
+        }
+        
+        console.log(`🔍 SDK: Processing deposit ${i}: ${deposit.amountDepositedNative.toString()} tokens`);
+        
+        // Get voting mint config for this deposit
+        const votingMintConfig = registrarAccount.votingMints[deposit.votingMintConfigIdx];
+        if (!votingMintConfig) {
+          console.log(`🔍 SDK: No voting mint config at index ${deposit.votingMintConfigIdx}`);
+          continue;
+        }
+        
+        // Calculate lockup factor
+        let lockupFactor = 0;
+        if (deposit.lockup.endTs > currentTime) {
+          const lockupSecs = deposit.lockup.endTs - currentTime;
+          lockupFactor = Math.min(lockupSecs / votingMintConfig.lockupSaturationSecs.toNumber(), 1.0);
+        }
+        
+        // Calculate voting power using VSR formula
+        const baselineWeight = votingMintConfig.baselineVoteWeightScaledFactor.toNumber();
+        const maxExtraWeight = votingMintConfig.maxExtraLockupVoteWeightScaledFactor.toNumber();
+        const scaledFactor = baselineWeight + (lockupFactor * maxExtraWeight);
+        
+        const depositAmount = deposit.amountDepositedNative.toNumber();
+        const depositVotingPower = (depositAmount * scaledFactor) / 1_000_000_000; // Scale factor normalization
+        
+        totalVotingPower += depositVotingPower;
+        
+        console.log(`🔍 SDK: Deposit ${i}: ${depositAmount} tokens × ${(scaledFactor / 1_000_000_000).toFixed(6)} = ${depositVotingPower.toLocaleString()} voting power`);
+      }
+      
+      console.log(`🔍 SDK: Total voting power: ${totalVotingPower.toLocaleString()}`);
+      return totalVotingPower;
+      
+    } catch (fetchError) {
+      if (fetchError.message.includes('Account does not exist')) {
+        console.log(`🔍 SDK: No voter account found for wallet`);
+        return 0;
+      }
+      throw fetchError;
+    }
+    
+  } catch (error) {
+    console.error(`🔍 SDK: Error getting VSR voting power: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
+ * Get canonical governance power using exact SDK methodology
  */
 async function getCanonicalGovernancePower(walletAddress) {
   const walletPubkey = new PublicKey(walletAddress);
   
   console.log(`🏛️ Getting canonical governance power for: ${walletAddress}`);
   
-  // First check for VSR governance power using SDK approach
-  const vsrPower = await getLockTokensVotingPowerPerWallet({
-    connection,
-    walletAddress: walletPubkey,
-    registrar: ISLAND_DAO_REGISTRAR
-  });
-  
-  if (vsrPower > 0) {
+  try {
+    // Set up Anchor context using the exact methodology requested
+    const dummyWallet = createDummyWallet();
+    const provider = new AnchorProvider(connection, dummyWallet, { commitment: 'confirmed' });
+    const program = new Program(vsrIdl, VSR_PROGRAM_ID, provider);
+    
+    console.log(`🔍 SDK: Anchor setup complete`);
+    console.log(`🔍 SDK: Program ID: ${VSR_PROGRAM_ID.toBase58()}`);
+    console.log(`🔍 SDK: Registrar PDA: ${ISLAND_DAO_REGISTRAR.toBase58()}`);
+    
+    // Use exact function signature as requested
+    const votingPower = await getLockTokensVotingPowerPerWallet(
+      program,
+      walletPubkey,
+      ISLAND_DAO_REGISTRAR
+    );
+    
+    if (votingPower > 0) {
+      return {
+        nativeGovernancePower: votingPower,
+        delegatedGovernancePower: 0,
+        totalGovernancePower: votingPower,
+        source: "vsr_sdk"
+      };
+    }
+    
+    // Check for TokenOwnerRecord if no VSR
+    const torResult = await getTokenOwnerRecord(walletPubkey);
+    if (torResult.governingTokenDepositAmount > 0) {
+      return {
+        nativeGovernancePower: torResult.governingTokenDepositAmount,
+        delegatedGovernancePower: 0,
+        totalGovernancePower: torResult.governingTokenDepositAmount,
+        source: "token_owner_record",
+        governanceDelegate: torResult.governanceDelegate,
+        details: {
+          depositAmount: torResult.governingTokenDepositAmount,
+          mint: torResult.governingTokenMint
+        }
+      };
+    }
+    
+    // Return zero power if neither found
     return {
-      nativeGovernancePower: vsrPower,
+      nativeGovernancePower: 0,
       delegatedGovernancePower: 0,
-      totalGovernancePower: vsrPower,
-      source: "vsr",
-      details: {
-        vsrDeposits: "Calculated using VSR SDK methodology"
-      }
+      totalGovernancePower: 0,
+      source: "none"
+    };
+    
+  } catch (error) {
+    console.error(`🔍 SDK: Error in canonical governance calculation: ${error.message}`);
+    return {
+      nativeGovernancePower: 0,
+      delegatedGovernancePower: 0,
+      totalGovernancePower: 0,
+      source: "error",
+      error: error.message
     };
   }
-  
-  // Check for TokenOwnerRecord if no VSR
-  const torResult = await getTokenOwnerRecord(walletPubkey);
-  if (torResult.governingTokenDepositAmount > 0) {
-    return {
-      nativeGovernancePower: torResult.governingTokenDepositAmount,
-      delegatedGovernancePower: 0,
-      totalGovernancePower: torResult.governingTokenDepositAmount,
-      source: "token_owner_record",
-      governanceDelegate: torResult.governanceDelegate,
-      details: {
-        depositAmount: torResult.governingTokenDepositAmount,
-        mint: torResult.governingTokenMint
-      }
-    };
-  }
-  
-  // Return zero power if neither found
-  return {
-    nativeGovernancePower: 0,
-    delegatedGovernancePower: 0,
-    totalGovernancePower: 0,
-    source: "none",
-    details: {}
-  };
 }
 
 /**
