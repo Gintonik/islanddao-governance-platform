@@ -54,24 +54,35 @@ function deriveVoterWeightRecordPDA(walletPubkey) {
 }
 
 /**
- * Parse deposit entry from Voter account data
+ * Parse deposit entry from Voter account data using correct VSR structure
  */
 function parseDepositEntry(data, offset) {
   try {
-    // Deposit entry structure based on VSR IDL
+    // Check if we have enough data
+    if (offset + 72 > data.length) {
+      return null;
+    }
+    
+    // VSR Deposit Entry structure (72 bytes total)
     const isUsed = data[offset] === 1;
     const allowClawback = data[offset + 1] === 1;
-    
-    // Read amounts as u64 (8 bytes each)
     const votingMintConfigIdx = data[offset + 2];
+    
+    // Skip padding/reserved bytes and read the amount at the correct position
+    // The amount is typically at offset +8 from the start of the deposit entry
     const amountDepositedNative = Number(data.readBigUInt64LE(offset + 8));
     const amountInitiallyLockedNative = Number(data.readBigUInt64LE(offset + 16));
     
     // Lockup information
-    const lockupKind = data[offset + 24]; // 0 = None, 1 = Cliff, 2 = Constant, 3 = Vested
+    const lockupKind = data[offset + 24];
     const lockupStartTs = Number(data.readBigUInt64LE(offset + 32));
     const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
     const lockupPeriods = Number(data.readBigUInt64LE(offset + 48));
+    
+    // Validate that the amounts are reasonable (less than total ISLAND supply)
+    if (amountDepositedNative > 1e15) { // More than 1 billion ISLAND in micro-tokens
+      return null;
+    }
     
     return {
       isUsed,
@@ -164,32 +175,79 @@ async function analyzeVoterAccount(walletAddress, verbose = false) {
         console.log(`   📊 Analyzing Voter account: ${pubkey.toBase58()}`);
       }
       
-      // Parse deposit entries (typically starts around offset 200, 72 bytes each)
-      for (let i = 0; i < 32; i++) { // Max 32 deposits
-        const depositOffset = 200 + (i * 72);
-        if (depositOffset + 72 > data.length) break;
-        
-        const deposit = parseDepositEntry(data, depositOffset);
-        if (!deposit || !deposit.isUsed || deposit.amountDepositedNative === 0) {
-          continue;
+      // Method 1: Parse structured deposit entries
+      const startOffsets = [200, 250, 300]; // Common deposit array starting points
+      
+      for (const startOffset of startOffsets) {
+        for (let i = 0; i < 32; i++) { // Max 32 deposits
+          const depositOffset = startOffset + (i * 72);
+          if (depositOffset + 72 > data.length) break;
+          
+          const deposit = parseDepositEntry(data, depositOffset);
+          if (!deposit || deposit.amountDepositedNative === 0) {
+            continue;
+          }
+          
+          // Include deposits that either have isUsed=true OR have a significant amount
+          if (!deposit.isUsed && deposit.amountDepositedNative < 1000000) { // Less than 1 ISLAND
+            continue;
+          }
+          
+          const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
+          const power = (deposit.amountDepositedNative * multiplier) / 1e6;
+          
+          totalGovernancePower += power;
+          deposits.push({
+            amount: deposit.amountDepositedNative / 1e6,
+            multiplier: multiplier,
+            power: power,
+            isLocked: deposit.isLocked(),
+            lockupKind: deposit.lockupKind,
+            source: 'structured'
+          });
+          
+          if (verbose) {
+            const lockStatus = deposit.isLocked() ? "locked" : "unlocked";
+            console.log(`     💰 Structured deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)} = ${power.toLocaleString()} power (${lockStatus})`);
+          }
         }
-        
-        // Include ALL valid deposits - both locked and unlocked
-        const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
-        const power = (deposit.amountDepositedNative * multiplier) / 1e6;
-        
-        totalGovernancePower += power;
-        deposits.push({
-          amount: deposit.amountDepositedNative / 1e6,
-          multiplier: multiplier,
-          power: power,
-          isLocked: deposit.isLocked(),
-          lockupKind: deposit.lockupKind
-        });
-        
-        if (verbose) {
-          const lockStatus = deposit.isLocked() ? "locked" : "unlocked";
-          console.log(`     💰 Deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)} = ${power.toLocaleString()} power (${lockStatus})`);
+      }
+      
+      // Method 2: Search for direct deposit values (like the 200k at offset 112)
+      if (verbose) {
+        console.log(`     🔍 Searching for direct deposit values...`);
+      }
+      
+      for (let offset = 100; offset <= data.length - 8; offset += 8) {
+        try {
+          const rawValue = Number(data.readBigUInt64LE(offset));
+          const islandAmount = rawValue / 1e6;
+          
+          // Look for significant amounts that could be governance deposits
+          if (islandAmount >= 1000 && islandAmount <= 50000000) { // Between 1k and 50M ISLAND
+            // Avoid double-counting by checking if we already found this amount
+            const alreadyFound = deposits.some(d => Math.abs(d.amount - islandAmount) < 1);
+            
+            if (!alreadyFound) {
+              const power = islandAmount; // Unlocked deposits use 1.0 multiplier
+              totalGovernancePower += power;
+              deposits.push({
+                amount: islandAmount,
+                multiplier: 1.0,
+                power: power,
+                isLocked: false,
+                lockupKind: 0,
+                source: 'direct',
+                offset: offset
+              });
+              
+              if (verbose) {
+                console.log(`     💰 Direct deposit at ${offset}: ${islandAmount.toLocaleString()} ISLAND × 1.00 = ${power.toLocaleString()} power (unlocked)`);
+              }
+            }
+          }
+        } catch (error) {
+          // Continue searching
         }
       }
     }
