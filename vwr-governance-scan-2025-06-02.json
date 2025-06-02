@@ -1,10 +1,10 @@
 {
-  "scanDate": "2025-06-02T22:53:34.763Z",
+  "scanDate": "2025-06-02T22:54:57.580Z",
   "summary": {
     "totalWallets": 20,
-    "walletsWithPower": 12,
-    "totalGovernancePower": 26104660.530975003,
-    "averagePowerPerActiveWallet": 2175388.3775812504
+    "walletsWithPower": 14,
+    "totalGovernancePower": 26459944.310782004,
+    "averagePowerPerActiveWallet": 1889996.0221987145
   },
   "configuration": {
     "vsrProgram": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
@@ -132,6 +132,68 @@
       ]
     },
     {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "governancePower": 204294.967342,
+      "source": "Voter fallback",
+      "voterWeight": 204294967342,
+      "fallbackUsed": true,
+      "totalDeposits": 2,
+      "totalPowerFromVoter": 204294.967342,
+      "unlockedIncluded": true,
+      "deposits": [
+        {
+          "amount": 200000,
+          "multiplier": 1,
+          "power": 200000,
+          "isLocked": false,
+          "lockupKind": 0,
+          "source": "direct",
+          "offset": 112
+        },
+        {
+          "amount": 4294.967342,
+          "multiplier": 1,
+          "power": 4294.967342,
+          "isLocked": false,
+          "lockupKind": 0,
+          "source": "direct",
+          "offset": 116
+        }
+      ],
+      "voterAccountCount": 1
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "governancePower": 150988.81246500002,
+      "source": "Voter fallback",
+      "voterWeight": 150988812465,
+      "fallbackUsed": true,
+      "totalDeposits": 2,
+      "totalPowerFromVoter": 150988.81246500002,
+      "unlockedIncluded": true,
+      "deposits": [
+        {
+          "amount": 146693.845135,
+          "multiplier": 1,
+          "power": 146693.845135,
+          "isLocked": false,
+          "lockupKind": 0,
+          "source": "direct",
+          "offset": 112
+        },
+        {
+          "amount": 4294.96733,
+          "multiplier": 1,
+          "power": 4294.96733,
+          "isLocked": false,
+          "lockupKind": 0,
+          "source": "direct",
+          "offset": 116
+        }
+      ],
+      "voterAccountCount": 1
+    },
+    {
       "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
       "governancePower": 143918.195927,
       "source": "176-byte VWR account",
@@ -216,13 +278,6 @@
       "fallbackUsed": false
     },
     {
-      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
       "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
       "governancePower": 0,
       "source": "No match",
@@ -245,13 +300,6 @@
     },
     {
       "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
-      "governancePower": 0,
-      "source": "No match",
-      "voterWeight": 0,
-      "fallbackUsed": false
-    },
-    {
-      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
       "governancePower": 0,
       "source": "No match",
       "voterWeight": 0,

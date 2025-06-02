@@ -218,7 +218,18 @@ async function analyzeVoterAccount(walletAddress, verbose = false) {
         console.log(`     🔍 Searching for direct deposit values...`);
       }
       
+      // Check known deposit locations first, then scan systematically
+      const knownOffsets = [112, 116, 120]; // Known good offsets
+      const allOffsets = [...knownOffsets];
+      
+      // Add systematic scan
       for (let offset = 100; offset <= data.length - 8; offset += 8) {
+        if (!allOffsets.includes(offset)) {
+          allOffsets.push(offset);
+        }
+      }
+      
+      for (const offset of allOffsets) {
         try {
           const rawValue = Number(data.readBigUInt64LE(offset));
           const islandAmount = rawValue / 1e6;
