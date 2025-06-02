@@ -163,6 +163,54 @@ function calculateVotingPowerFromVoter(voterAccountData, accountPubkey) {
 }
 
 /**
+ * Custom implementation of getLockTokensVotingPowerPerWallet functionality
+ */
+async function getLockTokensVotingPowerPerWallet({ connection, walletAddress, registrar }) {
+  try {
+    console.log(`📊 Getting lock tokens voting power for: ${walletAddress.toBase58()}`);
+    console.log(`Using registrar: ${registrar.toBase58()}`);
+    
+    // Derive Voter PDA using the registrar
+    const [voterPDA] = PublicKey.findProgramAddressSync(
+      [
+        registrar.toBuffer(),
+        Buffer.from("voter"),
+        walletAddress.toBuffer(),
+      ],
+      VSR_PROGRAM_ID
+    );
+    
+    console.log(`Voter PDA: ${voterPDA.toBase58()}`);
+    
+    // Fetch the Voter account
+    const accountInfo = await connection.getAccountInfo(voterPDA);
+    
+    if (accountInfo && accountInfo.data) {
+      console.log(`Found Voter account, data length: ${accountInfo.data.length}`);
+      
+      // Parse Voter account structure to get voter_weight
+      const data = accountInfo.data;
+      let offset = 8 + 32 + 32 + 1 + 1; // Skip discriminator + registrar + authority + bumps
+      
+      // Read voter_weight (8 bytes)
+      if (data.length >= offset + 8) {
+        const voterWeightBytes = data.slice(offset, offset + 8);
+        const voterWeight = Number(voterWeightBytes.readBigUInt64LE(0));
+        console.log(`Lock tokens voting power: ${voterWeight}`);
+        return voterWeight;
+      }
+    }
+    
+    console.log(`No Voter account found or insufficient data`);
+    return 0;
+    
+  } catch (error) {
+    console.error(`Error getting lock tokens voting power: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
  * Calculate VSR governance power using IslandDAO registrar
  */
 async function calculateVSRGovernancePower(walletAddress) {
@@ -395,16 +443,20 @@ app.get("/api/governance-power", async (req, res) => {
       if (voterAccounts.length === 0) {
         console.log("❌ No Voter accounts found using targeted search");
         
-        // Try VSR governance power calculation
-        console.log("🔄 Trying VSR governance power calculation");
-        const vsrPower = await calculateVSRGovernancePower(wallet);
+        // Try VSR SDK-style governance power calculation
+        console.log("🔄 Trying VSR SDK-style governance power calculation");
+        const votingPower = await getLockTokensVotingPowerPerWallet({
+          connection,
+          walletAddress: new PublicKey(wallet),
+          registrar: ISLAND_DAO_REGISTRAR
+        });
         
-        if (vsrPower > 0) {
+        if (votingPower > 0) {
           return res.json({
             wallet,
-            nativePower: vsrPower,
+            nativePower: votingPower,
             delegatedPower: 0,
-            totalPower: vsrPower,
+            totalPower: votingPower,
           });
         }
         
@@ -576,15 +628,19 @@ app.get("/api/governance-power", async (req, res) => {
 
     // If no VSR governance power found, try VSR registrar calculation
     if (maxGovernancePower === 0) {
-      console.log("🔄 No VSR power found, trying VSR registrar calculation");
-      const vsrPower = await calculateVSRGovernancePower(wallet);
+      console.log("🔄 No VSR power found, trying SDK-style calculation");
+      const votingPower = await getLockTokensVotingPowerPerWallet({
+        connection,
+        walletAddress: new PublicKey(wallet),
+        registrar: ISLAND_DAO_REGISTRAR
+      });
       
-      if (vsrPower > 0) {
+      if (votingPower > 0) {
         return res.json({
           wallet,
-          nativePower: vsrPower,
+          nativePower: votingPower,
           delegatedPower: 0,
-          totalPower: vsrPower,
+          totalPower: votingPower,
         });
       }
       
