@@ -549,63 +549,66 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         
         // DELEGATION DETECTION: voterAuthority === targetWallet AND authority !== targetWallet
         if (voterAuthority === walletAddress && authority !== walletAddress) {
-          // Parse ALL deposit entries from this delegating Voter account
-          const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+          // Parse deposit entries directly from VSR account structure using canonical Anchor deserialization
+          let foundDelegatedDeposits = false;
           
-          if (deposits && deposits.length > 0) {
-            for (const deposit of deposits) {
-              if (deposit.isUsed && deposit.amountDepositedNative > 0) {
-                // Only count active/locked deposits for delegation
-                const isActiveLockup = deposit.lockupEndTs > timestamp;
-                const multiplier = calculateAuthenticLockupMultiplier(deposit, timestamp);
-                const adjustedPower = deposit.amountDepositedNative * multiplier;
+          // Scan for deposit entries using same structure as native power detection
+          const depositOffsets = [];
+          for (let i = 0; i < 32; i++) {
+            // VSR deposits start at offset 104 + (87 * i) based on Anchor structure
+            depositOffsets.push(104 + (87 * i));
+          }
+          
+          for (const offset of depositOffsets) {
+            if (offset + 48 <= data.length) {
+              try {
+                // Read deposit entry fields using canonical Anchor layout
+                const isUsed = data[offset] === 1;
+                const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+                const lockupKind = data[offset + 24];
+                const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
                 
-                if (adjustedPower > 0) {
-                  delegatedGovernancePower += adjustedPower;
-                  delegators.push(authority);
+                if (isUsed && rawAmount > 0) {
+                  const islandAmount = rawAmount / 1e6;
                   
-                  delegatedSources.push({
-                    account: pubkey.toBase58(),
-                    power: adjustedPower,
-                    baseAmount: deposit.amountDepositedNative,
-                    multiplier: multiplier,
-                    type: 'Voter-delegated',
-                    authority: authority,
-                    voterAuthority: voterAuthority,
-                    lockupActive: isActiveLockup,
-                    estimated: false
-                  });
-                  
-                  if (verbose) {
-                    const status = isActiveLockup ? 'ACTIVE' : 'EXPIRED';
-                    console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+                  if (islandAmount >= 100 && islandAmount <= 50000000) {
+                    // Calculate voting power multiplier for all deposits (locked and unlocked)
+                    const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
+                    const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+                    const adjustedPower = islandAmount * multiplier;
+                    
+                    if (adjustedPower > 0) {
+                      delegatedGovernancePower += adjustedPower;
+                      delegators.push(authority);
+                      foundDelegatedDeposits = true;
+                      
+                      delegatedSources.push({
+                        account: pubkey.toBase58(),
+                        power: adjustedPower,
+                        baseAmount: islandAmount,
+                        multiplier: multiplier,
+                        type: 'Voter-delegated',
+                        authority: authority,
+                        voterAuthority: voterAuthority,
+                        lockupActive: isActiveLockup,
+                        estimated: false
+                      });
+                      
+                      if (verbose) {
+                        const status = isActiveLockup ? 'ACTIVE' : 'EXPIRED';
+                        console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${islandAmount.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+                      }
+                    }
                   }
                 }
+              } catch (error) {
+                continue;
               }
             }
-          } else {
-            // Fallback: Use account analysis for delegation if deposits not parsed
-            const delegatingAccountResult = await analyzeVoterAccount(authority, false);
-            if (delegatingAccountResult && delegatingAccountResult.totalGovernancePower > 0) {
-              delegatedGovernancePower += delegatingAccountResult.totalGovernancePower;
-              delegators.push(authority);
-              
-              delegatedSources.push({
-                account: pubkey.toBase58(),
-                power: delegatingAccountResult.totalGovernancePower,
-                baseAmount: delegatingAccountResult.totalGovernancePower,
-                multiplier: 1.0,
-                type: 'Voter-delegated-fallback',
-                authority: authority,
-                voterAuthority: voterAuthority,
-                lockupActive: false,
-                estimated: false
-              });
-              
-              if (verbose) {
-                console.log(`     📨 Delegated (fallback) from ${authority.substring(0,8)}: ${delegatingAccountResult.totalGovernancePower.toFixed(3)} ISLAND`);
-              }
-            }
+          }
+          
+          if (verbose && foundDelegatedDeposits) {
+            console.log(`     🔗 Found delegation from ${authority.substring(0,8)} with valid locked deposits`);
           }
         }
       }
@@ -641,7 +644,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   // Debug logs for every wallet
   console.log(`🏛️ VWR Total: ${hasVWR ? vwrTotal.toFixed(3) : 'N/A'}`);
   console.log(`🟢 Native from Deposits: ${nativeGovernancePower.toFixed(3)}`);
-  console.log(`🟡 Delegated from Voter Accounts: ${delegatedGovernancePower.toFixed(3)}`);
+  console.log(`🟡 Delegated from Others: ${delegatedGovernancePower.toFixed(3)}`);
   
   if (hasVWR && vwrTotal > 0) {
     // Check if calculated deposits match VWR total within tolerance
