@@ -408,41 +408,44 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     }
   }
   
-  // Step 2: Calculate native power - deposits where wallet is authority
+  // STRICT SEPARATION: Native vs Delegated Power
+  // ============================================
+  
+  // NATIVE POWER: Calculate deposits where this wallet is the authority (owns the deposits)
   for (const { pubkey, account } of allVoterAccounts) {
     const data = account.data;
     const authorities = parseVoterAuthorities(data);
     
-    if (!authorities) continue;
+    if (!authorities || authorities.authority !== walletAddress) continue;
     
     const { authority, voterAuthority } = authorities;
     
-    // NATIVE POWER: Only count deposits where this wallet is the authority (owns the deposits)
-    if (authority === walletAddress) {
-      // Analyze deposits in this Voter account
-      const voterAnalysis = await analyzeVoterAccountDeposits(data, verbose);
-      
-      if (voterAnalysis && voterAnalysis.totalPower > 0) {
-        nativeGovernancePower += voterAnalysis.totalPower;
+    // Parse deposits with full lockup validation and multiplier application
+    const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+    
+    if (deposits && deposits.length > 0) {
+      for (const deposit of deposits) {
+        nativeGovernancePower += deposit.adjustedPower;
         nativeSources.push({
           account: pubkey.toBase58(),
-          power: voterAnalysis.totalPower,
+          power: deposit.adjustedPower,
+          baseAmount: deposit.amount,
+          multiplier: deposit.multiplier,
           type: 'Voter-native',
           authority: authority,
           voterAuthority: voterAuthority,
-          isDelegated: voterAuthority !== authority
+          lockupActive: deposit.isActive
         });
         
         if (verbose) {
-          const delegationNote = voterAuthority !== authority ? 
-            ` (voting power delegated to ${voterAuthority.substring(0,8)}...)` : '';
-          console.log(`     ✅ Native deposits: ${voterAnalysis.totalPower.toLocaleString()} ISLAND owned by wallet${delegationNote}`);
+          const status = deposit.isActive ? 'ACTIVE' : 'EXPIRED';
+          console.log(`     ✅ Native: ${deposit.amount.toLocaleString()} × ${deposit.multiplier.toFixed(2)}x = ${deposit.adjustedPower.toLocaleString()} ISLAND (${status})`);
         }
       }
     }
   }
   
-  // Step 3: Calculate delegated power - deposits where other wallets delegate to this wallet
+  // DELEGATED POWER: Calculate deposits where other wallets delegate voting power to this wallet
   for (const { pubkey, account } of allVoterAccounts) {
     const data = account.data;
     const authorities = parseVoterAuthorities(data);
@@ -451,30 +454,77 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     
     const { authority, voterAuthority } = authorities;
     
-    // DELEGATED POWER: Count deposits where this wallet receives voting power from others
+    // Only process delegations: voterAuthority === target wallet AND authority !== target wallet
     if (voterAuthority === walletAddress && authority !== walletAddress) {
-      // Analyze deposits in this delegation account
-      const voterAnalysis = await analyzeVoterAccountDeposits(data, false);
+      // Use VWR approach for delegated power calculation
+      const vwrAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+        filters: [
+          { dataSize: 176 },
+          { memcmp: { offset: 72, bytes: authority } } // Find VWR for the delegating authority
+        ]
+      });
       
-      if (voterAnalysis && voterAnalysis.totalPower > 0) {
-        delegatedGovernancePower += voterAnalysis.totalPower;
-        delegatedSources.push({
-          account: pubkey.toBase58(),
-          power: voterAnalysis.totalPower,
-          type: 'Voter-delegated',
-          authority: authority,
-          voterAuthority: voterAuthority
-        });
+      for (const { account: vwrAccount } of vwrAccounts) {
+        const vwrPowerRaw = Number(vwrAccount.data.readBigUInt64LE(104));
+        const vwrPower = vwrPowerRaw / 1e6;
         
-        if (verbose) {
-          console.log(`     📨 Delegated deposits: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${authority.substring(0,8)}...`);
+        if (vwrPower > 0) {
+          delegatedGovernancePower += vwrPower;
+          delegatedSources.push({
+            account: pubkey.toBase58(),
+            power: vwrPower,
+            type: 'VWR-delegated',
+            authority: authority,
+            voterAuthority: voterAuthority,
+            vwrBased: true
+          });
+          
+          if (verbose) {
+            console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${vwrPower.toLocaleString()} ISLAND (VWR-based)`);
+          }
+          break; // Only count once per delegation relationship
         }
       }
     }
   }
   
-  // Step 4: Calculate total governance power (native + delegated)
-  totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+  // VWR RECONCILIATION: Use authoritative VWR totals with intelligent native/delegated separation
+  if (hasVWR && totalGovernancePower > 0) {
+    // VWR provides the authoritative total governance power
+    const vwrTotal = totalGovernancePower;
+    
+    if (nativeGovernancePower > 0 && delegatedGovernancePower === 0) {
+      // Case: Wallet has native deposits but no detected delegations
+      // Use VWR total as native power (includes authentic multipliers)
+      nativeGovernancePower = vwrTotal;
+      delegatedGovernancePower = 0;
+      
+      if (verbose) {
+        console.log(`     ✅ VWR-based native power: ${vwrTotal.toLocaleString()} ISLAND (includes authentic multipliers)`);
+      }
+    } else if (nativeGovernancePower === 0 && delegatedGovernancePower > 0) {
+      // Case: Wallet has only delegated power
+      nativeGovernancePower = 0;
+      delegatedGovernancePower = vwrTotal;
+      
+      if (verbose) {
+        console.log(`     📨 VWR-based delegated power: ${vwrTotal.toLocaleString()} ISLAND`);
+      }
+    } else if (nativeGovernancePower > 0 && delegatedGovernancePower > 0) {
+      // Case: Wallet has both native and delegated power
+      // Keep calculated native, adjust delegated to match VWR total
+      delegatedGovernancePower = Math.max(0, vwrTotal - nativeGovernancePower);
+      
+      if (verbose) {
+        console.log(`     ⚖️  Mixed power: ${nativeGovernancePower.toLocaleString()} native + ${delegatedGovernancePower.toLocaleString()} delegated = ${vwrTotal.toLocaleString()} total`);
+      }
+    }
+    
+    totalGovernancePower = vwrTotal;
+  } else {
+    // No VWR: Use calculated native + delegated
+    totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+  }
   
   // Step 4: Fallback for wallets with no power detected
   if (totalGovernancePower === 0) {
@@ -535,11 +585,10 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
 
 
 /**
- * Analyze deposits in a Voter account with proper lockup multipliers
- * Uses structured VSR deposit parsing with authentic multiplier calculations
+ * Parse Voter account deposits with authentic VSR lockup multipliers
+ * Implements proper Anchor-compatible deposit structure parsing
  */
-async function analyzeVoterAccountDeposits(data, verbose = false) {
-  let totalPower = 0;
+async function parseVoterAccountDepositsWithMultipliers(data, verbose = false) {
   const deposits = [];
   const currentTimestamp = Math.floor(Date.now() / 1000);
   
@@ -556,38 +605,34 @@ async function analyzeVoterAccountDeposits(data, verbose = false) {
     const deposit = parseDepositEntry(data, offset);
     
     if (deposit && deposit.isUsed && deposit.amountDepositedNative > 0) {
-      // Calculate multiplier based on lockup configuration
-      const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
+      // Apply authentic VSR lockup multiplier logic
+      const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
+      const adjustedPower = (deposit.amountDepositedNative * multiplier) / 1e6;
       
-      // Only include active lockups (not expired) with valid amounts
-      if (multiplier > 0) {
-        const power = (deposit.amountDepositedNative * multiplier) / 1e6;
+      // Include all valid deposits with their authentic multipliers
+      if (adjustedPower > 0) {
+        deposits.push({
+          amount: deposit.amountDepositedNative / 1e6,
+          multiplier: multiplier,
+          adjustedPower: adjustedPower,
+          lockupEndTs: deposit.lockupEndTs,
+          lockupStartTs: deposit.lockupStartTs,
+          lockupKind: deposit.lockupKind,
+          isActive: currentTimestamp < deposit.lockupEndTs,
+          depositIndex: i
+        });
         
-        if (power > 0) {
-          totalPower += power;
-          deposits.push({
-            amount: deposit.amountDepositedNative / 1e6,
-            multiplier: multiplier,
-            power: power,
-            lockupEndTs: deposit.lockupEndTs,
-            lockupStartTs: deposit.lockupStartTs,
-            lockupKind: deposit.lockupKind,
-            isActive: currentTimestamp < deposit.lockupEndTs,
-            depositIndex: i
-          });
-          
-          if (verbose) {
-            const lockupStatus = currentTimestamp < deposit.lockupEndTs ? 'ACTIVE' : 'EXPIRED';
-            const endDate = new Date(deposit.lockupEndTs * 1000).toISOString().split('T')[0];
-            console.log(`       Deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)}x = ${power.toLocaleString()} (${lockupStatus} until ${endDate})`);
-          }
+        if (verbose) {
+          const lockupStatus = currentTimestamp < deposit.lockupEndTs ? 'ACTIVE' : 'EXPIRED';
+          const endDate = new Date(deposit.lockupEndTs * 1000).toISOString().split('T')[0];
+          console.log(`       Deposit ${i}: ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)}x = ${adjustedPower.toLocaleString()} (${lockupStatus} until ${endDate})`);
         }
       }
     }
   }
   
-  // Fallback: If no structured deposits found, try simple value extraction
-  if (totalPower === 0) {
+  // Fallback: Use simple deposit values if no structured deposits found
+  if (deposits.length === 0) {
     const fallbackOffsets = [112, 144, 176, 208, 240];
     
     for (const offset of fallbackOffsets) {
@@ -596,20 +641,19 @@ async function analyzeVoterAccountDeposits(data, verbose = false) {
         const islandAmount = rawValue / 1e6;
         
         if (islandAmount >= 1000 && islandAmount <= 50000000 && rawValue !== 4294967296) {
-          // For fallback, assume unlocked deposits (1.0x multiplier)
-          totalPower += islandAmount;
-          
+          // Use base amount without synthetic multipliers - let VWR reconciliation handle totals
           deposits.push({
             amount: islandAmount,
             multiplier: 1.0,
-            power: islandAmount,
+            adjustedPower: islandAmount,
             lockupEndTs: 0,
             isActive: false,
-            fallbackOffset: offset
+            fallbackOffset: offset,
+            fallback: true
           });
           
           if (verbose) {
-            console.log(`       Fallback (@${offset}): ${islandAmount.toLocaleString()} ISLAND × 1.0x = ${islandAmount.toLocaleString()} (unlocked)`);
+            console.log(`       Fallback (@${offset}): ${islandAmount.toLocaleString()} ISLAND × 1.0x = ${islandAmount.toLocaleString()} (base amount)`);
           }
           break; // Only take first valid fallback deposit
         }
@@ -619,10 +663,41 @@ async function analyzeVoterAccountDeposits(data, verbose = false) {
     }
   }
   
-  return totalPower > 0 ? {
-    totalPower: totalPower,
-    deposits: deposits
-  } : null;
+  return deposits;
+}
+
+/**
+ * Calculate authentic VSR lockup multiplier using IslandDAO configuration
+ */
+function calculateAuthenticLockupMultiplier(deposit, currentTimestamp) {
+  if (!deposit.isUsed || deposit.amountDepositedNative === 0) {
+    return 0;
+  }
+  
+  // Handle invalid timestamp data (common in VSR accounts)
+  if (deposit.lockupEndTs === 0 || deposit.lockupStartTs === 0) {
+    // For deposits with invalid timestamps, use lockupKind to estimate multiplier
+    if (deposit.lockupKind > 1000000) {
+      // Likely encoded differently - assume maximum lockup
+      return 5.0;
+    }
+    return 1.0; // Conservative fallback
+  }
+  
+  // Standard VSR multiplier calculation
+  if (currentTimestamp >= deposit.lockupEndTs) {
+    return 1.0; // Expired lockups have base multiplier
+  }
+  
+  const remainingSeconds = deposit.lockupEndTs - currentTimestamp;
+  const remainingYears = remainingSeconds / (365.25 * 24 * 60 * 60);
+  
+  // IslandDAO VSR configuration: 1x to 5x over 4 years
+  if (remainingYears <= 0) return 1.0;
+  if (remainingYears >= 4) return 5.0;
+  
+  // Linear interpolation between 1x and 5x
+  return 1.0 + (remainingYears / 4.0) * 4.0;
 }
 
 /**
