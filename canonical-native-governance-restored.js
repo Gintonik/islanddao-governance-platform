@@ -351,7 +351,7 @@ async function validateRestoredResults() {
     },
     {
       name: 'GJdRQcsy',
-      wallet: 'GJdRQcsyWZ4vDSxmbC5JrJQfCDdq7QfSMZH4zK8LRZue',
+      wallet: 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh',
       expected: 144708.98
     }
   ];
