@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-06-03T18:55:34.619Z",
+  "scannerVersion": "validated-citizen-discovery",
+  "totalCitizens": 20,
+  "validatedCitizens": 3,
+  "maxReasonableIsland": 50000000,
+  "minCitizenPower": 1,
+  "discoveryMethods": [
+    "known_alias"
+  ],
+  "methodBreakdown": {
+    "known_alias": 3
+  },
+  "results": [
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "name": "7pPJt2xo",
+      "nativePower": 15127221.398542449,
+      "matchedAccounts": 1,
+      "totalDeposits": 7,
+      "authorities": [
+        "QxTebcJ4ouDLJvWoGBvdw3Au6Bjd9TTRx7nMuTkVgvH"
+      ],
+      "discoveryMethods": [
+        "known_alias"
+      ],
+      "topDeposits": [
+        {
+          "amount": 3682784.632186,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "lockupEndTs": 0
+        },
+        {
+          "amount": 3682784.632186,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "lockupEndTs": 0
+        },
+        {
+          "amount": 2000000,
+          "multiplier": 1.1087046175118584,
+          "votingPower": 2217409.235023717,
+          "lockupEndTs": 1752407321
+        },
+        {
+          "amount": 2000000,
+          "multiplier": 1.1087046175118584,
+          "votingPower": 2217409.235023717,
+          "lockupEndTs": 1752407321
+        },
+        {
+          "amount": 1500000,
+          "multiplier": 1.1087046175118584,
+          "votingPower": 1663056.9262677876,
+          "lockupEndTs": 1752407321
+        }
+      ]
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "name": "GJdRQcsy",
+      "nativePower": 194536.95393256925,
+      "matchedAccounts": 1,
+      "totalDeposits": 7,
+      "authorities": [
+        "GQkBRZffdsKwx4GTNR96c6v6aM59DfqyHjwzArobDoT3"
+      ],
+      "discoveryMethods": [
+        "known_alias"
+      ],
+      "topDeposits": [
+        {
+          "amount": 37626.982836,
+          "multiplier": 1.3352244347616358,
+          "votingPower": 50240.46688898387,
+          "lockupEndTs": 1759555596
+        },
+        {
+          "amount": 37626.982836,
+          "multiplier": 1.3352244347299418,
+          "votingPower": 50240.46688779133,
+          "lockupEndTs": 1759555596
+        },
+        {
+          "amount": 25738.998886,
+          "multiplier": 1.2236620759824937,
+          "votingPower": 31495.836810553854,
+          "lockupEndTs": 1756035028
+        },
+        {
+          "amount": 25738.998886,
+          "multiplier": 1.2236620759824937,
+          "votingPower": 31495.836810553854,
+          "lockupEndTs": 1756035028
+        },
+        {
+          "amount": 10000,
+          "multiplier": 1.3352244347616358,
+          "votingPower": 13352.244347616357,
+          "lockupEndTs": 1759555596
+        }
+      ]
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "name": "4pT6ESaM",
+      "nativePower": 25251.161862,
+      "matchedAccounts": 1,
+      "totalDeposits": 2,
+      "authorities": [
+        "9ZXrSQWB1YqA5wezKBpsR3HDcYjhs9GeDz8YqNA4WvuB"
+      ],
+      "discoveryMethods": [
+        "known_alias"
+      ],
+      "topDeposits": [
+        {
+          "amount": 12625.580931,
+          "multiplier": 1,
+          "votingPower": 12625.580931,
+          "lockupEndTs": 0
+        },
+        {
+          "amount": 12625.580931,
+          "multiplier": 1,
+          "votingPower": 12625.580931,
+          "lockupEndTs": 0
+        }
+      ]
+    }
+  ]
+}

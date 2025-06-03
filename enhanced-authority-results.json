@@ -1,0 +1,54 @@
+{
+  "timestamp": "2025-06-03T18:53:26.918Z",
+  "scannerVersion": "enhanced-authority-scanner",
+  "totalCitizens": 20,
+  "citizensWithPower": 3,
+  "discoveryStrategies": [
+    "direct",
+    "known_alias",
+    "reverse_alias",
+    "cross_alias",
+    "pattern_match"
+  ],
+  "results": [
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "name": "7pPJt2xo",
+      "nativePower": 15127249.727454294,
+      "matchedAccounts": 1,
+      "totalDeposits": 7,
+      "authorities": [
+        "QxTebcJ4ouDLJvWoGBvdw3Au6Bjd9TTRx7nMuTkVgvH"
+      ],
+      "discoveryMethods": [
+        "known_alias"
+      ]
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "name": "GJdRQcsy",
+      "nativePower": 194537.56353357426,
+      "matchedAccounts": 1,
+      "totalDeposits": 7,
+      "authorities": [
+        "GQkBRZffdsKwx4GTNR96c6v6aM59DfqyHjwzArobDoT3"
+      ],
+      "discoveryMethods": [
+        "known_alias"
+      ]
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "name": "4pT6ESaM",
+      "nativePower": 25251.161862,
+      "matchedAccounts": 1,
+      "totalDeposits": 2,
+      "authorities": [
+        "9ZXrSQWB1YqA5wezKBpsR3HDcYjhs9GeDz8YqNA4WvuB"
+      ],
+      "discoveryMethods": [
+        "known_alias"
+      ]
+    }
+  ]
+}
