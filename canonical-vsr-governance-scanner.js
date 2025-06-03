@@ -150,8 +150,8 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
         continue;
       }
       
-      // Parse authority field (32 bytes at offset 8-40)
-      const authorityBytes = data.slice(8, 40);
+      // Parse authority field (32 bytes at offset 32-64) - CORRECT OFFSET
+      const authorityBytes = data.slice(32, 64);
       const authority = new PublicKey(authorityBytes);
       
       // Canonical ownership rule: count as native only if authority === wallet
