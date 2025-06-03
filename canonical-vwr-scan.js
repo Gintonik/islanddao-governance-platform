@@ -545,25 +545,6 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
               }
             }
           }
-              
-              nativeSources.push({
-                account: pubkey.toBase58(),
-                power: adjustedPower,
-                baseAmount: islandAmount,
-                multiplier: multiplier,
-                type: 'Voter-native',
-                authority: authority,
-                voterAuthority: voterAuthority,
-                lockupActive: isActiveLockup,
-                estimated: false
-              });
-              
-              if (verbose) {
-                const status = isActiveLockup ? 'ACTIVE' : 'EXPIRED';
-                console.log(`     ✅ Native: ${islandAmount.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
-              }
-            }
-          }
         } catch (error) {
           continue;
         }
