@@ -128,11 +128,11 @@ async function runCanonicalMultiLockupScan() {
     const walletAliases = loadWalletAliases();
     console.log(`Loaded ${Object.keys(walletAliases).length} wallet alias mappings`);
 
-    // Fetch all VSR program accounts
+    // Fetch all VSR program accounts (full data, no slice)
     console.log('Fetching VSR program accounts...');
     const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      encoding: 'base64',
-      dataSlice: { offset: 0, length: 2728 }
+      commitment: 'confirmed',
+      encoding: 'base64'
     });
     console.log(`Found ${accounts.length} VSR program accounts`);
 
@@ -159,65 +159,62 @@ async function runCanonicalMultiLockupScan() {
 
       // Scan all VSR accounts for matching authorities or wallet references
       for (const account of accounts) {
-        let accountData;
-        if (Array.isArray(account.account.data)) {
-          accountData = Buffer.from(account.account.data[0], 'base64');
-        } else if (typeof account.account.data === 'string') {
-          accountData = Buffer.from(account.account.data, 'base64');
-        } else {
-          continue; // Skip if data format is unexpected
-        }
-        
-        if (accountData.length < 100) continue;
-
-        let isControlled = false;
-        let controlType = '';
-        
-        // Check 1: Authority control (primary method)
         try {
-          const authorityBytes = accountData.slice(32, 64);
-          const authority = new PublicKey(authorityBytes).toString();
+          const data = account.account.data;
           
-          if (authoritySet.has(authority)) {
-            isControlled = true;
-            controlType = authority === citizenWallet ? 'Direct authority' : 'Verified alias';
-          }
-        } catch (e) {
-          // Continue to next check
-        }
-        
-        // Check 2: Wallet bytes in data (broader detection for previous working cases)
-        if (!isControlled) {
+          if (data.length < 100) continue;
+
+          let isControlled = false;
+          let controlType = '';
+          
+          // Check 1: Authority control (primary method)
           try {
-            // Check key positions where wallet might appear
-            const checkPositions = [8, 64, 96]; // Common positions for wallet references
+            const authorityBytes = data.slice(32, 64);
+            const authority = new PublicKey(authorityBytes).toString();
             
-            for (const pos of checkPositions) {
-              if (pos + 32 <= accountData.length) {
-                const slice = accountData.slice(pos, pos + 32);
-                if (slice.equals(Buffer.from(walletBytes))) {
-                  isControlled = true;
-                  controlType = `Wallet reference at offset ${pos}`;
-                  break;
-                }
-              }
+            if (authoritySet.has(authority)) {
+              isControlled = true;
+              controlType = authority === citizenWallet ? 'Direct authority' : 'Verified alias';
             }
           } catch (e) {
-            // Continue
+            // Continue to next check
           }
-        }
-
-        if (isControlled) {
-          const deposits = parseDeposits(accountData);
           
-          if (deposits.length > 0) {
-            results[citizenWallet].accounts++;
-            
-            for (const deposit of deposits) {
-              results[citizenWallet].nativeGovernancePower += deposit.votingPower;
-              results[citizenWallet].deposits.push(deposit);
+          // Check 2: Wallet bytes in data (broader detection for previous working cases)
+          if (!isControlled) {
+            try {
+              // Check key positions where wallet might appear
+              const checkPositions = [8, 64, 96]; // Common positions for wallet references
+              
+              for (const pos of checkPositions) {
+                if (pos + 32 <= data.length) {
+                  const slice = data.slice(pos, pos + 32);
+                  if (slice.equals(Buffer.from(walletBytes))) {
+                    isControlled = true;
+                    controlType = `Wallet reference at offset ${pos}`;
+                    break;
+                  }
+                }
+              }
+            } catch (e) {
+              // Continue
             }
           }
+
+          if (isControlled) {
+            const deposits = parseDeposits(data);
+            
+            if (deposits.length > 0) {
+              results[citizenWallet].accounts++;
+              
+              for (const deposit of deposits) {
+                results[citizenWallet].nativeGovernancePower += deposit.votingPower;
+                results[citizenWallet].deposits.push(deposit);
+              }
+            }
+          }
+        } catch (error) {
+          // Continue to next account
         }
       }
 

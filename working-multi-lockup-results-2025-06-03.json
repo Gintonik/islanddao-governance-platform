@@ -1,0 +1,691 @@
+{
+  "timestamp": "2025-06-03T19:11:16.280Z",
+  "totalCitizens": 20,
+  "citizensWithPower": 14,
+  "totalNativePower": 858375664.5496781,
+  "scanMethod": "working-multi-lockup",
+  "results": [
+    {
+      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+      "nativePower": 0,
+      "deposits": 0,
+      "accounts": 0,
+      "depositDetails": []
+    },
+    {
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "nativePower": 111969.618073,
+      "deposits": 3,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 16097.79386,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1733465904,
+          "cliffTs": 1733465904,
+          "multiplier": 1,
+          "votingPower": 16097.79386,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 78857.030444,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 78857.030444,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 17014.793769,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 17014.793769,
+          "isUsed": true,
+          "offset": 264
+        }
+      ]
+    },
+    {
+      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "nativePower": 536529.257549,
+      "deposits": 3,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 519659.577033,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1721058340,
+          "cliffTs": 1721058340,
+          "multiplier": 1,
+          "votingPower": 519659.577033,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 3500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 3500,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 13369.680516,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 13369.680516,
+          "isUsed": true,
+          "offset": 264
+        }
+      ]
+    },
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "nativePower": 845587142.7568389,
+      "deposits": 8,
+      "accounts": 5,
+      "depositDetails": [
+        {
+          "amount": 500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 500,
+          "isUsed": true,
+          "offset": 104
+        },
+        {
+          "amount": 1000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1696496371,
+          "cliffTs": 1696496371,
+          "multiplier": 1,
+          "votingPower": 1000,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 28619.140733,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 28619.140733,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 422180999.908717,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 422180999.908717,
+          "isUsed": true,
+          "offset": 104
+        },
+        {
+          "amount": 413011999.098917,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 413011999.098917,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 10353647.013,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 10353647.013,
+          "isUsed": true,
+          "offset": 104
+        },
+        {
+          "amount": 1,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 1,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 10376.595472,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 10376.595472,
+          "isUsed": true,
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+      "nativePower": 0,
+      "deposits": 0,
+      "accounts": 0,
+      "depositDetails": []
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "nativePower": 12625.580931,
+      "deposits": 1,
+      "accounts": 2,
+      "depositDetails": [
+        {
+          "amount": 12625.580931,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 12625.580931,
+          "isUsed": true,
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "nativePower": 537007.0813130001,
+      "deposits": 6,
+      "accounts": 2,
+      "depositDetails": [
+        {
+          "amount": 50000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1721919355,
+          "cliffTs": 1721919355,
+          "multiplier": 1,
+          "votingPower": 50000,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 21500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 21500,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 49202.733486,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 49202.733486,
+          "isUsed": true,
+          "offset": 264
+        },
+        {
+          "amount": 100000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1733238595,
+          "cliffTs": 1733238595,
+          "multiplier": 1,
+          "votingPower": 100000,
+          "isUsed": true,
+          "offset": 272
+        },
+        {
+          "amount": 116304.347827,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 116304.347827,
+          "isUsed": true,
+          "offset": 344
+        },
+        {
+          "amount": 200000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 200000,
+          "isUsed": true,
+          "offset": 352
+        }
+      ]
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "nativePower": 7183474.632185999,
+      "deposits": 4,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 690,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1718804359,
+          "cliffTs": 1718804359,
+          "multiplier": 1,
+          "votingPower": 690,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 1500000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 1500000,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 2000000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 2000000,
+          "isUsed": true,
+          "offset": 264
+        },
+        {
+          "amount": 3682784.632186,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "isUsed": true,
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "nativePower": 126801.222404,
+      "deposits": 2,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 126779.222404,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1705933205,
+          "cliffTs": 1705933205,
+          "multiplier": 1,
+          "votingPower": 126779.222404,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 22,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 22,
+          "isUsed": true,
+          "offset": 184
+        }
+      ]
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "nativePower": 124693.845135,
+      "deposits": 1,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 124693.845135,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 124693.845135,
+          "isUsed": true,
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "nativePower": 4879,
+      "deposits": 1,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 4879,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 4879,
+          "isUsed": true,
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+      "nativePower": 0,
+      "deposits": 0,
+      "accounts": 0,
+      "depositDetails": []
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "nativePower": 29484.464683,
+      "deposits": 1,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 29484.464683,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 29484.464683,
+          "isUsed": true,
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+      "nativePower": 0,
+      "deposits": 0,
+      "accounts": 0,
+      "depositDetails": []
+    },
+    {
+      "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+      "nativePower": 0,
+      "deposits": 0,
+      "accounts": 0,
+      "depositDetails": []
+    },
+    {
+      "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+      "nativePower": 0,
+      "deposits": 0,
+      "accounts": 0,
+      "depositDetails": []
+    },
+    {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "nativePower": 200000,
+      "deposits": 1,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 200000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 200000,
+          "isUsed": true,
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "nativePower": 3375961.436187,
+      "deposits": 10,
+      "accounts": 4,
+      "depositDetails": [
+        {
+          "amount": 11000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 11000,
+          "isUsed": true,
+          "offset": 104
+        },
+        {
+          "amount": 1000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1728514800,
+          "cliffTs": 1728514800,
+          "multiplier": 1,
+          "votingPower": 1000,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 5,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 5,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 10,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 10,
+          "isUsed": true,
+          "offset": 344
+        },
+        {
+          "amount": 3361730.150474,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 3361730.150474,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 214.285713,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1698501344,
+          "cliffTs": 1698501344,
+          "multiplier": 1,
+          "votingPower": 214.285713,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 1071.428571,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 1071.428571,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 428.571429,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 428.571429,
+          "isUsed": true,
+          "offset": 264
+        },
+        {
+          "amount": 500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1696409280,
+          "cliffTs": 1696409280,
+          "multiplier": 1,
+          "votingPower": 500,
+          "isUsed": true,
+          "offset": 272
+        },
+        {
+          "amount": 2,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 2,
+          "isUsed": true,
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "nativePower": 77278.981722,
+      "deposits": 4,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 3913,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1738742046,
+          "cliffTs": 1738742046,
+          "multiplier": 1,
+          "votingPower": 3913,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 10000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 10000,
+          "isUsed": true,
+          "offset": 184
+        },
+        {
+          "amount": 37626.982836,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 37626.982836,
+          "isUsed": true,
+          "offset": 264
+        },
+        {
+          "amount": 25738.998886,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 25738.998886,
+          "isUsed": true,
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "nativePower": 467816.672656,
+      "deposits": 3,
+      "accounts": 1,
+      "depositDetails": [
+        {
+          "amount": 126344.822273,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 126344.822273,
+          "isUsed": true,
+          "offset": 104
+        },
+        {
+          "amount": 30998.881087,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1720921219,
+          "cliffTs": 1720921219,
+          "multiplier": 1,
+          "votingPower": 30998.881087,
+          "isUsed": true,
+          "offset": 112
+        },
+        {
+          "amount": 310472.969296,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "cliffTs": 0,
+          "multiplier": 1,
+          "votingPower": 310472.969296,
+          "isUsed": true,
+          "offset": 184
+        }
+      ]
+    }
+  ]
+}
