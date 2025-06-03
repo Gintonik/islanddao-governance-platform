@@ -1,169 +1,113 @@
 {
-  "timestamp": "2025-06-03T16:00:00.000Z",
-  "scannerVersion": "canonical-native-governance-final-locked",
-  "totalCitizens": 20,
-  "walletAliasesCount": 1,
-  "methodology": {
-    "authorityMatching": "Direct + Verified aliases + Wallet reference detection",
-    "offsetMethod": "Extended canonical byte offsets [104, 112, 184, 192, 200, 208, 264, 272, 344, 352]",
-    "phantomFiltering": "Empty config detection for 1,000 ISLAND deposits",
-    "multiplierCalculation": "Canonical lockup logic with 5x cap",
-    "lockupParsing": "Authentic on-chain timestamp validation"
-  },
-  "totalGovernancePower": 23182625.54,
-  "citizensWithPower": 14,
-  "totalControlledAccounts": 23,
-  "totalValidDeposits": 41,
-  "results": [
+  "timestamp": "2025-06-03T17:40:54.944Z",
+  "scannerVersion": "canonical-native-governance-final",
+  "validationStatus": "CURRENT_BLOCKCHAIN_STATE",
+  "note": "Results reflect current authentic on-chain data",
+  "targetValidation": [
     {
-      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
-      "nativePower": 10394142.75,
-      "accountCount": 5,
-      "depositCount": 5,
-      "rank": 1
-    },
-    {
+      "name": "Takisoul",
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "nativePower": 7183474.63,
-      "accountCount": 1,
-      "depositCount": 4,
-      "rank": 2,
-      "note": "Takisoul - Authentic on-chain governance power"
+      "verifiedTarget": 8709019.78,
+      "currentResult": 7401197.9597360045,
+      "difference": -1307821.8202639949,
+      "tolerancePercent": 15.01686588503758,
+      "isMatch": false,
+      "deposits": [
+        {
+          "offset": 112,
+          "amount": 690,
+          "lockupEndTs": 1750340359,
+          "multiplier": 1.043347290669899,
+          "votingPower": 719.9096305622304,
+          "timestampFoundAtOffset": 48
+        },
+        {
+          "offset": 184,
+          "amount": 1500000,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 1500000,
+          "timestampFoundAtOffset": null
+        },
+        {
+          "offset": 264,
+          "amount": 2000000,
+          "lockupEndTs": 1752407321,
+          "multiplier": 1.108846708959721,
+          "votingPower": 2217693.417919442,
+          "timestampFoundAtOffset": 56
+        },
+        {
+          "offset": 344,
+          "amount": 3682784.632186,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "timestampFoundAtOffset": null
+        }
+      ]
     },
     {
-      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
-      "nativePower": 3375944.44,
-      "accountCount": 4,
-      "depositCount": 7,
-      "rank": 3
+      "name": "Whale's Friend",
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "verifiedTarget": 12625.58,
+      "currentResult": 12625.580931,
+      "difference": 0.0009310000004916219,
+      "tolerancePercent": 0.000007373918667432482,
+      "isMatch": true,
+      "deposits": [
+        {
+          "offset": 104,
+          "amount": 12625.580931,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 12625.580931,
+          "timestampFoundAtOffset": null
+        }
+      ]
     },
     {
-      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
-      "nativePower": 537007.08,
-      "accountCount": 2,
-      "depositCount": 6,
-      "rank": 4
-    },
-    {
-      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
-      "nativePower": 536529.26,
-      "accountCount": 1,
-      "depositCount": 3,
-      "rank": 5
-    },
-    {
-      "wallet": "kruHL3zJ2KF2KJX6XZnZdLkDiPJj7KiAqXdGEtF5vJNX",
-      "nativePower": 467816.67,
-      "accountCount": 1,
-      "depositCount": 3,
-      "rank": 6
-    },
-    {
-      "wallet": "Fgv1zrwBRsJE9zUQu7k8Jm5KnKqPMYJZnQGu6VTdVgKm",
-      "nativePower": 200000.00,
-      "accountCount": 1,
-      "depositCount": 1,
-      "rank": 7
-    },
-    {
-      "wallet": "9RSpFWGnPJgPCzSj9ZJnUKqPMr6FdQxGHR8VXnTzKGNv",
-      "nativePower": 126779.22,
-      "accountCount": 1,
-      "depositCount": 1,
-      "rank": 8
-    },
-    {
-      "wallet": "9WW4oiMyTW6PBnKjgJo6rqm5E4FnGdQ8w2aLt9Xk6QJv",
-      "nativePower": 124693.85,
-      "accountCount": 1,
-      "depositCount": 1,
-      "rank": 9
-    },
-    {
-      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
-      "nativePower": 111969.62,
-      "accountCount": 1,
-      "depositCount": 3,
-      "rank": 10
-    },
-    {
-      "wallet": "GJdRQcsyLpx7nQKr6wuYMNZQm8VftQHR2tUGdQNfTzKv",
-      "nativePower": 77278.98,
-      "accountCount": 1,
-      "depositCount": 4,
-      "rank": 11
-    },
-    {
-      "wallet": "BPmVp1b4aPJb5eU8KtEeQGNrZkQm6TfGdR9vNkRjJzKv",
-      "nativePower": 29484.46,
-      "accountCount": 1,
-      "depositCount": 1,
-      "rank": 12
-    },
-    {
-      "wallet": "4pT6ESaMz3XqeKzJ8tNrGVKpQmYfUeR7dZ9wPJqNzKGv",
-      "nativePower": 12625.58,
-      "accountCount": 2,
-      "depositCount": 1,
-      "rank": 13
-    },
-    {
-      "wallet": "ADjG92YTLWqKzJN6V8fGrEpZkQm5UdQ7tX9ePKqNzKGv",
-      "nativePower": 4879.00,
-      "accountCount": 1,
-      "depositCount": 1,
-      "rank": 14
-    },
-    {
-      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
-      "nativePower": 0,
-      "accountCount": 0,
-      "depositCount": 0,
-      "rank": 15
-    },
-    {
-      "wallet": "3s6VUe21z8N2Y6PrKGxQm7UfJ4tNzXJd9QKvRfGNJzKv",
-      "nativePower": 0,
-      "accountCount": 0,
-      "depositCount": 0,
-      "rank": 16
-    },
-    {
-      "wallet": "B93csAjDzKG4NqR6TfMeQPNvZkQm8VgUdR2wNJqGzKJv",
-      "nativePower": 0,
-      "accountCount": 0,
-      "depositCount": 0,
-      "rank": 17
-    },
-    {
-      "wallet": "CdCAQnq1z8N2P6MrKGxQm7UfJ4tNzXJd9QKvRfGNJzKv",
-      "nativePower": 0,
-      "accountCount": 0,
-      "depositCount": 0,
-      "rank": 18
-    },
-    {
-      "wallet": "DraTvYwqz8N2P6MrKGxQm7UfJ4tNzXJd9QKvRfGNJzKv",
-      "nativePower": 0,
-      "accountCount": 0,
-      "depositCount": 0,
-      "rank": 19
-    },
-    {
-      "wallet": "EViz4YGrz8N2P6MrKGxQm7UfJ4tNzXJd9QKvRfGNJzKv",
-      "nativePower": 0,
-      "accountCount": 0,
-      "depositCount": 0,
-      "rank": 20
+      "name": "GJdRQcsy",
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "verifiedTarget": 144708.98,
+      "currentResult": 97249.11450363422,
+      "difference": -47459.86549636579,
+      "tolerancePercent": 32.79676596183995,
+      "isMatch": false,
+      "deposits": [
+        {
+          "offset": 112,
+          "amount": 3913,
+          "lockupEndTs": 1752580684,
+          "multiplier": 1.1143402286760788,
+          "votingPower": 4360.413314809496,
+          "timestampFoundAtOffset": 128
+        },
+        {
+          "offset": 184,
+          "amount": 10000,
+          "lockupEndTs": 1752580684,
+          "multiplier": 1.1143402286443922,
+          "votingPower": 11143.402286443921,
+          "timestampFoundAtOffset": 56
+        },
+        {
+          "offset": 264,
+          "amount": 37626.982836,
+          "lockupEndTs": 1759555596,
+          "multiplier": 1.3353663910887195,
+          "votingPower": 50245.808277266515,
+          "timestampFoundAtOffset": 56
+        },
+        {
+          "offset": 344,
+          "amount": 25738.998886,
+          "lockupEndTs": 1756035028,
+          "multiplier": 1.2238040323412713,
+          "votingPower": 31499.490625114293,
+          "timestampFoundAtOffset": 56
+        }
+      ]
     }
-  ],
-  "validation": {
-    "takisoulExpected": 8709019.78,
-    "takisoulActual": 7183474.63,
-    "takisoulDifference": -1525545.15,
-    "takisoulNote": "Current on-chain data shows no active lockup multipliers. VSR account contains expired or invalid lockup timestamps.",
-    "canonicalAccuracy": "100% - Based on authentic VSR account parsing",
-    "dataSource": "Solana blockchain VSR program accounts",
-    "lastUpdated": "2025-06-03T16:00:00.000Z"
-  }
+  ]
 }
