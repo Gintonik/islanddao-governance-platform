@@ -313,10 +313,10 @@ function parseVoterAuthorities(data) {
 }
 
 /**
- * Build comprehensive delegation map from all Voter accounts
+ * Build delegation map for incoming delegated power only
  */
 async function buildDelegationMap(allVoterAccounts, verbose = false) {
-  const delegationMap = new Map();
+  const delegationMap = new Map(); // Maps voterAuthority -> total delegated power
   let totalDelegations = 0;
   
   if (verbose) {
@@ -331,49 +331,38 @@ async function buildDelegationMap(allVoterAccounts, verbose = false) {
     
     const { authority, voterAuthority } = authorities;
     
-    // Extract deposit power from this account
-    const voterAnalysis = await analyzeVoterAccountDeposits(data, false);
-    
-    if (voterAnalysis && voterAnalysis.totalPower > 0) {
-      // Initialize maps if needed
-      if (!delegationMap.has(authority)) {
-        delegationMap.set(authority, { native: 0, delegated: 0, delegatedTo: [], delegatedFrom: [] });
-      }
-      if (!delegationMap.has(voterAuthority)) {
-        delegationMap.set(voterAuthority, { native: 0, delegated: 0, delegatedTo: [], delegatedFrom: [] });
-      }
+    // Only process if this is a delegation (authority != voterAuthority)
+    if (authority !== voterAuthority) {
+      const voterAnalysis = await analyzeVoterAccountDeposits(data, false);
       
-      // Authority gets native power (owns the deposits)
-      delegationMap.get(authority).native += voterAnalysis.totalPower;
-      
-      // If delegation exists (authority != voterAuthority)
-      if (authority !== voterAuthority) {
-        // VoterAuthority gets delegated power
-        delegationMap.get(voterAuthority).delegated += voterAnalysis.totalPower;
-        delegationMap.get(voterAuthority).delegatedFrom.push({
+      if (voterAnalysis && voterAnalysis.totalPower > 0) {
+        // Initialize delegation tracking for voterAuthority
+        if (!delegationMap.has(voterAuthority)) {
+          delegationMap.set(voterAuthority, {
+            totalDelegated: 0,
+            delegations: []
+          });
+        }
+        
+        // Add delegated power to voterAuthority
+        delegationMap.get(voterAuthority).totalDelegated += voterAnalysis.totalPower;
+        delegationMap.get(voterAuthority).delegations.push({
           from: authority,
-          power: voterAnalysis.totalPower,
-          account: pubkey.toBase58()
-        });
-        delegationMap.get(authority).delegatedTo.push({
-          to: voterAuthority,
           power: voterAnalysis.totalPower,
           account: pubkey.toBase58()
         });
         
         totalDelegations++;
-        console.log(`Delegation Detected:`);
-        console.log(`Authority: ${authority}`);
-        console.log(`Voter Authority: ${voterAuthority}`);
-        console.log(`Power: ${voterAnalysis.totalPower.toLocaleString()} ISLAND`);
-        console.log(`Account: ${pubkey.toBase58()}`);
-        console.log('---');
+        
+        if (verbose) {
+          console.log(`Delegation: ${authority.substring(0,8)}... → ${voterAuthority.substring(0,8)}... | ${voterAnalysis.totalPower.toLocaleString()} ISLAND`);
+        }
       }
     }
   }
   
   if (verbose) {
-    console.log(`   📊 Built delegation map: ${delegationMap.size} wallets, ${totalDelegations} delegations`);
+    console.log(`   📊 Built delegation map: ${delegationMap.size} recipients, ${totalDelegations} delegations`);
   }
   
   return delegationMap;
@@ -419,23 +408,57 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     }
   }
   
-  // Step 2: Extract powers from delegation map
-  const delegationMap = await buildDelegationMap(allVoterAccounts, verbose);
-  const walletData = delegationMap.get(walletAddress);
+  // Step 2: Calculate native power (keep existing logic)
+  let processedAccounts = 0;
   
-  if (walletData) {
-    nativeGovernancePower = walletData.native;
-    delegatedGovernancePower = walletData.delegated;
-    
-    // Add source tracking
-    if (walletData.native > 0) {
-      nativeSources.push({
-        type: 'Voter-native',
-        power: walletData.native
-      });
+  for (const { pubkey, account } of allVoterAccounts) {
+    processedAccounts++;
+    if (verbose && processedAccounts % 1000 === 0) {
+      console.log(`     📊 Processed ${processedAccounts}/${allVoterAccounts.length} Voter accounts`);
     }
     
-    for (const delegation of walletData.delegatedFrom) {
+    const data = account.data;
+    const authorities = parseVoterAuthorities(data);
+    
+    if (!authorities) continue;
+    
+    const { authority, voterAuthority } = authorities;
+    
+    // Skip if this account doesn't involve our target wallet as authority
+    if (authority !== walletAddress) {
+      continue;
+    }
+    
+    // Analyze deposits in this Voter account
+    const voterAnalysis = await analyzeVoterAccountDeposits(data, verbose && authority === walletAddress);
+    
+    if (voterAnalysis && voterAnalysis.totalPower > 0) {
+      // Native deposits (wallet owns these deposits, regardless of delegation)
+      nativeGovernancePower += voterAnalysis.totalPower;
+      nativeSources.push({
+        account: pubkey.toBase58(),
+        power: voterAnalysis.totalPower,
+        type: 'Voter-native',
+        authority: authority,
+        delegatedTo: voterAuthority !== authority ? voterAuthority : null
+      });
+      
+      if (verbose) {
+        const delegationNote = voterAuthority !== authority ? 
+          ` (delegated to ${voterAuthority.substring(0,8)}...)` : '';
+        console.log(`     ✅ Native deposit: ${voterAnalysis.totalPower.toLocaleString()} ISLAND from ${pubkey.toBase58()}${delegationNote}`);
+      }
+    }
+  }
+  
+  // Step 2.5: Add delegated power from delegation map
+  const delegationMap = await buildDelegationMap(allVoterAccounts, verbose);
+  const walletDelegations = delegationMap.get(walletAddress);
+  
+  if (walletDelegations) {
+    delegatedGovernancePower = walletDelegations.totalDelegated;
+    
+    for (const delegation of walletDelegations.delegations) {
       delegatedSources.push({
         type: 'Voter-delegated',
         power: delegation.power,
@@ -444,9 +467,9 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
       });
     }
     
-    if (verbose && walletData.delegatedFrom.length > 0) {
-      console.log(`     📊 Incoming delegations:`);
-      for (const delegation of walletData.delegatedFrom) {
+    if (verbose && walletDelegations.delegations.length > 0) {
+      console.log(`     📊 Incoming delegations: ${delegatedGovernancePower.toLocaleString()} ISLAND`);
+      for (const delegation of walletDelegations.delegations) {
         console.log(`       ${delegation.from.substring(0,8)}... → ${delegation.power.toLocaleString()} ISLAND`);
       }
     }
