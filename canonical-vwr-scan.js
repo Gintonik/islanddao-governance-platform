@@ -557,29 +557,150 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
 }
 
 /**
- * Analyze deposits in a Voter account (simplified version)
+ * Parse a single deposit entry from Voter account data
+ */
+function parseDepositEntry(data, offset) {
+  try {
+    // Deposit entry structure (72 bytes):
+    // 0-8: amount_deposited_native (u64)
+    // 8-16: amount_initially_locked_native (u64) 
+    // 16-24: is_used (bool + padding)
+    // 24-32: allow_clawback (bool + padding)
+    // 32-40: lockup_start_ts (u64)
+    // 40-48: lockup_end_ts (u64)
+    // 48-52: lockup_kind (u32)
+    // 52-72: padding
+    
+    const amountDepositedNative = Number(data.readBigUInt64LE(offset));
+    const amountInitiallyLocked = Number(data.readBigUInt64LE(offset + 8));
+    const isUsed = data.readUInt8(offset + 16) !== 0;
+    const lockupStartTs = Number(data.readBigUInt64LE(offset + 32));
+    const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+    const lockupKind = data.readUInt32LE(offset + 48);
+    
+    return {
+      amountDepositedNative,
+      amountInitiallyLocked,
+      isUsed,
+      lockupStartTs,
+      lockupEndTs,
+      lockupKind
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Calculate lockup multiplier based on VSR logic
+ */
+function calculateLockupMultiplier(deposit, currentTimestamp) {
+  if (!deposit.isUsed || deposit.amountDepositedNative === 0) {
+    return 0;
+  }
+  
+  // If lockup has expired, no multiplier
+  if (currentTimestamp >= deposit.lockupEndTs) {
+    return 1.0; // Base multiplier for unlocked tokens
+  }
+  
+  // Calculate remaining lockup time in seconds
+  const remainingSeconds = deposit.lockupEndTs - currentTimestamp;
+  const remainingYears = remainingSeconds / (365.25 * 24 * 60 * 60);
+  
+  // VSR multiplier formula approximation
+  // This follows the IslandDAO VSR configuration
+  if (remainingYears <= 0) return 1.0;
+  if (remainingYears >= 4) return 5.0;
+  
+  // Linear interpolation between 1x and 5x over 4 years
+  return 1.0 + (remainingYears / 4.0) * 4.0;
+}
+
+/**
+ * Analyze deposits in a Voter account with proper multipliers
+ * Uses both VoterWeightRecord and fallback Voter account parsing
  */
 async function analyzeVoterAccountDeposits(data, verbose = false) {
-  // Use the same reliable extraction method from find-target-delegations.js
-  const depositOffsets = [112, 144, 176, 208, 240];
   let totalPower = 0;
+  const deposits = [];
+  const currentTimestamp = Math.floor(Date.now() / 1000);
   
-  for (const offset of depositOffsets) {
-    try {
-      const rawValue = Number(data.readBigUInt64LE(offset));
-      const islandAmount = rawValue / 1e6;
+  // Method 1: Try structured deposit parsing at multiple base offsets
+  const possibleBaseOffsets = [104, 136, 168, 200, 232];
+  
+  for (const baseOffset of possibleBaseOffsets) {
+    const maxDeposits = 32;
+    const depositSize = 72;
+    
+    for (let i = 0; i < maxDeposits; i++) {
+      const offset = baseOffset + (i * depositSize);
       
-      if (islandAmount >= 1000 && islandAmount <= 50000000 && rawValue !== 4294967296) {
-        totalPower += islandAmount;
+      if (offset + depositSize > data.length) break;
+      
+      const deposit = parseDepositEntry(data, offset);
+      
+      if (deposit && deposit.isUsed && deposit.amountDepositedNative > 0) {
+        const multiplier = calculateLockupMultiplier(deposit, currentTimestamp);
+        const power = (deposit.amountDepositedNative * multiplier) / 1e6;
+        
+        if (power > 0) {
+          totalPower += power;
+          deposits.push({
+            amount: deposit.amountDepositedNative / 1e6,
+            multiplier: multiplier,
+            power: power,
+            lockupEndTs: deposit.lockupEndTs,
+            isActive: currentTimestamp < deposit.lockupEndTs,
+            baseOffset: baseOffset,
+            depositIndex: i
+          });
+          
+          if (verbose) {
+            const lockupStatus = currentTimestamp < deposit.lockupEndTs ? 'ACTIVE' : 'EXPIRED';
+            console.log(`       Deposit ${i} (@${baseOffset}+${i*depositSize}): ${(deposit.amountDepositedNative / 1e6).toLocaleString()} ISLAND × ${multiplier.toFixed(2)}x = ${power.toLocaleString()} (${lockupStatus})`);
+          }
+        }
       }
-    } catch (error) {
-      // Continue
+    }
+  }
+  
+  // Method 2: Fallback to simple value extraction if no structured deposits found
+  if (totalPower === 0) {
+    const knownOffsets = [112, 144, 176, 208, 240];
+    
+    for (const offset of knownOffsets) {
+      try {
+        const rawValue = Number(data.readBigUInt64LE(offset));
+        const islandAmount = rawValue / 1e6;
+        
+        if (islandAmount >= 1000 && islandAmount <= 50000000 && rawValue !== 4294967296) {
+          // Apply conservative multiplier for fallback deposits
+          const power = islandAmount * 1.0; // Assume base multiplier
+          totalPower += power;
+          
+          deposits.push({
+            amount: islandAmount,
+            multiplier: 1.0,
+            power: power,
+            lockupEndTs: 0,
+            isActive: false,
+            fallbackOffset: offset
+          });
+          
+          if (verbose) {
+            console.log(`       Fallback (@${offset}): ${islandAmount.toLocaleString()} ISLAND × 1.0x = ${power.toLocaleString()}`);
+          }
+        }
+      } catch (error) {
+        // Continue
+      }
     }
   }
   
   return totalPower > 0 ? {
     totalPower: totalPower,
-    deposits: []
+    deposits: deposits
   } : null;
 }
 

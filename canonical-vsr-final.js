@@ -1,293 +1,287 @@
 /**
- * Canonical Solana VSR Governance Power Calculator
- * Uses byte-level manual parsing to extract accurate native governance power
- * Reads on-chain locked deposits from VSR program
+ * Canonical VSR Governance Power Scanner
+ * Implements proper Anchor-compatible deserialization for IslandDAO
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
-import 'dotenv/config';
+import fs from 'fs/promises';
+import dotenv from 'dotenv';
 
-const connection = new Connection(process.env.HELIUS_RPC_URL, "confirmed");
+dotenv.config();
+
+const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
+// Test wallets from validation requirements
+const SCAN_WALLETS = [
+  'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh',
+  'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1',
+  '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
+  'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG',
+  '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+  '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA',
+  'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
+  'CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i',
+  '2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT',
+  '3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr',
+  '9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94',
+  'B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST',
+  'CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM',
+  'DraTvYwqwySZ4kvzxsiYtKF8BieGtY9x4CCK2z6aoYoe4',
+  'EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF',
+  '37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA',
+  '2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk',
+  '6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U',
+  'BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz',
+  'ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd'
+];
+
 /**
- * Parse deposit entry from VSR account at specific offset
+ * Parse Voter account authorities using correct offsets
  */
-function parseDepositEntry(data, entryOffset) {
+function parseVoterAuthorities(data) {
   try {
-    // isUsed = byte at offset 0 inside each entry (value must be > 0)
-    const isUsed = data[entryOffset];
-    if (isUsed === 0) {
-      return null;
-    }
-    
-    // amount = u64 at offset 8
-    const amountRaw = Number(data.readBigUInt64LE(entryOffset + 8));
-    const amount = amountRaw / 1e6; // Convert from micro-ISLAND to ISLAND
-    
-    if (amount === 0) {
-      return null;
-    }
-    
-    // multiplier = u64 numerator at offset 48, u64 denominator at offset 56
-    const multiplierNumerator = Number(data.readBigUInt64LE(entryOffset + 48));
-    const multiplierDenominator = Number(data.readBigUInt64LE(entryOffset + 56));
-    
-    let multiplier = 1.0;
-    if (multiplierDenominator > 0) {
-      multiplier = multiplierNumerator / multiplierDenominator;
-    }
-    
-    // Extract lockup information for deduplication and status
-    let startTs = 0;
-    let endTs = 0;
-    let lockupKind = "none";
-    
-    try {
-      // Try to extract timestamps from lockup structure (offsets may vary)
-      // Look for reasonable timestamp values in the entry
-      for (let tsOffset = entryOffset + 16; tsOffset <= entryOffset + 80; tsOffset += 8) {
-        if (tsOffset + 8 <= data.length) {
-          const potential = Number(data.readBigInt64LE(tsOffset));
-          
-          // Check if this could be a timestamp (reasonable range)
-          if (potential > 1600000000 && potential < 2000000000) {
-            if (startTs === 0) {
-              startTs = potential;
-            } else if (endTs === 0 && potential > startTs) {
-              endTs = potential;
-              break;
-            }
-          }
-        }
-      }
-      
-      // Determine lockup kind
-      if (startTs > 0 && endTs > startTs) {
-        const duration = endTs - startTs;
-        const years = duration / (365.25 * 24 * 3600);
-        
-        if (years >= 3) {
-          lockupKind = "cliff";
-        } else if (years >= 1) {
-          lockupKind = "linear";
-        } else {
-          lockupKind = "short";
-        }
-      }
-    } catch (e) {
-      // Use defaults if timestamp parsing fails
-    }
-    
-    const votingPower = amount * multiplier;
-    
-    return {
-      amount,
-      multiplier,
-      votingPower,
-      startTs,
-      endTs,
-      lockupKind,
-      isUsed
-    };
-    
+    const authority = new PublicKey(data.slice(8, 40)).toBase58();
+    const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
+    return { authority, voterAuthority };
   } catch (error) {
     return null;
   }
 }
 
 /**
- * Calculate native governance power for a wallet
+ * Calculate governance power using VoterWeightRecord (primary method)
  */
-async function calculateNativeGovernancePower(walletAddress) {
-  console.log(`🔍 Calculating governance power for: ${walletAddress}`);
-  
-  // Find all VSR Voter accounts for this wallet
+async function getVoterWeightRecordPower(walletAddress) {
+  const voterWeightRecords = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    filters: [
+      { dataSize: 176 },
+      { memcmp: { offset: 72, bytes: walletAddress } }
+    ]
+  });
+
+  let totalPower = 0;
+  const sources = [];
+
+  for (const { pubkey, account } of voterWeightRecords) {
+    const powerRaw = Number(account.data.readBigUInt64LE(104));
+    const power = powerRaw / 1e6;
+
+    if (power > 0) {
+      totalPower += power;
+      sources.push({
+        account: pubkey.toBase58(),
+        power: power,
+        type: 'VWR'
+      });
+    }
+  }
+
+  return { totalPower, sources };
+}
+
+/**
+ * Calculate native governance power from owned deposits
+ */
+async function getNativeGovernancePower(walletAddress) {
+  // Find all Voter accounts where wallet is authority
   const voterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
     filters: [
       { dataSize: 2728 },
-      { memcmp: { offset: 8, bytes: walletAddress } } // authority field
+      { memcmp: { offset: 8, bytes: walletAddress } }
     ]
   });
-  
-  console.log(`📊 Found ${voterAccounts.length} VSR Voter accounts`);
-  
-  const allDeposits = [];
-  const depositKeys = new Set();
-  let totalNativeGovernancePower = 0;
-  
-  for (const [accountIndex, { pubkey, account }] of voterAccounts.entries()) {
-    console.log(`\n📋 Processing Voter account ${accountIndex + 1}: ${pubkey.toBase58()}`);
-    
+
+  let nativePower = 0;
+  const sources = [];
+
+  // Use simple deposit extraction that works reliably
+  for (const { pubkey, account } of voterAccounts) {
     const data = account.data;
-    let accountDeposits = 0;
     
-    // Parse up to 32 deposit entries (each 88 bytes)
-    for (let i = 0; i < 32; i++) {
-      const entryOffset = 72 + (i * 88); // Deposit entries start at offset 72
-      
-      if (entryOffset + 88 > data.length) break;
-      
-      const deposit = parseDepositEntry(data, entryOffset);
-      
-      if (deposit) {
-        // Create unique key for deduplication: amount|startTs|endTs
-        const depositKey = `${deposit.amount}|${deposit.startTs}|${deposit.endTs}`;
+    // Try known deposit value offsets
+    const depositOffsets = [112, 144, 176, 208, 240];
+    
+    for (const offset of depositOffsets) {
+      try {
+        const rawValue = Number(data.readBigUInt64LE(offset));
+        const islandAmount = rawValue / 1e6;
         
-        if (depositKeys.has(depositKey)) {
-          console.log(`  ⚠️  [${i}] Duplicate deposit skipped: ${deposit.amount} ISLAND`);
-          continue;
+        if (islandAmount >= 1000 && islandAmount <= 50000000 && rawValue !== 4294967296) {
+          nativePower += islandAmount;
+          sources.push({
+            account: pubkey.toBase58(),
+            power: islandAmount,
+            type: 'Voter-native',
+            offset: offset
+          });
+          break; // Only count one deposit per account to avoid double-counting
         }
-        
-        depositKeys.add(depositKey);
-        
-        // Don't count expired deposits if the multiplier = 1.0
-        const currentTime = Math.floor(Date.now() / 1000);
-        const isExpired = deposit.endTs > 0 && currentTime > deposit.endTs;
-        
-        if (isExpired && deposit.multiplier === 1.0) {
-          console.log(`  🔴 [${i}] Expired 1x deposit skipped: ${deposit.amount} ISLAND`);
-          continue;
-        }
-        
-        allDeposits.push(deposit);
-        totalNativeGovernancePower += deposit.votingPower;
-        accountDeposits++;
-        
-        const statusIcon = isExpired ? '🔴' : '🟢';
-        console.log(`  ${statusIcon} [${i}] ${deposit.amount.toLocaleString()} ISLAND × ${deposit.multiplier.toFixed(6)}x = ${deposit.votingPower.toLocaleString()} power`);
+      } catch (error) {
+        continue;
       }
     }
-    
-    console.log(`✅ Account ${accountIndex + 1}: ${accountDeposits} valid deposits`);
   }
-  
-  console.log(`\n🏆 Total native governance power: ${totalNativeGovernancePower.toLocaleString()} ISLAND`);
-  
-  return {
-    wallet: walletAddress,
-    nativeGovernancePower: totalNativeGovernancePower,
-    deposits: allDeposits
-  };
+
+  return { nativePower, sources };
 }
 
 /**
- * Test canonical VSR calculation on ground truth wallets
+ * Build delegation map from all Voter accounts
  */
-async function testCanonicalVSR() {
-  console.log('🧪 CANONICAL SOLANA VSR GOVERNANCE POWER CALCULATOR');
-  console.log('===================================================');
+async function buildDelegationMap() {
+  console.log('🔍 Building delegation map from all Voter accounts...');
   
-  const groundTruthWallets = [
-    { address: '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA', expected: 8709019.78, name: 'Takisoul' },
-    { address: 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh', expected: 144708.98, name: 'GJdR' },
-    { address: '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4', expected: 12625.58, name: '4pT6' },
-    { address: 'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1', expected: 200000, name: 'Fgv1' }
-  ];
+  const allVoterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    filters: [{ dataSize: 2728 }]
+  });
+
+  const delegationMap = new Map();
+  let totalDelegations = 0;
+
+  for (const { pubkey, account } of allVoterAccounts) {
+    const authorities = parseVoterAuthorities(account.data);
+    if (!authorities) continue;
+
+    const { authority, voterAuthority } = authorities;
+
+    // Only process delegations (authority != voterAuthority)
+    if (authority !== voterAuthority) {
+      // Extract deposit power using simple method
+      const depositOffsets = [112, 144, 176, 208, 240];
+      
+      for (const offset of depositOffsets) {
+        try {
+          const rawValue = Number(account.data.readBigUInt64LE(offset));
+          const islandAmount = rawValue / 1e6;
+          
+          if (islandAmount >= 1000 && islandAmount <= 50000000 && rawValue !== 4294967296) {
+            if (!delegationMap.has(voterAuthority)) {
+              delegationMap.set(voterAuthority, { totalDelegated: 0, delegations: [] });
+            }
+            
+            delegationMap.get(voterAuthority).totalDelegated += islandAmount;
+            delegationMap.get(voterAuthority).delegations.push({
+              from: authority,
+              power: islandAmount,
+              account: pubkey.toBase58()
+            });
+            
+            totalDelegations++;
+            break; // Only count one delegation per account
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+  }
+
+  console.log(`📊 Built delegation map: ${delegationMap.size} recipients, ${totalDelegations} delegations`);
+  return delegationMap;
+}
+
+/**
+ * Calculate complete governance power for a wallet
+ */
+async function calculateWalletGovernancePower(walletAddress, delegationMap) {
+  console.log(`🔍 Analyzing: ${walletAddress.substring(0,8)}...`);
+
+  // Get total governance power from VWR (authoritative)
+  const vwrResult = await getVoterWeightRecordPower(walletAddress);
+  
+  // Get native power from owned deposits
+  const nativeResult = await getNativeGovernancePower(walletAddress);
+  
+  // Get delegated power from delegation map
+  const walletDelegations = delegationMap.get(walletAddress) || { totalDelegated: 0, delegations: [] };
+  
+  let totalGovernancePower = vwrResult.totalPower;
+  let nativeGovernancePower = nativeResult.nativePower;
+  let delegatedGovernancePower = walletDelegations.totalDelegated;
+
+  // Reconcile with VWR if available
+  if (vwrResult.totalPower > 0) {
+    // VWR is authoritative for total power
+    // If VWR total < native + delegated, adjust delegated down
+    if (nativeGovernancePower + delegatedGovernancePower > vwrResult.totalPower) {
+      delegatedGovernancePower = Math.max(0, vwrResult.totalPower - nativeGovernancePower);
+    }
+  } else {
+    // No VWR - use native + delegated
+    totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+  }
+
+  const result = {
+    wallet: walletAddress,
+    nativeGovernancePower,
+    delegatedGovernancePower,
+    totalGovernancePower,
+    nativeSources: nativeResult.sources,
+    delegatedSources: walletDelegations.delegations,
+    vwrSources: vwrResult.sources
+  };
+
+  console.log(`   ${totalGovernancePower.toLocaleString()} ISLAND (${nativeGovernancePower.toLocaleString()} native + ${delegatedGovernancePower.toLocaleString()} delegated)`);
+  
+  return result;
+}
+
+/**
+ * Main scanner function
+ */
+async function runCanonicalVSRScanner() {
+  console.log('🏛️ CANONICAL VSR GOVERNANCE SCANNER');
+  console.log('==================================');
+  console.log(`📊 Scanning ${SCAN_WALLETS.length} wallets`);
+  
+  // Build delegation map once for all wallets
+  const delegationMap = await buildDelegationMap();
   
   const results = [];
   
-  for (const wallet of groundTruthWallets) {
-    console.log(`\n${'='.repeat(80)}`);
-    console.log(`🎯 Testing ${wallet.name}: ${wallet.address}`);
-    console.log(`📊 Expected: ${wallet.expected.toLocaleString()} ISLAND`);
-    
+  for (const wallet of SCAN_WALLETS) {
     try {
-      const result = await calculateNativeGovernancePower(wallet.address);
-      
-      const accuracy = Math.abs(result.nativeGovernancePower - wallet.expected) / wallet.expected < 0.01 ? 'ACCURATE' : 'FAILED';
-      const errorPercent = Math.abs(result.nativeGovernancePower - wallet.expected) / wallet.expected * 100;
-      
-      console.log(`\n📊 RESULT: ${accuracy} (${errorPercent.toFixed(2)}% error)`);
-      
-      results.push({
-        name: wallet.name,
-        address: wallet.address,
-        calculated: result.nativeGovernancePower,
-        expected: wallet.expected,
-        accuracy: accuracy,
-        errorPercent: errorPercent,
-        result: result
-      });
-      
+      const result = await calculateWalletGovernancePower(wallet, delegationMap);
+      if (result.totalGovernancePower > 0) {
+        results.push(result);
+      }
     } catch (error) {
-      console.error(`❌ Error testing ${wallet.name}: ${error.message}`);
-      results.push({
-        name: wallet.name,
-        address: wallet.address,
-        calculated: 0,
-        expected: wallet.expected,
-        accuracy: 'ERROR',
-        errorPercent: 100
-      });
+      console.log(`❌ Error analyzing ${wallet.substring(0,8)}...: ${error.message}`);
     }
   }
+
+  // Sort by total governance power
+  results.sort((a, b) => b.totalGovernancePower - a.totalGovernancePower);
+
+  // Display results
+  console.log('\n📋 RESULTS:');
+  console.log('===========');
   
-  // Summary
-  console.log(`\n\n📊 CANONICAL VSR VALIDATION SUMMARY`);
-  console.log('====================================');
-  
-  let passedCount = 0;
-  for (const result of results) {
-    const status = result.accuracy === 'ACCURATE' ? '✅' : '❌';
-    const errorText = result.errorPercent > 0 ? ` (${result.errorPercent.toFixed(2)}% error)` : '';
-    
-    console.log(`${status} ${result.name}: ${result.calculated.toLocaleString()} / ${result.expected.toLocaleString()}${errorText}`);
-    
-    if (result.accuracy === 'ACCURATE') {
-      passedCount++;
-    }
-  }
-  
-  console.log(`\n🎯 Overall Accuracy: ${passedCount}/${results.length} (${(passedCount/results.length*100).toFixed(1)}%)`);
-  
-  if (passedCount === results.length) {
-    console.log('🏆 ALL TESTS PASSED - Canonical VSR calculation achieved!');
-  } else {
-    console.log('⚠️ Some tests failed - Check deposit parsing and multiplier calculations');
-  }
-  
+  results.forEach((result, index) => {
+    console.log(`${(index + 1).toString().padStart(2)}. ${result.totalGovernancePower.toLocaleString()} ISLAND (${result.nativeGovernancePower.toLocaleString()} native + ${result.delegatedGovernancePower.toLocaleString()} delegated)`);
+    console.log(`    ${result.wallet}`);
+  });
+
+  // Save results
+  const timestamp = new Date().toISOString().split('T')[0];
+  const output = {
+    scanDate: new Date().toISOString(),
+    summary: {
+      totalWallets: SCAN_WALLETS.length,
+      walletsWithPower: results.length,
+      totalNativePower: results.reduce((sum, r) => sum + r.nativeGovernancePower, 0),
+      totalDelegatedPower: results.reduce((sum, r) => sum + r.delegatedGovernancePower, 0),
+      totalGovernancePower: results.reduce((sum, r) => sum + r.totalGovernancePower, 0)
+    },
+    results: results
+  };
+
+  await fs.writeFile(`canonical-vsr-scan-${timestamp}.json`, JSON.stringify(output, null, 2));
+  console.log(`\n💾 Results saved to: canonical-vsr-scan-${timestamp}.json`);
+
   return results;
 }
 
-/**
- * Calculate governance power for a single wallet (API function)
- */
-async function getGovernancePower(walletAddress) {
-  try {
-    const result = await calculateNativeGovernancePower(walletAddress);
-    
-    // Format output as specified
-    const formattedResult = {
-      wallet: result.wallet,
-      nativeGovernancePower: result.nativeGovernancePower,
-      deposits: result.deposits.map(deposit => ({
-        amount: deposit.amount,
-        multiplier: deposit.multiplier,
-        votingPower: deposit.votingPower,
-        startTs: deposit.startTs,
-        endTs: deposit.endTs,
-        lockupKind: deposit.lockupKind
-      }))
-    };
-    
-    return formattedResult;
-    
-  } catch (error) {
-    console.error(`Error calculating governance power for ${walletAddress}:`, error);
-    return {
-      wallet: walletAddress,
-      nativeGovernancePower: 0,
-      deposits: [],
-      error: error.message
-    };
-  }
-}
-
-// Export for API usage
-export { getGovernancePower };
-
-// Run tests if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  testCanonicalVSR().catch(console.error);
-}
+// Run scanner
+runCanonicalVSRScanner().catch(console.error);

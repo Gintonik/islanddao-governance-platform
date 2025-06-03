@@ -1,0 +1,46 @@
+You are helping me build a canonical VSR (Voter Stake Registry) governance power scanner for IslandDAO on Solana. The goal is to calculate **native**, **delegated**, and **total** governance power for a list of wallets, using only **on-chain data** via Anchor-compatible deserialization — no byte-guessing.
+
+🧠 Logic Rules:
+1. **Native Governance Power** must include *only* tokens from deposits owned by the wallet (i.e., authority === wallet).
+2. If a wallet delegates its voting rights, **it still retains native power** — it does NOT lose governance power.
+3. **Delegated Governance Power** is the sum of tokens **delegated TO** a wallet from other wallets (i.e., it is the voterAuthority on someone else's voter account).
+4. Do not show delegated governance for wallets that own the deposits (even if they've delegated them).
+5. Governance power = deposit.amount * multiplier (only if the lockup is active/locked).
+6. If lockup is expired, exclude it from native governance power.
+
+🧪 VALIDATION TEST CASES (MUST PASS):
+- GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh:
+  - Native: 144,708.981722 ISLAND (from 4 active lockups with multipliers)
+  - Delegated: 0
+- Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1:
+  - Native: 200,000 ISLAND
+  - Delegated: 0
+- 3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt:
+  - Native: 10,353,647.013 ISLAND
+  - Delegated: 1,268,162 ISLAND
+- Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG:
+  - Native: 3,361,730.15 ISLAND
+  - Delegated: 1,598,919.1 ISLAND
+- 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4:
+  - Native: 12,625.580931 ISLAND
+  - Delegated: should include delegation from CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i (estimated ~4.19M ISLAND)
+- 7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA:
+  - Native: 8,709,019.78 ISLAND (from multiple complex lockups)
+- kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC:
+  - Native: 30,999 ISLAND
+  - Delegated: 1,337,238 ISLAND
+
+🛠️ What You Must Do:
+- Use `@coral-xyz/anchor` and the full IDL to deserialize Voter and Registrar accounts.
+- Scan all Voter accounts under the IslandDAO VSR program: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+- Use offset **72** to extract `voterAuthority` correctly.
+- For each Voter account, if the wallet is `authority`, treat the valid deposits as native.
+- For each Voter account, if the wallet is `voterAuthority` (but not authority), add its deposits as delegated to that voterAuthority wallet.
+- Always return accurate per-wallet governance power:
+  - `nativeGovernancePower`
+  - `delegatedGovernancePower`
+  - `totalGovernancePower`
+
+Do not change the native power calculation logic, which already works. Only add delegation detection that is safe, verifiable, and respects the wallet authority model.
+
+Final goal: Export a clean JSON and CSV leaderboard that matches all expectations above.
