@@ -1,0 +1,69 @@
+🎯 Goal:
+Fix the canonical VSR scanner so that it:
+1. Accurately detects all native governance power.
+2. Correctly applies VSR-based delegation rules without hardcoded exclusions.
+3. Works reliably for all current and future citizen wallets.
+
+---
+
+🧭 Governance Power Rules (Canonical VSR Logic Only):
+
+🟢 Native Power:
+- Comes from deposit entries inside a `Voter` account where:
+  - `voterAuthority === walletAddress`
+  - Deposits are not expired (i.e., `lockup.endTs > currentTime`)
+  - `amountDeposited > 0`
+- Each deposit gets a multiplier: `1 + min(years_remaining, 4)` (cap at 5x)
+
+🔵 Delegated Power:
+- Comes from Voter accounts **not owned by** the wallet, where:
+  - `voterAuthority === walletAddress`
+  - `authority !== walletAddress` (delegator is someone else)
+- Do not filter by address prefix or hardcoded address lists.
+- Validate that the account is not simultaneously voter and authority.
+
+---
+
+🛠 Implementation Fix Instructions:
+
+1. 🧪 Investigate why wallet `kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC` only shows ~30,999 native governance power.
+
+   ✅ This wallet has **two active lockups**:
+   - 310,472.9693 ISLAND
+   - 126,344.82227 ISLAND
+
+   The scanner must detect both and apply proper multipliers (est. total power > 1M, possibly ~8.7M).
+
+2. 📦 Native Detection Fix:
+   - Loop through **all depositEntries** in Voter accounts.
+   - Skip entries with zero amount or expired lockups.
+   - Sum: `amount * multiplier` per valid deposit.
+
+3. 🔁 Delegation Fix:
+   - For every Voter account:
+     - If `voterAuthority !== wallet` → skip
+     - If `authority === wallet` → skip (self-owned deposits)
+   - Only include power from third-party delegators
+
+4. ✅ Confirm:
+   - `kruHL3zJ`: ~436K base deposits → native gov power >> 1M
+   - `delegated` = 0
+
+5. 🧹 Deduplication:
+   - Prevent double-counting same deposits found via different byte scan methods or struct mismatches.
+
+---
+
+✅ Output Format:
+{
+wallet: "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+native: <must exceed sum of the two deposits since they are locked with multipliers>,
+delegated: 0,
+note: "Detected two valid long lockups. Delegation properly excluded via canonical rule."
+}
+
+
+---
+
+🚫 Do not use any wallet-specific filters or prefix checks. 
+✅ All logic must generalize to any current or future IslandDAO citizen.
