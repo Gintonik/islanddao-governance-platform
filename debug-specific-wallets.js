@@ -80,13 +80,9 @@ async function findAllVSRAccountsForWallet(walletAddress) {
     const data = account.account.data;
     
     try {
-      // Parse voter_authority (32 bytes at offset 72)
-      const voterAuthorityBytes = data.slice(72, 104);
-      const voterAuthority = new PublicKey(voterAuthorityBytes).toString();
-      
-      // Parse authority (32 bytes at offset 40) 
-      const authorityBytes = data.slice(40, 72);
-      const authority = new PublicKey(authorityBytes).toString();
+      // Use exact offsets from working scanner
+      const authority = new PublicKey(data.slice(8, 40)).toBase58();
+      const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
       
       const isNative = authority === walletAddress;
       const isDelegated = voterAuthority === walletAddress && authority !== walletAddress;
