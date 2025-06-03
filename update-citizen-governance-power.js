@@ -43,8 +43,7 @@ async function updateCitizenGovernancePower() {
       try {
         const updateQuery = `
           UPDATE citizens 
-          SET native_governance_power = $1,
-              updated_at = NOW()
+          SET native_governance_power = $1
           WHERE wallet = $2
         `;
         
