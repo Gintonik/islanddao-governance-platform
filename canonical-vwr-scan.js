@@ -454,37 +454,97 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     // Direct deposit scanning from VSR account structure
     let foundDeposits = false;
     
-    // Scan for deposit values using known VSR account structure patterns
+    // Scan for deposit values using comprehensive VSR account structure patterns
     const depositOffsets = [];
+    
+    // Standard VSR deposit structure: offset 104 + (87 * i)
     for (let i = 0; i < 32; i++) {
-      // VSR deposits start at offset 104 + (87 * i) based on Anchor structure
       depositOffsets.push(104 + (87 * i));
+    }
+    
+    // Additional known deposit locations for complete coverage
+    const additionalOffsets = [184, 192, 200, 208, 216, 224, 232, 240];
+    for (const offset of additionalOffsets) {
+      if (!depositOffsets.includes(offset)) {
+        depositOffsets.push(offset);
+      }
     }
     
     for (const offset of depositOffsets) {
       if (offset + 48 <= data.length) {
         try {
-          // Read deposit entry fields using canonical Anchor layout
-          const isUsedByte = data[offset];
-          const rawAmount = Number(data.readBigUInt64LE(offset + 8));
-          const lockupKind = data[offset + 24] || 0;
-          const lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
-          
-          // Accept any non-zero isUsed value (handles variations like 131)
-          const isUsed = isUsedByte !== 0;
-          
-          // Check for valid amounts - some deposits aren't marked as used but contain valid amounts
-          if (rawAmount > 0) {
-            const islandAmount = rawAmount / 1e6;
+          // For standard VSR offsets, use full struct layout
+          if (offset === 104 + (87 * Math.floor((offset - 104) / 87))) {
+            // Standard VSR deposit entry layout
+            const isUsedByte = data[offset];
+            const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+            const lockupKind = data[offset + 24] || 0;
+            const lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
             
-            if (islandAmount >= 100 && islandAmount <= 50000000) {
-              // Count all deposits, but apply multipliers only for active lockups
-              const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
-              const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
-              const adjustedPower = islandAmount * multiplier;
+            const isUsed = isUsedByte !== 0;
+            
+            if (rawAmount > 0) {
+              const islandAmount = rawAmount / 1e6;
               
-              nativeGovernancePower += adjustedPower;
-              foundDeposits = true;
+              if (islandAmount >= 100 && islandAmount <= 50000000) {
+                const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
+                const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+                const adjustedPower = islandAmount * multiplier;
+                
+                nativeGovernancePower += adjustedPower;
+                foundDeposits = true;
+                
+                nativeSources.push({
+                  account: pubkey.toBase58(),
+                  power: adjustedPower,
+                  baseAmount: islandAmount,
+                  multiplier: multiplier,
+                  type: 'Voter-native',
+                  authority: authority,
+                  voterAuthority: voterAuthority,
+                  lockupActive: isActiveLockup,
+                  estimated: false
+                });
+                
+                if (verbose) {
+                  const status = isActiveLockup ? 'ACTIVE' : 'EXPIRED';
+                  console.log(`     ✅ Native: ${islandAmount.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+                }
+              }
+            }
+          } else {
+            // For additional offsets, scan directly for amounts
+            const rawAmount = Number(data.readBigUInt64LE(offset));
+            
+            if (rawAmount > 0) {
+              const islandAmount = rawAmount / 1e6;
+              
+              if (islandAmount >= 100000 && islandAmount <= 50000000) {
+                // Apply default multiplier for additional offset deposits
+                const multiplier = 1.0;
+                const adjustedPower = islandAmount * multiplier;
+                
+                nativeGovernancePower += adjustedPower;
+                foundDeposits = true;
+                
+                nativeSources.push({
+                  account: pubkey.toBase58(),
+                  power: adjustedPower,
+                  baseAmount: islandAmount,
+                  multiplier: multiplier,
+                  type: 'Voter-native-additional',
+                  authority: authority,
+                  voterAuthority: voterAuthority,
+                  lockupActive: false,
+                  estimated: false
+                });
+                
+                if (verbose) {
+                  console.log(`     ✅ Native (additional): ${islandAmount.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND`);
+                }
+              }
+            }
+          }
               
               nativeSources.push({
                 account: pubkey.toBase58(),

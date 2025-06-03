@@ -1,0 +1,44 @@
+Fix the canonical VSR governance power scanner to use the correct canonical rules below. The goal is to calculate native and delegated governance power using only on-chain data, without any inference or fallback assumptions. DO NOT misclassify native as delegated or vice versa.
+
+Use these verified ground-truth test cases to validate and correct the scanner:
+
+1. Wallet: kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC
+   - Deposits:
+     - 310,472.9693 ISLAND
+     - 126,344.82227 ISLAND
+   - All locked in VSR with voting multipliers
+   - ✅ Expected:
+     - Native Governance Power: ➡️ Use multiplier-based calculation
+     - Delegated Power: **0**
+     - DO NOT assume delegated power. There is none.
+     - DO NOT default to VWR total.
+
+2. Wallet: 3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt
+   - Deposits: ~10.35M ISLAND
+   - ✅ Expected:
+     - Native Power: ~10.35M ISLAND
+     - Delegated Power: ~1,268,162 ISLAND (delegation exists)
+     - Total: ~11.62M ISLAND
+
+3. Wallet: Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG
+   - ✅ Expected:
+     - Native Power: ~3.36M ISLAND
+     - Delegated Power: ~1.6M ISLAND
+
+4. Wallet: 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+   - ✅ Expected:
+     - Native Power: ~13,625.581 ISLAND
+     - Delegated Power: ~4,189,328.11 ISLAND
+     - Delegator: CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i
+
+👉 Ensure:
+- Voter accounts where `authority === wallet` are counted as native.
+- Voter accounts where `voterAuthority === wallet` and `authority !== wallet` are delegated.
+- Parse deposits properly using Anchor-compatible struct parsing (e.g., offset 104 + 87*i), and use correct isUsed detection (handle values like 131).
+- Apply the correct lockup multipliers per IslandDAO config (e.g., cliff, constant, vesting).
+- Do not fall back to VWR if native deposits are present.
+- Do not infer delegated power if none is found via Voter account scan.
+
+Fix any deposit parsing, lockup detection, or delegation map logic that causes discrepancies against the known values above.
+
+Run a fresh scan and validate all wallets using ONLY authentic on-chain data.
