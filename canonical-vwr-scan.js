@@ -452,56 +452,77 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     voterAccountsFound++;
     const { authority, voterAuthority } = authorities;
     
-    // Parse ALL deposits from this owned Voter account
-    const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+    // Direct deposit scanning from VSR account structure
+    let foundDeposits = false;
     
-    if (deposits && deposits.length > 0) {
-      for (const deposit of deposits) {
-        if (deposit.isUsed && deposit.amountDepositedNative > 0) {
-          const multiplier = calculateAuthenticLockupMultiplier(deposit, timestamp);
-          const adjustedPower = deposit.amountDepositedNative * multiplier;
+    // Scan for deposit values using known VSR account structure patterns
+    const depositOffsets = [];
+    for (let i = 0; i < 32; i++) {
+      // VSR deposits start at offset 104 + (87 * i) based on Anchor structure
+      depositOffsets.push(104 + (87 * i));
+    }
+    
+    for (const offset of depositOffsets) {
+      if (offset + 16 <= data.length) {
+        try {
+          // Read amount_deposited_native at offset + 8
+          const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+          const islandAmount = rawAmount / 1e6;
           
-          if (adjustedPower > 0) {
+          if (islandAmount >= 100 && islandAmount <= 50000000 && rawAmount > 0) {
+            // Read lockup info to calculate multiplier
+            const lockupKind = data[offset + 24] || 0;
+            const lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
+            
+            const isActiveLockup = lockupEndTs > timestamp;
+            const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+            const adjustedPower = islandAmount * multiplier;
+            
             nativeGovernancePower += adjustedPower;
+            foundDeposits = true;
+            
             nativeSources.push({
               account: pubkey.toBase58(),
               power: adjustedPower,
-              baseAmount: deposit.amountDepositedNative,
+              baseAmount: islandAmount,
               multiplier: multiplier,
               type: 'Voter-native',
               authority: authority,
               voterAuthority: voterAuthority,
-              lockupActive: deposit.lockupEndTs > timestamp,
+              lockupActive: isActiveLockup,
               estimated: false
             });
             
             if (verbose) {
-              const status = deposit.lockupEndTs > timestamp ? 'ACTIVE' : 'EXPIRED';
-              console.log(`     ✅ Native: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+              const status = isActiveLockup ? 'ACTIVE' : 'EXPIRED';
+              console.log(`     ✅ Native: ${islandAmount.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
             }
           }
+        } catch (error) {
+          continue;
         }
       }
-    } else {
-      // Fallback: Use VWR total for this Voter account if no structured deposits found
-      const accountVWRTotal = hasVWR ? vwrTotal / voterAccountsFound : 0;
-      if (accountVWRTotal > 0) {
-        nativeGovernancePower += accountVWRTotal;
-        nativeSources.push({
-          account: pubkey.toBase58(),
-          power: accountVWRTotal,
-          baseAmount: accountVWRTotal,
-          multiplier: 1.0,
-          type: 'Voter-native-vwr',
-          authority: authority,
-          voterAuthority: voterAuthority,
-          lockupActive: false,
-          estimated: false
-        });
-        
-        if (verbose) {
-          console.log(`     ✅ Native (VWR): ${accountVWRTotal.toFixed(3)} × 1.00x = ${accountVWRTotal.toFixed(3)} ISLAND`);
-        }
+    }
+    
+    // If no deposits found through structure parsing, use the VWR total as native power
+    if (!foundDeposits && hasVWR && vwrTotal > 0) {
+      const accountShare = vwrTotal / Math.max(voterAccountsFound, 1);
+      nativeGovernancePower += accountShare;
+      
+      nativeSources.push({
+        account: pubkey.toBase58(),
+        power: accountShare,
+        baseAmount: accountShare,
+        multiplier: 1.0,
+        type: 'Voter-native-vwr',
+        authority: authority,
+        voterAuthority: voterAuthority,
+        lockupActive: false,
+        estimated: false
+      });
+      
+      if (verbose) {
+        console.log(`     ✅ Native (VWR): ${accountShare.toFixed(3)} × 1.00x = ${accountShare.toFixed(3)} ISLAND`);
       }
     }
   }
