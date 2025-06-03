@@ -16,6 +16,7 @@ const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXq
 let walletAliases = {};
 try {
   walletAliases = JSON.parse(fs.readFileSync('./wallet_aliases.json', 'utf8'));
+  console.log(`Loaded wallet aliases for ${Object.keys(walletAliases).length} wallets`);
 } catch (error) {
   console.log('No wallet aliases file found, using direct authority matching only');
 }
@@ -38,18 +39,23 @@ function calculateMultiplier(lockupKind, startTs, endTs, cliffTs) {
 }
 
 /**
+ * Check if authority is native for wallet (direct or alias)
+ */
+const isNativeAuthority = (wallet, authority) =>
+  authority === wallet || (walletAliases[wallet]?.includes(authority) ?? false);
+
+/**
  * Check if authority is controlled by wallet (direct or verified alias)
  */
 function isControlledAuthority(authority, walletAddress) {
-  // Base rule: direct authority match
-  if (authority === walletAddress) {
-    return { controlled: true, type: 'Direct authority' };
-  }
-  
-  // Verified alias mapping
-  const aliases = walletAliases[walletAddress];
-  if (aliases && aliases.includes(authority)) {
-    return { controlled: true, type: 'Verified alias' };
+  // Use the simplified native authority check
+  if (isNativeAuthority(walletAddress, authority)) {
+    // Determine control type
+    if (authority === walletAddress) {
+      return { controlled: true, type: 'Direct authority' };
+    } else {
+      return { controlled: true, type: 'Verified alias' };
+    }
   }
   
   return { controlled: false, type: null };
