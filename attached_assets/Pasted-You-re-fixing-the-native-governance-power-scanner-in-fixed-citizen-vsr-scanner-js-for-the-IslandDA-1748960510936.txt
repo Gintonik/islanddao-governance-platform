@@ -1,0 +1,49 @@
+You're fixing the native governance power scanner in `fixed-citizen-vsr-scanner.js` for the IslandDAO Citizen Map. Your goal is to finalize canonical, correct calculations using authentic on-chain data with strict ownership filtering. Apply the following steps:
+
+1. ✅ Native Power Filter:
+   - Only include VSR accounts where BOTH:
+     - `voter_authority === walletPublicKey`
+     - `authority === walletPublicKey`
+   - This ensures we only count native power (no delegated deposits).
+   - Example:
+     ```js
+     if (
+       voterAuthority.equals(walletPublicKey) &&
+       authority.equals(walletPublicKey)
+     ) {
+       // ✅ valid native governance deposit
+     } else {
+       // 🚫 skip delegated or misattributed
+     }
+     ```
+
+2. ✅ Full VSR Account Scan:
+   - Scan all program accounts (approx. 6,096) to detect **all** VSR accounts for each wallet.
+   - Check `authority` field (offset 8–40) to determine ownership.
+   - Ensure you're not stopping after the first match — aggregate across all accounts owned by the wallet.
+
+3. ✅ Use Working Offset Parser:
+   - Reuse the previously working `parseVSRDepositsWithValidation()` function.
+   - It uses byte offsets [104, 112, 184, 192, 200, 208] to get:
+     - isUsed (flag)
+     - amount
+     - multiplier
+   - For each deposit:
+     ```js
+     if (isUsed) {
+       nativePower += depositAmount * multiplier;
+     }
+     ```
+
+4. ✅ Manual Validation Benchmarks:
+   - Wallet: `4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4` (Whale's Friend)
+     - Must return exactly `12,625.58` ISLAND native governance power (no more, no less).
+     - Any extra (like +1,000 ISLAND) must be filtered as delegated or invalid.
+   - Wallet: `7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA` (Takisoul)
+     - Must detect **all native lockups** totaling ~8.7M ISLAND.
+     - Confirm that you're including all VSR accounts owned by this wallet.
+
+5. ✅ Final Output:
+   - After confirming all results match expectations, freeze this logic in a new file:
+     `canonical-native-scanner.js`
+   - This file will never change again — it becomes the trusted source of truth.
