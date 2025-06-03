@@ -164,7 +164,7 @@ function parseVSRDeposits(data, walletAddress = '', accountPubkey = '') {
 }
 
 /**
- * Get all VSR accounts from the program
+ * Get all VSR accounts from the program without filtering
  */
 async function getAllVSRAccounts() {
   console.log('Fetching all VSR program accounts...');
@@ -173,16 +173,9 @@ async function getAllVSRAccounts() {
     commitment: 'confirmed'
   });
   
-  console.log(`Found ${accounts.length} total VSR accounts`);
+  console.log(`Found ${accounts.length} total VSR accounts (no size filtering)`);
   
-  // Filter by Voter account size (check broader range to catch all potential VSR accounts)
-  const voterAccounts = accounts.filter(account => 
-    account.account.data.length >= 2000 && account.account.data.length <= 6000
-  );
-  
-  console.log(`Filtered to ${voterAccounts.length} Voter accounts`);
-  
-  return voterAccounts;
+  return accounts;
 }
 
 /**
@@ -193,13 +186,25 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
   
   let nativeAccounts = 0;
   let allRawDeposits = [];
+  let processedAccounts = 0;
+  let skippedAccounts = 0;
   
   console.log(`\nCalculating native power for: ${walletAddress}`);
+  console.log(`Processing all ${allVSRAccounts.length} VSR accounts...`);
   
-  // FIX 1: Aggregate ALL VSR accounts where authority === wallet
-  for (const account of allVSRAccounts) {
+  // Iterate through ALL 16,586 accounts without early stops
+  for (let i = 0; i < allVSRAccounts.length; i++) {
+    const account = allVSRAccounts[i];
+    processedAccounts++;
+    
     try {
       const data = account.account.data;
+      
+      // Skip accounts that are too small to contain authority field
+      if (data.length < 72) {
+        skippedAccounts++;
+        continue;
+      }
       
       // Parse authority field (32 bytes at offset 8-40)
       const authorityBytes = data.slice(8, 40);
@@ -209,7 +214,7 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
       if (authority.equals(walletPubkey)) {
         nativeAccounts++;
         
-        console.log(`  Found native VSR account ${nativeAccounts}: ${account.pubkey.toString()}`);
+        console.log(`  Found native VSR account ${nativeAccounts}: ${account.pubkey.toString()} (size: ${data.length} bytes)`);
         
         // Parse deposits from this account
         const deposits = parseVSRDeposits(data, walletAddress, account.pubkey.toString());
@@ -223,10 +228,18 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
       }
       
     } catch (error) {
-      // Skip accounts with parsing errors
+      skippedAccounts++;
+      // Continue processing even if one account fails
       continue;
     }
+    
+    // Progress logging every 2000 accounts
+    if (processedAccounts % 2000 === 0) {
+      console.log(`  Processed ${processedAccounts}/${allVSRAccounts.length} accounts, found ${nativeAccounts} native accounts...`);
+    }
   }
+  
+  console.log(`  Completed scan: ${processedAccounts} processed, ${skippedAccounts} skipped, ${nativeAccounts} native accounts found`);
   
   // FIX 2: Apply filtering for small deposits when large deposits exist
   let filteredDeposits = [];
