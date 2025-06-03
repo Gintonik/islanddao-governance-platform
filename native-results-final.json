@@ -1,129 +1,576 @@
 {
-  "timestamp": "2025-06-03T18:14:28.325Z",
-  "scannerVersion": "canonical-vsr-restored",
-  "validationStatus": "CURRENT_BLOCKCHAIN_STATE",
+  "timestamp": "2025-06-03T15:34:59.608Z",
+  "scannerVersion": "canonical-native-governance-final-optimized",
+  "totalCitizens": 20,
+  "walletAliasesCount": 1,
   "methodology": {
-    "authorityMatching": "Direct authority + wallet reference + comprehensive alias resolution",
-    "lockupExtraction": "Byte search +0 to +160 from deposit offset",
-    "multiplierFormula": "min(5, 1 + min((endTs - now) / 31556952, 4))",
-    "deduplication": "[amount, multiplier] composite key",
-    "phantomFiltering": "1000 ISLAND deposits with no lockup and empty config"
+    "authorityMatching": "Direct + Verified aliases + Wallet reference detection",
+    "offsetMethod": "Extended canonical byte offsets [104, 112, 184, 192, 200, 208, 264, 272, 344, 352]",
+    "phantomFiltering": "Empty config detection for 1,000 ISLAND deposits",
+    "multiplierCalculation": "Canonical lockup logic with 5x cap"
   },
-  "targetValidation": [
+  "results": [
     {
-      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "name": "Takisoul",
-      "expectedPower": 8709019.78,
-      "actualPower": 7564244.692192314,
-      "difference": -1144775.0878076851,
-      "percentageError": 13.144706485069957,
-      "isMatch": false,
-      "controlledAccounts": 1,
+      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "nativePower": 111969.618073,
+      "accountCount": 1,
+      "depositCount": 3,
       "deposits": [
         {
-          "amount": 690,
-          "lockupEndTs": 1750340359,
-          "multiplier": 1.0432834943628284,
-          "votingPower": 719.8656111103516,
-          "offset": 112,
-          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "lockupDate": "2025-06-19"
+          "amount": 16097.79386,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1733465904,
+          "multiplier": 1,
+          "votingPower": 16097.79386,
+          "accountPubkey": "Gqzb2GDKmTtBExZbBXLdRrGjzrSbvZbsyLquZGQTHAcY",
+          "offset": 112
         },
         {
-          "amount": 1500000,
-          "lockupEndTs": 1752407321,
-          "multiplier": 1.1087829126843443,
-          "votingPower": 1663174.3690265163,
-          "offset": 184,
-          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "lockupDate": "2025-07-13"
-        },
-        {
-          "amount": 2000000,
-          "lockupEndTs": 1752407321,
-          "multiplier": 1.1087829126843443,
-          "votingPower": 2217565.8253686884,
-          "offset": 264,
-          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "lockupDate": "2025-07-13"
-        },
-        {
-          "amount": 3682784.632186,
+          "amount": 78857.030444,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
           "lockupEndTs": 0,
           "multiplier": 1,
-          "votingPower": 3682784.632186,
-          "offset": 344,
-          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "lockupDate": null
+          "votingPower": 78857.030444,
+          "accountPubkey": "Gqzb2GDKmTtBExZbBXLdRrGjzrSbvZbsyLquZGQTHAcY",
+          "offset": 184
+        },
+        {
+          "amount": 17014.793769,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 17014.793769,
+          "accountPubkey": "Gqzb2GDKmTtBExZbBXLdRrGjzrSbvZbsyLquZGQTHAcY",
+          "offset": 264
         }
       ]
     },
     {
-      "wallet": "GJdRQcsyWZ4vDSxmbC5JrJQfCDdq7QfSMZH4zK8LRZue",
-      "name": "GJdRQcsy",
-      "expectedPower": 144708.98,
-      "actualPower": 99454.45016502234,
-      "difference": -45254.52983497767,
-      "percentageError": 31.27278613599354,
-      "isMatch": false,
-      "controlledAccounts": 1,
+      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "nativePower": 536529.257549,
+      "accountCount": 1,
+      "depositCount": 3,
       "deposits": [
         {
-          "amount": 3913,
-          "lockupEndTs": 1752580684,
-          "multiplier": 1.1142764860180447,
-          "votingPower": 4360.163889788609,
-          "offset": 112,
-          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
-          "lockupDate": "2025-07-15"
+          "amount": 519659.577033,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1721058340,
+          "multiplier": 1,
+          "votingPower": 519659.577033,
+          "accountPubkey": "4poA3zkq2qm41rh5uqwF2N8m3TS5X4KNFvQWEp8ufiKX",
+          "offset": 112
         },
         {
-          "amount": 10000,
-          "lockupEndTs": 1759555596,
-          "multiplier": 1.335302648494066,
-          "votingPower": 13353.02648494066,
-          "offset": 184,
-          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
-          "lockupDate": "2025-10-04"
+          "amount": 3500,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 3500,
+          "accountPubkey": "4poA3zkq2qm41rh5uqwF2N8m3TS5X4KNFvQWEp8ufiKX",
+          "offset": 184
         },
         {
-          "amount": 37626.982836,
-          "lockupEndTs": 1759555596,
-          "multiplier": 1.335302648494066,
-          "votingPower": 50243.40983575157,
-          "offset": 264,
-          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
-          "lockupDate": "2025-10-04"
-        },
-        {
-          "amount": 25738.998886,
-          "lockupEndTs": 1756035028,
-          "multiplier": 1.2237402897466179,
-          "votingPower": 31497.849954541514,
-          "offset": 344,
-          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
-          "lockupDate": "2025-08-24"
+          "amount": 13369.680516,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 13369.680516,
+          "accountPubkey": "4poA3zkq2qm41rh5uqwF2N8m3TS5X4KNFvQWEp8ufiKX",
+          "offset": 264
         }
       ]
+    },
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "nativePower": 10394142.749205,
+      "accountCount": 5,
+      "depositCount": 5,
+      "deposits": [
+        {
+          "amount": 500,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 500,
+          "accountPubkey": "ghdaFEBVGe8FjvEenZwuccfioymkRZM7Vwe6pBpYoDP",
+          "offset": 104
+        },
+        {
+          "amount": 1000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1696496371,
+          "multiplier": 1,
+          "votingPower": 1000,
+          "accountPubkey": "ghdaFEBVGe8FjvEenZwuccfioymkRZM7Vwe6pBpYoDP",
+          "offset": 112
+        },
+        {
+          "amount": 28619.140733,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 28619.140733,
+          "accountPubkey": "7U3jK7nSANP3yAcUpYPrxjZsxBAhPFsdX94khkVJ5zjj",
+          "offset": 112
+        },
+        {
+          "amount": 10353647.013,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 10353647.013,
+          "accountPubkey": "DqH7YkHB2MKT936DEDw1N7d14MGFbg5eUQHSVT2yuNsW",
+          "offset": 104
+        },
+        {
+          "amount": 10376.595472,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 10376.595472,
+          "accountPubkey": "FGQxAkrADYB9zsXDrBLfzCiugnBqePBLS6hkSCsMnR4W",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
     },
     {
       "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
-      "name": "Whale's Friend",
-      "expectedPower": 12625.58,
-      "actualPower": 12625.580931,
-      "difference": 0.0009310000004916219,
-      "percentageError": 0.000007373918667432482,
-      "isMatch": true,
-      "controlledAccounts": 2,
+      "nativePower": 12625.580931,
+      "accountCount": 2,
+      "depositCount": 1,
       "deposits": [
         {
           "amount": 12625.580931,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
           "lockupEndTs": 0,
           "multiplier": 1,
           "votingPower": 12625.580931,
-          "offset": 104,
           "accountPubkey": "AErp8UYUay7uBE9i6ULtSDgQP5d3W66n9RJH5QpUG3Uh",
-          "lockupDate": null
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "nativePower": 537007.0813130001,
+      "accountCount": 2,
+      "depositCount": 6,
+      "deposits": [
+        {
+          "amount": 50000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1721919355,
+          "multiplier": 1,
+          "votingPower": 50000,
+          "accountPubkey": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "offset": 112
+        },
+        {
+          "amount": 21500,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 21500,
+          "accountPubkey": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "offset": 184
+        },
+        {
+          "amount": 49202.733486,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 49202.733486,
+          "accountPubkey": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "offset": 264
+        },
+        {
+          "amount": 100000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1733238595,
+          "multiplier": 1,
+          "votingPower": 100000,
+          "accountPubkey": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "offset": 272
+        },
+        {
+          "amount": 116304.347827,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 116304.347827,
+          "accountPubkey": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "offset": 344
+        },
+        {
+          "amount": 200000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 200000,
+          "accountPubkey": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "offset": 352
+        }
+      ]
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "nativePower": 7183474.632185999,
+      "accountCount": 1,
+      "depositCount": 4,
+      "deposits": [
+        {
+          "amount": 690,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1718804359,
+          "multiplier": 1,
+          "votingPower": 690,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 112
+        },
+        {
+          "amount": 1500000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 1500000,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 184
+        },
+        {
+          "amount": 2000000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 2000000,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 264
+        },
+        {
+          "amount": 3682784.632186,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "nativePower": 126779.222404,
+      "accountCount": 1,
+      "depositCount": 1,
+      "deposits": [
+        {
+          "amount": 126779.222404,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1705933205,
+          "multiplier": 1,
+          "votingPower": 126779.222404,
+          "accountPubkey": "AsisfQU6HPBpefNrbEeKUVB4v5JB8ymDxwC4kbxxzhnG",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "nativePower": 124693.845135,
+      "accountCount": 1,
+      "depositCount": 1,
+      "deposits": [
+        {
+          "amount": 124693.845135,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 124693.845135,
+          "accountPubkey": "7qaaCgTsyX9zA3URF2sQczNrWuJwNeEGk2N9YE5jieiP",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "nativePower": 4879,
+      "accountCount": 1,
+      "depositCount": 1,
+      "deposits": [
+        {
+          "amount": 4879,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 4879,
+          "accountPubkey": "4YG7bYeAmHT9gNhnkReTtEabzFPjaarMKtLeGjffaWKr",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "nativePower": 29484.464683,
+      "accountCount": 1,
+      "depositCount": 1,
+      "deposits": [
+        {
+          "amount": 29484.464683,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 29484.464683,
+          "accountPubkey": "8AK1cH1UsVqJzvvK1TqjtkCYYhxCbxtsVdoMWiHY7VUm",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "nativePower": 200000,
+      "accountCount": 1,
+      "depositCount": 1,
+      "deposits": [
+        {
+          "amount": 200000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 200000,
+          "accountPubkey": "xGW423w6m34PkGfFsCF6eWzP8LbEAYMHFYp9dvvV2br",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "nativePower": 3375944.436187,
+      "accountCount": 4,
+      "depositCount": 7,
+      "deposits": [
+        {
+          "amount": 11000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 11000,
+          "accountPubkey": "7DuFZy88khR3y8b6PoV7PEQgvpqGsjNMi4umaHAdYbEz",
+          "offset": 104
+        },
+        {
+          "amount": 1000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1728514800,
+          "multiplier": 1,
+          "votingPower": 1000,
+          "accountPubkey": "7DuFZy88khR3y8b6PoV7PEQgvpqGsjNMi4umaHAdYbEz",
+          "offset": 112
+        },
+        {
+          "amount": 3361730.150474,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 3361730.150474,
+          "accountPubkey": "CUmwUPKCZTHQ8MUPmB7CRyDNwTAjEe5iojkqyyFDoGFY",
+          "offset": 112
+        },
+        {
+          "amount": 214.285713,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1698501344,
+          "multiplier": 1,
+          "votingPower": 214.285713,
+          "accountPubkey": "CyZDhumUzGEEzQsewvRkuvTEtDgpd3SZcWRW1fp6DV89",
+          "offset": 112
+        },
+        {
+          "amount": 1071.428571,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 1071.428571,
+          "accountPubkey": "CyZDhumUzGEEzQsewvRkuvTEtDgpd3SZcWRW1fp6DV89",
+          "offset": 184
+        },
+        {
+          "amount": 428.571429,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 428.571429,
+          "accountPubkey": "CyZDhumUzGEEzQsewvRkuvTEtDgpd3SZcWRW1fp6DV89",
+          "offset": 264
+        },
+        {
+          "amount": 500,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1696409280,
+          "multiplier": 1,
+          "votingPower": 500,
+          "accountPubkey": "CyZDhumUzGEEzQsewvRkuvTEtDgpd3SZcWRW1fp6DV89",
+          "offset": 272
+        }
+      ]
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "nativePower": 77278.981722,
+      "accountCount": 1,
+      "depositCount": 4,
+      "deposits": [
+        {
+          "amount": 3913,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1738742046,
+          "multiplier": 1,
+          "votingPower": 3913,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "offset": 112
+        },
+        {
+          "amount": 10000,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 10000,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "offset": 184
+        },
+        {
+          "amount": 37626.982836,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 37626.982836,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "offset": 264
+        },
+        {
+          "amount": 25738.998886,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 25738.998886,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "nativePower": 467816.672656,
+      "accountCount": 1,
+      "depositCount": 3,
+      "deposits": [
+        {
+          "amount": 126344.822273,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 126344.822273,
+          "accountPubkey": "5cSWVmahnt6DoWPpxkJRAXAMEeX2DDmbdNieT3HSQy3x",
+          "offset": 104
+        },
+        {
+          "amount": 30998.881087,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 1720921219,
+          "multiplier": 1,
+          "votingPower": 30998.881087,
+          "accountPubkey": "5cSWVmahnt6DoWPpxkJRAXAMEeX2DDmbdNieT3HSQy3x",
+          "offset": 112
+        },
+        {
+          "amount": 310472.969296,
+          "lockupKind": 0,
+          "lockupStartTs": 0,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 310472.969296,
+          "accountPubkey": "5cSWVmahnt6DoWPpxkJRAXAMEeX2DDmbdNieT3HSQy3x",
+          "offset": 184
         }
       ]
     }
