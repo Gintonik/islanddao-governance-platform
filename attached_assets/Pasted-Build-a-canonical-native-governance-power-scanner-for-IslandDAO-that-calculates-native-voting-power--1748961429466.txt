@@ -1,0 +1,51 @@
+Build a canonical native governance power scanner for IslandDAO that calculates native voting power based purely on on-chain data from the Voter Stake Registry (VSR) on Solana mainnet. The results must match verified user reports for wallets like Whale’s Friend and Takisoul, without manual overrides or hardcoded values.
+
+🟩 REQUIREMENTS:
+
+1. **Scan all VSR program accounts** (~16,500 total from `getProgramAccounts()` on VSR program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`)
+   - Filter by account size: only decode accounts matching the Voter struct size (≈5,304 bytes)
+   - Skip non-voter accounts (registrars, mint configs, etc.)
+
+2. **Canonical Ownership Rule for Native Governance Power**:
+   - Count VSR deposits as native **only if `authority === wallet`**
+   - Do NOT require `voter_authority === wallet` (most native accounts delegate voting rights)
+
+3. **Parse Deposits Canonically**:
+   - Each Voter account may contain up to 32 `DepositEntry` structs
+   - Use canonical byte offsets: [104, 112, 184, 192, 200, 208] to extract deposit amounts
+   - Use `isUsed` flag to skip empty entries
+   - Scale values by 1e-6 to convert to ISLAND tokens
+
+4. **Apply Canonical Multiplier Logic**:
+   - Constant lockup: use multiplier if `now < endTs`, else 1.0x
+   - Cliff lockup: use multiplier if `now < cliffTs`, else 1.0x
+   - Vested and No lockup: always 1.0x
+   - Calculate: `voting_power = amount * multiplier`
+
+5. **Return for Each Wallet**:
+   - Total native governance power (sum of valid deposits)
+   - Breakdown of deposits with amount, lockup kind, and multiplier
+   - Example:  
+     ```
+     Wallet: 7pPJt2xo...
+     Native Power: 8,709,019.78 ISLAND
+     - Deposit 1: 2,000,000 ISLAND (cliff, 3.00x)
+     - Deposit 2: 1,500,000 ISLAND (constant, 2.00x)
+     - Deposit 3: 500,000 ISLAND (no lock, 1.00x)
+     ```
+
+6. **No Guessing or Hardcoding**:
+   - Do not hardcode values (e.g. “Whale’s Friend = 12,625.58”) — extract all deposits and apply ownership + multiplier logic
+   - Do not exclude deposits manually
+   - Trust the on-chain byte structure and offsets
+
+7. **Goal**:
+   - Produce accurate, trustless, and verifiable native governance power values
+   - Match known benchmarks:
+     - Whale’s Friend (4pT6ESaM...): 12,625.58 native (1 deposit)
+     - Takisoul (7pPJt2xo...): ~8.7M native across multiple lockups
+     - 3PKhzE9w...: large deposits, no lockups
+
+---
+
+When done, the scanner should be locked and reused as the **canonical native VSR governance power engine**. We'll create a separate scanner for delegation afterward, without altering this logic.
