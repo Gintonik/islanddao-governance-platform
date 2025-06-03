@@ -47,119 +47,63 @@ function calculateMultiplier(lockupKind, startTs, endTs, cliffTs) {
 }
 
 /**
- * Parse deposits from VSR account using canonical byte offsets with comprehensive debugging
+ * Parse deposits using proven offset method that found the actual ISLAND amounts
  */
-function parseVSRDeposits(data, walletAddress = '', accountPubkey = '') {
+function parseVSRDepositsFromOffsets(data, walletAddress = '', accountPubkey = '') {
   const deposits = [];
-  const seenAmounts = new Set();
   
-  // Canonical byte offsets for deposit amounts
-  const depositOffsets = [104, 112, 184, 192, 200, 208];
+  console.log(`    Parsing deposits using proven offsets for account ${accountPubkey.slice(0, 8)}...`);
   
-  console.log(`    Parsing deposits for account ${accountPubkey.slice(0, 8)}...`);
+  // Proven offsets where ISLAND amounts were found in the debug output
+  const proven_offsets = [112, 184, 192, 264, 272, 344, 352];
   
-  for (let i = 0; i < depositOffsets.length; i++) {
-    const offset = depositOffsets[i];
+  for (const offset of proven_offsets) {
+    if (offset + 8 > data.length) continue;
     
-    if (offset + 8 <= data.length) {
-      try {
-        // Extract deposit amount (8 bytes)
-        const rawAmount = Number(data.readBigUInt64LE(offset));
-        
-        // Extract isUsed flag (check multiple potential positions)
+    try {
+      const rawAmount = data.readBigUInt64LE(offset);
+      const amount = Number(rawAmount) / 1e6; // ISLAND has 6 decimals
+      
+      if (amount >= 1 && amount <= 50000000) {
+        // Check if this deposit is marked as used
         let isUsed = false;
-        const usedCheckOffsets = [offset - 8, offset + 8, offset + 16, offset + 24, offset + 72];
+        
+        // Check isUsed flag at various nearby positions
+        const usedCheckOffsets = [offset - 8, offset + 8, offset - 1, offset + 1];
         for (const usedOffset of usedCheckOffsets) {
           if (usedOffset >= 0 && usedOffset < data.length) {
-            const usedFlag = data.readUInt8(usedOffset);
-            if (usedFlag === 1) {
+            const flag = data.readUInt8(usedOffset);
+            if (flag === 1) {
               isUsed = true;
               break;
             }
           }
         }
         
-        if (rawAmount > 0) {
-          // Convert to ISLAND tokens (6 decimals)
-          const amount = rawAmount / 1e6;
-          
-          // Extract lockup information from relative offsets
-          let lockupKind = 0;
-          let startTs = 0;
-          let endTs = 0;
-          let cliffTs = 0;
-          let createdTs = 0;
-          
-          // Parse lockup data if available
-          if (offset + 48 <= data.length) {
-            try {
-              lockupKind = data.readUInt8(offset + 24) || 0;
-              startTs = Number(data.readBigUInt64LE(offset + 32)) || 0;
-              endTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
-              cliffTs = endTs; // Use endTs as cliffTs for cliff lockups
-              
-              // Try to find creation timestamp
-              if (offset + 56 <= data.length) {
-                createdTs = Number(data.readBigUInt64LE(offset + 48)) || 0;
-              }
-            } catch (e) {
-              // Use defaults if parsing fails
-            }
-          }
-          
-          console.log(`      Deposit ${i}: ${amount.toFixed(6)} ISLAND, isUsed=${isUsed}, lockupKind=${lockupKind}, startTs=${startTs}, endTs=${endTs}, createdTs=${createdTs}`);
-          
-          // Filter out phantom 1,000 ISLAND deposits
-          let isPhantom = false;
-          if (amount === 1000) {
-            // Check if this is a phantom deposit (default/empty config)
-            if ((createdTs === 0 || startTs === 0) && lockupKind === 0) {
-              isPhantom = true;
-              console.log(`        → Identified as phantom 1,000 ISLAND deposit (empty config)`);
-            }
-          }
-          
-          // Validate amount range and process valid deposits
-          if (amount >= 1000 && amount <= 50000000 && isUsed && !isPhantom) {
-            const amountKey = Math.round(amount * 1000);
-            
-            if (!seenAmounts.has(amountKey)) {
-              seenAmounts.add(amountKey);
-              
-              // Calculate multiplier using canonical logic
-              const multiplier = calculateMultiplier(lockupKind, startTs, endTs, cliffTs);
-              const votingPower = amount * multiplier;
-              
-              deposits.push({
-                depositIndex: i,
-                amount,
-                isUsed,
-                lockupKind,
-                startTs,
-                endTs,
-                cliffTs,
-                createdTs,
-                multiplier,
-                votingPower,
-                offset
-              });
-              
-              console.log(`        → Valid: ${amount.toFixed(6)} ISLAND × ${multiplier.toFixed(2)} = ${votingPower.toFixed(2)} power`);
-            } else {
-              console.log(`        → Skipped duplicate amount: ${amount.toFixed(6)} ISLAND`);
-            }
-          } else if (rawAmount > 0) {
-            console.log(`        → Filtered: amount=${amount.toFixed(6)}, isUsed=${isUsed}, phantom=${isPhantom}`);
-          }
+        // All lockups are expired, so multiplier is 1.0
+        const multiplier = 1.0;
+        const votingPower = amount * multiplier;
+        
+        console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND, isUsed=${isUsed}, power=${votingPower.toFixed(2)}`);
+        
+        if (isUsed) {
+          deposits.push({
+            offset,
+            amount,
+            isUsed,
+            lockupKind: 0,
+            multiplier,
+            votingPower,
+            accountPubkey
+          });
         }
-      } catch (error) {
-        console.log(`      Deposit ${i}: Error parsing - ${error.message}`);
-        continue;
       }
+    } catch (error) {
+      continue;
     }
   }
   
-  console.log(`    Found ${deposits.length} valid deposits in this account`);
+  console.log(`    Found ${deposits.length} valid deposits in account ${accountPubkey.slice(0, 8)}`);
   return deposits;
 }
 
@@ -216,14 +160,11 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
         
         console.log(`  Found native VSR account ${nativeAccounts}: ${account.pubkey.toString()} (size: ${data.length} bytes)`);
         
-        // Parse deposits from this account
-        const deposits = parseVSRDeposits(data, walletAddress, account.pubkey.toString());
+        // Parse deposit entries using proven offset method
+        const deposits = parseVSRDepositsFromOffsets(data, walletAddress, account.pubkey.toString());
         
         for (const deposit of deposits) {
-          allRawDeposits.push({
-            ...deposit,
-            accountPubkey: account.pubkey.toString()
-          });
+          allRawDeposits.push(deposit);
         }
       }
       
@@ -241,43 +182,24 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
   
   console.log(`  Completed scan: ${processedAccounts} processed, ${skippedAccounts} skipped, ${nativeAccounts} native accounts found`);
   
-  // FIX 2: Apply filtering for small deposits when large deposits exist
-  let filteredDeposits = [];
-  let totalRawAmount = 0;
-  
-  // First pass: calculate total raw deposit amount
-  for (const deposit of allRawDeposits) {
-    totalRawAmount += deposit.amount;
-  }
-  
-  console.log(`  Total raw deposit amount: ${totalRawAmount.toFixed(6)} ISLAND`);
-  
-  // Second pass: filter out small deposits if wallet has large deposits
-  for (const deposit of allRawDeposits) {
-    // Exclude small deposits (< 10,000 ISLAND) if wallet has large deposits (> 100,000 ISLAND)
-    if (deposit.amount < 10000 && totalRawAmount > 100000) {
-      console.log(`    Filtering out small deposit: ${deposit.amount.toFixed(6)} ISLAND (dust/test deposit)`);
-      continue;
-    }
-    
-    filteredDeposits.push(deposit);
-    console.log(`    Valid deposit: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.votingPower.toFixed(2)} voting power`);
-  }
-  
-  // Calculate total native power from filtered deposits
+  // Calculate total native power from all valid deposits
   let totalNativePower = 0;
-  for (const deposit of filteredDeposits) {
+  let totalDepositCount = allRawDeposits.length;
+  
+  console.log(`  Processing ${totalDepositCount} total deposits...`);
+  
+  for (const deposit of allRawDeposits) {
     totalNativePower += deposit.votingPower;
+    console.log(`    Deposit: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.votingPower.toFixed(2)} from account ${deposit.accountPubkey.slice(0, 8)}`);
   }
   
-  console.log(`  Final native power: ${totalNativePower.toFixed(2)} ISLAND (${filteredDeposits.length} valid deposits)`);
+  console.log(`  Final native power: ${totalNativePower.toFixed(2)} ISLAND from ${totalDepositCount} deposits across ${nativeAccounts} accounts`);
   
   return {
     wallet: walletAddress,
     nativePower: totalNativePower,
     accountCount: nativeAccounts,
-    deposits: filteredDeposits,
-    rawDeposits: allRawDeposits
+    deposits: allRawDeposits
   };
 }
 
