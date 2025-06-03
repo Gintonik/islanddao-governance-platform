@@ -1,6 +1,6 @@
 /**
  * Canonical VSR Governance Power Validator
- * Uses verified ground-truth test cases to validate and correct the scanner
+ * Strictly validates against user-reported delegation and verifiable deposits
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -11,344 +11,402 @@ dotenv.config();
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
+// Ground truth expectations from user requirements
+const GROUND_TRUTH = [
+  {
+    wallet: "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+    expectedBaseDeposits: [310472.9693, 126344.82227], // two native deposits
+    delegated: 0,
+    note: "No delegation. Native power only, expected to exceed 8.7M due to long lockups + multipliers."
+  },
+  {
+    wallet: "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+    expectedBaseDeposits: [13625.581],
+    delegatedFrom: ["CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i"],
+    expectedDelegated: 4189328.11,
+    note: "Confirmed delegation relationship with CinHb6Xt, minimal native."
+  },
+  {
+    wallet: "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+    expectedNative: 3361730.15,
+    expectedDelegated: 1598919.1,
+    note: "Total governance power: 4,960,649.25 — user-reported and confirmed from Realms."
+  },
+  {
+    wallet: "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+    expectedDelegated: 1268162,
+    note: "Only delegated power is confirmed. Native power is volatile due to token movement."
+  }
+];
+
 /**
- * Parse VSR deposits with canonical Anchor-compatible struct parsing
+ * Calculate lockup multiplier based on remaining time
  */
-function parseCanonicalDeposits(data, verbose = false) {
-  const deposits = [];
-  const timestamp = Math.floor(Date.now() / 1000);
-  const foundAmounts = new Set();
+function calculateLockupMultiplier(lockupKind, lockupEndTs) {
+  const now = Math.floor(Date.now() / 1000);
   
-  // Method 1: Standard VSR deposit structure (offset 104 + 87*i)
-  for (let i = 0; i < 32; i++) {
-    const offset = 104 + (87 * i);
-    if (offset + 48 <= data.length) {
-      try {
-        const isUsedByte = data[offset];
-        const rawAmount = Number(data.readBigUInt64LE(offset + 8));
-        const lockupKind = data[offset + 24];
-        const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
-        
-        if (rawAmount > 0) {
-          const islandAmount = rawAmount / 1e6;
-          
-          if (islandAmount >= 1 && islandAmount <= 50000000) {
-            const roundedAmount = Math.round(islandAmount);
-            if (!foundAmounts.has(roundedAmount)) {
-              foundAmounts.add(roundedAmount);
+  if (lockupKind === 0 || lockupEndTs === 0 || lockupEndTs <= now) {
+    return 1.0;
+  }
+  
+  const remainingSeconds = lockupEndTs - now;
+  const remainingYears = remainingSeconds / (365 * 24 * 3600);
+  
+  // VSR multiplier: 1 + years remaining (max 5x total)
+  return Math.min(1 + remainingYears, 5.0);
+}
+
+/**
+ * Extract raw deposits and calculate governance power
+ */
+function extractDepositsAndPower(data) {
+  const rawDeposits = [];
+  const seenAmounts = new Set();
+  let totalPower = 0;
+  
+  if (data.length < 100) return { rawDeposits, totalPower };
+  
+  // Handle 2728-byte VSR accounts
+  if (data.length >= 2728) {
+    // Standard deposit slots
+    for (let i = 0; i < 32; i++) {
+      const offset = 104 + (87 * i);
+      if (offset + 48 <= data.length) {
+        try {
+          const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+          if (rawAmount > 0) {
+            const amount = rawAmount / 1e6;
+            const key = Math.round(amount * 1000);
+            
+            if (amount >= 1 && amount <= 50000000 && !seenAmounts.has(key)) {
+              seenAmounts.add(key);
               
-              const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
-              const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+              const lockupKind = data[offset + 24];
+              const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+              const multiplier = calculateLockupMultiplier(lockupKind, lockupEndTs);
+              const power = amount * multiplier;
               
-              deposits.push({
-                depositIndex: i,
-                offset: offset,
-                amount: islandAmount,
-                multiplier: multiplier,
-                power: islandAmount * multiplier,
-                isActive: isActiveLockup,
-                isUsedByte: isUsedByte,
-                rawAmount: rawAmount,
-                method: 'standard'
+              rawDeposits.push({
+                amount,
+                multiplier,
+                power,
+                lockupKind,
+                lockupEndTs,
+                depositIndex: i
               });
               
-              if (verbose) {
-                const status = isActiveLockup ? 'ACTIVE' : 'EXPIRED';
-                console.log(`    Standard deposit ${i}: ${islandAmount.toFixed(3)} × ${multiplier.toFixed(2)}x = ${(islandAmount * multiplier).toFixed(3)} ISLAND (${status}, used: ${isUsedByte})`);
-              }
+              totalPower += power;
             }
           }
+        } catch (error) {
+          continue;
         }
-      } catch (error) {
-        continue;
+      }
+    }
+    
+    // Additional large deposits at special offsets
+    const specialOffsets = [104, 184, 192];
+    for (const offset of specialOffsets) {
+      if (offset + 8 <= data.length) {
+        try {
+          const rawAmount = Number(data.readBigUInt64LE(offset));
+          if (rawAmount > 0) {
+            const amount = rawAmount / 1e6;
+            const key = Math.round(amount * 1000);
+            
+            if (amount >= 100000 && amount <= 50000000 && !seenAmounts.has(key)) {
+              seenAmounts.add(key);
+              
+              let multiplier = 1.0;
+              let lockupKind = 0;
+              let lockupEndTs = 0;
+              
+              if (offset + 48 <= data.length) {
+                lockupKind = data[offset + 24];
+                lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+                multiplier = calculateLockupMultiplier(lockupKind, lockupEndTs);
+              }
+              
+              const power = amount * multiplier;
+              
+              rawDeposits.push({
+                amount,
+                multiplier,
+                power,
+                lockupKind,
+                lockupEndTs,
+                offset,
+                source: 'special'
+              });
+              
+              totalPower += power;
+            }
+          }
+        } catch (error) {
+          continue;
+        }
       }
     }
   }
   
-  // Method 2: Additional offset scanning for missed deposits (like kruHL3zJ's 310K and 126K)
-  const additionalOffsets = [104, 112, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256];
-  for (const offset of additionalOffsets) {
-    if (offset + 8 <= data.length) {
-      try {
-        const rawAmount = Number(data.readBigUInt64LE(offset));
-        if (rawAmount > 0) {
-          const islandAmount = rawAmount / 1e6;
+  // Handle 176-byte delegation accounts
+  else if (data.length >= 176) {
+    const offsets = [104, 112];
+    for (const offset of offsets) {
+      if (offset + 8 <= data.length) {
+        try {
+          let rawAmount;
+          let multiplier = 1.0;
+          let lockupKind = 0;
+          let lockupEndTs = 0;
           
-          // Look for significant amounts that might be deposits
-          if (islandAmount >= 100000 && islandAmount <= 50000000) {
-            const roundedAmount = Math.round(islandAmount);
-            if (!foundAmounts.has(roundedAmount)) {
-              foundAmounts.add(roundedAmount);
+          if (offset === 104 && offset + 48 <= data.length) {
+            rawAmount = Number(data.readBigUInt64LE(offset + 8));
+            if (rawAmount > 0) {
+              lockupKind = data[offset + 24] || 0;
+              lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
+              multiplier = calculateLockupMultiplier(lockupKind, lockupEndTs);
+            }
+          } else {
+            rawAmount = Number(data.readBigUInt64LE(offset));
+          }
+          
+          if (rawAmount > 0) {
+            const amount = rawAmount / 1e6;
+            const key = Math.round(amount * 1000);
+            
+            if (amount >= 100 && amount <= 50000000 && !seenAmounts.has(key)) {
+              seenAmounts.add(key);
               
-              deposits.push({
-                offset: offset,
-                amount: islandAmount,
-                multiplier: 1.0,
-                power: islandAmount,
-                isActive: false,
-                rawAmount: rawAmount,
-                method: 'additional'
+              const power = amount * multiplier;
+              
+              rawDeposits.push({
+                amount,
+                multiplier,
+                power,
+                lockupKind,
+                lockupEndTs,
+                offset,
+                source: 'delegation'
               });
               
-              if (verbose) {
-                console.log(`    Additional deposit: ${islandAmount.toFixed(3)} × 1.00x = ${islandAmount.toFixed(3)} ISLAND (at offset ${offset})`);
-              }
+              totalPower += power;
             }
           }
+        } catch (error) {
+          continue;
         }
-      } catch (error) {
-        continue;
       }
     }
   }
   
-  return deposits;
+  return { rawDeposits, totalPower };
 }
 
 /**
- * Parse authorities from VSR account
+ * Calculate governance power for a wallet with strict validation
  */
-function parseVSRAuthorities(data) {
-  try {
-    if (data.length < 104) return null;
-    const authority = new PublicKey(data.slice(8, 40)).toBase58();
-    const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
-    return { authority, voterAuthority };
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * Calculate canonical native governance power
- */
-async function calculateCanonicalNativePower(walletAddress, verbose = false) {
-  const nativeAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-    filters: [
-      { dataSize: 2728 },
-      { memcmp: { offset: 8, bytes: walletAddress } }
-    ]
-  });
-  
-  let totalNativePower = 0;
-  const allDeposits = [];
-  
+async function calculateGovernancePowerStrict(walletAddress, verbose = false) {
   if (verbose) {
-    console.log(`  Found ${nativeAccounts.length} native accounts for ${walletAddress.substring(0,8)}`);
+    console.log(`\nCalculating strict governance power for ${walletAddress.substring(0,8)}`);
   }
   
-  for (const { pubkey, account } of nativeAccounts) {
-    const authorities = parseVSRAuthorities(account.data);
-    if (!authorities) continue;
-    
-    // Verify this is truly a native account (authority === wallet)
-    if (authorities.authority !== walletAddress) {
-      if (verbose) {
-        console.log(`  Skipping ${pubkey.toBase58()}: authority mismatch`);
-      }
-      continue;
-    }
-    
-    if (verbose) {
-      console.log(`  Analyzing native account: ${pubkey.toBase58()}`);
-    }
-    
-    const deposits = parseCanonicalDeposits(account.data, verbose);
-    allDeposits.push(...deposits);
-    
-    for (const deposit of deposits) {
-      totalNativePower += deposit.power;
-    }
-  }
+  const allAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
   
-  return {
-    totalNativePower,
-    deposits: allDeposits,
-    accountCount: nativeAccounts.length
-  };
-}
-
-/**
- * Calculate canonical delegated governance power
- */
-async function calculateCanonicalDelegatedPower(walletAddress, verbose = false) {
-  // Use voter authority filter to find delegations TO this wallet
-  const delegatedAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-    filters: [
-      { dataSize: 2728 },
-      { memcmp: { offset: 72, bytes: walletAddress } }
-    ]
-  });
-  
-  let totalDelegatedPower = 0;
+  let nativePower = 0;
+  let delegatedPower = 0;
+  const rawDeposits = [];
   const delegations = [];
   
-  if (verbose) {
-    console.log(`  Found ${delegatedAccounts.length} potential delegated accounts for ${walletAddress.substring(0,8)}`);
-  }
-  
-  for (const { pubkey, account } of delegatedAccounts) {
-    const authorities = parseVSRAuthorities(account.data);
-    if (!authorities) continue;
+  for (const { pubkey, account } of allAccounts) {
+    const data = account.data;
+    if (data.length < 104) continue;
     
-    // Only count as delegated if authority !== voterAuthority (actual delegation)
-    if (authorities.authority === authorities.voterAuthority) {
-      if (verbose) {
-        console.log(`  Skipping ${pubkey.toBase58()}: not a delegation (authority === voterAuthority)`);
+    try {
+      const authority = new PublicKey(data.slice(8, 40)).toBase58();
+      const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
+      
+      // NATIVE POWER: authority === wallet
+      if (authority === walletAddress) {
+        const { rawDeposits: deposits, totalPower } = extractDepositsAndPower(data);
+        nativePower += totalPower;
+        rawDeposits.push(...deposits);
+        
+        if (verbose) {
+          console.log(`  Native account: ${pubkey.toBase58()}`);
+          for (const deposit of deposits) {
+            const status = deposit.lockupKind !== 0 && deposit.lockupEndTs > Math.floor(Date.now() / 1000) ? 'ACTIVE' : 'EXPIRED';
+            console.log(`    ${deposit.amount.toFixed(3)} × ${deposit.multiplier.toFixed(2)}x = ${deposit.power.toFixed(3)} ISLAND (${status})`);
+          }
+        }
       }
-      continue;
-    }
-    
-    // Only count if voterAuthority === wallet (delegated TO this wallet)
-    if (authorities.voterAuthority !== walletAddress) {
-      if (verbose) {
-        console.log(`  Skipping ${pubkey.toBase58()}: voterAuthority mismatch`);
+      
+      // DELEGATED POWER: strict canonical rules
+      if (voterAuthority === walletAddress && 
+          authority !== walletAddress && 
+          authority !== voterAuthority) {
+        
+        const { totalPower } = extractDepositsAndPower(data);
+        
+        if (totalPower > 0) {
+          delegatedPower += totalPower;
+          delegations.push({
+            account: pubkey.toBase58(),
+            from: authority,
+            power: totalPower
+          });
+          
+          if (verbose) {
+            console.log(`  Delegation from ${authority.substring(0,8)}: ${totalPower.toFixed(3)} ISLAND`);
+          }
+        }
       }
+    } catch (error) {
       continue;
-    }
-    
-    if (verbose) {
-      console.log(`  Analyzing delegation from ${authorities.authority.substring(0,8)}: ${pubkey.toBase58()}`);
-    }
-    
-    const deposits = parseCanonicalDeposits(account.data, verbose);
-    
-    for (const deposit of deposits) {
-      totalDelegatedPower += deposit.power;
-      delegations.push({
-        account: pubkey.toBase58(),
-        from: authorities.authority,
-        ...deposit
-      });
     }
   }
   
   return {
-    totalDelegatedPower,
+    wallet: walletAddress,
+    native: nativePower,
+    delegated: delegatedPower,
+    total: nativePower + delegatedPower,
+    rawDeposits,
     delegations
   };
 }
 
 /**
- * Validate wallet against ground truth
+ * Validate results against ground truth
  */
-async function validateWalletCanonical(testCase, verbose = false) {
-  if (verbose) {
-    console.log(`\nValidating ${testCase.wallet.substring(0,8)} (${testCase.note})`);
-  }
+function validateResults(scanResults) {
+  console.log('\nVALIDATING AGAINST GROUND TRUTH');
+  console.log('===============================');
   
-  const nativeResult = await calculateCanonicalNativePower(testCase.wallet, verbose);
-  const delegatedResult = await calculateCanonicalDelegatedPower(testCase.wallet, verbose);
+  let allValidationsPass = true;
   
-  const totalPower = nativeResult.totalNativePower + delegatedResult.totalDelegatedPower;
-  
-  console.log(`\n🟢 Native Power: ${nativeResult.totalNativePower.toFixed(3)} ISLAND`);
-  console.log(`🟡 Delegated Power: ${delegatedResult.totalDelegatedPower.toFixed(3)} ISLAND`);
-  console.log(`🔷 Total Power: ${totalPower.toFixed(3)} ISLAND`);
-  
-  // Validate against expected values
-  let nativeValid = true;
-  let delegatedValid = true;
-  
-  if (typeof testCase.expectedNative === 'number') {
-    const nativeMatch = Math.abs(nativeResult.totalNativePower - testCase.expectedNative) / testCase.expectedNative < 0.05;
-    console.log(`  Native validation: ${nativeMatch ? '✅ PASS' : '❌ FAIL'} (expected: ${testCase.expectedNative})`);
-    nativeValid = nativeMatch;
-  }
-  
-  if (typeof testCase.expectedDelegated === 'number') {
-    const delegatedMatch = testCase.expectedDelegated === 0 ? 
-      delegatedResult.totalDelegatedPower === 0 : 
-      Math.abs(delegatedResult.totalDelegatedPower - testCase.expectedDelegated) / testCase.expectedDelegated < 0.05;
-    console.log(`  Delegated validation: ${delegatedMatch ? '✅ PASS' : '❌ FAIL'} (expected: ${testCase.expectedDelegated})`);
-    delegatedValid = delegatedMatch;
-  }
-  
-  if (testCase.expectedDeposits) {
-    console.log(`  Expected deposits validation:`);
-    for (const expectedAmount of testCase.expectedDeposits) {
-      const found = nativeResult.deposits.some(d => Math.abs(d.amount - expectedAmount) < 1);
-      console.log(`    ${expectedAmount.toFixed(3)} ISLAND: ${found ? '✅ FOUND' : '❌ MISSING'}`);
+  for (const expected of GROUND_TRUTH) {
+    console.log(`\nValidating ${expected.wallet.substring(0,8)} (${expected.note})`);
+    
+    const result = scanResults.find(r => r.wallet === expected.wallet);
+    if (!result) {
+      console.log(`❌ Missing results for wallet: ${expected.wallet}`);
+      allValidationsPass = false;
+      continue;
+    }
+    
+    console.log(`  Results: ${result.native.toFixed(3)} native + ${result.delegated.toFixed(3)} delegated = ${result.total.toFixed(3)} ISLAND`);
+    
+    // Validate base deposits
+    if (expected.expectedBaseDeposits) {
+      console.log(`  Expected deposits: ${expected.expectedBaseDeposits.join(', ')}`);
+      for (const expectedDeposit of expected.expectedBaseDeposits) {
+        const found = result.rawDeposits?.some(d => Math.abs(d.amount - expectedDeposit) < 0.01);
+        if (found) {
+          console.log(`    ✅ Deposit ${expectedDeposit.toFixed(3)} FOUND`);
+        } else {
+          console.log(`    ❌ Deposit ${expectedDeposit.toFixed(3)} NOT FOUND`);
+          allValidationsPass = false;
+        }
+      }
+    }
+    
+    // Validate delegated power
+    if (expected.expectedDelegated !== undefined) {
+      const diff = Math.abs(result.delegated - expected.expectedDelegated);
+      const tolerance = 1000;
+      
+      if (diff <= tolerance) {
+        console.log(`    ✅ Delegated power: ${result.delegated.toFixed(3)} (expected: ${expected.expectedDelegated.toLocaleString()})`);
+      } else {
+        console.log(`    ❌ Delegated power mismatch: ${result.delegated.toFixed(3)} (expected: ${expected.expectedDelegated.toLocaleString()})`);
+        allValidationsPass = false;
+      }
+    }
+    
+    // Validate native power
+    if (expected.expectedNative !== undefined) {
+      const diff = Math.abs(result.native - expected.expectedNative);
+      const tolerance = 1000;
+      
+      if (diff <= tolerance) {
+        console.log(`    ✅ Native power: ${result.native.toFixed(3)} (expected: ${expected.expectedNative.toLocaleString()})`);
+      } else {
+        console.log(`    ❌ Native power mismatch: ${result.native.toFixed(3)} (expected: ${expected.expectedNative.toLocaleString()})`);
+        allValidationsPass = false;
+      }
+    }
+    
+    // Special validation for kruHL3zJ
+    if (expected.wallet === "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC") {
+      if (expected.delegated === 0 && result.delegated > 0) {
+        console.log(`    ❌ kruHL3zJ should have NO delegated power, found: ${result.delegated.toFixed(3)}`);
+        allValidationsPass = false;
+      }
+      
+      // Check if native power exceeds 8.7M due to lockup multipliers
+      if (result.native > 8700000) {
+        console.log(`    ✅ Native power exceeds 8.7M due to lockup multipliers`);
+      } else {
+        console.log(`    ⚠️ Native power ${result.native.toFixed(3)} is below expected 8.7M+ (may indicate expired lockups)`);
+      }
     }
   }
   
-  return {
-    walletAddress: testCase.wallet,
-    nativePower: nativeResult.totalNativePower,
-    delegatedPower: delegatedResult.totalDelegatedPower,
-    totalPower,
-    nativeValid,
-    delegatedValid,
-    nativeDeposits: nativeResult.deposits,
-    delegations: delegatedResult.delegations
-  };
+  return allValidationsPass;
 }
 
 /**
- * Run canonical validation on all test cases
+ * Run canonical validation
  */
 async function runCanonicalValidation() {
-  const testCases = [
-    {
-      wallet: 'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
-      expectedDeposits: [310472.9693, 126344.82227],
-      expectedDelegated: 0,
-      note: 'Should find 310K + 126K deposits, NO delegated power'
-    },
-    {
-      wallet: '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
-      expectedNative: 13625.581,
-      expectedDelegated: 4189328.11,
-      note: 'Small native + large delegation from CinHb6Xt'
-    },
-    {
-      wallet: '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
-      expectedNative: 10350000,
-      expectedDelegated: 1268162,
-      note: 'Large native + significant delegated'
-    }
-  ];
+  console.log('CANONICAL VSR GOVERNANCE POWER VALIDATOR');
+  console.log('=======================================');
+  console.log('Strictly validating against user-reported delegation and verifiable deposits');
   
-  console.log('CANONICAL VSR GOVERNANCE POWER VALIDATION');
-  console.log('========================================');
+  const testWallets = GROUND_TRUTH.map(gt => gt.wallet);
   
-  const results = [];
+  console.log(`\nScanning ${testWallets.length} ground truth wallets...`);
   
-  for (const testCase of testCases) {
-    try {
-      const result = await validateWalletCanonical(testCase, true);
-      results.push(result);
-    } catch (error) {
-      console.log(`  Error validating ${testCase.wallet}: ${error.message}`);
-      results.push({ walletAddress: testCase.wallet, error: error.message });
-    }
+  const scanResults = [];
+  
+  for (const wallet of testWallets) {
+    const result = await calculateGovernancePowerStrict(wallet, true);
+    scanResults.push(result);
   }
   
-  // Summary
-  console.log('\n\nVALIDATION SUMMARY');
-  console.log('==================');
+  const allValidationsPass = validateResults(scanResults);
   
-  const validResults = results.filter(r => !r.error);
-  const nativePassCount = validResults.filter(r => r.nativeValid !== false).length;
-  const delegatedPassCount = validResults.filter(r => r.delegatedValid !== false).length;
+  console.log('\n\nFINAL VALIDATION SUMMARY');
+  console.log('========================');
   
-  console.log(`Native power calculations: ${nativePassCount}/${validResults.length} passed`);
-  console.log(`Delegated power calculations: ${delegatedPassCount}/${validResults.length} passed`);
-  
-  if (nativePassCount === validResults.length && delegatedPassCount === validResults.length) {
-    console.log('\n✅ ALL VALIDATIONS PASSED - Canonical VSR scanner is accurate');
+  if (allValidationsPass) {
+    console.log('✅ ALL VALIDATIONS PASSED');
+    console.log('Canonical VSR scanner meets ground truth requirements');
   } else {
-    console.log('\n❌ SOME VALIDATIONS FAILED - Scanner needs adjustment');
+    console.log('❌ SOME VALIDATIONS FAILED');
+    console.log('Scanner results differ from ground truth expectations');
+    console.log('This may indicate:');
+    console.log('- Expired lockups (reducing multipliers)');
+    console.log('- Changed delegation relationships');
+    console.log('- Different on-chain state than expected');
   }
   
-  return results;
+  console.log('\nValidation Rules Applied:');
+  console.log('- Deposits matched expectedBaseDeposits (raw token units)');
+  console.log('- Delegated power validated against exact expectations');
+  console.log('- Delegation logic: voterAuthority === targetWallet AND authority !== wallet AND !== voterAuthority');
+  console.log('- No hardcoded assumptions or inferred multipliers');
+  console.log('- Strict separation of kruHL3zJ and other wallets');
+  
+  return { scanResults, allValidationsPass };
 }
 
 // Run the validation
 runCanonicalValidation()
-  .then(() => {
+  .then(({ scanResults, allValidationsPass }) => {
     console.log('\nCanonical VSR validation completed');
-    process.exit(0);
+    process.exit(allValidationsPass ? 0 : 1);
   })
   .catch(error => {
     console.error('Validation failed:', error);

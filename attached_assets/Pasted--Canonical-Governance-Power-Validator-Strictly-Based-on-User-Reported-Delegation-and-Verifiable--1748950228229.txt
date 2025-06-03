@@ -1,0 +1,62 @@
+// Canonical Governance Power Validator — Strictly Based on User-Reported Delegation and Verifiable Deposits
+// DO NOT PROCEED unless these wallet outputs match the following expectations exactly:
+
+const GROUND_TRUTH = [
+  {
+    wallet: "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+    expectedBaseDeposits: [310_472.9693, 126_344.82227], // two native deposits
+    delegated: 0,
+    note: "No delegation. Native power only, expected to exceed 8.7M due to long lockups + multipliers."
+  },
+  {
+    wallet: "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+    expectedBaseDeposits: [13_625.581],
+    delegatedFrom: ["CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i"],
+    expectedDelegated: 4_189_328.11,
+    note: "Confirmed delegation relationship with CinHb6Xt, minimal native."
+  },
+  {
+    wallet: "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+    expectedNative: 3_361_730.15,
+    expectedDelegated: 1_598_919.1,
+    note: "Total governance power: 4,960,649.25 — user-reported and confirmed from Realms."
+  },
+  {
+    wallet: "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+    expectedDelegated: 1_268_162,
+    note: "Only delegated power is confirmed. Native power is volatile due to token movement."
+  }
+];
+
+// Validation Rules:
+// ✅ Deposits must match expectedBaseDeposits (in raw token units, not multiplied)
+// ✅ Delegated power must be exact if known
+// ✅ voterAuthority === targetWallet AND authority !== wallet AND !== voterAuthority
+// ✅ NO hardcoded assumptions or inferred multipliers
+// ✅ DO NOT crosswire kruHL3zJ and Takisoul
+
+function validate(scanResults) {
+  for (const expected of GROUND_TRUTH) {
+    const result = scanResults.find(r => r.wallet === expected.wallet);
+    if (!result) throw new Error(`Missing results for wallet: ${expected.wallet}`);
+
+    if (expected.expectedBaseDeposits) {
+      for (const deposit of expected.expectedBaseDeposits) {
+        const found = result.rawDeposits?.some(d => Math.abs(d.amount - deposit) < 0.01);
+        if (!found) console.warn(`Deposit ${deposit} not found for ${expected.wallet}`);
+      }
+    }
+
+    if (expected.expectedDelegated !== undefined) {
+      const diff = Math.abs(result.delegated - expected.expectedDelegated);
+      if (diff > 1000) console.warn(`Delegated power mismatch for ${expected.wallet}. Expected: ${expected.expectedDelegated}, Got: ${result.delegated}`);
+    }
+
+    if (expected.expectedNative !== undefined) {
+      const diff = Math.abs(result.native - expected.expectedNative);
+      if (diff > 1000) console.warn(`Native power mismatch for ${expected.wallet}. Expected: ${expected.expectedNative}, Got: ${result.native}`);
+    }
+  }
+}
+
+module.exports = { validate };
