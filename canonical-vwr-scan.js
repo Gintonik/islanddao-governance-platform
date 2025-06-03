@@ -8,7 +8,11 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import fs from 'fs';
 import 'dotenv/config';
 
-const connection = new Connection(process.env.HELIUS_RPC_URL, "confirmed");
+// RPC configuration with fallback support
+const primaryRpcUrl = process.env.HELIUS_RPC_URL;
+const fallbackRpcUrl = process.env.FALLBACK_RPC_URL || 'https://api.mainnet-beta.solana.com';
+let connection = new Connection(primaryRpcUrl, "confirmed");
+let usingFallbackRpc = false;
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
 // IslandDAO configuration
@@ -449,51 +453,128 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   // DELEGATED POWER: Scan ALL Voter accounts to find deposits delegated to this wallet
   const delegators = [];
   const currentTimestamp = Math.floor(Date.now() / 1000);
+  let delegationScanSucceeded = false;
   
-  for (const { pubkey, account } of allVoterAccounts) {
-    const data = account.data;
-    const authorities = parseVoterAuthorities(data);
-    
-    if (!authorities) continue;
-    
-    const { authority, voterAuthority } = authorities;
-    
-    // DELEGATION DETECTION: voterAuthority === targetWallet AND authority !== targetWallet
-    if (voterAuthority === walletAddress && authority !== walletAddress) {
-      // Parse deposits from this delegating account
-      const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+  try {
+    // Try to scan all Voter accounts for delegation detection
+    for (const { pubkey, account } of allVoterAccounts) {
+      const data = account.data;
+      const authorities = parseVoterAuthorities(data);
       
-      if (deposits && deposits.length > 0) {
-        for (const deposit of deposits) {
-          if (deposit.isUsed && deposit.amountDepositedNative > 0) {
-            // Calculate multiplier for delegated deposit
-            const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
-            const adjustedPower = deposit.amountDepositedNative * multiplier;
-            
-            if (adjustedPower > 0) {
-              delegatedGovernancePower += adjustedPower;
-              delegators.push(authority);
+      if (!authorities) continue;
+      
+      const { authority, voterAuthority } = authorities;
+      
+      // DELEGATION DETECTION: voterAuthority === targetWallet AND authority !== targetWallet
+      if (voterAuthority === walletAddress && authority !== walletAddress) {
+        // Parse deposits from this delegating account
+        const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+        
+        if (deposits && deposits.length > 0) {
+          for (const deposit of deposits) {
+            if (deposit.isUsed && deposit.amountDepositedNative > 0) {
+              // Calculate multiplier for delegated deposit
+              const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
+              const adjustedPower = deposit.amountDepositedNative * multiplier;
               
-              delegatedSources.push({
-                account: pubkey.toBase58(),
-                power: adjustedPower,
-                baseAmount: deposit.amountDepositedNative,
-                multiplier: multiplier,
-                type: 'Voter-delegated',
-                authority: authority,
-                voterAuthority: voterAuthority,
-                lockupActive: deposit.lockupEndTs > currentTimestamp,
-                estimated: false
-              });
-              
-              if (verbose) {
-                const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
-                console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+              if (adjustedPower > 0) {
+                delegatedGovernancePower += adjustedPower;
+                delegators.push(authority);
+                
+                delegatedSources.push({
+                  account: pubkey.toBase58(),
+                  power: adjustedPower,
+                  baseAmount: deposit.amountDepositedNative,
+                  multiplier: multiplier,
+                  type: 'Voter-delegated',
+                  authority: authority,
+                  voterAuthority: voterAuthority,
+                  lockupActive: deposit.lockupEndTs > currentTimestamp,
+                  estimated: false
+                });
+                
+                if (verbose) {
+                  const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
+                  console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+                }
               }
             }
           }
         }
       }
+    }
+    delegationScanSucceeded = true;
+  } catch (error) {
+    if (verbose) {
+      console.log(`     ⚠️  Delegation scan failed: ${error.message}`);
+    }
+    
+    // Try fallback RPC if available
+    if (!usingFallbackRpc && fallbackRpcUrl !== primaryRpcUrl) {
+      try {
+        if (verbose) {
+          console.log(`     🔄 Switching to fallback RPC for delegation scan...`);
+        }
+        connection = new Connection(fallbackRpcUrl, "confirmed");
+        usingFallbackRpc = true;
+        
+        // Retry delegation scan with fallback RPC
+        const fallbackVoterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+          filters: [{ dataSize: 3312 }]
+        });
+        
+        for (const { pubkey, account } of fallbackVoterAccounts) {
+          const data = account.data;
+          const authorities = parseVoterAuthorities(data);
+          
+          if (!authorities) continue;
+          
+          const { authority, voterAuthority } = authorities;
+          
+          if (voterAuthority === walletAddress && authority !== walletAddress) {
+            const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+            
+            if (deposits && deposits.length > 0) {
+              for (const deposit of deposits) {
+                if (deposit.isUsed && deposit.amountDepositedNative > 0) {
+                  const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
+                  const adjustedPower = deposit.amountDepositedNative * multiplier;
+                  
+                  if (adjustedPower > 0) {
+                    delegatedGovernancePower += adjustedPower;
+                    delegators.push(authority);
+                    
+                    delegatedSources.push({
+                      account: pubkey.toBase58(),
+                      power: adjustedPower,
+                      baseAmount: deposit.amountDepositedNative,
+                      multiplier: multiplier,
+                      type: 'Voter-delegated',
+                      authority: authority,
+                      voterAuthority: voterAuthority,
+                      lockupActive: deposit.lockupEndTs > currentTimestamp,
+                      estimated: false
+                    });
+                    
+                    if (verbose) {
+                      const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
+                      console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        delegationScanSucceeded = true;
+      } catch (fallbackError) {
+        if (verbose) {
+          console.log(`     ❌ Fallback delegation scan also failed: ${fallbackError.message}`);
+        }
+        delegationScanSucceeded = false;
+      }
+    } else {
+      delegationScanSucceeded = false;
     }
   }
   
@@ -535,26 +616,27 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
       const vwrDelta = vwrTotal - nativeGovernancePower;
       const deltaPercentage = nativeGovernancePower > 0 ? (vwrDelta / nativeGovernancePower) : 0;
       
-      if (deltaPercentage > 0.05 && vwrDelta > 1000) {
-        // INFERENCE MODE: VWR significantly exceeds native deposits
+      if (delegationScanSucceeded && deltaPercentage > 0.05 && vwrDelta > 1000) {
+        // INFERENCE MODE: Delegation scan succeeded but VWR significantly exceeds native deposits
         delegatedGovernancePower = vwrDelta;
         totalGovernancePower = vwrTotal;
         
         console.log(`Wallet ${walletAddress} | Inference Mode - Native: ${nativeGovernancePower.toFixed(3)} | Inferred Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
-        console.log(`⚠️  Using VWR inference mode due to native undercount or hidden delegation (${deltaPercentage.toFixed(1)}% delta)`);
+        console.log(`⚠️  Using VWR inference mode due to missing delegations (scan succeeded, ${deltaPercentage.toFixed(1)}% delta)`);
         
         if (verbose) {
           console.log(`     🔍 Inference mode: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} inferred delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
         }
       } else {
-        // STRICT MODE: VWR matches native deposits
+        // STRICT MODE: Either delegation scan failed or VWR matches native deposits
         delegatedGovernancePower = 0;
         totalGovernancePower = nativeGovernancePower;
         
-        console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: 0 | VWR Total: ${vwrTotal.toFixed(3)} | Delta: ${vwrDelta.toFixed(3)}`);
+        const scanStatus = delegationScanSucceeded ? "scan succeeded" : "scan failed";
+        console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: 0 | VWR Total: ${vwrTotal.toFixed(3)} | Delta: ${vwrDelta.toFixed(3)} | (${scanStatus})`);
         
         if (verbose) {
-          console.log(`     ✅ Strict mode (native only): ${nativeGovernancePower.toFixed(3)} ISLAND`);
+          console.log(`     ✅ Strict mode (native only): ${nativeGovernancePower.toFixed(3)} ISLAND (${scanStatus})`);
         }
       }
     }
