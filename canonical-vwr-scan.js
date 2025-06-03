@@ -506,28 +506,53 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   
   // VWR RECONCILIATION: Use VWR as authoritative total, properly separate native vs delegated
   if (hasVWR && vwrTotal > 0) {
-    // If delegations were found, subtract delegated power from VWR total to get true native power
+    // VWR represents total governance power - use calculated native deposits + reconcile delegated
     if (delegatedGovernancePower > 0) {
-      nativeGovernancePower = Math.max(0, vwrTotal - delegatedGovernancePower);
+      // Delegations detected - use calculated native and delegated values
       totalGovernancePower = vwrTotal;
+      // Keep calculated native power from deposits, adjust if needed to match VWR
+      const calculatedTotal = nativeGovernancePower + delegatedGovernancePower;
+      if (Math.abs(vwrTotal - calculatedTotal) / vwrTotal < 0.05) {
+        // VWR matches calculated - use calculated values
+        totalGovernancePower = calculatedTotal;
+      } else {
+        // VWR differs significantly - trust VWR total, adjust delegated
+        delegatedGovernancePower = Math.max(0, vwrTotal - nativeGovernancePower);
+        totalGovernancePower = vwrTotal;
+      }
       
-      // Debug comparison
       console.log(`Wallet ${walletAddress} | Final Native: ${nativeGovernancePower.toFixed(3)} | Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
       
       if (verbose) {
         console.log(`     ⚖️  VWR separation: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
       }
     } else {
-      // No delegations detected - assume 100% of VWR is native
-      nativeGovernancePower = vwrTotal;
-      delegatedGovernancePower = 0;
-      totalGovernancePower = vwrTotal;
+      // No delegations detected - check if VWR suggests there should be some
+      const nativeFromDeposits = nativeGovernancePower;
+      const vwrDelta = vwrTotal - nativeFromDeposits;
       
-      // Debug comparison
-      console.log(`Wallet: ${walletAddress} | Native from deposits: ${nativeGovernancePower.toFixed(3)} | VWR total: ${vwrTotal.toFixed(3)} | Delta: ${(vwrTotal - nativeGovernancePower).toFixed(3)}`);
-      
-      if (verbose) {
-        console.log(`     ✅ VWR as native: ${vwrTotal.toFixed(3)} ISLAND (no delegations detected)`);
+      if (vwrDelta > 1000 && (vwrDelta > nativeFromDeposits * 0.05 || vwrDelta > 100000)) {
+        // Significant VWR delta suggests possible missing delegations
+        nativeGovernancePower = nativeFromDeposits;
+        delegatedGovernancePower = vwrDelta;
+        totalGovernancePower = vwrTotal;
+        
+        console.log(`Wallet ${walletAddress} | Inferred Native: ${nativeGovernancePower.toFixed(3)} | Inferred Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
+        
+        if (verbose) {
+          console.log(`     🔍 VWR inference: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} inferred delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+        }
+      } else {
+        // VWR matches native deposits - use native only
+        nativeGovernancePower = nativeFromDeposits;
+        delegatedGovernancePower = 0;
+        totalGovernancePower = nativeFromDeposits;
+        
+        console.log(`Wallet: ${walletAddress} | Native from deposits: ${nativeGovernancePower.toFixed(3)} | VWR total: ${vwrTotal.toFixed(3)} | Delta: ${vwrDelta.toFixed(3)}`);
+        
+        if (verbose) {
+          console.log(`     ✅ Native only: ${nativeGovernancePower.toFixed(3)} ISLAND (VWR matches deposits)`);
+        }
       }
     }
   } else {
