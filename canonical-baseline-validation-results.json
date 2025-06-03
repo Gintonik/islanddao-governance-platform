@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-06-03T17:07:33.473Z",
+  "scannerVersion": "canonical-native-baseline-matcher",
+  "baselineValidation": [
+    {
+      "name": "7pPJt2xo...",
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "expectedBaseline": 7183474.632,
+      "actualBaseline": 7183474.632185999,
+      "baselineDifference": 0.0001859990879893303,
+      "baselineMatch": true,
+      "potentialWithMultipliers": 7401320.209414698,
+      "historicalTarget": 8709019.78
+    },
+    {
+      "name": "6aJo6zRi...",
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "expectedBaseline": 537007.081,
+      "actualBaseline": 537007.0813130001,
+      "baselineDifference": 0.0003130000550299883,
+      "baselineMatch": true,
+      "potentialWithMultipliers": 649696.4246260365,
+      "historicalTarget": null
+    }
+  ],
+  "status": "BASELINE_RESTORED"
+}
