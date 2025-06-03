@@ -391,6 +391,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   });
   
   const hasVWR = voterWeightRecords.length > 0;
+  let vwrTotal = 0;
   
   if (hasVWR) {
     for (const { pubkey, account } of voterWeightRecords) {
@@ -399,7 +400,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
       const power = powerRaw / 1e6;
       
       if (power > 0) {
-        totalGovernancePower += power;
+        vwrTotal += power;
         
         if (verbose) {
           console.log(`     📊 Total VWR Power: ${power.toLocaleString()} ISLAND from ${pubkey.toBase58()}`);
@@ -492,9 +493,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
   
   // VWR RECONCILIATION: Use VWR as authoritative total, maintain strict separation
-  if (hasVWR) {
-    const vwrTotal = totalGovernancePower; // This contains the sum of all VWR powers
-    
+  if (hasVWR && vwrTotal > 0) {
     // Debug comparison line
     console.log(`Wallet: ${walletAddress} | Native from deposits: ${nativeGovernancePower.toFixed(3)} | VWR total: ${vwrTotal.toFixed(3)} | Delta: ${(vwrTotal - nativeGovernancePower).toFixed(3)}`);
     
