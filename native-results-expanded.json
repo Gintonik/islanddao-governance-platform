@@ -1,0 +1,177 @@
+{
+  "timestamp": "2025-06-03T15:12:08.266Z",
+  "scannerVersion": "canonical-native-governance-expanded",
+  "totalCitizens": 20,
+  "walletAliasesUsed": 1,
+  "results": [
+    {
+      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "nativePower": 7183474.632185999,
+      "accountCount": 1,
+      "depositCount": 4,
+      "deposits": [
+        {
+          "amount": 690,
+          "multiplier": 1,
+          "votingPower": 690,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 112
+        },
+        {
+          "amount": 1500000,
+          "multiplier": 1,
+          "votingPower": 1500000,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 192
+        },
+        {
+          "amount": 2000000,
+          "multiplier": 1,
+          "votingPower": 2000000,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 272
+        },
+        {
+          "amount": 3682784.632186,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "offset": 352
+        }
+      ]
+    },
+    {
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    },
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "nativePower": 0,
+      "accountCount": 0,
+      "depositCount": 0,
+      "deposits": []
+    }
+  ]
+}
