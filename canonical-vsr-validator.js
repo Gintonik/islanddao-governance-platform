@@ -15,27 +15,32 @@ const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXq
 const GROUND_TRUTH = [
   {
     wallet: "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
-    expectedBaseDeposits: [310472.9693, 126344.82227], // two native deposits
-    delegated: 0,
-    note: "No delegation. Native power only, expected to exceed 8.7M due to long lockups + multipliers."
+    expectedBaseDeposits: [310472.9693, 126344.82227],
+    expectedDelegated: 0,
+    note: "No delegation. Native power only, derived from two confirmed deposits with long lockups."
   },
   {
     wallet: "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
     expectedBaseDeposits: [13625.581],
     delegatedFrom: ["CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i"],
     expectedDelegated: 4189328.11,
-    note: "Confirmed delegation relationship with CinHb6Xt, minimal native."
+    note: "Confirmed delegation from CinHb6Xt. Native power is minimal."
   },
   {
     wallet: "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
     expectedNative: 3361730.15,
     expectedDelegated: 1598919.1,
-    note: "Total governance power: 4,960,649.25 — user-reported and confirmed from Realms."
+    note: "User-reported total governance power of 4,960,649.25 confirmed via Realms."
   },
   {
     wallet: "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
     expectedDelegated: 1268162,
-    note: "Only delegated power is confirmed. Native power is volatile due to token movement."
+    note: "Only delegated power is confirmed. Native power has been volatile due to frequent movement."
+  },
+  {
+    wallet: "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+    expectedDelegated: 0,
+    note: "This is the wallet with native governance power expected to exceed 8.7M due to long lockups and multipliers."
   }
 ];
 
@@ -337,10 +342,18 @@ function validateResults(scanResults) {
       }
     }
     
-    // Special validation for kruHL3zJ
+    // Special validation for kruHL3zJ (no delegation expected)
     if (expected.wallet === "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC") {
-      if (expected.delegated === 0 && result.delegated > 0) {
+      if (expected.expectedDelegated === 0 && result.delegated > 0) {
         console.log(`    ❌ kruHL3zJ should have NO delegated power, found: ${result.delegated.toFixed(3)}`);
+        allValidationsPass = false;
+      }
+    }
+    
+    // Special validation for 7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA (8.7M+ native expected)
+    if (expected.wallet === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
+      if (expected.expectedDelegated === 0 && result.delegated > 0) {
+        console.log(`    ❌ 7pPJt2xo should have NO delegated power, found: ${result.delegated.toFixed(3)}`);
         allValidationsPass = false;
       }
       
