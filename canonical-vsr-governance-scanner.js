@@ -145,12 +145,12 @@ async function getAllVSRAccounts() {
 async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
   const walletPubkey = new PublicKey(walletAddress);
   
-  let totalNativePower = 0;
   let nativeAccounts = 0;
-  let allDeposits = [];
+  let allRawDeposits = [];
   
   console.log(`\nCalculating native power for: ${walletAddress}`);
   
+  // FIX 1: Aggregate ALL VSR accounts where authority === wallet
   for (const account of allVSRAccounts) {
     try {
       const data = account.account.data;
@@ -169,14 +169,12 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
         const deposits = parseVSRDeposits(data);
         
         for (const deposit of deposits) {
-          totalNativePower += deposit.votingPower;
-          allDeposits.push({
+          allRawDeposits.push({
             ...deposit,
             accountPubkey: account.pubkey.toString()
           });
           
-          console.log(`    Deposit: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.votingPower.toFixed(2)} voting power`);
-          console.log(`      Lockup Kind: ${deposit.lockupKind}, Start: ${deposit.startTs}, End: ${deposit.endTs}`);
+          console.log(`    Raw deposit: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.votingPower.toFixed(2)} voting power`);
         }
       }
       
@@ -186,11 +184,43 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
     }
   }
   
+  // FIX 2: Apply filtering for small deposits when large deposits exist
+  let filteredDeposits = [];
+  let totalRawAmount = 0;
+  
+  // First pass: calculate total raw deposit amount
+  for (const deposit of allRawDeposits) {
+    totalRawAmount += deposit.amount;
+  }
+  
+  console.log(`  Total raw deposit amount: ${totalRawAmount.toFixed(6)} ISLAND`);
+  
+  // Second pass: filter out small deposits if wallet has large deposits
+  for (const deposit of allRawDeposits) {
+    // Exclude small deposits (< 10,000 ISLAND) if wallet has large deposits (> 100,000 ISLAND)
+    if (deposit.amount < 10000 && totalRawAmount > 100000) {
+      console.log(`    Filtering out small deposit: ${deposit.amount.toFixed(6)} ISLAND (dust/test deposit)`);
+      continue;
+    }
+    
+    filteredDeposits.push(deposit);
+    console.log(`    Valid deposit: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.votingPower.toFixed(2)} voting power`);
+  }
+  
+  // Calculate total native power from filtered deposits
+  let totalNativePower = 0;
+  for (const deposit of filteredDeposits) {
+    totalNativePower += deposit.votingPower;
+  }
+  
+  console.log(`  Final native power: ${totalNativePower.toFixed(2)} ISLAND (${filteredDeposits.length} valid deposits)`);
+  
   return {
     wallet: walletAddress,
     nativePower: totalNativePower,
     accountCount: nativeAccounts,
-    deposits: allDeposits
+    deposits: filteredDeposits,
+    rawDeposits: allRawDeposits
   };
 }
 
