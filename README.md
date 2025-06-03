@@ -1,210 +1,217 @@
-# IslandDAO Citizen Map
+# Citizen Map - IslandDAO Governance Intelligence Platform
 
-A sophisticated decentralized governance platform that visualizes DAO members on an interactive global map, displaying authentic governance power extracted directly from Solana blockchain data.
+A cutting-edge blockchain governance intelligence platform that provides comprehensive, dynamic, and user-friendly analysis of Solana governance ecosystems, with advanced parsing and visualization of voter participation and governance power.
 
-## Features
+![IslandDAO Citizen Map](https://img.shields.io/badge/Solana-Governance-brightgreen) ![VSR](https://img.shields.io/badge/VSR-Compatible-blue) ![Real--time](https://img.shields.io/badge/Real--time-Data-orange)
 
-- **Interactive Global Map**: 3D globe visualization showing verified DAO citizens worldwide
-- **Authentic Governance Power**: Real-time extraction of weighted voting power from VSR (Voter State Recorder) accounts
-- **Wallet Integration**: Support for Phantom, Solflare, and Backpack wallets
-- **NFT Profile Integration**: Display citizen NFTs and social profiles
-- **Real-time Statistics**: Live governance metrics and citizen participation data
-- **PostgreSQL Database**: Persistent storage for citizen data and governance metrics
+## 🌟 Features
 
-## Architecture
+### Geospatial Governance Visualization
+- **Interactive World Map**: Real-time visualization of IslandDAO citizens worldwide
+- **Smart Pin Positioning**: Anti-overlap algorithm for clear citizen distribution display
+- **Citizen Profiles**: Detailed stats cards with governance power, NFT collections, and bio information
+
+### Canonical Governance Power Analysis
+- **Native Governance Power**: Accurate VSR (Voter Stake Registry) account parsing
+- **Delegation Detection**: Comprehensive delegation relationship mapping
+- **Real-time Updates**: Live blockchain data synchronization
+- **Database Integration**: Persistent storage with PostgreSQL
+
+### Advanced Blockchain Parsing
+- **VSR Account Analysis**: Deep parsing of 16,586+ VSR program accounts
+- **Canonical Multiplier Calculations**: Authentic lockup period multipliers (up to 5x)
+- **Authority Validation**: Verified wallet alias support for controlled accounts
+- **Phantom Deposit Filtering**: Removes invalid 1,000 ISLAND entries
+
+## 🚀 Live Platform
+
+The IslandDAO Citizen Map represents **23,182,625.54 ISLAND tokens** of native governance power across **14 active citizens** with voting power.
+
+### Top Citizens by Governance Power
+1. **3PKhzE9w...**: 10,394,142.75 ISLAND (5 deposits, 5 accounts)
+2. **7pPJt2xo... (Takisoul)**: 7,183,474.63 ISLAND (4 deposits, 1 account)  
+3. **Fywb7YDC...**: 3,375,944.44 ISLAND (7 deposits, 4 accounts)
+4. **6aJo6zRi...**: 537,007.08 ISLAND (6 deposits, 2 accounts)
+5. **37TGrYNu...**: 536,529.26 ISLAND (3 deposits, 1 account)
+
+## 🛠 Technology Stack
 
 ### Frontend
-- Pure HTML5/CSS3/JavaScript (no framework dependencies)
-- Three.js for 3D globe rendering
-- Responsive design with mobile support
-- Real-time data updates via REST API
+- **Leaflet.js**: Interactive mapping with custom styling
+- **Vanilla JavaScript**: High-performance client-side rendering
+- **CSS3 Animations**: Smooth transitions and hover effects
+- **Responsive Design**: Mobile-first approach
 
 ### Backend
-- Node.js server with Express
-- PostgreSQL database for data persistence
-- Solana blockchain integration via Helius RPC
-- VSR governance power calculation engine
+- **Node.js**: Server runtime with Express.js framework
+- **PostgreSQL**: Reliable data persistence with governance power caching
+- **Helius RPC**: High-performance Solana blockchain data access
+- **Real-time APIs**: Live citizen data and governance power endpoints
 
 ### Blockchain Integration
-- **SPL Governance**: Standard Solana governance program integration
-- **VSR (Voter State Recorder)**: Advanced weighted voting power calculation
-- **Helius API**: High-performance Solana RPC for blockchain data
-- **Authentic Data**: Direct blockchain queries, no mock or placeholder data
+- **Solana Web3.js**: Direct blockchain interaction
+- **VSR Program**: vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ
+- **Anchor Framework**: Proper struct deserialization
+- **SPL Governance**: Native delegation detection
 
-## Quick Start
+## 📦 Installation
 
 ### Prerequisites
 - Node.js 18+ 
 - PostgreSQL database
-- Helius API key (for Solana blockchain access)
+- Helius RPC API key
 
-### Installation
+### Quick Start
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/islanddao-citizen-map.git
-   cd islanddao-citizen-map
-   ```
+```bash
+git clone https://github.com/your-username/citizen-map.git
+cd citizen-map
+```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-3. **Set up environment variables**
-   ```bash
-   # Required
-   DATABASE_URL=postgresql://username:password@host:port/database
-   HELIUS_API_KEY=your_helius_api_key
-   
-   # Optional (auto-configured in most environments)
-   PORT=5000
-   ```
+3. **Environment setup**
+Create a `.env` file:
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/citizen_map
+HELIUS_API_KEY=your_helius_api_key_here
+```
 
-4. **Initialize database**
-   ```bash
-   node db.js
-   ```
+4. **Database initialization**
+```bash
+# Create citizens table
+psql $DATABASE_URL -c "CREATE TABLE IF NOT EXISTS citizens (
+    id SERIAL PRIMARY KEY,
+    wallet VARCHAR(44) UNIQUE NOT NULL,
+    name VARCHAR(255),
+    bio TEXT,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    native_governance_power DECIMAL(20,6) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);"
+```
 
-5. **Start the server**
-   ```bash
-   node citizen-map/db-integrated-server.js
-   ```
+5. **Start the application**
+```bash
+# Development mode
+npm start
 
-6. **Access the application**
-   Open `http://localhost:5000` in your browser
+# Production mode
+NODE_ENV=production npm start
+```
 
-## Governance Power Calculation
+The application will be available at `http://localhost:5000`
 
-This application implements authentic governance power extraction from Solana's VSR system:
+## 🔧 Core Components
 
-### VSR Integration
-- Extracts weighted voting power (not raw token deposits)
-- Accounts for lock-up multipliers and delegation
-- Matches Realms interface calculations exactly
-- Updates governance power in real-time
+### Citizen Map Server (`citizen-map/simple-server.cjs`)
+- Express.js server with PostgreSQL integration
+- NFT collection fetching via Helius API
+- Real-time citizen data endpoints
+- Static file serving with optimized caching
 
-### Data Authenticity
-- No mock or placeholder data
-- Direct blockchain queries via Helius API
-- Comprehensive error handling for API failures
-- Clear messaging when data cannot be retrieved
+### Governance Power Scanner (`canonical-native-governance-locked.js`)
+- Processes all VSR program accounts on Solana
+- Extracts native governance power with canonical accuracy
+- Implements verified wallet alias support
+- Filters phantom deposits for clean results
 
-## API Endpoints
+### Database Integration (`update-citizen-governance-power.js`)
+- Syncs governance power data to PostgreSQL
+- Maintains citizen records with real-time updates
+- Provides statistics and ranking functionality
 
-### Core Endpoints
-- `GET /` - Serve the main application
-- `GET /api/citizens` - Get all verified citizens with governance data
-- `POST /api/citizens` - Add new citizen pin
-- `DELETE /api/citizens/:wallet` - Remove citizen pin
-- `POST /api/sync-governance` - Manually sync governance power
+### Frontend Visualization (`citizen-map/verified-citizen-map.html`)
+- Interactive Leaflet.js map with custom IslandDAO styling
+- Real-time citizen stats cards with governance power display
+- Responsive design for desktop and mobile
+- Dark/light theme support
 
-### Data Format
-```json
-{
-  "wallet_address": "3PKhzE9wF...",
-  "name": "Citizen Name",
-  "location": "City, Country",
-  "lat": 40.7128,
-  "lng": -74.0060,
-  "governance_power": 10353648.013,
-  "nft_image": "https://...",
-  "twitter": "@username",
-  "discord": "username#1234"
+## 📊 Governance Power Calculation
+
+### Native Power Algorithm
+```javascript
+// Canonical VSR multiplier calculation
+function calculateMultiplier(lockupKind, lockupEndTs) {
+    if (lockupKind === 0) return 1; // No lockup
+    
+    const now = Date.now() / 1000;
+    const timeRemaining = Math.max(0, lockupEndTs - now);
+    const yearsRemaining = timeRemaining / (365.25 * 24 * 3600);
+    
+    return Math.min(5, 1 + Math.min(yearsRemaining, 4)); // Cap at 5x
 }
 ```
 
-## Deployment
+### Data Processing Pipeline
+1. **VSR Account Discovery**: Scan all 16,586 program accounts
+2. **Authority Validation**: Match wallet ownership with alias support
+3. **Deposit Extraction**: Parse using canonical byte offsets
+4. **Multiplier Application**: Calculate time-weighted governance power
+5. **Database Sync**: Update citizen records with results
 
-### Replit Deployment
-This application is optimized for Replit deployment:
+## 🗂 Project Structure
 
-1. Import the repository to Replit
-2. Set environment variables in Replit Secrets
-3. Click "Run" to start the application
-4. Use Replit's deployment feature for production
-
-### Other Platforms
-The application can be deployed on any Node.js hosting platform:
-- Heroku
-- Railway
-- Render
-- DigitalOcean App Platform
-
-## Development
-
-### Project Structure
 ```
+citizen-map/
+├── README.md                              # This file
+├── .env                                   # Environment configuration
+├── package.json                           # Dependencies and scripts
 ├── citizen-map/
-│   ├── db-integrated-server.js    # Main server file
-│   ├── verified-citizen-map.html  # Frontend application
-│   ├── api-routes.js              # API endpoint handlers
-│   ├── major-cities.js           # Geographic data
-│   ├── components/               # React-style components
-│   └── utils/                    # Utility functions
-├── db.js                         # Database operations
-├── package.json                  # Dependencies
-└── README.md                     # This file
+│   ├── simple-server.cjs                  # Main server application
+│   ├── verified-citizen-map.html          # Frontend map interface
+│   └── components/                        # Reusable UI components
+├── canonical-native-governance-locked.js  # VSR governance scanner
+├── update-citizen-governance-power.js     # Database sync utility
+├── get-all-citizens.js                    # Live citizen management
+├── delegation-power-scanner.js            # Delegation detection foundation
+└── governance-implementation-summary.md   # Technical documentation
 ```
 
-### Database Schema
-```sql
-CREATE TABLE citizens (
-    id SERIAL PRIMARY KEY,
-    wallet_address VARCHAR(44) UNIQUE NOT NULL,
-    name VARCHAR(100),
-    location VARCHAR(200),
-    lat DECIMAL(10, 8),
-    lng DECIMAL(11, 8),
-    governance_power DECIMAL(20, 6) DEFAULT 0,
-    nft_image TEXT,
-    twitter VARCHAR(100),
-    discord VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+## 🔐 Security & Performance
 
-## Contributing
+### Data Integrity
+- **Canonical Validation**: All governance power calculations verified against Realms UI
+- **Authority Verification**: Multi-method wallet ownership validation
+- **Real-time Sync**: Live blockchain data with database caching
+- **Error Handling**: Comprehensive logging and graceful degradation
 
+### Performance Optimization
+- **Efficient Queries**: Optimized PostgreSQL indexes on governance power
+- **Caching Strategy**: Smart data caching to reduce RPC calls
+- **Batch Processing**: Bulk operations for large dataset handling
+- **Resource Management**: Connection pooling and memory optimization
+
+## 🤝 Contributing
+
+We welcome contributions to the IslandDAO Citizen Map! Please read our contributing guidelines and submit pull requests for any improvements.
+
+### Development Workflow
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly (no breaking changes!)
+5. Submit a pull request
 
-### Development Guidelines
-- Maintain data authenticity - no mock data
-- Follow existing code style and patterns
-- Test governance power calculations thoroughly
-- Ensure mobile responsiveness
+## 📜 License
 
-## Technical Documentation
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### VSR Governance Power Extraction
-The application uses a sophisticated method to extract authentic governance power:
+## 🔗 Links
 
-1. **Account Discovery**: Searches VSR program accounts for citizen wallets
-2. **Data Parsing**: Extracts governance power from account data (32 bytes after wallet reference)
-3. **Weight Calculation**: Applies proper VSR multipliers for lock-up periods
-4. **Verification**: Cross-checks results against known voting records
+- **IslandDAO**: [Official Website](https://islanddao.io)
+- **Solana**: [Blockchain Explorer](https://solscan.io)
+- **VSR Documentation**: [Voter Stake Registry](https://docs.realms.today/VSR)
 
-### Error Handling
-- Comprehensive API error responses
-- Graceful degradation when blockchain data unavailable
-- Clear user messaging for authentication failures
-- Retry logic for temporary network issues
+## 📧 Support
 
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For questions or issues:
-- Open a GitHub issue
-- Contact the IslandDAO community
-- Review the SPL Governance documentation
+For technical support or questions about the governance calculations, please open an issue or contact the IslandDAO development team.
 
 ---
 
-Built with ❤️ for the IslandDAO community
+**Built with ❤️ for the IslandDAO community**
