@@ -491,36 +491,57 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   // FINAL AGGREGATION: Calculate total governance power from native + delegated
   totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
   
-  // VWR RECONCILIATION: Only adjust if there's a significant discrepancy
+  // VWR RECONCILIATION: Handle mixed power scenarios intelligently
   if (hasVWR && totalGovernancePower > 0) {
     const vwrTotal = totalGovernancePower;
     const calculatedTotal = nativeGovernancePower + delegatedGovernancePower;
     
-    // If VWR total differs significantly from calculated total, use VWR as authoritative
+    // If VWR total is significantly larger than calculated native, it likely includes delegated power
     const discrepancy = Math.abs(vwrTotal - calculatedTotal) / Math.max(vwrTotal, calculatedTotal);
     
-    if (discrepancy > 0.05 && nativeGovernancePower > 0 && delegatedGovernancePower === 0) {
-      // Case: Significant VWR difference with only native power detected
-      // Use VWR total as native power (includes authentic multipliers)
-      nativeGovernancePower = vwrTotal;
-      delegatedGovernancePower = 0;
-      totalGovernancePower = vwrTotal;
-      
-      if (verbose) {
-        console.log(`     ✅ VWR reconciliation: ${vwrTotal.toFixed(3)} ISLAND native (includes authentic multipliers)`);
+    if (discrepancy > 0.05) {
+      if (nativeGovernancePower > 0 && delegatedGovernancePower === 0) {
+        // Check if VWR total suggests mixed power (native + delegated)
+        const nativeRatio = nativeGovernancePower / vwrTotal;
+        
+        if (nativeRatio < 0.95 && nativeRatio > 0.01) {
+          // VWR total is much larger than detected native - likely includes delegated power
+          delegatedGovernancePower = vwrTotal - nativeGovernancePower;
+          totalGovernancePower = vwrTotal;
+          
+          if (verbose) {
+            console.log(`     ⚖️  Mixed power detected: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+          }
+        } else {
+          // VWR total is close to native - use VWR as pure native power
+          nativeGovernancePower = vwrTotal;
+          delegatedGovernancePower = 0;
+          totalGovernancePower = vwrTotal;
+          
+          if (verbose) {
+            console.log(`     ✅ VWR-based native: ${vwrTotal.toFixed(3)} ISLAND (includes authentic multipliers)`);
+          }
+        }
+      } else {
+        // Use VWR total with calculated separation
+        totalGovernancePower = vwrTotal;
+        
+        if (verbose) {
+          console.log(`     📊 VWR total: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+        }
       }
     } else {
-      // Use calculated values (native + delegated detection worked properly)
+      // VWR matches calculated values well
       totalGovernancePower = calculatedTotal;
       
       if (verbose) {
-        console.log(`     📊 Calculated total: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+        console.log(`     📊 Calculated: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
       }
     }
   } else {
     // No VWR: Use calculated native + delegated
     if (verbose) {
-      console.log(`     📊 Final total: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+      console.log(`     📊 Final: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
     }
   }
   
