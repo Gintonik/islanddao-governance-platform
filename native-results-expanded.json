@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-06-03T15:12:08.266Z",
-  "scannerVersion": "canonical-native-governance-expanded",
+  "timestamp": "2025-06-03T15:22:42.901Z",
+  "scannerVersion": "canonical-native-governance-optimized",
   "totalCitizens": 20,
   "walletAliasesUsed": 1,
   "results": [
@@ -55,37 +55,39 @@
     },
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "nativePower": 7183474.632185999,
+      "nativePower": 7182784.632185999,
       "accountCount": 1,
-      "depositCount": 4,
+      "depositCount": 3,
       "deposits": [
         {
-          "amount": 690,
-          "multiplier": 1,
-          "votingPower": 690,
-          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "offset": 112
-        },
-        {
           "amount": 1500000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
           "multiplier": 1,
           "votingPower": 1500000,
           "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "offset": 192
+          "offset": 184
         },
         {
           "amount": 2000000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
           "multiplier": 1,
           "votingPower": 2000000,
           "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "offset": 272
+          "offset": 264
         },
         {
           "amount": 3682784.632186,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
           "multiplier": 1,
           "votingPower": 3682784.632186,
           "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "offset": 352
+          "offset": 344
         }
       ]
     },
