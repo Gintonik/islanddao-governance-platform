@@ -53,9 +53,9 @@ function parseVoterAccount(data) {
     
     const depositEntries = [];
     
-    // Based on debugging: deposits found at offset 168+ with isUsed at +32, amount at +16
-    // Parse deposits using discovered structure
-    const depositStartOffsets = [168]; // Start of deposit entries based on debugging
+    // Based on debugging: deposits found at multiple offsets
+    // Parse deposits using discovered structure - expand search to find all deposits
+    const depositStartOffsets = [104, 136, 168]; // Multiple starting points found in debugging
     
     for (const startOffset of depositStartOffsets) {
       for (let i = 0; i < 32; i++) {
