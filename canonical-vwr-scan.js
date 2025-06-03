@@ -8,11 +8,34 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import fs from 'fs';
 import 'dotenv/config';
 
-// RPC configuration with fallback support
+// RPC configuration
 const primaryRpcUrl = process.env.HELIUS_RPC_URL;
-const fallbackRpcUrl = process.env.FALLBACK_RPC_URL || 'https://api.mainnet-beta.solana.com';
 let connection = new Connection(primaryRpcUrl, "confirmed");
-let usingFallbackRpc = false;
+
+/**
+ * Safe RPC function that tries fallback on failure
+ */
+async function safeGetProgramAccounts(programId, config = {}) {
+  try {
+    return await connection.getProgramAccounts(programId, config);
+  } catch (error) {
+    // Try fallback RPC if available
+    const fallbackRpcUrl = process.env.FALLBACK_RPC_URL || 'https://api.mainnet-beta.solana.com';
+    
+    if (fallbackRpcUrl && fallbackRpcUrl !== primaryRpcUrl) {
+      try {
+        console.log(`🔄 Primary RPC failed, trying fallback: ${error.message}`);
+        const fallbackConnection = new Connection(fallbackRpcUrl, "confirmed");
+        return await fallbackConnection.getProgramAccounts(programId, config);
+      } catch (fallbackError) {
+        console.log(`❌ Fallback RPC also failed: ${fallbackError.message}`);
+        throw new Error(`Both primary and fallback RPC failed: ${error.message}`);
+      }
+    }
+    
+    throw error;
+  }
+}
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
 // IslandDAO configuration
@@ -387,7 +410,7 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   }
   
   // Step 1: Get total governance power from VoterWeightRecord (if exists)
-  const voterWeightRecords = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+  const voterWeightRecords = await safeGetProgramAccounts(VSR_PROGRAM_ID, {
     filters: [
       { dataSize: 176 },
       { memcmp: { offset: 72, bytes: walletAddress } }
@@ -455,127 +478,67 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   const currentTimestamp = Math.floor(Date.now() / 1000);
   let delegationScanSucceeded = false;
   
-  try {
-    // Try to scan all Voter accounts for delegation detection
-    for (const { pubkey, account } of allVoterAccounts) {
-      const data = account.data;
-      const authorities = parseVoterAuthorities(data);
-      
-      if (!authorities) continue;
-      
-      const { authority, voterAuthority } = authorities;
-      
-      // DELEGATION DETECTION: voterAuthority === targetWallet AND authority !== targetWallet
-      if (voterAuthority === walletAddress && authority !== walletAddress) {
-        // Parse deposits from this delegating account
-        const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+  // Check if we successfully loaded all Voter accounts
+  if (allVoterAccounts.length > 0) {
+    try {
+      for (const { pubkey, account } of allVoterAccounts) {
+        const data = account.data;
+        const authorities = parseVoterAuthorities(data);
         
-        if (deposits && deposits.length > 0) {
-          for (const deposit of deposits) {
-            if (deposit.isUsed && deposit.amountDepositedNative > 0) {
-              // Calculate multiplier for delegated deposit
-              const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
-              const adjustedPower = deposit.amountDepositedNative * multiplier;
-              
-              if (adjustedPower > 0) {
-                delegatedGovernancePower += adjustedPower;
-                delegators.push(authority);
+        if (!authorities) continue;
+        
+        const { authority, voterAuthority } = authorities;
+        
+        // DELEGATION DETECTION: voterAuthority === targetWallet AND authority !== targetWallet
+        if (voterAuthority === walletAddress && authority !== walletAddress) {
+          // Parse deposits from this delegating account
+          const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
+          
+          if (deposits && deposits.length > 0) {
+            for (const deposit of deposits) {
+              if (deposit.isUsed && deposit.amountDepositedNative > 0) {
+                // Calculate multiplier for delegated deposit
+                const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
+                const adjustedPower = deposit.amountDepositedNative * multiplier;
                 
-                delegatedSources.push({
-                  account: pubkey.toBase58(),
-                  power: adjustedPower,
-                  baseAmount: deposit.amountDepositedNative,
-                  multiplier: multiplier,
-                  type: 'Voter-delegated',
-                  authority: authority,
-                  voterAuthority: voterAuthority,
-                  lockupActive: deposit.lockupEndTs > currentTimestamp,
-                  estimated: false
-                });
-                
-                if (verbose) {
-                  const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
-                  console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    delegationScanSucceeded = true;
-  } catch (error) {
-    if (verbose) {
-      console.log(`     ⚠️  Delegation scan failed: ${error.message}`);
-    }
-    
-    // Try fallback RPC if available
-    if (!usingFallbackRpc && fallbackRpcUrl !== primaryRpcUrl) {
-      try {
-        if (verbose) {
-          console.log(`     🔄 Switching to fallback RPC for delegation scan...`);
-        }
-        connection = new Connection(fallbackRpcUrl, "confirmed");
-        usingFallbackRpc = true;
-        
-        // Retry delegation scan with fallback RPC
-        const fallbackVoterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-          filters: [{ dataSize: 3312 }]
-        });
-        
-        for (const { pubkey, account } of fallbackVoterAccounts) {
-          const data = account.data;
-          const authorities = parseVoterAuthorities(data);
-          
-          if (!authorities) continue;
-          
-          const { authority, voterAuthority } = authorities;
-          
-          if (voterAuthority === walletAddress && authority !== walletAddress) {
-            const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
-            
-            if (deposits && deposits.length > 0) {
-              for (const deposit of deposits) {
-                if (deposit.isUsed && deposit.amountDepositedNative > 0) {
-                  const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
-                  const adjustedPower = deposit.amountDepositedNative * multiplier;
+                if (adjustedPower > 0) {
+                  delegatedGovernancePower += adjustedPower;
+                  delegators.push(authority);
                   
-                  if (adjustedPower > 0) {
-                    delegatedGovernancePower += adjustedPower;
-                    delegators.push(authority);
-                    
-                    delegatedSources.push({
-                      account: pubkey.toBase58(),
-                      power: adjustedPower,
-                      baseAmount: deposit.amountDepositedNative,
-                      multiplier: multiplier,
-                      type: 'Voter-delegated',
-                      authority: authority,
-                      voterAuthority: voterAuthority,
-                      lockupActive: deposit.lockupEndTs > currentTimestamp,
-                      estimated: false
-                    });
-                    
-                    if (verbose) {
-                      const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
-                      console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
-                    }
+                  delegatedSources.push({
+                    account: pubkey.toBase58(),
+                    power: adjustedPower,
+                    baseAmount: deposit.amountDepositedNative,
+                    multiplier: multiplier,
+                    type: 'Voter-delegated',
+                    authority: authority,
+                    voterAuthority: voterAuthority,
+                    lockupActive: deposit.lockupEndTs > currentTimestamp,
+                    estimated: false
+                  });
+                  
+                  if (verbose) {
+                    const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
+                    console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
                   }
                 }
               }
             }
           }
         }
-        delegationScanSucceeded = true;
-      } catch (fallbackError) {
-        if (verbose) {
-          console.log(`     ❌ Fallback delegation scan also failed: ${fallbackError.message}`);
-        }
-        delegationScanSucceeded = false;
       }
-    } else {
+      delegationScanSucceeded = true;
+    } catch (error) {
+      if (verbose) {
+        console.log(`     ⚠️  Delegation processing failed: ${error.message}`);
+      }
       delegationScanSucceeded = false;
     }
+  } else {
+    if (verbose) {
+      console.log(`     ⚠️  No Voter accounts loaded - delegation scan skipped`);
+    }
+    delegationScanSucceeded = false;
   }
   
   if (verbose && delegators.length > 0) {
