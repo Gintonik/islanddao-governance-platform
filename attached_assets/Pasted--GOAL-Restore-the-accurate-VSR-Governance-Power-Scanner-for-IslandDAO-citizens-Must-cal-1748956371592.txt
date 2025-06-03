@@ -1,0 +1,95 @@
+// 🧠 GOAL: Restore the accurate VSR Governance Power Scanner for IslandDAO citizens.
+// ✅ Must calculate native power for each wallet using canonical, non-guesswork methods.
+// ✅ Must return >0 power for ~14 out of 20 citizens as before.
+// ❌ Do NOT rely solely on Anchor deserialization (fails silently).
+// ✅ Use known-good offset-based parsing that worked previously.
+
+const { Connection, PublicKey } = require('@solana/web3.js');
+const bs58 = require('bs58');
+const BN = require('bn.js');
+const bs = require('binary-parser').Parser;
+
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const HELIUS_RPC_URL = process.env.HELIUS_RPC_URL;
+const connection = new Connection(HELIUS_RPC_URL, 'confirmed');
+
+// ⏱️ Constants
+const SECONDS_IN_YEAR = 365.25 * 24 * 60 * 60;
+const MAX_MULTIPLIER = 5;
+
+const getCitizenWallets = async () => {
+  const res = await fetch('https://your-api-url.com/api/citizens');
+  const data = await res.json();
+  return data.map(c => c.wallet);
+};
+
+const voterParser = new bs()
+  .endianess('little')
+  .array('depositEntries', {
+    type: new bs()
+      .endianess('little')
+      .uint8('isUsed')
+      .buffer('padding1', { length: 7 })
+      .uint64('amountDepositedNative')
+      .buffer('padding2', { length: 16 }) // vestingRate + padding
+      .uint8('lockupKind')
+      .buffer('padding3', { length: 7 }) // alignment
+      .uint64('startTs')
+      .uint64('endTs')
+      .uint64('cliffTs'),
+    length: 32
+  });
+
+const calculateMultiplier = (lockup) => {
+  const now = Math.floor(Date.now() / 1000);
+  if (lockup.endTs <= now) return 1.0;
+
+  const duration = lockup.endTs - now;
+  const yearsRemaining = duration / SECONDS_IN_YEAR;
+  return Math.min(1 + yearsRemaining, MAX_MULTIPLIER);
+};
+
+const parseGovernancePower = async (wallet) => {
+  const filters = [
+    { dataSize: 2728 },
+    { memcmp: { offset: 8, bytes: wallet.toBase58() } }
+  ];
+  const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, { filters });
+
+  let nativePower = 0;
+
+  for (const acc of accounts) {
+    const buf = acc.account.data;
+    const parsed = voterParser.parse(buf);
+
+    for (const entry of parsed.depositEntries) {
+      if (entry.isUsed !== 1) continue;
+
+      const amount = new BN(entry.amountDepositedNative, 10).toNumber() / 1e9;
+      const lockup = {
+        kind: entry.lockupKind,
+        startTs: new BN(entry.startTs, 10).toNumber(),
+        endTs: new BN(entry.endTs, 10).toNumber(),
+        cliffTs: new BN(entry.cliffTs, 10).toNumber(),
+      };
+
+      const multiplier = calculateMultiplier(lockup);
+      nativePower += amount * multiplier;
+    }
+  }
+
+  return { wallet: wallet.toBase58(), nativePower: nativePower.toFixed(6) };
+};
+
+(async () => {
+  const walletStrings = await getCitizenWallets();
+  const wallets = walletStrings.map(w => new PublicKey(w));
+
+  const results = [];
+  for (const w of wallets) {
+    const res = await parseGovernancePower(w);
+    results.push(res);
+  }
+
+  console.table(results);
+})();
