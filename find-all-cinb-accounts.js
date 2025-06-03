@@ -16,7 +16,7 @@ const TARGET_DELEGATEE = '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4';
 function parseVoterAuthorities(data) {
   try {
     const authority = new PublicKey(data.slice(8, 40)).toBase58();
-    const voterAuthority = new PublicKey(data.slice(40, 72)).toBase58();
+    const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
     return { authority, voterAuthority };
   } catch (error) {
     return null;
@@ -83,7 +83,7 @@ async function findAllCinbAccounts() {
   const delegatedTo4pT6Accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
     filters: [
       { dataSize: 2728 },
-      { memcmp: { offset: 40, bytes: TARGET_DELEGATEE } }
+      { memcmp: { offset: 72, bytes: TARGET_DELEGATEE } }
     ]
   });
   

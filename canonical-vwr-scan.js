@@ -303,8 +303,8 @@ function parseVoterAuthorities(data) {
     // Authority is at offset 8 (32 bytes)
     const authority = new PublicKey(data.slice(8, 40)).toBase58();
     
-    // VoterAuthority is at offset 40 (32 bytes) 
-    const voterAuthority = new PublicKey(data.slice(40, 72)).toBase58();
+    // VoterAuthority is at offset 72 (32 bytes) - corrected position
+    const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
     
     return { authority, voterAuthority };
   } catch (error) {
