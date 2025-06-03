@@ -1,0 +1,63 @@
+# 1. Modify the citizen fetch logic to always pull the latest list from the database
+#    Update get-all-citizens.js or equivalent to query the live citizens table
+
+# Replace the static list with:
+const { Client } = require('pg');
+const client = new Client({ connectionString: process.env.DATABASE_URL });
+
+async function fetchCitizensFromDB() {
+  await client.connect();
+  const res = await client.query('SELECT wallet FROM citizens WHERE wallet IS NOT NULL');
+  await client.end();
+  return res.rows.map(row => row.wallet);
+}
+
+// Export or use the list in your scanner
+module.exports = fetchCitizensFromDB;
+
+
+# 1. Lock the working native governance scanner so it never changes
+cp canonical-native-governance-final-optimized.js canonical-native-governance-locked.js
+
+# 2. Rename the latest output to reflect its locked authoritative status
+cp native-results-final.json native-results-latest.json
+
+# 3. Commit the locked scanner and latest results to Git
+git add canonical-native-governance-locked.js native-results-latest.json
+git commit -m "🔒 Lock canonical native governance power scanner and results snapshot"
+git push
+
+# 4. Create a clean delegation module starter file
+touch delegation-power-scanner.js
+
+# 5. In delegation-power-scanner.js, begin with:
+
+// delegation-power-scanner.js
+
+const fs = require('fs');
+
+// ✅ Load locked native governance power results
+const nativeResults = JSON.parse(fs.readFileSync('./native-results-latest.json', 'utf8'));
+
+const nativePowerMap = {};
+nativeResults.results.forEach(entry => {
+  nativePowerMap[entry.wallet] = entry.nativePower;
+});
+
+// 🧪 Print total native power snapshot
+console.log("Total wallets with native power:", Object.keys(nativePowerMap).length);
+console.log("Example wallet:", Object.keys(nativePowerMap)[0], "→ Native:", nativePowerMap[Object.keys(nativePowerMap)[0]]);
+
+// 🛠️ Delegation logic to be implemented separately here
+
+Run that and you'll have:
+
+🔒 Locked native scanner and output file
+
+✅ Canonical source ready for cron jobs and backend sync
+
+🆕 A clean slate to start working on delegated power
+
+we can update the citizen card stats, the field "Native Governnace Power" should be the output from our native govenance resualts final json. 
+
+every new pin placed will add to the list that our calculator checks.

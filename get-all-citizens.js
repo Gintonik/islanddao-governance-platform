@@ -15,11 +15,11 @@ const pool = new Pool({
 });
 
 /**
- * Get all citizen wallet addresses from database
+ * Get all citizen wallet addresses from database (live query)
  */
-async function getAllCitizenWallets() {
+async function fetchCitizensFromDB() {
   try {
-    const query = 'SELECT wallet FROM citizens ORDER BY wallet';
+    const query = 'SELECT wallet FROM citizens WHERE wallet IS NOT NULL ORDER BY wallet';
     const result = await pool.query(query);
     
     const wallets = result.rows.map(row => row.wallet);
@@ -47,4 +47,7 @@ async function getAllCitizenWallets() {
   }
 }
 
-getAllCitizenWallets().catch(console.error);
+// Export the function for use in other modules
+module.exports = fetchCitizensFromDB;
+
+fetchCitizensFromDB().catch(console.error);
