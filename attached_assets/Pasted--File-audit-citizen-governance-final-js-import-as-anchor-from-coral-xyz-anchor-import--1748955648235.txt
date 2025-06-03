@@ -1,0 +1,103 @@
+// File: audit-citizen-governance-final.js
+
+import * as anchor from '@coral-xyz/anchor';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { deserializeAccountRaw } from '@coral-xyz/anchor/dist/cjs/program/namespace/account';
+import vsrIdl from './vsr-idl.json' assert { type: 'json' };
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Setup connection and program
+const connection = new Connection(process.env.HELIUS_RPC_URL, 'confirmed');
+const provider = new anchor.AnchorProvider(connection, {} as any, {});
+const program = new anchor.Program(vsrIdl, new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ'), provider);
+
+// ✅ 20 citizen wallet addresses from map DB
+const WALLET_ADDRESSES = [
+  'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh',
+  '6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U',
+  'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG',
+  '3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr',
+  '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+  '37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA',
+  'B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST',
+  'ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd',
+  '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA',
+  'EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF',
+  '2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk',
+  '2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT',
+  'CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM',
+  'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
+  '9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94',
+  '9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n',
+  'BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz',
+  'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1',
+  '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
+  'DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt',
+].map((x) => new PublicKey(x));
+
+// Canonical multiplier
+function calculateMultiplier(lockup) {
+  if (lockup.lockupKind === 0 || lockup.lockupEndTs.eqn(0)) return 1.0;
+  const now = Math.floor(Date.now() / 1000);
+  const secondsRemaining = Math.max(0, lockup.lockupEndTs.toNumber() - now);
+  const years = secondsRemaining / (365.25 * 24 * 3600);
+  return Math.min(1 + years, 5);
+}
+
+(async () => {
+  const voterAccounts = await connection.getProgramAccounts(program.programId, {
+    filters: [{ dataSize: 2728 }],
+  });
+
+  for (const wallet of WALLET_ADDRESSES) {
+    const walletBase58 = wallet.toBase58();
+    let native = 0;
+    let delegated = 0;
+    let found = false;
+
+    for (const { account } of voterAccounts) {
+      const decoded = deserializeAccountRaw(program.idl, 'voter', account.data);
+      const authority = decoded.authority.toBase58();
+      const voterAuthority = decoded.voterAuthority.toBase58();
+
+      for (let i = 0; i < decoded.depositEntries.length; i++) {
+        const entry = decoded.depositEntries[i];
+        const amount = entry.amountDepositedNative.toNumber() / 1e9;
+        if (amount === 0) continue;
+
+        const multiplier = calculateMultiplier(entry.lockup);
+        const power = amount * multiplier;
+
+        const isNative = authority === walletBase58;
+        const isDelegated = voterAuthority === walletBase58 && authority !== walletBase58;
+
+        if (isNative) native += power;
+        if (isDelegated) delegated += power;
+
+        if (isNative || isDelegated) {
+          found = true;
+          const tag = isNative ? '🟢 Native' : '🔵 Delegated';
+          console.log(`${tag} | ${walletBase58} | Deposit #${i}`);
+          console.log(`    Amount: ${amount}`);
+          console.log(`    Multiplier: ${multiplier.toFixed(2)} | Power: ${power.toFixed(2)}`);
+          console.log(`    LockupKind: ${entry.lockup.lockupKind}`);
+          console.log(`    StartTs: ${entry.lockup.startTs.toNumber()}`);
+          console.log(`    EndTs: ${entry.lockup.lockupEndTs.toNumber()}`);
+          console.log(`    Authority: ${authority} → VoterAuthority: ${voterAuthority}\n`);
+        }
+      }
+    }
+
+    const total = native + delegated;
+    console.log(`\n✅ Summary for ${walletBase58}`);
+    console.log(`   - Native Power   : ${native.toFixed(2)} ISLAND`);
+    console.log(`   - Delegated Power: ${delegated.toFixed(2)} ISLAND`);
+    console.log(`   - Total Power    : ${total.toFixed(2)} ISLAND`);
+    console.log(`-----------------------------------------------------\n`);
+
+    if (!found) {
+      console.log(`🟡 No VSR deposits found for ${walletBase58}\n-----------------------------------------------------\n`);
+    }
+  }
+})();
