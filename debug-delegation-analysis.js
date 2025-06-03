@@ -3,8 +3,8 @@
  * Investigates specific wallets to understand delegation structures
  */
 
-const { Connection, PublicKey } = require('@solana/web3.js');
-const BN = require('bn.js');
+import { Connection, PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
 
 // Configuration
 const connection = new Connection(process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com');
