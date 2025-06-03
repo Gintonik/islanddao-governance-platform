@@ -214,20 +214,67 @@ function parseVoterAccountData(data, accountPubkey) {
                 continue; // Skip phantom deposits
               }
               
-              // Treat as unlocked deposit (multiplier 1.0)
-              const power = amount * 1.0;
+              // Enhanced lockup detection for multi-lockup accounts
+              let lockupInfo = { kind: 0, startTs: 0, endTs: 0 };
+              let multiplier = 1.0;
+              
+              // Look for lockup metadata in nearby bytes
+              const scanRange = 40;
+              for (let scanOffset = offset - scanRange; scanOffset <= offset + scanRange; scanOffset += 8) {
+                if (scanOffset >= 0 && scanOffset + 8 <= data.length) {
+                  try {
+                    const potentialTs = Number(data.readBigUInt64LE(scanOffset));
+                    if (potentialTs > 1577836800 && potentialTs < 1893456000) {
+                      for (let kindOffset = scanOffset - 16; kindOffset <= scanOffset + 16; kindOffset++) {
+                        if (kindOffset >= 0 && kindOffset < data.length) {
+                          const kind = data[kindOffset];
+                          if (kind >= 1 && kind <= 4) {
+                            let startTs = 0;
+                            let endTs = 0;
+                            
+                            for (let tsOffset = kindOffset - 32; tsOffset <= kindOffset + 32; tsOffset += 8) {
+                              if (tsOffset >= 0 && tsOffset + 8 <= data.length) {
+                                try {
+                                  const ts = Number(data.readBigUInt64LE(tsOffset));
+                                  if (ts > 1577836800 && ts < 1893456000) {
+                                    if (startTs === 0 || ts < startTs) {
+                                      endTs = startTs;
+                                      startTs = ts;
+                                    } else if (endTs === 0 || ts > endTs) {
+                                      endTs = ts;
+                                    }
+                                  }
+                                } catch (e) {}
+                              }
+                            }
+                            
+                            if (endTs > currentTime) {
+                              lockupInfo = { kind, startTs, endTs };
+                              multiplier = calculateMultiplier(lockupInfo, currentTime);
+                              break;
+                            }
+                          }
+                        }
+                      }
+                      if (lockupInfo.kind > 0) break;
+                    }
+                  } catch (e) {}
+                }
+              }
+              
+              const power = amount * multiplier;
               
               deposits.push({
                 amount: amount,
-                multiplier: 1.0,
+                multiplier: multiplier,
                 power: power,
-                lockupKind: 0,
-                endTs: 0,
-                isUnlocked: true,
+                lockupKind: lockupInfo.kind,
+                endTs: lockupInfo.endTs,
+                isUnlocked: lockupInfo.kind === 0,
                 authority: authority,
                 voterAuthority: voterAuthority,
                 account: accountPubkey,
-                source: 'directAmount',
+                source: lockupInfo.kind > 0 ? 'lockupDetected' : 'directAmount',
                 offset: offset
               });
             }
