@@ -154,7 +154,10 @@ async function runCanonicalMultiLockupScan() {
         walletAliases[citizenWallet].forEach(alias => authoritySet.add(alias));
       }
 
-      // Scan all VSR accounts for matching authorities
+      // Prepare wallet bytes for reference detection
+      const walletBytes = new PublicKey(citizenWallet).toBytes();
+
+      // Scan all VSR accounts for matching authorities or wallet references
       for (const account of accounts) {
         let accountData;
         if (Array.isArray(account.account.data)) {
@@ -165,9 +168,46 @@ async function runCanonicalMultiLockupScan() {
           continue; // Skip if data format is unexpected
         }
         
-        const authority = extractAuthority(accountData);
+        if (accountData.length < 100) continue;
 
-        if (authority && authoritySet.has(authority)) {
+        let isControlled = false;
+        let controlType = '';
+        
+        // Check 1: Authority control (primary method)
+        try {
+          const authorityBytes = accountData.slice(32, 64);
+          const authority = new PublicKey(authorityBytes).toString();
+          
+          if (authoritySet.has(authority)) {
+            isControlled = true;
+            controlType = authority === citizenWallet ? 'Direct authority' : 'Verified alias';
+          }
+        } catch (e) {
+          // Continue to next check
+        }
+        
+        // Check 2: Wallet bytes in data (broader detection for previous working cases)
+        if (!isControlled) {
+          try {
+            // Check key positions where wallet might appear
+            const checkPositions = [8, 64, 96]; // Common positions for wallet references
+            
+            for (const pos of checkPositions) {
+              if (pos + 32 <= accountData.length) {
+                const slice = accountData.slice(pos, pos + 32);
+                if (slice.equals(Buffer.from(walletBytes))) {
+                  isControlled = true;
+                  controlType = `Wallet reference at offset ${pos}`;
+                  break;
+                }
+              }
+            }
+          } catch (e) {
+            // Continue
+          }
+        }
+
+        if (isControlled) {
           const deposits = parseDeposits(accountData);
           
           if (deposits.length > 0) {
