@@ -1,0 +1,38 @@
+🛠️ I need to fix the canonical VSR governance power scanner in `canonical-vwr-scan.js` to meet the following conditions without breaking any previously validated results.
+
+🔍 THE PROBLEM:
+- Wallet `GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh` should show ≈144,708 ISLAND native power (4 lockups with multipliers) but currently shows only ~5,665.
+- This error was introduced after adding delegation detection logic, which incorrectly classifies this wallet’s native deposits as delegated.
+- **Delegated deposits must NOT overwrite native deposits.**
+- We must separate delegation and native power cleanly and ensure all multipliers and lockup conditions are preserved.
+
+✅ WHAT TO DO:
+1. In `canonical-vwr-scan.js`, ensure the following parsing logic:
+   - If `deposit.authority === walletPublicKey`, treat it as native governance power.
+   - If `deposit.voterAuthority === walletPublicKey && deposit.authority !== walletPublicKey`, treat it as delegated governance power.
+2. Lockup-based filtering:
+   - Only include deposits where `lockup.kind !== none && !isLockExpired(lockup)` – apply this logic to both native and delegated deposits.
+3. Multiplier application:
+   - For each valid deposit, calculate:
+     ```js
+     adjustedAmount = deposit.amount * getMultiplier(lockup.kind, lockup.duration);
+     ```
+   - Use the Registrar account to fetch correct multipliers.
+4. Final values:
+   - `nativePower[wallet] = sum(adjusted native deposits)`
+   - `delegatedPower[wallet] = sum(adjusted delegated deposits from other authorities)`
+   - `totalPower[wallet] = native + delegated`
+5. Run this for each wallet in the `citizens` list and store the values in `governance_power.csv`.
+
+🧪 VALIDATION TEST CASES (MUST PASS):
+- `GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh`: 144,708 native, 0 delegated
+- `3PKhzE9wu...`: ~10.35M native, ~1.26M delegated
+- `Fywb7YDCXxt...`: ~3.36M native, ~1.59M delegated
+- `4pT6ESaMQT...`: ~12.6K native, ~4.19M delegated (from CinHb)
+- `7pPJt2xo...`: ~1.7K native, ~8.7M delegated
+- `Fgv1zrwB6...`: 200,000 native
+- `kruHL3zJ1M...`: ~30,999 native, ~1.33M delegated
+
+📌 Ensure these wallets report correct native/delegated values without breaking any lockup logic. Only on-chain VSR data must be used. Do not rely on VoterWeightRecords for totals. Run `validate-test-cases.js` afterward and confirm all test cases pass.
+
+Let me know in comments where you made changes so I can track them clearly.
