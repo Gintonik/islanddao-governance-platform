@@ -33,58 +33,78 @@ function calculateMultiplier(lockupKind, startTs, endTs, cliffTs) {
 }
 
 /**
- * Parse deposits using proven offset method with comprehensive validation
+ * Parse VSR deposits using canonical deposit entry structure
  */
 function parseVSRDepositsExpanded(data, walletAddress = '', accountPubkey = '') {
   const deposits = [];
   
-  console.log(`    Parsing deposits for account ${accountPubkey.slice(0, 8)}...`);
+  console.log(`    Parsing deposits using canonical VSR deposit entry structure for account ${accountPubkey.slice(0, 8)}...`);
   
-  // Proven offsets where ISLAND amounts were found
-  const proven_offsets = [112, 184, 192, 264, 272, 344, 352];
+  // VSR deposit entries start at offset 232, each entry is 80 bytes
+  const DEPOSIT_AREA_START = 232;
+  const DEPOSIT_ENTRY_SIZE = 80;
+  const MAX_DEPOSITS = 32;
   
-  for (const offset of proven_offsets) {
-    if (offset + 8 > data.length) continue;
+  for (let i = 0; i < MAX_DEPOSITS; i++) {
+    const entryOffset = DEPOSIT_AREA_START + (i * DEPOSIT_ENTRY_SIZE);
+    
+    if (entryOffset + DEPOSIT_ENTRY_SIZE > data.length) break;
     
     try {
-      const rawAmount = data.readBigUInt64LE(offset);
-      const amount = Number(rawAmount) / 1e6; // Convert to ISLAND (6 decimals)
+      // Parse deposit entry fields using canonical VSR structure
+      const isUsed = data.readUInt8(entryOffset) === 1;
+      const reserved = data.readUInt32LE(entryOffset + 1); // 4 bytes padding
+      const amountDepositedNative = data.readBigUInt64LE(entryOffset + 8);
+      const allowClawback = data.readUInt8(entryOffset + 16) === 1;
       
-      if (amount >= 1 && amount <= 50000000) {
-        // Check isUsed flag at various nearby positions
-        let isUsed = false;
-        const usedCheckOffsets = [offset - 8, offset + 8, offset - 1, offset + 1];
-        for (const usedOffset of usedCheckOffsets) {
-          if (usedOffset >= 0 && usedOffset < data.length) {
-            const flag = data.readUInt8(usedOffset);
-            if (flag === 1) {
-              isUsed = true;
-              break;
-            }
+      // Lockup structure starts at offset +24
+      const lockupKind = data.readUInt8(entryOffset + 24);
+      const lockupStartTs = data.readBigUInt64LE(entryOffset + 32);
+      const lockupEndTs = data.readBigUInt64LE(entryOffset + 40);
+      const lockupCliffTs = data.readBigUInt64LE(entryOffset + 48);
+      
+      // Convert amount to ISLAND (6 decimals)
+      const amount = Number(amountDepositedNative) / 1e6;
+      
+      if (isUsed && amount > 0) {
+        // Enhanced phantom detection for 1,000 ISLAND deposits
+        let isPhantom = false;
+        if (amount === 1000) {
+          // Filter phantom 1,000 ISLAND if all lockup configs are zero
+          if (lockupKind === 0 && lockupStartTs === 0n && lockupEndTs === 0n && lockupCliffTs === 0n) {
+            isPhantom = true;
+            console.log(`      Entry ${i}: ${amount.toFixed(6)} ISLAND (phantom - all lockup configs zero)`);
           }
         }
         
-        if (isUsed) {
-          // All lockups are expired based on previous analysis
-          const multiplier = 1.0;
+        if (!isPhantom) {
+          // Calculate multiplier using canonical lockup logic
+          const multiplier = calculateMultiplier(lockupKind, Number(lockupStartTs), Number(lockupEndTs), Number(lockupCliffTs));
           const votingPower = amount * multiplier;
           
-          console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND, isUsed=${isUsed}, power=${votingPower.toFixed(2)}`);
+          console.log(`      Entry ${i}: ${amount.toFixed(6)} ISLAND, isUsed=${isUsed}, lockup=${lockupKind}, startTs=${Number(lockupStartTs)}, endTs=${Number(lockupEndTs)}, multiplier=${multiplier.toFixed(2)}, power=${votingPower.toFixed(2)}`);
           
           deposits.push({
-            offset,
+            depositIndex: i,
+            entryOffset,
             amount,
             isUsed,
-            lockupKind: 0,
+            allowClawback,
+            lockupKind,
+            lockupStartTs: Number(lockupStartTs),
+            lockupEndTs: Number(lockupEndTs),
+            lockupCliffTs: Number(lockupCliffTs),
             multiplier,
             votingPower,
             accountPubkey
           });
-        } else {
-          console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND (not used)`);
         }
+      } else if (amount > 0) {
+        console.log(`      Entry ${i}: ${amount.toFixed(6)} ISLAND (not used, isUsed=${isUsed})`);
       }
+      
     } catch (error) {
+      console.log(`      Entry ${i}: Parse error - ${error.message}`);
       continue;
     }
   }
@@ -94,21 +114,44 @@ function parseVSRDepositsExpanded(data, walletAddress = '', accountPubkey = '') 
 }
 
 /**
- * Check if a wallet controls an authority through verified aliases
+ * Check if a wallet controls a VSR account through comprehensive detection methods
  */
-function isControlledAuthority(walletAddress, authority) {
-  // Direct match
+function isControlledVSRAccount(walletAddress, data) {
+  // Extract authority and voter_authority
+  const authorityBytes = data.slice(32, 64);
+  const authority = new PublicKey(authorityBytes).toString();
+  
+  const voterAuthorityBytes = data.slice(64, 96);
+  const voterAuthority = new PublicKey(voterAuthorityBytes).toString();
+  
+  // Rule 1: Direct authority match
   if (walletAddress === authority) {
-    return true;
+    return { controlled: true, type: 'Direct authority', authority };
   }
   
-  // Check aliases
+  // Rule 2: Verified alias match
   const aliases = walletAliases[walletAddress];
   if (aliases && aliases.includes(authority)) {
-    return true;
+    return { controlled: true, type: 'Verified alias', authority };
   }
   
-  return false;
+  // Rule 3: Wallet appears at offset 8 (fallback detection pattern)
+  try {
+    const offset8Bytes = data.slice(8, 40);
+    const offset8Address = new PublicKey(offset8Bytes).toString();
+    
+    if (walletAddress === offset8Address) {
+      // Additional validation: wallet should not equal authority or voter_authority
+      // This reduces false positives by ensuring it's truly a fallback case
+      if (walletAddress !== authority && walletAddress !== voterAuthority) {
+        return { controlled: true, type: 'Offset 8 fallback detection', authority: offset8Address };
+      }
+    }
+  } catch (error) {
+    // Continue if offset 8 parsing fails
+  }
+  
+  return { controlled: false, type: null, authority };
 }
 
 /**
@@ -153,17 +196,15 @@ async function calculateExpandedNativeGovernancePower(walletAddress, allVSRAccou
         continue;
       }
       
-      // Parse authority field (32 bytes at offset 32-64)
-      const authorityBytes = data.slice(32, 64);
-      const authority = new PublicKey(authorityBytes).toString();
+      // Check if this wallet controls this VSR account through any mechanism
+      const controlCheck = isControlledVSRAccount(walletAddress, data);
       
-      // Check if this wallet controls this authority (direct or through aliases)
-      if (isControlledAuthority(walletAddress, authority)) {
+      if (controlCheck.controlled) {
         nativeAccounts++;
         
         console.log(`  Found controlled VSR account ${nativeAccounts}: ${account.pubkey.toString()}`);
-        console.log(`    Authority: ${authority}`);
-        console.log(`    Control type: ${authority === walletAddress ? 'Direct' : 'Verified alias'}`);
+        console.log(`    Authority: ${controlCheck.authority}`);
+        console.log(`    Control type: ${controlCheck.type}`);
         
         // Parse deposit entries using proven offset method
         const deposits = parseVSRDepositsExpanded(data, walletAddress, account.pubkey.toString());
