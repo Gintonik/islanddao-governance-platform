@@ -1,102 +1,108 @@
 /**
  * Debug VSR Account Structure
- * Analyze the exact byte layout to find correct deposit entry offsets
+ * Analyze the actual byte layout to find deposits
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
 
-const connection = new Connection(process.env.HELIUS_RPC_URL, "confirmed");
+dotenv.config();
+
+const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
-async function debugVSRStructure() {
-  // Test with GJdR wallet that should have deposits
-  const walletAddress = 'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh';
+/**
+ * Debug account structure by scanning for ISLAND amounts
+ */
+function debugAccountStructure(data, accountAddress) {
+  console.log(`\nDebugging account ${accountAddress} (${data.length} bytes)`);
   
-  console.log(`🔍 Debugging VSR structure for: ${walletAddress}`);
-  
-  const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-    filters: [
-      { dataSize: 2728 },
-      { memcmp: { offset: 8, bytes: walletAddress } }
-    ]
-  });
-  
-  if (accounts.length === 0) {
-    console.log('❌ No accounts found');
-    return;
-  }
-  
-  const { pubkey, account } = accounts[0];
-  const data = account.data;
-  
-  console.log(`📋 Account: ${pubkey.toBase58()}`);
-  console.log(`📏 Data length: ${data.length} bytes`);
-  
-  // Look for patterns that could be deposit amounts
-  console.log('\n🔍 Scanning for potential deposit amounts:');
+  // Look for potential ISLAND amounts by scanning for 64-bit values
+  const potentialAmounts = [];
   
   for (let offset = 0; offset < data.length - 8; offset += 8) {
-    const value = Number(data.readBigUInt64LE(offset));
-    const asTokens = value / 1e6;
-    
-    // Look for values that could be reasonable ISLAND amounts
-    if (asTokens > 1000 && asTokens < 1000000) {
-      console.log(`Offset ${offset.toString().padStart(4)}: ${value} raw → ${asTokens.toLocaleString()} ISLAND`);
-      
-      // Check if there's a corresponding isUsed flag nearby
-      for (let flagOffset = Math.max(0, offset - 16); flagOffset < Math.min(data.length, offset + 16); flagOffset++) {
-        const flag = data[flagOffset];
-        if (flag === 1) {
-          console.log(`  ✅ Found isUsed=1 at offset ${flagOffset} (relative: ${flagOffset - offset})`);
-        }
-      }
-    }
-  }
-  
-  // Try different deposit entry layouts
-  console.log('\n🔍 Testing different deposit entry layouts:');
-  
-  const possibleOffsets = [72, 64, 80, 88, 96];
-  
-  for (const startOffset of possibleOffsets) {
-    console.log(`\n📦 Testing deposit entries starting at offset ${startOffset}:`);
-    
-    for (let i = 0; i < 5; i++) { // Test first 5 entries
-      const entryOffset = startOffset + (i * 88);
-      if (entryOffset + 88 > data.length) break;
-      
-      const isUsed = data[entryOffset];
-      const amount8 = Number(data.readBigUInt64LE(entryOffset + 8)) / 1e6;
-      const amount16 = Number(data.readBigUInt64LE(entryOffset + 16)) / 1e6;
-      
-      console.log(`  Entry ${i}: isUsed=${isUsed}, amount@+8=${amount8.toFixed(2)}, amount@+16=${amount16.toFixed(2)}`);
-      
-      if (isUsed !== 0 && (amount8 > 0 || amount16 > 0)) {
-        console.log(`    🎯 Potential valid entry found!`);
+    try {
+      const rawValue = Number(data.readBigUInt64LE(offset));
+      if (rawValue > 0) {
+        const islandValue = rawValue / 1e6;
         
-        // Show more details for this entry
-        for (let j = 0; j < 88; j += 8) {
-          if (entryOffset + j + 8 <= data.length) {
-            const val = Number(data.readBigUInt64LE(entryOffset + j));
-            console.log(`      +${j.toString().padStart(2)}: ${val} (0x${val.toString(16)})`);
-          }
+        // Check if this could be a reasonable ISLAND amount
+        if (islandValue >= 1000 && islandValue <= 50000000) {
+          potentialAmounts.push({
+            offset: offset,
+            rawValue: rawValue,
+            islandValue: islandValue
+          });
         }
       }
+    } catch (error) {
+      continue;
     }
   }
   
-  // Look for the voter weight record value that should match expected governance power
-  console.log('\n🔍 Searching for voter weight record (144,708 ISLAND):');
-  const target = Math.round(144708 * 1e6);
+  console.log(`Found ${potentialAmounts.length} potential ISLAND amounts:`);
+  for (const amount of potentialAmounts.slice(0, 10)) {
+    console.log(`  Offset ${amount.offset}: ${amount.islandValue.toFixed(3)} ISLAND (raw: ${amount.rawValue})`);
+  }
   
-  for (let offset = 0; offset < data.length - 8; offset++) {
-    const value = Number(data.readBigUInt64LE(offset));
-    if (Math.abs(value - target) < 1000000) { // Within small margin
-      const asTokens = value / 1e6;
-      console.log(`🎯 Found close match at offset ${offset}: ${value} → ${asTokens.toLocaleString()} ISLAND`);
+  // Also check the canonical deposit offsets
+  console.log('\nChecking canonical deposit offsets:');
+  for (let i = 0; i < 5; i++) {
+    const offset = 104 + (87 * i);
+    if (offset + 48 <= data.length) {
+      try {
+        const isUsed = data[offset];
+        const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+        const lockupKind = data[offset + 24];
+        const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+        
+        console.log(`  Deposit ${i} (offset ${offset}):`);
+        console.log(`    isUsed: ${isUsed}`);
+        console.log(`    rawAmount: ${rawAmount} (${rawAmount / 1e6} ISLAND)`);
+        console.log(`    lockupKind: ${lockupKind}`);
+        console.log(`    lockupEndTs: ${lockupEndTs}`);
+      } catch (error) {
+        console.log(`    Error reading deposit ${i}: ${error.message}`);
+      }
     }
   }
 }
 
-debugVSRStructure().catch(console.error);
+/**
+ * Debug specific wallets
+ */
+async function debugWallets() {
+  const testWallets = [
+    '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+    'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1',
+    'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC' // This one worked previously
+  ];
+  
+  console.log('VSR ACCOUNT STRUCTURE DEBUG');
+  console.log('===========================');
+  
+  for (const wallet of testWallets) {
+    console.log(`\nAnalyzing wallet: ${wallet}`);
+    
+    // Find Voter accounts
+    const voterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [
+        { dataSize: 2728 },
+        { memcmp: { offset: 8, bytes: wallet } }
+      ]
+    });
+    
+    console.log(`Found ${voterAccounts.length} Voter accounts`);
+    
+    for (const { pubkey, account } of voterAccounts) {
+      debugAccountStructure(account.data, pubkey.toBase58());
+    }
+  }
+}
+
+debugWallets()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error('Debug failed:', error);
+    process.exit(1);
+  });
