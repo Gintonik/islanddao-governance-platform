@@ -103,12 +103,10 @@ function parseVSRDepositsWithValidation(data) {
 /**
  * Parse all 32 VSR deposit entries using canonical structure
  */
-function parseAllVSRDeposits(data, walletAddress, debugLog = false) {
+function parseCanonicalVSRDeposits(data, walletAddress) {
   const deposits = [];
   
-  if (debugLog) {
-    console.log(`  🔍 Parsing all 32 deposit entries for ${walletAddress.slice(0, 8)}...`);
-  }
+  console.log(`  🔍 Parsing all 32 deposit entries for ${walletAddress.slice(0, 8)}...`);
   
   // Loop over all 32 deposit entries starting at offset 232, each 80 bytes
   for (let i = 0; i < 32; i++) {
@@ -117,18 +115,16 @@ function parseAllVSRDeposits(data, walletAddress, debugLog = false) {
     if (depositOffset + 80 > data.length) break;
     
     try {
-      // Check isUsed flag at start of deposit entry
-      const isUsed = data.readUInt8(depositOffset) === 1;
+      // Check isUsed flag at offset +72 within deposit entry
+      const isUsed = data.readUInt8(depositOffset + 72) === 1;
       
       // Extract amountDepositedNative (8 bytes at offset +0 within deposit)
-      const amountRaw = data.readBigUInt64LE(depositOffset + 8);
+      const amountRaw = data.readBigUInt64LE(depositOffset + 0);
       const amount = Number(amountRaw) / 1e9; // 9 decimals for ISLAND
       
-      if (debugLog && (isUsed || amount > 0)) {
-        console.log(`    Entry ${i}: isUsed=${isUsed}, amount=${amount.toFixed(6)}`);
-      }
+      console.log(`    Entry ${i}: isUsed=${isUsed}, amount=${amount.toFixed(6)}`);
       
-      // Only process if isUsed === true and amount > 0
+      // Only process if isUsed === 1 and amount > 0
       if (!isUsed || amount === 0) continue;
       
       // Parse lockup fields starting at offset +32 within deposit entry
@@ -171,14 +167,12 @@ function parseAllVSRDeposits(data, walletAddress, debugLog = false) {
       
       const governancePower = amount * multiplier;
       
-      if (debugLog) {
-        console.log(`    ✅ Valid deposit ${i}:`);
-        console.log(`       Amount: ${amount.toFixed(6)} ISLAND`);
-        console.log(`       Lockup Kind: ${lockupKind}`);
-        console.log(`       Start: ${startTs} | End: ${endTs} | Cliff: ${cliffTs}`);
-        console.log(`       Multiplier: ${multiplier.toFixed(2)}x`);
-        console.log(`       Governance Power: ${governancePower.toFixed(2)} ISLAND`);
-      }
+      console.log(`    ✅ Valid deposit ${i}:`);
+      console.log(`       Amount: ${amount.toFixed(6)} ISLAND`);
+      console.log(`       Lockup Kind: ${lockupKind}`);
+      console.log(`       Start: ${startTs} | End: ${endTs} | Cliff: ${cliffTs}`);
+      console.log(`       Multiplier: ${multiplier.toFixed(2)}x`);
+      console.log(`       Governance Power: ${governancePower.toFixed(2)} ISLAND`);
       
       deposits.push({
         depositIndex: i,
@@ -194,9 +188,7 @@ function parseAllVSRDeposits(data, walletAddress, debugLog = false) {
       });
       
     } catch (error) {
-      if (debugLog) {
-        console.log(`    ❌ Error parsing deposit ${i}: ${error.message}`);
-      }
+      console.log(`    ❌ Error parsing deposit ${i}: ${error.message}`);
       continue;
     }
   }
@@ -266,11 +258,11 @@ async function scanCitizensWithWorkingLogic() {
           if (isNative) {
             native += deposit.governancePower;
             depositCount++;
-            console.log(`    💰 Native deposit ${deposit.depositIndex}: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.governancePower.toFixed(2)} ISLAND`);
+            console.log(`    Native deposit ${deposit.depositIndex}: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.governancePower.toFixed(2)} ISLAND`);
           }
           if (isDelegated) {
             delegated += deposit.governancePower;
-            console.log(`    🔵 Delegated deposit ${deposit.depositIndex}: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.governancePower.toFixed(2)} ISLAND`);
+            console.log(`    Delegated deposit ${deposit.depositIndex}: ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(2)} = ${deposit.governancePower.toFixed(2)} ISLAND`);
           }
           
           found = true;
