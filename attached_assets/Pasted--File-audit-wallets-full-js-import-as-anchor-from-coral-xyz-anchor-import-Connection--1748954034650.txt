@@ -1,0 +1,91 @@
+// File: audit-wallets-full.js
+
+import * as anchor from '@coral-xyz/anchor';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { deserializeAccountRaw } from '@coral-xyz/anchor/dist/cjs/program/namespace/account';
+import vsrIdl from './vsr-idl.json' assert { type: 'json' };
+import dotenv from 'dotenv';
+dotenv.config();
+
+const connection = new Connection(process.env.HELIUS_RPC_URL, 'confirmed');
+const provider = new anchor.AnchorProvider(connection, {} as any, {});
+const program = new anchor.Program(vsrIdl, new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ'), provider);
+
+const WALLET_ADDRESSES = [
+  // ✅ Correct Takisoul
+  '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA',
+  'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG',
+  '4pT6ESaMQTgGPZXmR3nwwyPYzF7gX5Bdc3o5VLseWbMJ',
+  '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
+  'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh',
+  'CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i',
+  '9zvKYrDJKFYfuDbT14Xy6n7YnkQbY1LR6P1xvhHKtUHV',
+  'HZzKfqjD5dzEJ9AxkWrrNdavkiTjPRWs6ymK7bJeqE4K',
+  'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
+  '2oEAxKTpGW9TCdLjHXMMLrZAFmwPfgAS1nJX5mR2h9dh',
+  'F9V4Lwo4LgX6ZyFg3BzBtiCdpAPX8qhmMbTYbNpFqVEH',
+  'EovWj6zX9cscP8nLFjzLEqgrt2fz6XLsz3Hngd3XYkKt',
+  '7FCMy5NsqY1sWmSEbTKew5eEu5fw3xHDZC17BdZAvzXL',
+  '6Y3qQ5w8Rx8qahWBSoq9ebnzyX31zZtZuHbVLwFwD6J6',
+  '9xhkgCVbQUcM9FuAfHTqZ3zAe6Xxz6duqW72XYh3AkLW',
+  '2vKBy2sxoxRb9D81udEdL5t8Tu5zNjEfUe8MT4CkZwkg',
+  'HxuAMLG5vfjcd6TtZ9JW5KUPptgQX59oYxbFcFiChDJj',
+  '6dHLXifHLF39HH43UNzuhRaFeAHG6EG5wQm4npKJD2MJ',
+  'C5c5sN8WqmmUKu5YrEnm3Cprcz8dXmgqzY74B1kSFnCG',
+  '6cbS16f6YNbAxR4pBP9FSHXgRDJ1CSuNGkzZKsnqaXtB',
+].map((x) => new PublicKey(x));
+
+function calculateMultiplier(lockup) {
+  if (lockup.lockupKind === 0 || lockup.lockupEndTs.eqn(0)) return 1.0;
+  const now = Math.floor(Date.now() / 1000);
+  const secondsRemaining = Math.max(0, lockup.lockupEndTs.toNumber() - now);
+  const years = secondsRemaining / (365.25 * 24 * 3600);
+  return Math.min(1 + years, 5);
+}
+
+(async () => {
+  const voterAccounts = await connection.getProgramAccounts(program.programId, {
+    filters: [{ dataSize: 2728 }],
+  });
+
+  for (const wallet of WALLET_ADDRESSES) {
+    const walletBase58 = wallet.toBase58();
+    let native = 0;
+    let delegated = 0;
+
+    for (const { account } of voterAccounts) {
+      const decoded = deserializeAccountRaw(program.idl, 'voter', account.data);
+      const authority = decoded.authority.toBase58();
+      const voterAuthority = decoded.voterAuthority.toBase58();
+
+      for (let i = 0; i < decoded.depositEntries.length; i++) {
+        const entry = decoded.depositEntries[i];
+        const amount = entry.amountDepositedNative.toNumber() / 1e9;
+        const multiplier = calculateMultiplier(entry.lockup);
+        const power = amount * multiplier;
+
+        if (amount === 0) continue;
+
+        const isNative = authority === walletBase58;
+        const isDelegated = voterAuthority === walletBase58 && authority !== walletBase58;
+
+        if (isNative) native += power;
+        if (isDelegated) delegated += power;
+
+        if (isNative || isDelegated) {
+          const tag = isNative ? '🟢 Native' : '🔵 Delegated';
+          console.log(
+            `${tag} | ${walletBase58} | Deposit #${i} | Amount: ${amount.toFixed(6)} | Mult: ${multiplier.toFixed(2)} | Power: ${power.toFixed(2)} | From: ${authority} → ${voterAuthority}`
+          );
+        }
+      }
+    }
+
+    const total = native + delegated;
+    console.log(`\n✅ Summary for ${walletBase58}`);
+    console.log(`   - Native Power:   ${native.toFixed(2)} ISLAND`);
+    console.log(`   - Delegated Power:${delegated.toFixed(2)} ISLAND`);
+    console.log(`   - Total Power:    ${total.toFixed(2)} ISLAND\n`);
+    console.log(`-----------------------------------------------------\n`);
+  }
+})();
