@@ -1,6 +1,6 @@
 /**
- * Canonical Native Governance Power Scanner - Restored Working Model
- * Restores the proven methodology that detected governance power for 14+ citizens
+ * Canonical Native Governance Scanner - Final Optimized Version
+ * Restores working methodology with performance optimizations
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -12,7 +12,7 @@ dotenv.config();
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
-// Load wallet aliases mapping for verified control relationships
+// Load wallet aliases mapping
 let walletAliases = {};
 try {
   walletAliases = JSON.parse(fs.readFileSync('./wallet_aliases.json', 'utf8'));
@@ -28,10 +28,8 @@ function calculateMultiplier(lockupKind, startTs, endTs, cliffTs) {
   const now = Math.floor(Date.now() / 1000);
   
   if (lockupKind === 0 || endTs <= now) {
-    // No lockup or expired lockup
     return 1.0;
   } else {
-    // Active lockup - calculate years remaining
     const yearsRemaining = (endTs - now) / (365.25 * 24 * 3600);
     const multiplier = 1 + Math.min(yearsRemaining, 4);
     return Math.min(multiplier, 5.0);
@@ -39,60 +37,21 @@ function calculateMultiplier(lockupKind, startTs, endTs, cliffTs) {
 }
 
 /**
- * Check if authority is controlled by wallet (direct or verified alias)
+ * Check if authority is controlled by wallet
  */
 const isControlledByWallet = (wallet, authority) => {
   return authority === wallet || (walletAliases[wallet]?.includes(authority) ?? false);
 };
 
 /**
- * Check if VSR account is controlled by wallet (broader detection)
- */
-function isControlledVSRAccount(walletAddress, account, data) {
-  // Extract authority field (32 bytes at offset 32-64)
-  const authorityBytes = data.slice(32, 64);
-  const authority = new PublicKey(authorityBytes).toString();
-  
-  // Primary check: wallet controls this account through authority
-  if (isControlledByWallet(walletAddress, authority)) {
-    if (authority === walletAddress) {
-      return { controlled: true, type: 'Direct authority', authority };
-    } else {
-      return { controlled: true, type: 'Verified alias', authority };
-    }
-  }
-  
-  // Secondary check: VSR account contains wallet address in data (broader detection)
-  if (account.account.owner.toString() === VSR_PROGRAM_ID.toString()) {
-    try {
-      // Check if wallet appears anywhere in the VSR account data (previous working method)
-      const walletPubkey = new PublicKey(walletAddress);
-      const walletBytes = walletPubkey.toBytes();
-      
-      // Search for wallet bytes in account data (multiple possible locations)
-      for (let i = 0; i <= data.length - 32; i++) {
-        const slice = data.slice(i, i + 32);
-        if (slice.equals(walletBytes)) {
-          return { controlled: true, type: 'Wallet found in VSR data', authority: walletAddress };
-        }
-      }
-    } catch (error) {
-      // Continue if wallet parsing fails
-    }
-  }
-  
-  return { controlled: false, type: null, authority };
-}
-
-/**
- * Parse deposits using canonical byte offsets and validation
+ * Parse deposits using canonical byte offsets
  */
 function parseVSRDeposits(data, walletAddress = '', accountPubkey = '') {
   const deposits = [];
   const seenAmounts = new Set();
   
   // Canonical byte offsets for deposit amounts
-  const canonicalOffsets = [112, 184, 192, 264, 272, 344, 352];
+  const canonicalOffsets = [104, 112, 184, 192, 200, 208, 264, 272, 344, 352];
   
   console.log(`    Parsing deposits for account ${accountPubkey.slice(0, 8)}...`);
   
@@ -101,71 +60,64 @@ function parseVSRDeposits(data, walletAddress = '', accountPubkey = '') {
     
     if (offset + 8 <= data.length) {
       try {
-        // Extract deposit amount (8 bytes)
         const rawAmount = Number(data.readBigUInt64LE(offset));
         
-        // Extract isUsed flag (check multiple potential positions)
-        let isUsed = false;
-        const usedCheckOffsets = [offset - 8, offset + 8, offset + 16, offset + 24, offset + 72];
-        for (const usedOffset of usedCheckOffsets) {
-          if (usedOffset >= 0 && usedOffset < data.length) {
-            const usedFlag = data.readUInt8(usedOffset);
-            if (usedFlag === 1) {
-              isUsed = true;
-              break;
-            }
-          }
-        }
-        
         if (rawAmount > 0) {
-          // Convert to ISLAND tokens (6 decimals)
           const amount = rawAmount / 1e6;
           
-          // Extract lockup information from relative offsets
+          // Check isUsed flag at nearby positions
+          let isUsed = false;
+          const usedCheckOffsets = [offset - 8, offset + 8, offset + 16, offset + 24];
+          for (const usedOffset of usedCheckOffsets) {
+            if (usedOffset >= 0 && usedOffset < data.length) {
+              const usedFlag = data.readUInt8(usedOffset);
+              if (usedFlag === 1) {
+                isUsed = true;
+                break;
+              }
+            }
+          }
+          
+          // Extract lockup information
           let lockupKind = 0;
           let startTs = 0;
           let endTs = 0;
           let cliffTs = 0;
           let createdTs = 0;
           
-          // Parse lockup data if available
           if (offset + 48 <= data.length) {
             try {
               lockupKind = data.readUInt8(offset + 24) || 0;
               startTs = Number(data.readBigUInt64LE(offset + 32)) || 0;
               endTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
-              cliffTs = endTs; // Use endTs as cliffTs for cliff lockups
+              cliffTs = endTs;
               
-              // Try to find creation timestamp
               if (offset + 56 <= data.length) {
                 createdTs = Number(data.readBigUInt64LE(offset + 48)) || 0;
               }
             } catch (e) {
-              // Use defaults if parsing fails
+              // Use defaults
             }
           }
           
-          console.log(`      Deposit ${i}: ${amount.toFixed(6)} ISLAND, isUsed=${isUsed}, lockupKind=${lockupKind}, startTs=${startTs}, endTs=${endTs}`);
+          console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND, isUsed=${isUsed}, lockupKind=${lockupKind}`);
           
-          // Filter phantom 1,000 ISLAND deposits with empty config or vesting type 0
+          // Filter phantom 1,000 ISLAND deposits with empty configs
           let isPhantom = false;
           if (amount === 1000) {
-            // Check if this is a phantom deposit (empty config or default vesting)
-            if ((createdTs === 0 || startTs === 0) && lockupKind === 0) {
+            if ((createdTs === 0 || startTs === 0) && lockupKind === 0 && endTs === 0) {
               isPhantom = true;
-              console.log(`        → Phantom 1,000 ISLAND deposit filtered (empty config)`);
+              console.log(`        → Phantom deposit filtered`);
             }
           }
           
-          // Validate deposit: must be used, within range, and not phantom
+          // Include valid deposits: used, reasonable amount, not phantom
           if (amount >= 100 && amount <= 50000000 && isUsed && !isPhantom) {
             const amountKey = Math.round(amount * 1000);
             
-            // Avoid duplicate amounts within same account
             if (!seenAmounts.has(amountKey)) {
               seenAmounts.add(amountKey);
               
-              // Calculate multiplier using canonical logic
               const multiplier = calculateMultiplier(lockupKind, startTs, endTs, cliffTs);
               const votingPower = amount * multiplier;
               
@@ -193,7 +145,6 @@ function parseVSRDeposits(data, walletAddress = '', accountPubkey = '') {
           }
         }
       } catch (error) {
-        console.log(`      Deposit ${i}: Parse error - ${error.message}`);
         continue;
       }
     }
@@ -204,17 +155,20 @@ function parseVSRDeposits(data, walletAddress = '', accountPubkey = '') {
 }
 
 /**
- * Calculate native governance power for a specific wallet
+ * Calculate native governance power with optimized detection
  */
-async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
+async function calculateOptimizedNativeGovernancePower(walletAddress, allVSRAccounts) {
   console.log(`\nCalculating native governance power for: ${walletAddress}`);
   
   let allDeposits = [];
   let controlledAccounts = 0;
   let processedAccounts = 0;
-  let skippedAccounts = 0;
   
   console.log(`Processing all ${allVSRAccounts.length} VSR accounts...`);
+  
+  // Create wallet pubkey for efficient comparison
+  const walletPubkey = new PublicKey(walletAddress);
+  const walletBytes = walletPubkey.toBytes();
   
   for (let i = 0; i < allVSRAccounts.length; i++) {
     const account = allVSRAccounts[i];
@@ -223,43 +177,70 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
     try {
       const data = account.account.data;
       
-      // Skip accounts that are too small
-      if (data.length < 100) {
-        skippedAccounts++;
-        continue;
+      if (data.length < 100) continue;
+      
+      let isControlled = false;
+      let controlType = '';
+      let controlAuthority = '';
+      
+      // Check 1: Authority control (primary method)
+      try {
+        const authorityBytes = data.slice(32, 64);
+        const authority = new PublicKey(authorityBytes).toString();
+        
+        if (isControlledByWallet(walletAddress, authority)) {
+          isControlled = true;
+          controlType = authority === walletAddress ? 'Direct authority' : 'Verified alias';
+          controlAuthority = authority;
+        }
+      } catch (e) {
+        // Continue to next check
       }
       
-      // Check if this VSR account is controlled by the wallet (broader detection)
-      const controlCheck = isControlledVSRAccount(walletAddress, account, data);
+      // Check 2: Wallet bytes in data (broader detection for previous working cases)
+      if (!isControlled) {
+        try {
+          // Check key positions where wallet might appear
+          const checkPositions = [8, 64, 96]; // Common positions for wallet references
+          
+          for (const pos of checkPositions) {
+            if (pos + 32 <= data.length) {
+              const slice = data.slice(pos, pos + 32);
+              if (slice.equals(walletBytes)) {
+                isControlled = true;
+                controlType = `Wallet reference at offset ${pos}`;
+                controlAuthority = walletAddress;
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          // Continue
+        }
+      }
       
-      if (controlCheck.controlled) {
+      if (isControlled) {
         controlledAccounts++;
         
         console.log(`  Found controlled VSR account ${controlledAccounts}: ${account.pubkey.toString()}`);
-        console.log(`    Authority: ${controlCheck.authority}`);
-        console.log(`    Control type: ${controlCheck.type}`);
+        console.log(`    Control type: ${controlType}`);
+        console.log(`    Authority: ${controlAuthority}`);
         
-        // Parse deposits from this account
         const deposits = parseVSRDeposits(data, walletAddress, account.pubkey.toString());
-        
-        // Add all deposits to the collection
         allDeposits.push(...deposits);
       }
       
     } catch (error) {
-      skippedAccounts++;
       continue;
     }
     
-    // Progress reporting
-    if (processedAccounts % 2000 === 0) {
+    if (processedAccounts % 3000 === 0) {
       console.log(`  Processed ${processedAccounts}/${allVSRAccounts.length} accounts, found ${controlledAccounts} controlled accounts...`);
     }
   }
   
-  console.log(`  Completed scan: ${processedAccounts} processed, ${skippedAccounts} skipped, ${controlledAccounts} controlled accounts found`);
+  console.log(`  Completed scan: ${processedAccounts} processed, ${controlledAccounts} controlled accounts found`);
   
-  // Calculate total native governance power
   const totalNativePower = allDeposits.reduce((sum, deposit) => sum + deposit.votingPower, 0);
   
   console.log(`  Processing ${allDeposits.length} total deposits...`);
@@ -278,19 +259,17 @@ async function calculateNativeGovernancePower(walletAddress, allVSRAccounts) {
 }
 
 /**
- * Scan all citizen wallets for native governance power
+ * Scan all citizen wallets with optimized methodology
  */
-async function scanAllCitizensNativeGovernance() {
-  console.log('CANONICAL NATIVE GOVERNANCE POWER SCANNER - RESTORED');
-  console.log('===================================================');
-  console.log('Restoring proven methodology with verified alias support\n');
+async function scanAllCitizensOptimized() {
+  console.log('CANONICAL NATIVE GOVERNANCE SCANNER - FINAL OPTIMIZED');
+  console.log('======================================================');
+  console.log('Optimized methodology with broad detection and alias support\n');
   
   try {
-    // Load citizen wallets
     const citizenWallets = JSON.parse(fs.readFileSync('./citizen-wallets.json', 'utf8'));
     console.log(`Scanning ${citizenWallets.length} citizen wallets...\n`);
     
-    // Load all VSR accounts once for efficiency
     console.log('Loading all VSR program accounts...');
     const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
       commitment: 'confirmed',
@@ -300,12 +279,10 @@ async function scanAllCitizensNativeGovernance() {
     
     const results = [];
     
-    // Process each citizen wallet
     for (const wallet of citizenWallets) {
-      const result = await calculateNativeGovernancePower(wallet, allVSRAccounts);
+      const result = await calculateOptimizedNativeGovernancePower(wallet, allVSRAccounts);
       results.push(result);
       
-      // Progress summary
       console.log(`\n=== ${wallet.slice(0, 8)}... Summary ===`);
       console.log(`Native Power: ${result.nativePower.toFixed(2)} ISLAND`);
       console.log(`Controlled Accounts: ${result.accountCount}`);
@@ -320,15 +297,15 @@ async function scanAllCitizensNativeGovernance() {
       console.log('');
     }
     
-    // Save canonical results
+    // Save results
     const outputData = {
       timestamp: new Date().toISOString(),
-      scannerVersion: 'canonical-native-governance-restored',
+      scannerVersion: 'canonical-native-governance-final-optimized',
       totalCitizens: results.length,
       walletAliasesCount: Object.keys(walletAliases).length,
       methodology: {
-        authorityMatching: 'Direct + Verified aliases',
-        offsetMethod: 'Canonical byte offsets [112, 184, 192, 264, 272, 344, 352]',
+        authorityMatching: 'Direct + Verified aliases + Wallet reference detection',
+        offsetMethod: 'Extended canonical byte offsets [104, 112, 184, 192, 200, 208, 264, 272, 344, 352]',
         phantomFiltering: 'Empty config detection for 1,000 ISLAND deposits',
         multiplierCalculation: 'Canonical lockup logic with 5x cap'
       },
@@ -353,7 +330,7 @@ async function scanAllCitizensNativeGovernance() {
     fs.writeFileSync('./native-results-final.json', JSON.stringify(outputData, null, 2));
     
     console.log(`\n${'='.repeat(70)}`);
-    console.log(`CANONICAL NATIVE GOVERNANCE RESULTS - FINAL`);
+    console.log(`FINAL OPTIMIZED CANONICAL NATIVE GOVERNANCE RESULTS`);
     console.log(`${'='.repeat(70)}`);
     
     const totalNativePower = results.reduce((sum, r) => sum + r.nativePower, 0);
@@ -374,19 +351,11 @@ async function scanAllCitizensNativeGovernance() {
       }
     }
     
-    console.log(`\n✅ Methodology validation:`);
-    console.log(`  - Used canonical byte offsets for deposit extraction`);
-    console.log(`  - Applied authority === wallet + verified alias mapping`);
-    console.log(`  - Filtered phantom 1,000 ISLAND deposits with empty configs`);
-    console.log(`  - Calculated canonical lockup multipliers with 5x cap`);
-    console.log(`  - Processed all ${allVSRAccounts.length} VSR program accounts`);
-    
-    console.log(`\n✅ Results saved to native-results-final.json`);
-    console.log(`✅ Canonical native governance scanner restoration completed successfully`);
+    console.log(`\nFinal optimized canonical native governance scanner completed successfully.`);
     
   } catch (error) {
-    console.error('Error in canonical scanner restoration:', error.message);
+    console.error('Error in optimized canonical scanner:', error.message);
   }
 }
 
-scanAllCitizensNativeGovernance().catch(console.error);
+scanAllCitizensOptimized().catch(console.error);
