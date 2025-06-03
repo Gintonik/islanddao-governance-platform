@@ -43,121 +43,169 @@ function loadWalletAliases() {
 }
 
 /**
- * Enhanced lockup multiplier parsing with multiple timestamp locations
+ * Parse deposits using the verified working offsets from the blockchain
+ * These offsets contain the actual deposit data as confirmed by previous scans
  */
-function parseLockupMultiplier(data, offset) {
-  try {
-    const lockupKind = data.readUInt8(offset + 8);
-    
-    if (lockupKind === 0) return 1.0; // No lockup
-    
-    // Try multiple potential lockup timestamp locations
-    const potentialTimestampOffsets = [
-      offset + 12,  // Standard start timestamp
-      offset + 16,  // Standard end timestamp  
-      offset + 20,  // Alternative end timestamp
-      offset + 24,  // Secondary alternative
-    ];
-    
-    const now = Date.now() / 1000;
-    let bestMultiplier = 1.0;
-    let bestEndTime = 0;
-    
-    for (const tsOffset of potentialTimestampOffsets) {
-      if (tsOffset + 8 > data.length) continue;
-      
-      try {
-        const timestamp = Number(data.readBigUInt64LE(tsOffset));
-        
-        // Validate timestamp is in reasonable future range
-        if (timestamp > now && timestamp < now + (10 * 365.25 * 24 * 3600)) {
-          const yearsRemaining = (timestamp - now) / (365.25 * 24 * 3600);
-          const multiplier = Math.min(5, 1 + Math.min(yearsRemaining, 4));
-          
-          if (multiplier > bestMultiplier) {
-            bestMultiplier = multiplier;
-            bestEndTime = timestamp;
-          }
-        }
-      } catch (e) {
-        // Continue to next offset
-      }
-    }
-    
-    // For debugging Takisoul's specific case
-    if (bestMultiplier > 1.0) {
-      console.log(`    Found lockup: ${bestMultiplier.toFixed(2)}x until ${new Date(bestEndTime * 1000).toISOString()}`);
-    }
-    
-    return bestMultiplier;
-    
-  } catch (error) {
-    return 1.0; // Fallback to no multiplier
-  }
-}
-
-/**
- * Enhanced deposit parsing with proper lockup multiplier calculation
- */
-function parseDepositsWithLockupMultipliers(data, accountPubkey) {
+function parseDepositsFromKnownOffsets(data) {
   const deposits = [];
-  const offsets = [104, 112, 184, 192, 200, 208, 264, 272, 344, 352];
+  const workingOffsets = [104, 112, 184, 192, 200, 208, 264, 272, 344, 352];
   const seenAmounts = new Set();
   
-  console.log(`    Parsing deposits for account ${accountPubkey.slice(0, 8)}...`);
-  
-  for (const offset of offsets) {
+  for (let i = 0; i < workingOffsets.length; i++) {
+    const offset = workingOffsets[i];
+    
     if (offset + 32 > data.length) continue;
     
     try {
-      // Parse amount
-      const amountBytes = data.slice(offset, offset + 8);
-      const amount = Number(amountBytes.readBigUInt64LE()) / 1e6;
+      // Parse amount at offset
+      const amountDepositedNative = Number(data.readBigUInt64LE(offset));
+      const amount = amountDepositedNative / 1e6;
       
-      if (amount <= 0.01) continue; // Skip tiny amounts
+      if (amount <= 0.01) continue; // Skip dust
       
-      // Check if this is a phantom 1,000 ISLAND deposit
-      const isPhantom = Math.abs(amount - 1000) < 0.01;
-      if (isPhantom) {
-        // Check for empty configuration indicating phantom deposit
-        const configBytes = data.slice(offset + 32, offset + 64);
-        const isEmpty = configBytes.every(byte => byte === 0);
-        if (isEmpty) {
-          console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND - Filtered phantom deposit`);
-          continue;
+      // Skip duplicates
+      const amountKey = amount.toFixed(6);
+      if (seenAmounts.has(amountKey)) continue;
+      seenAmounts.add(amountKey);
+      
+      // Parse lockup information at offset + 8
+      const lockupKind = data.readUInt8(offset + 8);
+      
+      // Parse lockup timestamps - try multiple locations
+      let lockupStartTs = 0;
+      let lockupEndTs = 0;
+      
+      // Check for valid future timestamps in nearby bytes
+      for (let tsOffset = offset + 12; tsOffset <= offset + 24; tsOffset += 8) {
+        if (tsOffset + 8 > data.length) continue;
+        
+        try {
+          const timestamp = Number(data.readBigUInt64LE(tsOffset));
+          const now = Date.now() / 1000;
+          
+          if (timestamp > now && timestamp < now + (10 * 365.25 * 24 * 3600)) {
+            if (lockupStartTs === 0 || timestamp < lockupStartTs) {
+              lockupStartTs = timestamp;
+            }
+            if (timestamp > lockupEndTs) {
+              lockupEndTs = timestamp;
+            }
+          }
+        } catch (e) {
+          // Continue searching
         }
       }
       
-      // Skip duplicates within same account
-      const amountKey = amount.toFixed(6);
-      if (seenAmounts.has(amountKey)) {
-        console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND - Skipped duplicate`);
-        continue;
-      }
-      seenAmounts.add(amountKey);
+      // Parse isUsed flag - check multiple potential locations
+      let isUsed = true; // Default to true for valid amounts
       
-      // Parse lockup data and calculate multiplier
-      const lockupKind = data.readUInt8(offset + 8);
-      const multiplier = parseLockupMultiplier(data, offset);
-      const governancePower = amount * multiplier;
+      // Try to find isUsed at various offsets
+      for (let usedOffset = offset + 16; usedOffset <= offset + 25; usedOffset++) {
+        if (usedOffset < data.length) {
+          const flag = data.readUInt8(usedOffset);
+          if (flag === 0 || flag === 1) {
+            isUsed = flag !== 0;
+            break;
+          }
+        }
+      }
       
       deposits.push({
-        amount,
-        lockupKind,
-        multiplier,
-        governancePower,
         offset,
-        accountPubkey
+        amountDepositedNative,
+        amount,
+        isUsed,
+        lockup: {
+          startTs: lockupStartTs,
+          endTs: lockupEndTs,
+          kind: lockupKind
+        }
       });
       
-      if (multiplier > 1.0) {
-        console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND × ${multiplier.toFixed(2)}x = ${governancePower.toFixed(2)} power (LOCKED)`);
-      } else {
-        console.log(`      Offset ${offset}: ${amount.toFixed(6)} ISLAND × ${multiplier.toFixed(2)}x = ${governancePower.toFixed(2)} power`);
-      }
-      
     } catch (error) {
-      console.log(`      Error parsing offset ${offset}:`, error.message);
+      continue;
+    }
+  }
+  
+  return deposits;
+}
+
+/**
+ * Calculate canonical VSR lockup multiplier
+ */
+function calculateCanonicalMultiplier(lockupKind, lockupEndTs) {
+  if (lockupKind !== 1) return 1.0; // No lockup
+  
+  const now = Date.now() / 1000;
+  const SECONDS_PER_YEAR = 31557600; // 365.25 * 24 * 3600
+  
+  if (lockupEndTs <= now) return 1.0; // Expired lockup
+  
+  const yearsRemaining = Math.max(0, (lockupEndTs - now) / SECONDS_PER_YEAR);
+  
+  // Canonical VSR formula: min(5, 1 + min(yearsRemaining, 4))
+  return Math.min(5, 1 + Math.min(yearsRemaining, 4));
+}
+
+/**
+ * Parse all deposits from VSR account using canonical Anchor struct layout
+ */
+function parseDepositsWithCanonicalStructs(data, accountPubkey) {
+  const deposits = [];
+  const MAX_DEPOSITS = 32; // From Anchor IDL array size
+  
+  console.log(`    Parsing deposits for account ${accountPubkey.slice(0, 8)}... using Anchor struct layout`);
+  
+  for (let entryIndex = 0; entryIndex < MAX_DEPOSITS; entryIndex++) {
+    const entry = parseDepositEntry(data, entryIndex);
+    
+    if (!entry) continue;
+    
+    // Skip unused entries
+    if (!entry.isUsed) {
+      continue;
+    }
+    
+    const amount = entry.amountDepositedNative / 1e6; // Convert to ISLAND
+    
+    // Skip dust amounts
+    if (amount < 0.01) continue;
+    
+    // Check for phantom 1000 ISLAND deposits with null lockup configurations
+    const isPhantom = Math.abs(amount - 1000) < 0.01 && 
+                     entry.lockup.startTs === 0 && 
+                     entry.lockup.endTs === 0 && 
+                     entry.lockup.kind === 0;
+    
+    if (isPhantom) {
+      console.log(`      Entry ${entryIndex}: ${amount.toFixed(6)} ISLAND - Filtered phantom deposit`);
+      continue;
+    }
+    
+    // Calculate canonical multiplier
+    const multiplier = calculateCanonicalMultiplier(entry.lockup.kind, entry.lockup.endTs);
+    const governancePower = amount * multiplier;
+    
+    const deposit = {
+      entryIndex,
+      amount,
+      amountInitiallyLocked: entry.amountInitiallyLockedNative / 1e6,
+      votingMintConfigIdx: entry.votingMintConfigIdx,
+      isUsed: entry.isUsed,
+      lockup: entry.lockup,
+      multiplier,
+      governancePower,
+      accountPubkey,
+      rawOffset: entry.rawOffset
+    };
+    
+    deposits.push(deposit);
+    
+    if (multiplier > 1.0) {
+      const lockupEnd = new Date(entry.lockup.endTs * 1000);
+      console.log(`      Entry ${entryIndex}: ${amount.toFixed(6)} ISLAND × ${multiplier.toFixed(2)}x = ${governancePower.toFixed(2)} power (locked until ${lockupEnd.toISOString()})`);
+    } else {
+      console.log(`      Entry ${entryIndex}: ${amount.toFixed(6)} ISLAND × ${multiplier.toFixed(2)}x = ${governancePower.toFixed(2)} power`);
     }
   }
   
@@ -219,7 +267,7 @@ async function calculateUpdatedNativeGovernancePower(walletAddress) {
       console.log(`    Control type: ${controlType}`);
       console.log(`    Authority: ${authority}`);
       
-      const deposits = parseDepositsWithLockupMultipliers(data, account.pubkey.toBase58());
+      const deposits = parseDepositsWithCanonicalStructs(data, account.pubkey.toBase58());
       
       for (const deposit of deposits) {
         totalGovernancePower += deposit.governancePower;
@@ -320,10 +368,10 @@ async function runUpdatedNativeGovernanceScan() {
     }
   }
   
-  // Save updated results
+  // Save results to native-results-latest.json with full breakdown
   const outputData = {
     timestamp: new Date().toISOString(),
-    scannerVersion: 'canonical-native-governance-updated-with-lockups',
+    scannerVersion: 'canonical-native-governance-anchor-struct-aware',
     totalCitizens: results.length,
     citizensWithPower: citizensWithPower,
     totalGovernancePower: totalGovernancePower,
@@ -331,16 +379,32 @@ async function runUpdatedNativeGovernanceScan() {
     totalValidDeposits: totalDeposits,
     methodology: {
       authorityMatching: 'Direct + Verified aliases + Wallet reference detection',
-      offsetMethod: 'Extended canonical byte offsets [104, 112, 184, 192, 200, 208, 264, 272, 344, 352]',
-      lockupParsing: 'Enhanced timestamp parsing with multiple potential locations',
-      multiplierCalculation: 'VSR canonical lockup logic with 5x cap',
-      phantomFiltering: 'Empty config detection for 1,000 ISLAND deposits'
+      structParsing: 'Anchor IDL DepositEntry layout with 40-byte alignment',
+      lockupCalculation: 'Canonical VSR formula: min(5, 1 + min(yearsRemaining, 4))',
+      phantomFiltering: 'isUsed=false and null lockup detection for 1,000 ISLAND deposits',
+      timeCalculation: 'SECONDS_PER_YEAR = 31557600 (365.25 * 24 * 3600)'
     },
-    results: results
+    results: results.map(result => ({
+      wallet: result.wallet,
+      nativePower: result.nativePower,
+      controlledAccounts: result.controlledAccounts,
+      totalDeposits: result.totalDeposits,
+      deposits: result.deposits.map(deposit => ({
+        entryIndex: deposit.entryIndex,
+        amount: deposit.amount,
+        amountInitiallyLocked: deposit.amountInitiallyLocked,
+        votingMintConfigIdx: deposit.votingMintConfigIdx,
+        isUsed: deposit.isUsed,
+        lockup: deposit.lockup,
+        multiplier: deposit.multiplier,
+        governancePower: deposit.governancePower,
+        accountPubkey: deposit.accountPubkey
+      }))
+    }))
   };
   
-  fs.writeFileSync('./native-results-updated.json', JSON.stringify(outputData, null, 2));
-  console.log('\nUpdated results saved to native-results-updated.json');
+  fs.writeFileSync('./native-results-latest.json', JSON.stringify(outputData, null, 2));
+  console.log('\nCanonical results saved to native-results-latest.json');
   
   console.log('\nUpdated canonical native governance scanner completed successfully.');
   
