@@ -491,57 +491,37 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   // FINAL AGGREGATION: Calculate total governance power from native + delegated
   totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
   
-  // VWR RECONCILIATION: Handle mixed power scenarios intelligently
-  if (hasVWR && totalGovernancePower > 0) {
-    const vwrTotal = totalGovernancePower;
-    const calculatedTotal = nativeGovernancePower + delegatedGovernancePower;
+  // VWR RECONCILIATION: Use VWR as authoritative total, maintain strict separation
+  if (hasVWR) {
+    const vwrTotal = totalGovernancePower; // This contains the sum of all VWR powers
     
-    // If VWR total is significantly larger than calculated native, it likely includes delegated power
-    const discrepancy = Math.abs(vwrTotal - calculatedTotal) / Math.max(vwrTotal, calculatedTotal);
+    // Debug comparison line
+    console.log(`Wallet: ${walletAddress} | Native from deposits: ${nativeGovernancePower.toFixed(3)} | VWR total: ${vwrTotal.toFixed(3)} | Delta: ${(vwrTotal - nativeGovernancePower).toFixed(3)}`);
     
-    if (discrepancy > 0.05) {
-      if (nativeGovernancePower > 0 && delegatedGovernancePower === 0) {
-        // Check if VWR total suggests mixed power (native + delegated)
-        const nativeRatio = nativeGovernancePower / vwrTotal;
-        
-        if (nativeRatio < 0.95 && nativeRatio > 0.01) {
-          // VWR total is much larger than detected native - likely includes delegated power
-          delegatedGovernancePower = vwrTotal - nativeGovernancePower;
-          totalGovernancePower = vwrTotal;
-          
-          if (verbose) {
-            console.log(`     ⚖️  Mixed power detected: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
-          }
-        } else {
-          // VWR total is close to native - use VWR as pure native power
-          nativeGovernancePower = vwrTotal;
-          delegatedGovernancePower = 0;
-          totalGovernancePower = vwrTotal;
-          
-          if (verbose) {
-            console.log(`     ✅ VWR-based native: ${vwrTotal.toFixed(3)} ISLAND (includes authentic multipliers)`);
-          }
-        }
-      } else {
-        // Use VWR total with calculated separation
-        totalGovernancePower = vwrTotal;
-        
-        if (verbose) {
-          console.log(`     📊 VWR total: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
-        }
-      }
-    } else {
-      // VWR matches calculated values well
-      totalGovernancePower = calculatedTotal;
+    // If no incoming delegations detected, assume 100% of VWR is native
+    if (delegatedGovernancePower === 0) {
+      nativeGovernancePower = vwrTotal;
+      delegatedGovernancePower = 0;
+      totalGovernancePower = vwrTotal;
       
       if (verbose) {
-        console.log(`     📊 Calculated: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+        console.log(`     ✅ VWR as native: ${vwrTotal.toFixed(3)} ISLAND (no delegations detected)`);
+      }
+    } else {
+      // Use VWR total with detected delegations
+      totalGovernancePower = vwrTotal;
+      nativeGovernancePower = Math.max(0, vwrTotal - delegatedGovernancePower);
+      
+      if (verbose) {
+        console.log(`     ⚖️  VWR separation: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
       }
     }
   } else {
     // No VWR: Use calculated native + delegated
+    totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+    
     if (verbose) {
-      console.log(`     📊 Final: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+      console.log(`     📊 Calculated: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
     }
   }
   
@@ -693,14 +673,11 @@ function calculateAuthenticLockupMultiplier(deposit, currentTimestamp) {
     return 0;
   }
   
-  // Handle invalid timestamp data (common in VSR accounts)
+  // Handle invalid timestamp data - DO NOT skip, apply maximum multiplier
   if (deposit.lockupEndTs === 0 || deposit.lockupStartTs === 0) {
-    // For deposits with invalid timestamps, use lockupKind to estimate multiplier
-    if (deposit.lockupKind > 1000000) {
-      // Likely encoded differently - assume maximum lockup
-      return 5.0;
-    }
-    return 1.0; // Conservative fallback
+    // For deposits with invalid timestamps, assume maximum lockup (5.0x)
+    // This captures the full value of lockups with corrupted timestamp data
+    return 5.0;
   }
   
   // Standard VSR multiplier calculation
