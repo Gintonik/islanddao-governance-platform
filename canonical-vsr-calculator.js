@@ -380,7 +380,7 @@ async function updateAllCitizensCanonical() {
   let citizens;
   
   try {
-    const result = await client.query('SELECT wallet, name FROM citizens ORDER BY name');
+    const result = await client.query('SELECT wallet FROM citizens ORDER BY wallet');
     citizens = result.rows;
   } finally {
     client.release();
@@ -393,7 +393,7 @@ async function updateAllCitizensCanonical() {
   
   for (let i = 0; i < citizens.length; i++) {
     const citizen = citizens[i];
-    console.log(`\n[${i + 1}/${citizens.length}] ${citizen.name || citizen.wallet.substring(0, 8)}...`);
+    console.log(`\n[${i + 1}/${citizens.length}] ${citizen.wallet.substring(0, 8)}...`);
     
     const result = await calculateNativeGovernancePower(citizen.wallet);
     const success = await updateCitizenGovernancePower(citizen.wallet, result.totalPower, result.deposits);
