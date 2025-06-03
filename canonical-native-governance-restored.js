@@ -35,11 +35,55 @@ async function getCitizenWallets() {
  */
 function loadWalletAliases() {
   try {
-    const aliases = JSON.parse(fs.readFileSync('./wallet_aliases.json', 'utf8'));
+    const aliases = JSON.parse(fs.readFileSync('./wallet_aliases_expanded.json', 'utf8'));
     return aliases;
   } catch (error) {
-    return {};
+    try {
+      const fallbackAliases = JSON.parse(fs.readFileSync('./wallet_aliases.json', 'utf8'));
+      return fallbackAliases;
+    } catch (e) {
+      return {};
+    }
   }
+}
+
+/**
+ * Advanced authority resolution for VSR accounts
+ * Implements comprehensive mapping logic to find all controlled accounts
+ */
+function resolveVSRAccountOwnership(walletAddress, voterAuthority, walletRef, walletAliases) {
+  // Rule 1: voter.authority === wallet (direct authority match)
+  if (voterAuthority === walletAddress) {
+    return { isControlled: true, type: 'Direct authority', authority: voterAuthority };
+  }
+  
+  // Rule 2: wallet in alias_map[voter.authority] (wallet is alias of authority)
+  if (walletAliases[walletAddress] && walletAliases[walletAddress].includes(voterAuthority)) {
+    return { isControlled: true, type: 'Wallet is alias of authority', authority: voterAuthority };
+  }
+  
+  // Rule 3: voter.authority in alias_map[wallet] (authority is alias of wallet)
+  for (const [mainWallet, aliases] of Object.entries(walletAliases)) {
+    if (mainWallet === walletAddress && aliases.includes(voterAuthority)) {
+      return { isControlled: true, type: 'Authority is alias of wallet', authority: voterAuthority };
+    }
+  }
+  
+  // Rule 4: wallet reference match
+  if (walletRef === walletAddress) {
+    return { isControlled: true, type: 'Wallet reference', authority: voterAuthority };
+  }
+  
+  // Rule 5: Cross-alias resolution - check if any alias of wallet matches any alias of authority
+  if (walletAliases[walletAddress]) {
+    for (const walletAlias of walletAliases[walletAddress]) {
+      if (walletAlias === voterAuthority) {
+        return { isControlled: true, type: 'Cross-alias match', authority: voterAuthority };
+      }
+    }
+  }
+  
+  return { isControlled: false, type: null, authority: voterAuthority };
 }
 
 /**
@@ -58,20 +102,54 @@ function calculateLockupMultiplier(lockupEndTs) {
 }
 
 /**
- * Check if wallet controls VSR account through authority or alias
+ * Discover all VSR accounts and create comprehensive wallet-to-account mapping
  */
-function checkWalletAuthority(walletAddress, voterAuthority, walletAliases) {
-  // Direct authority match
-  if (voterAuthority === walletAddress) {
-    return { isControlled: true, type: 'Direct authority' };
+async function discoverAllVSRAccountMappings() {
+  const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    filters: [{ dataSize: 2728 }]
+  });
+  
+  const walletAliases = loadWalletAliases();
+  const citizenWallets = await getCitizenWallets();
+  const mappings = {};
+  
+  console.log(`Discovering VSR account mappings for ${citizenWallets.length} citizens across ${allVSRAccounts.length} VSR accounts...`);
+  
+  // Initialize mappings for all citizens
+  for (const wallet of citizenWallets) {
+    mappings[wallet] = {
+      accounts: [],
+      totalDeposits: 0,
+      totalPower: 0
+    };
   }
   
-  // Alias match - wallet is an alias of voter.authority
-  if (walletAliases[walletAddress] && walletAliases[walletAddress].includes(voterAuthority)) {
-    return { isControlled: true, type: 'Verified alias' };
+  // Process each VSR account and find its owner
+  for (const account of allVSRAccounts) {
+    const data = account.account.data;
+    const authorityBytes = data.slice(32, 64);
+    const voterAuthority = new PublicKey(authorityBytes).toBase58();
+    const walletRefBytes = data.slice(8, 40);
+    const walletRef = new PublicKey(walletRefBytes).toBase58();
+    
+    // Check ownership for each citizen wallet
+    for (const citizenWallet of citizenWallets) {
+      const ownership = resolveVSRAccountOwnership(citizenWallet, voterAuthority, walletRef, walletAliases);
+      
+      if (ownership.isControlled) {
+        mappings[citizenWallet].accounts.push({
+          pubkey: account.pubkey.toBase58(),
+          authority: voterAuthority,
+          walletRef: walletRef,
+          controlType: ownership.type,
+          data: data
+        });
+        break; // Account belongs to this citizen, stop checking others
+      }
+    }
   }
   
-  return { isControlled: false, type: null };
+  return mappings;
 }
 
 /**
@@ -209,59 +287,48 @@ function parseDepositsIndependently(data, accountPubkey, debugMode = false) {
 }
 
 /**
- * Calculate native governance power for a wallet with restored authority detection
+ * Calculate native governance power for a wallet using comprehensive VSR account discovery
  */
 async function calculateRestoredNativeGovernancePower(walletAddress, debugMode = false) {
-  const walletAliases = loadWalletAliases();
+  const vsrMappings = await discoverAllVSRAccountMappings();
+  const walletMapping = vsrMappings[walletAddress];
   
-  // Load all VSR accounts
-  const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-    filters: [{ dataSize: 2728 }]
-  });
+  if (!walletMapping || walletMapping.accounts.length === 0) {
+    return {
+      wallet: walletAddress,
+      nativePower: 0,
+      controlledAccounts: 0,
+      totalDeposits: 0,
+      deposits: []
+    };
+  }
   
   let totalGovernancePower = 0;
-  let controlledAccounts = 0;
   let allDeposits = [];
   
-  for (const account of allVSRAccounts) {
-    const data = account.account.data;
-    
-    // Extract voter authority from VSR account
-    const authorityBytes = data.slice(32, 64);
-    const voterAuthority = new PublicKey(authorityBytes).toBase58();
-    
-    const walletRefBytes = data.slice(8, 40);
-    const walletRef = new PublicKey(walletRefBytes).toBase58();
-    
-    // Check wallet authority with both direct and alias matching
-    let controlResult = checkWalletAuthority(walletAddress, voterAuthority, walletAliases);
-    
-    // Also check wallet reference for additional control patterns
-    if (!controlResult.isControlled && walletRef === walletAddress) {
-      controlResult = { isControlled: true, type: 'Wallet reference' };
+  if (debugMode) {
+    console.log(`  Processing ${walletMapping.accounts.length} controlled VSR accounts for ${walletAddress.slice(0, 8)}...`);
+  }
+  
+  for (const [index, account] of walletMapping.accounts.entries()) {
+    if (debugMode) {
+      console.log(`  VSR Account ${index + 1}: ${account.pubkey}`);
+      console.log(`    Control type: ${account.controlType}`);
+      console.log(`    Authority: ${account.authority}`);
     }
     
-    if (controlResult.isControlled) {
-      controlledAccounts++;
-      if (debugMode) {
-        console.log(`  Found controlled VSR account ${controlledAccounts}: ${account.pubkey.toBase58()}`);
-        console.log(`    Control type: ${controlResult.type}`);
-        console.log(`    Voter authority: ${voterAuthority}`);
-      }
-      
-      const deposits = parseDepositsIndependently(data, account.pubkey.toBase58(), debugMode);
-      
-      for (const deposit of deposits) {
-        totalGovernancePower += deposit.votingPower;
-        allDeposits.push(deposit);
-      }
+    const deposits = parseDepositsIndependently(account.data, account.pubkey, debugMode);
+    
+    for (const deposit of deposits) {
+      totalGovernancePower += deposit.votingPower;
+      allDeposits.push(deposit);
     }
   }
   
   return {
     wallet: walletAddress,
     nativePower: totalGovernancePower,
-    controlledAccounts,
+    controlledAccounts: walletMapping.accounts.length,
     totalDeposits: allDeposits.length,
     deposits: allDeposits
   };
