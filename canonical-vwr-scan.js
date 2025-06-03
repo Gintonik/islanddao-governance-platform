@@ -446,8 +446,10 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     }
   }
   
-  // DELEGATED POWER: Analyze ALL Voter accounts to find deposits delegated to this wallet
-  // Loop through every Voter account to check if any deposits are delegated to targetWallet
+  // DELEGATED POWER: Scan ALL Voter accounts to find deposits delegated to this wallet
+  const delegators = [];
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  
   for (const { pubkey, account } of allVoterAccounts) {
     const data = account.data;
     const authorities = parseVoterAuthorities(data);
@@ -458,30 +460,36 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     
     // DELEGATION DETECTION: voterAuthority === targetWallet AND authority !== targetWallet
     if (voterAuthority === walletAddress && authority !== walletAddress) {
-      // Parse deposits from this delegating account with same lockup validation
+      // Parse deposits from this delegating account
       const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
       
       if (deposits && deposits.length > 0) {
         for (const deposit of deposits) {
-          // Apply same multiplier and lockup logic as native deposits
-          if (deposit.adjustedPower > 0) {
-            delegatedGovernancePower += deposit.adjustedPower;
-            delegatedSources.push({
-              account: pubkey.toBase58(),
-              power: deposit.adjustedPower,
-              baseAmount: deposit.amount,
-              multiplier: deposit.multiplier,
-              type: 'Voter-delegated',
-              authority: authority,
-              voterAuthority: voterAuthority,
-              lockupActive: deposit.isActive,
-              estimated: deposit.estimated || false
-            });
+          if (deposit.isUsed && deposit.amountDepositedNative > 0) {
+            // Calculate multiplier for delegated deposit
+            const multiplier = calculateAuthenticLockupMultiplier(deposit, currentTimestamp);
+            const adjustedPower = deposit.amountDepositedNative * multiplier;
             
-            if (verbose) {
-              const status = deposit.isActive ? 'ACTIVE' : 'EXPIRED';
-              const estimatedNote = deposit.estimated ? ' (estimated)' : '';
-              console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amount.toFixed(3)} × ${deposit.multiplier.toFixed(2)}x = ${deposit.adjustedPower.toFixed(3)} ISLAND (${status})${estimatedNote}`);
+            if (adjustedPower > 0) {
+              delegatedGovernancePower += adjustedPower;
+              delegators.push(authority);
+              
+              delegatedSources.push({
+                account: pubkey.toBase58(),
+                power: adjustedPower,
+                baseAmount: deposit.amountDepositedNative,
+                multiplier: multiplier,
+                type: 'Voter-delegated',
+                authority: authority,
+                voterAuthority: voterAuthority,
+                lockupActive: deposit.lockupEndTs > currentTimestamp,
+                estimated: false
+              });
+              
+              if (verbose) {
+                const status = deposit.lockupEndTs > currentTimestamp ? 'ACTIVE' : 'EXPIRED';
+                console.log(`     📨 Delegated from ${authority.substring(0,8)}: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+              }
             }
           }
         }
@@ -489,30 +497,37 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
     }
   }
   
+  if (verbose && delegators.length > 0) {
+    console.log(`     🔗 Delegators: ${[...new Set(delegators)].join(", ")}`);
+  }
+  
   // FINAL AGGREGATION: Calculate total governance power from native + delegated
   totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
   
-  // VWR RECONCILIATION: Use VWR as authoritative total, maintain strict separation
+  // VWR RECONCILIATION: Use VWR as authoritative total, properly separate native vs delegated
   if (hasVWR && vwrTotal > 0) {
-    // Debug comparison line
-    console.log(`Wallet: ${walletAddress} | Native from deposits: ${nativeGovernancePower.toFixed(3)} | VWR total: ${vwrTotal.toFixed(3)} | Delta: ${(vwrTotal - nativeGovernancePower).toFixed(3)}`);
-    
-    // If no incoming delegations detected, assume 100% of VWR is native
-    if (delegatedGovernancePower === 0) {
+    // If delegations were found, subtract delegated power from VWR total to get true native power
+    if (delegatedGovernancePower > 0) {
+      nativeGovernancePower = Math.max(0, vwrTotal - delegatedGovernancePower);
+      totalGovernancePower = vwrTotal;
+      
+      // Debug comparison
+      console.log(`Wallet ${walletAddress} | Final Native: ${nativeGovernancePower.toFixed(3)} | Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
+      
+      if (verbose) {
+        console.log(`     ⚖️  VWR separation: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+      }
+    } else {
+      // No delegations detected - assume 100% of VWR is native
       nativeGovernancePower = vwrTotal;
       delegatedGovernancePower = 0;
       totalGovernancePower = vwrTotal;
       
-      if (verbose) {
-        console.log(`     ✅ VWR as native: ${vwrTotal.toFixed(3)} ISLAND (no delegations detected)`);
-      }
-    } else {
-      // Use VWR total with detected delegations
-      totalGovernancePower = vwrTotal;
-      nativeGovernancePower = Math.max(0, vwrTotal - delegatedGovernancePower);
+      // Debug comparison
+      console.log(`Wallet: ${walletAddress} | Native from deposits: ${nativeGovernancePower.toFixed(3)} | VWR total: ${vwrTotal.toFixed(3)} | Delta: ${(vwrTotal - nativeGovernancePower).toFixed(3)}`);
       
       if (verbose) {
-        console.log(`     ⚖️  VWR separation: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
+        console.log(`     ✅ VWR as native: ${vwrTotal.toFixed(3)} ISLAND (no delegations detected)`);
       }
     }
   } else {
