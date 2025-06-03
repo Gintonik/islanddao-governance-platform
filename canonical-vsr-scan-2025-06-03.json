@@ -1,0 +1,369 @@
+{
+  "scanDate": "2025-06-03T00:23:06.569Z",
+  "summary": {
+    "totalWallets": 20,
+    "walletsWithPower": 14,
+    "totalNativePower": 17964025.119891,
+    "totalDelegatedPower": 0,
+    "totalGovernancePower": 30641101.486338004
+  },
+  "results": [
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "nativeGovernancePower": 10393642.749205,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 11271548.09398,
+      "nativeSources": [
+        {
+          "account": "ghdaFEBVGe8FjvEenZwuccfioymkRZM7Vwe6pBpYoDP",
+          "power": 1000,
+          "type": "Voter-native",
+          "offset": 112
+        },
+        {
+          "account": "7U3jK7nSANP3yAcUpYPrxjZsxBAhPFsdX94khkVJ5zjj",
+          "power": 28619.140733,
+          "type": "Voter-native",
+          "offset": 112
+        },
+        {
+          "account": "DqH7YkHB2MKT936DEDw1N7d14MGFbg5eUQHSVT2yuNsW",
+          "power": 10353647.013,
+          "type": "Voter-native",
+          "offset": 112
+        },
+        {
+          "account": "FGQxAkrADYB9zsXDrBLfzCiugnBqePBLS6hkSCsMnR4W",
+          "power": 10376.595472,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "2QqyEyU1pjj1YXR3aUGV5feBDUDwHvxoFgnAhMNvyibb",
+          "power": 1000,
+          "type": "VWR"
+        },
+        {
+          "account": "7YMyAEU3vJ9iPQmJiK7U9JyPMXghChkAmHNFXXdvb4CN",
+          "power": 10353648.013,
+          "type": "VWR"
+        },
+        {
+          "account": "GMb1DmHWxg163Yy3EdfArzTkhpGSqVWPeVNEXYWR7aWM",
+          "power": 916900.08098,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "nativeGovernancePower": 1727.78462,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 8639094.589543,
+      "nativeSources": [
+        {
+          "account": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "power": 1727.78462,
+          "type": "Voter-native",
+          "offset": 240
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "C1vgxMvvBzXegFkvfW4Do7CmyPeCKsGJT7SpQevPaSS8",
+          "power": 8639094.589543,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
+      "nativeGovernancePower": 3188875.278848,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 4189835.110228,
+      "nativeSources": [
+        {
+          "account": "6yujo5tRQNZrh6upsm2MnAHv1LrLYVjKnDtLbHR4rwhr",
+          "power": 3188875.278848,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "9w5gUxYBvqfc1xZ34aZw7dgXUJGSA4UzZxQKkVguStiA",
+          "power": 507,
+          "type": "VWR"
+        },
+        {
+          "account": "FfUrCTFp8LhWP1hvxZeCWLqsjwvKBeTkF8AKLYAwuDTi",
+          "power": 4189328.110228,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "nativeGovernancePower": 3364427.1644889996,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 3374735.150474,
+      "nativeSources": [
+        {
+          "account": "7DuFZy88khR3y8b6PoV7PEQgvpqGsjNMi4umaHAdYbEz",
+          "power": 1000,
+          "type": "Voter-native",
+          "offset": 112
+        },
+        {
+          "account": "CUmwUPKCZTHQ8MUPmB7CRyDNwTAjEe5iojkqyyFDoGFY",
+          "power": 3361730.150474,
+          "type": "Voter-native",
+          "offset": 112
+        },
+        {
+          "account": "CyZDhumUzGEEzQsewvRkuvTEtDgpd3SZcWRW1fp6DV89",
+          "power": 1697.014015,
+          "type": "Voter-native",
+          "offset": 240
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "2xxKfdUuDfh5vVjC7AN57Wk6kTnEbdQx8Paygiuej8XX",
+          "power": 11005,
+          "type": "VWR"
+        },
+        {
+          "account": "37P3wwPyd6wgUFhpYfP89gkTnffFhbVAMf73EzRGX8t2",
+          "power": 2000,
+          "type": "VWR"
+        },
+        {
+          "account": "9HtuMo2HwZFxa2ipMRGPnooNKeJ5Aj8zQxUqV1kxKpnD",
+          "power": 3361730.150474,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "nativeGovernancePower": 30998.881087,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 1368236.699457,
+      "nativeSources": [
+        {
+          "account": "5cSWVmahnt6DoWPpxkJRAXAMEeX2DDmbdNieT3HSQy3x",
+          "power": 30998.881087,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "7udRqrKsYCtqfLjUuitqriB1PSwmyTNQRcQsQWczR26w",
+          "power": 1368236.699457,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "nativeGovernancePower": 519659.577033,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 556309.05886,
+      "nativeSources": [
+        {
+          "account": "4poA3zkq2qm41rh5uqwF2N8m3TS5X4KNFvQWEp8ufiKX",
+          "power": 519659.577033,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "B2RXmfAZpe7NrXMi8WbM5RGMFFLmodj8iEaWzQy9UB5N",
+          "power": 556309.05886,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "nativeGovernancePower": 16097.79386,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 383487.296852,
+      "nativeSources": [
+        {
+          "account": "Gqzb2GDKmTtBExZbBXLdRrGjzrSbvZbsyLquZGQTHAcY",
+          "power": 16097.79386,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "4HpoA1Ax3KobxKJvUmkf5pPYkNLcThnJNafRsazPLKEE",
+          "power": 383487.296852,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "nativeGovernancePower": 50000,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 320254.400268,
+      "nativeSources": [
+        {
+          "account": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "power": 50000,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "83iKwdkDzjN2ogG9DpHZk3ZSRikQKzGNt61Rk52pqTLd",
+          "power": 320254.400268,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "nativeGovernancePower": 200000,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 200000,
+      "nativeSources": [
+        {
+          "account": "xGW423w6m34PkGfFsCF6eWzP8LbEAYMHFYp9dvvV2br",
+          "power": 200000,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": []
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "nativeGovernancePower": 146693.845135,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 146693.845135,
+      "nativeSources": [
+        {
+          "account": "7qaaCgTsyX9zA3URF2sQczNrWuJwNeEGk2N9YE5jieiP",
+          "power": 146693.845135,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": []
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "nativeGovernancePower": 3913,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 143918.195927,
+      "nativeSources": [
+        {
+          "account": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "power": 3913,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "jxEg5KWhwvoWBzUZnAXkgnegDV3m1WMUwjcGU6QKyhR",
+          "power": 143918.195927,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "nativeGovernancePower": 29484.464683,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 29484.464683,
+      "nativeSources": [
+        {
+          "account": "8AK1cH1UsVqJzvvK1TqjtkCYYhxCbxtsVdoMWiHY7VUm",
+          "power": 29484.464683,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "8t4F39hxmTzPcaHqq2Pq9TZwZWTxMuwQm4uZfKMjioJx",
+          "power": 29484.464683,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "nativeGovernancePower": 13625.580931,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 12625.580931,
+      "nativeSources": [
+        {
+          "account": "5wkcqwdfUGShh95E7Dnk6LvLdJJU157mqRyRdTofVm9b",
+          "power": 1000,
+          "type": "Voter-native",
+          "offset": 112
+        },
+        {
+          "account": "AErp8UYUay7uBE9i6ULtSDgQP5d3W66n9RJH5QpUG3Uh",
+          "power": 12625.580931,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "FaRu1b8yqshnnkUCGAbMDixWgghe7xHXoFVymMHE8nki",
+          "power": 12625.580931,
+          "type": "VWR"
+        }
+      ]
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "nativeGovernancePower": 4879,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 4879,
+      "nativeSources": [
+        {
+          "account": "4YG7bYeAmHT9gNhnkReTtEabzFPjaarMKtLeGjffaWKr",
+          "power": 4879,
+          "type": "Voter-native",
+          "offset": 112
+        }
+      ],
+      "delegatedSources": [],
+      "vwrSources": [
+        {
+          "account": "9MAitMo8GsxFuZX2ppY2ysoBnr1ryn2fUaAJJw4zxG91",
+          "power": 4879,
+          "type": "VWR"
+        }
+      ]
+    }
+  ]
+}

@@ -187,7 +187,7 @@ async function buildDelegationMap() {
 async function calculateWalletGovernancePower(walletAddress, delegationMap) {
   console.log(`🔍 Analyzing: ${walletAddress.substring(0,8)}...`);
 
-  // Get total governance power from VWR (authoritative)
+  // Get total governance power from VWR (authoritative for total)
   const vwrResult = await getVoterWeightRecordPower(walletAddress);
   
   // Get native power from owned deposits
@@ -196,33 +196,55 @@ async function calculateWalletGovernancePower(walletAddress, delegationMap) {
   // Get delegated power from delegation map
   const walletDelegations = delegationMap.get(walletAddress) || { totalDelegated: 0, delegations: [] };
   
-  let totalGovernancePower = vwrResult.totalPower;
-  let nativeGovernancePower = nativeResult.nativePower;
-  let delegatedGovernancePower = walletDelegations.totalDelegated;
+  let totalGovernancePower = 0;
+  let nativeGovernancePower = 0;
+  let delegatedGovernancePower = 0;
 
-  // Reconcile with VWR if available
+  // Strategy: Use VWR as authoritative total, then separate native vs delegated
   if (vwrResult.totalPower > 0) {
-    // VWR is authoritative for total power
-    // If VWR total < native + delegated, adjust delegated down
-    if (nativeGovernancePower + delegatedGovernancePower > vwrResult.totalPower) {
-      delegatedGovernancePower = Math.max(0, vwrResult.totalPower - nativeGovernancePower);
+    totalGovernancePower = vwrResult.totalPower;
+    
+    // If we have native power calculation, use that as baseline
+    if (nativeResult.nativePower > 0) {
+      nativeGovernancePower = nativeResult.nativePower;
+      // Remaining power is considered delegated
+      delegatedGovernancePower = Math.max(0, totalGovernancePower - nativeGovernancePower);
+    } else {
+      // No native power detected - all power might be delegated or we need fallback
+      delegatedGovernancePower = walletDelegations.totalDelegated;
+      nativeGovernancePower = Math.max(0, totalGovernancePower - delegatedGovernancePower);
     }
   } else {
-    // No VWR - use native + delegated
+    // No VWR - use calculated native + delegated
+    nativeGovernancePower = nativeResult.nativePower;
+    delegatedGovernancePower = walletDelegations.totalDelegated;
     totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+  }
+
+  // Sanity check: ensure native + delegated = total (within small tolerance)
+  const calculatedTotal = nativeGovernancePower + delegatedGovernancePower;
+  if (Math.abs(calculatedTotal - totalGovernancePower) > 0.01) {
+    // Adjust to make them match - prefer keeping VWR total accurate
+    const adjustment = totalGovernancePower - calculatedTotal;
+    delegatedGovernancePower = Math.max(0, delegatedGovernancePower + adjustment);
   }
 
   const result = {
     wallet: walletAddress,
-    nativeGovernancePower,
-    delegatedGovernancePower,
-    totalGovernancePower,
+    nativeGovernancePower: Math.round(nativeGovernancePower * 1000000) / 1000000,
+    delegatedGovernancePower: Math.round(delegatedGovernancePower * 1000000) / 1000000,
+    totalGovernancePower: Math.round(totalGovernancePower * 1000000) / 1000000,
     nativeSources: nativeResult.sources,
     delegatedSources: walletDelegations.delegations,
-    vwrSources: vwrResult.sources
+    vwrSources: vwrResult.sources,
+    reconciliation: {
+      vwrTotal: vwrResult.totalPower,
+      calculatedNative: nativeResult.nativePower,
+      calculatedDelegated: walletDelegations.totalDelegated
+    }
   };
 
-  console.log(`   ${totalGovernancePower.toLocaleString()} ISLAND (${nativeGovernancePower.toLocaleString()} native + ${delegatedGovernancePower.toLocaleString()} delegated)`);
+  console.log(`   ${result.totalGovernancePower.toLocaleString()} ISLAND (${result.nativeGovernancePower.toLocaleString()} native + ${result.delegatedGovernancePower.toLocaleString()} delegated)`);
   
   return result;
 }
