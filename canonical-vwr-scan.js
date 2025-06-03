@@ -304,16 +304,15 @@ async function analyzeVoterAccount(walletAddress, verbose = false) {
 }
 
 /**
- * Load all VSR Voter accounts for comprehensive delegation analysis
+ * Load all VSR accounts for comprehensive delegation analysis
  */
 async function loadAllVoterAccounts(verbose = false) {
   if (verbose) {
     console.log('📊 Loading all VSR Voter accounts for delegation analysis...');
   }
   
-  const allVoterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-    filters: [{ dataSize: 2728 }]
-  });
+  // Load ALL VSR program accounts without size filter to catch delegation relationships
+  const allVoterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
   
   if (verbose) {
     console.log(`   Found ${allVoterAccounts.length} total Voter accounts`);

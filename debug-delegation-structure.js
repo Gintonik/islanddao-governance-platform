@@ -120,7 +120,6 @@ async function analyzeDelegationPatterns() {
       } else {
         console.log('\n❌ Test wallet 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4 not found in delegation targets');
       }
-      }
     } else {
       console.log('\n❌ NO DELEGATION PATTERNS FOUND');
       console.log('   All Voter accounts have authority === voterAuthority');
