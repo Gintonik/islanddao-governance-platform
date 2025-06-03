@@ -1,12 +1,12 @@
 {
-  "scanDate": "2025-06-03T01:24:05.378Z",
+  "scanDate": "2025-06-03T09:34:44.124Z",
   "summary": {
     "totalWallets": 20,
     "walletsWithPower": 14,
-    "totalNativePower": 26451354.376110002,
+    "totalNativePower": 14879929.063446999,
     "totalDelegatedPower": 0,
-    "totalGovernancePower": 26451354.376110002,
-    "averagePowerPerActiveWallet": 1889382.4554364288
+    "totalGovernancePower": 14879929.063446999,
+    "averagePowerPerActiveWallet": 1062852.0759605
   },
   "configuration": {
     "vsrProgram": "vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ",
@@ -17,9 +17,9 @@
   "results": [
     {
       "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
-      "nativeGovernancePower": 11271548.09398,
+      "nativeGovernancePower": 10393642.749205,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 11271548.09398,
+      "totalGovernancePower": 10393642.749205,
       "sources": [
         "Voter-native",
         "Voter-native",
@@ -71,32 +71,10 @@
       "delegatedSources": []
     },
     {
-      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "nativeGovernancePower": 8639094.589543,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 8639094.589543,
-      "sources": [
-        "Voter-native"
-      ],
-      "nativeSources": [
-        {
-          "account": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-          "power": 1727.78462,
-          "baseAmount": 1727.78462,
-          "multiplier": 1,
-          "type": "Voter-native",
-          "authority": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-          "voterAuthority": "2MnAdvayCWywFpn5E8Vnov7sjjUFwBjQR36r647YraHd",
-          "lockupActive": false
-        }
-      ],
-      "delegatedSources": []
-    },
-    {
       "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
-      "nativeGovernancePower": 3374735.150474,
+      "nativeGovernancePower": 3364427.1644889996,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 3374735.150474,
+      "totalGovernancePower": 3364427.1644889996,
       "sources": [
         "Voter-native",
         "Voter-native",
@@ -137,32 +115,10 @@
       "delegatedSources": []
     },
     {
-      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
-      "nativeGovernancePower": 1368236.699457,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 1368236.699457,
-      "sources": [
-        "Voter-native"
-      ],
-      "nativeSources": [
-        {
-          "account": "5cSWVmahnt6DoWPpxkJRAXAMEeX2DDmbdNieT3HSQy3x",
-          "power": 30998.881087,
-          "baseAmount": 30998.881087,
-          "multiplier": 1,
-          "type": "Voter-native",
-          "authority": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
-          "voterAuthority": "DMMRnbgK3pQkAeWt3Kja5Pngg2oDJgCrLA38G917HxT",
-          "lockupActive": false
-        }
-      ],
-      "delegatedSources": []
-    },
-    {
       "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
-      "nativeGovernancePower": 556309.05886,
+      "nativeGovernancePower": 519659.577033,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 556309.05886,
+      "totalGovernancePower": 519659.577033,
       "sources": [
         "Voter-native"
       ],
@@ -175,50 +131,6 @@
           "type": "Voter-native",
           "authority": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
           "voterAuthority": "d8fm6wYGjvAGnKLCTjLspoyDq57zouBjVDgiuyy2qTu",
-          "lockupActive": false
-        }
-      ],
-      "delegatedSources": []
-    },
-    {
-      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
-      "nativeGovernancePower": 383487.296852,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 383487.296852,
-      "sources": [
-        "Voter-native"
-      ],
-      "nativeSources": [
-        {
-          "account": "Gqzb2GDKmTtBExZbBXLdRrGjzrSbvZbsyLquZGQTHAcY",
-          "power": 16097.79386,
-          "baseAmount": 16097.79386,
-          "multiplier": 1,
-          "type": "Voter-native",
-          "authority": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
-          "voterAuthority": "HAqxbkTRGBryeL7zePJwWmiqg76uEeJJy8JtSRCe2t5M",
-          "lockupActive": false
-        }
-      ],
-      "delegatedSources": []
-    },
-    {
-      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
-      "nativeGovernancePower": 320254.400268,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 320254.400268,
-      "sources": [
-        "Voter-native"
-      ],
-      "nativeSources": [
-        {
-          "account": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
-          "power": 50000,
-          "baseAmount": 50000,
-          "multiplier": 1,
-          "type": "Voter-native",
-          "authority": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
-          "voterAuthority": "CXwgnUKR4QoB43qUVWZhuwFZv42M8qVpsFBG6Qk6qLwh",
           "lockupActive": false
         }
       ],
@@ -247,18 +159,40 @@
       "delegatedSources": []
     },
     {
-      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
-      "nativeGovernancePower": 146693.845135,
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "nativeGovernancePower": 126779.222404,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 146693.845135,
+      "totalGovernancePower": 126779.222404,
+      "sources": [
+        "Voter-native"
+      ],
+      "nativeSources": [
+        {
+          "account": "AsisfQU6HPBpefNrbEeKUVB4v5JB8ymDxwC4kbxxzhnG",
+          "power": 126779.222404,
+          "baseAmount": 126779.222404,
+          "multiplier": 1,
+          "type": "Voter-native",
+          "authority": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+          "voterAuthority": "EhGVdvoZQhSRBjb3NeQiA9tDTH4my8K4StrrF2nrHotB",
+          "lockupActive": false
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "nativeGovernancePower": 124693.845135,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 124693.845135,
       "sources": [
         "Voter-native"
       ],
       "nativeSources": [
         {
           "account": "7qaaCgTsyX9zA3URF2sQczNrWuJwNeEGk2N9YE5jieiP",
-          "power": 146693.845135,
-          "baseAmount": 146693.845135,
+          "power": 124693.845135,
+          "baseAmount": 124693.845135,
           "multiplier": 1,
           "type": "Voter-native",
           "authority": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
@@ -269,22 +203,44 @@
       "delegatedSources": []
     },
     {
-      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
-      "nativeGovernancePower": 143918.195927,
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "nativeGovernancePower": 50000,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 143918.195927,
+      "totalGovernancePower": 50000,
       "sources": [
         "Voter-native"
       ],
       "nativeSources": [
         {
-          "account": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
-          "power": 3913,
-          "baseAmount": 3913,
+          "account": "6YEDVCcqThWUbobzEAL3wCCMFmpeBLVibkspDcF8QWPM",
+          "power": 50000,
+          "baseAmount": 50000,
           "multiplier": 1,
           "type": "Voter-native",
-          "authority": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
-          "voterAuthority": "DJRwnpvnShQ8S6PGxGrwQwioxkEce5fwgyKvde8M3gwR",
+          "authority": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+          "voterAuthority": "CXwgnUKR4QoB43qUVWZhuwFZv42M8qVpsFBG6Qk6qLwh",
+          "lockupActive": false
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "nativeGovernancePower": 30998.881087,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 30998.881087,
+      "sources": [
+        "Voter-native"
+      ],
+      "nativeSources": [
+        {
+          "account": "5cSWVmahnt6DoWPpxkJRAXAMEeX2DDmbdNieT3HSQy3x",
+          "power": 30998.881087,
+          "baseAmount": 30998.881087,
+          "multiplier": 1,
+          "type": "Voter-native",
+          "authority": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+          "voterAuthority": "DMMRnbgK3pQkAeWt3Kja5Pngg2oDJgCrLA38G917HxT",
           "lockupActive": false
         }
       ],
@@ -313,10 +269,32 @@
       "delegatedSources": []
     },
     {
-      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
-      "nativeGovernancePower": 12625.580931,
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "nativeGovernancePower": 16097.79386,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 12625.580931,
+      "totalGovernancePower": 16097.79386,
+      "sources": [
+        "Voter-native"
+      ],
+      "nativeSources": [
+        {
+          "account": "Gqzb2GDKmTtBExZbBXLdRrGjzrSbvZbsyLquZGQTHAcY",
+          "power": 16097.79386,
+          "baseAmount": 16097.79386,
+          "multiplier": 1,
+          "type": "Voter-native",
+          "authority": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+          "voterAuthority": "HAqxbkTRGBryeL7zePJwWmiqg76uEeJJy8JtSRCe2t5M",
+          "lockupActive": false
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "nativeGovernancePower": 13625.580931,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 13625.580931,
       "sources": [
         "Voter-native",
         "Voter-native"
@@ -368,22 +346,44 @@
       "delegatedSources": []
     },
     {
-      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
-      "nativeGovernancePower": 88,
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "nativeGovernancePower": 3913,
       "delegatedGovernancePower": 0,
-      "totalGovernancePower": 88,
+      "totalGovernancePower": 3913,
       "sources": [
         "Voter-native"
       ],
       "nativeSources": [
         {
-          "account": "AsisfQU6HPBpefNrbEeKUVB4v5JB8ymDxwC4kbxxzhnG",
-          "power": 126779.222404,
-          "baseAmount": 126779.222404,
+          "account": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "power": 3913,
+          "baseAmount": 3913,
           "multiplier": 1,
           "type": "Voter-native",
-          "authority": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
-          "voterAuthority": "EhGVdvoZQhSRBjb3NeQiA9tDTH4my8K4StrrF2nrHotB",
+          "authority": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+          "voterAuthority": "DJRwnpvnShQ8S6PGxGrwQwioxkEce5fwgyKvde8M3gwR",
+          "lockupActive": false
+        }
+      ],
+      "delegatedSources": []
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "nativeGovernancePower": 1727.78462,
+      "delegatedGovernancePower": 0,
+      "totalGovernancePower": 1727.78462,
+      "sources": [
+        "Voter-native"
+      ],
+      "nativeSources": [
+        {
+          "account": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "power": 1727.78462,
+          "baseAmount": 1727.78462,
+          "multiplier": 1,
+          "type": "Voter-native",
+          "authority": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+          "voterAuthority": "2MnAdvayCWywFpn5E8Vnov7sjjUFwBjQR36r647YraHd",
           "lockupActive": false
         }
       ],

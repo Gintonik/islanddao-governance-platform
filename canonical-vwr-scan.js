@@ -439,43 +439,59 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   // STRICT SEPARATION: Native vs Delegated Power
   // ============================================
   
-  // NATIVE POWER: Calculate deposits where this wallet is the authority (owns the deposits)
+  // NATIVE POWER: Calculate deposits from ALL Voter accounts where this wallet is the authority
+  let voterAccountsFound = 0;
+  const timestamp = Math.floor(Date.now() / 1000);
+  
   for (const { pubkey, account } of allVoterAccounts) {
     const data = account.data;
     const authorities = parseVoterAuthorities(data);
     
     if (!authorities || authorities.authority !== walletAddress) continue;
     
+    voterAccountsFound++;
     const { authority, voterAuthority } = authorities;
     
-    // Parse deposits with full lockup validation and multiplier application
+    // Parse ALL deposits from this Voter account using authentic VSR structure
     const deposits = await parseVoterAccountDepositsWithMultipliers(data, verbose);
     
     if (deposits && deposits.length > 0) {
       for (const deposit of deposits) {
-        nativeGovernancePower += deposit.adjustedPower;
-        nativeSources.push({
-          account: pubkey.toBase58(),
-          power: deposit.adjustedPower,
-          baseAmount: deposit.amount,
-          multiplier: deposit.multiplier,
-          type: 'Voter-native',
-          authority: authority,
-          voterAuthority: voterAuthority,
-          lockupActive: deposit.isActive
-        });
-        
-        if (verbose) {
-          const status = deposit.isActive ? 'ACTIVE' : 'EXPIRED';
-          console.log(`     ✅ Native: ${deposit.amount.toFixed(3)} × ${deposit.multiplier.toFixed(2)}x = ${deposit.adjustedPower.toFixed(3)} ISLAND (${status})`);
+        if (deposit.isUsed && deposit.amountDepositedNative > 0) {
+          const multiplier = calculateAuthenticLockupMultiplier(deposit, timestamp);
+          const adjustedPower = deposit.amountDepositedNative * multiplier;
+          
+          if (adjustedPower > 0) {
+            nativeGovernancePower += adjustedPower;
+            nativeSources.push({
+              account: pubkey.toBase58(),
+              power: adjustedPower,
+              baseAmount: deposit.amountDepositedNative,
+              multiplier: multiplier,
+              type: 'Voter-native',
+              authority: authority,
+              voterAuthority: voterAuthority,
+              lockupActive: deposit.lockupEndTs > timestamp,
+              estimated: false
+            });
+            
+            if (verbose) {
+              const status = deposit.lockupEndTs > timestamp ? 'ACTIVE' : 'EXPIRED';
+              console.log(`     ✅ Native: ${deposit.amountDepositedNative.toFixed(3)} × ${multiplier.toFixed(2)}x = ${adjustedPower.toFixed(3)} ISLAND (${status})`);
+            }
+          }
         }
       }
     }
   }
   
+  if (verbose) {
+    console.log(`     📊 Found ${voterAccountsFound} Voter accounts where wallet is authority`);
+    console.log(`     🟢 Total Native Power: ${nativeGovernancePower.toFixed(3)} ISLAND`);
+  }
+  
   // DELEGATED POWER: Scan ALL Voter accounts to find deposits delegated to this wallet
   const delegators = [];
-  const currentTimestamp = Math.floor(Date.now() / 1000);
   let delegationScanSucceeded = false;
   
   // Check if we successfully loaded all Voter accounts
@@ -552,87 +568,66 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
   // FINAL AGGREGATION: Calculate total governance power from native + delegated
   totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
   
-  // VWR RECONCILIATION: Canonical delegation logic with verbose debug
+  // CANONICAL GOVERNANCE POWER CALCULATION: Use authentic on-chain data only
+  const calculatedTotal = nativeGovernancePower + delegatedGovernancePower;
+  let inferenceUsed = false;
+  
+  // Debug logs for every wallet
+  console.log(`🏛️ VWR Total: ${hasVWR ? vwrTotal.toFixed(3) : 'N/A'}`);
+  console.log(`🟢 Native from Deposits: ${nativeGovernancePower.toFixed(3)}`);
+  console.log(`🟡 Delegated from Voter Accounts: ${delegatedGovernancePower.toFixed(3)}`);
+  
   if (hasVWR && vwrTotal > 0) {
-    const calculatedTotal = nativeGovernancePower + delegatedGovernancePower;
-    let inferenceUsed = false;
+    // Check if calculated deposits match VWR total within tolerance
+    const tolerance = 0.005; // 0.5% tolerance
+    const vwrDelta = Math.abs(vwrTotal - calculatedTotal);
+    const vwrMatches = vwrDelta / Math.max(vwrTotal, calculatedTotal) < tolerance;
     
-    // Debug logs
-    console.log(`🏛️ VWR Total: ${vwrTotal.toFixed(3)}`);
-    console.log(`🟢 Native from Deposits: ${nativeGovernancePower.toFixed(3)}`);
-    console.log(`🔁 Delegated Detected: ${delegatedGovernancePower.toFixed(3)}`);
-    
-    if (delegatedGovernancePower > 0) {
-      // STRICT MODE: Actual delegations detected from Voter accounts
-      if (Math.abs(vwrTotal - calculatedTotal) / Math.max(vwrTotal, calculatedTotal) < 0.05) {
-        // VWR matches calculated values - use strict mode results
-        totalGovernancePower = calculatedTotal;
-        
-        console.log(`🤖 Inferred Mode Used: ${inferenceUsed}`);
-        console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: ${delegatedGovernancePower.toFixed(3)} | Total: ${totalGovernancePower.toFixed(3)}`);
-        
-        if (verbose) {
-          console.log(`     ✅ Strict mode: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
-        }
-      } else {
-        // VWR differs - trust VWR total, adjust delegated
-        delegatedGovernancePower = Math.max(0, vwrTotal - nativeGovernancePower);
-        totalGovernancePower = vwrTotal;
-        
-        console.log(`🤖 Inferred Mode Used: ${inferenceUsed}`);
-        console.log(`Wallet ${walletAddress} | Strict Mode (VWR adjusted) - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
-        
-        if (verbose) {
-          console.log(`     ⚖️  VWR adjusted: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
-        }
+    if (vwrMatches || delegatedGovernancePower > 0) {
+      // STRICT MODE: Use calculated deposits when they match VWR or delegations exist
+      totalGovernancePower = calculatedTotal;
+      
+      console.log(`🧠 Inference Used? ${inferenceUsed}`);
+      console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: ${delegatedGovernancePower.toFixed(3)} | Total: ${totalGovernancePower.toFixed(3)}`);
+      
+      if (verbose) {
+        console.log(`     ✅ Strict mode: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
       }
     } else {
-      // No actual delegations found - determine mode based on deposit detection
-      const delta = vwrTotal - nativeGovernancePower;
-      const hasSignificantNativeDeposits = nativeGovernancePower > 1000;
-      const shouldUseInference = delegationScanSucceeded && 
-                                !hasSignificantNativeDeposits && 
-                                delta > 10000 && 
-                                vwrTotal > nativeGovernancePower * 2;
+      // Check if we should use inference (only when no significant deposits detected)
+      const hasMinimalDeposits = nativeGovernancePower < 1000;
+      const vwrSignificant = vwrTotal > 10000;
+      const shouldInfer = delegationScanSucceeded && hasMinimalDeposits && vwrSignificant;
       
-      if (shouldUseInference) {
-        // INFERENCE MODE: Use only when no significant native deposits detected
+      if (shouldInfer) {
+        // INFERENCE MODE: Use VWR when no deposits detected but VWR shows power
         inferenceUsed = true;
-        const inferredNative = nativeGovernancePower;
-        const inferredDelegated = vwrTotal - nativeGovernancePower;
-        
-        nativeGovernancePower = inferredNative;
-        delegatedGovernancePower = inferredDelegated;
+        delegatedGovernancePower = vwrTotal - nativeGovernancePower;
         totalGovernancePower = vwrTotal;
         
-        console.log(`🤖 Inferred Mode Used: ${inferenceUsed}`);
+        console.log(`🧠 Inference Used? ${inferenceUsed}`);
         console.log(`Wallet ${walletAddress} | Inference Mode - Native: ${nativeGovernancePower.toFixed(3)} | Inferred Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
-        console.log(`⚠️  Using VWR inference mode (no significant native deposits detected)`);
         
         if (verbose) {
           console.log(`     🔍 Inference mode: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} inferred delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
         }
       } else {
-        // STRICT MODE: Use VWR total as native power when significant deposits detected
-        delegatedGovernancePower = 0;
-        totalGovernancePower = vwrTotal; // Use VWR total as authoritative native power
-        nativeGovernancePower = vwrTotal;
+        // STRICT MODE: Trust calculated deposits over VWR when significant deposits found
+        totalGovernancePower = calculatedTotal;
         
-        const scanStatus = delegationScanSucceeded ? "scan succeeded" : "scan failed";
-        
-        console.log(`🤖 Inferred Mode Used: ${inferenceUsed}`);
-        console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: 0 | VWR Total: ${vwrTotal.toFixed(3)} | (${scanStatus})`);
+        console.log(`🧠 Inference Used? ${inferenceUsed}`);
+        console.log(`Wallet ${walletAddress} | Strict Mode (Deposits) - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: ${delegatedGovernancePower.toFixed(3)} | Total: ${totalGovernancePower.toFixed(3)}`);
         
         if (verbose) {
-          console.log(`     ✅ Strict mode (VWR as native): ${nativeGovernancePower.toFixed(3)} ISLAND (${scanStatus})`);
+          console.log(`     ✅ Strict mode (deposits over VWR): ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
         }
       }
     }
   } else {
-    // No VWR: Use calculated native + delegated
-    totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+    // No VWR: Use calculated native + delegated only
+    totalGovernancePower = calculatedTotal;
     
-    console.log(`🤖 Inferred Mode Used: false`);
+    console.log(`🧠 Inference Used? ${inferenceUsed}`);
     if (verbose) {
       console.log(`     📊 No VWR: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
     }
