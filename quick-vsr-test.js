@@ -33,10 +33,11 @@ function extractDeposits(data, verbose = false) {
         const lockupKind = data[offset + 24];
         const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
         
-        if (isUsed && rawAmount > 0) {
+        // Check for valid amounts regardless of isUsed flag for some edge cases
+        if (rawAmount > 0) {
           const islandAmount = rawAmount / 1e6;
           
-          if (islandAmount >= 100 && islandAmount <= 50000000) {
+          if (islandAmount >= 1000 && islandAmount <= 50000000) {
             const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
             const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
             

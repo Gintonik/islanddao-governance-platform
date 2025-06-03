@@ -473,10 +473,11 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
           // Accept any non-zero isUsed value (handles variations like 131)
           const isUsed = isUsedByte !== 0;
           
-          if (isUsed && rawAmount > 0) {
+          // Check for valid amounts - some deposits aren't marked as used but contain valid amounts
+          if (rawAmount > 0) {
             const islandAmount = rawAmount / 1e6;
             
-            if (islandAmount >= 100 && islandAmount <= 50000000) {
+            if (islandAmount >= 1000 && islandAmount <= 50000000) {
               // Count all deposits, but apply multipliers only for active lockups
               const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
               const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
