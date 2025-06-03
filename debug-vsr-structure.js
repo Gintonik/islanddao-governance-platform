@@ -1,115 +1,127 @@
 /**
  * Debug VSR Account Structure
- * Analyze the actual byte layout of VSR accounts to understand deposit parsing
+ * Examine actual VSR accounts to understand the correct deposit parsing
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
+config();
 
-dotenv.config();
-
-const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const connection = new Connection(process.env.HELIUS_RPC_URL);
 
-/**
- * Analyze specific VSR account byte structure
- */
-async function analyzeVSRAccount(accountPubkey) {
+async function debugVSRStructure() {
+  console.log('Debugging VSR account structure...');
+  
+  // Use Takisoul's known VSR account
+  const vsrAccount = new PublicKey('GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG');
+  
   try {
-    const account = await connection.getAccountInfo(new PublicKey(accountPubkey));
-    if (!account) {
-      console.log(`Account ${accountPubkey} not found`);
+    const accountInfo = await connection.getAccountInfo(vsrAccount);
+    
+    if (!accountInfo) {
+      console.log('Account not found');
       return;
     }
-
-    const data = account.data;
-    console.log(`\n=== Analyzing VSR Account ${accountPubkey.slice(0, 8)} ===`);
-    console.log(`Account size: ${data.length} bytes`);
-    console.log(`Owner: ${account.owner.toString()}`);
-
-    // Extract authority from known offset (offset 32, 32 bytes)
-    const authorityBytes = data.slice(32, 64);
-    const authority = new PublicKey(authorityBytes).toString();
-    console.log(`Authority: ${authority}`);
-
-    // Look for deposit patterns in the data
-    console.log(`\n--- Searching for deposit patterns ---`);
     
-    // Method 1: Search for large numbers that could be ISLAND amounts
-    for (let i = 0; i < data.length - 8; i += 8) {
+    const data = accountInfo.data;
+    console.log(`Account size: ${data.length} bytes`);
+    
+    // Examine the first 200 bytes in detail
+    console.log('\nFirst 200 bytes (hex):');
+    console.log(data.slice(0, 200).toString('hex'));
+    
+    console.log('\nFirst 200 bytes (structured):');
+    for (let i = 0; i < Math.min(200, data.length); i += 8) {
+      const slice = data.slice(i, i + 8);
       try {
         const value = data.readBigUInt64LE(i);
-        const asISLAND = Number(value) / 1e6;
+        const floatValue = Number(value) / 1e6;
+        console.log(`Offset ${i.toString().padStart(3)}: ${slice.toString('hex').padEnd(16)} = ${value.toString().padEnd(20)} (${floatValue.toLocaleString()} tokens)`);
+      } catch (e) {
+        console.log(`Offset ${i.toString().padStart(3)}: ${slice.toString('hex').padEnd(16)} = <read error>`);
+      }
+    }
+    
+    // Look for patterns that could be ISLAND amounts (in the millions)
+    console.log('\nScanning for potential ISLAND amounts (1M+ tokens):');
+    for (let offset = 0; offset <= data.length - 8; offset += 4) {
+      try {
+        const value = data.readBigUInt64LE(offset);
+        const tokens = Number(value) / 1e6;
         
-        // Look for reasonable ISLAND amounts (1-50M range)
-        if (asISLAND >= 1 && asISLAND <= 50000000) {
-          console.log(`  Offset ${i}: ${asISLAND.toFixed(6)} ISLAND (raw: ${value.toString()})`);
-          
-          // Check nearby bytes for deposit structure
-          if (i >= 8 && i + 32 < data.length) {
-            const isUsedBefore = data.readUInt8(i - 8);
-            const isUsedAfter = data.readUInt8(i + 8);
-            const nextValue = data.readBigUInt64LE(i + 8);
-            
-            console.log(`    isUsed before (-8): ${isUsedBefore}`);
-            console.log(`    isUsed after (+8): ${isUsedAfter}`);
-            console.log(`    Next 8 bytes: ${nextValue.toString()}`);
-          }
+        if (tokens >= 1000000 && tokens <= 10000000) { // 1M to 10M ISLAND
+          console.log(`Offset ${offset}: ${tokens.toLocaleString()} ISLAND (${value} raw)`);
         }
       } catch (e) {
         continue;
       }
     }
-
-    // Method 2: Try to parse using known VSR deposit structure
-    console.log(`\n--- Attempting structured deposit parsing ---`);
     
-    // VSR deposits typically start around offset 232 with 80-byte entries
-    const depositAreaStart = 232;
-    if (data.length >= depositAreaStart + 80) {
-      console.log(`Trying structured parsing from offset ${depositAreaStart}...`);
+    // Look for timestamp patterns (values that could be Unix timestamps)
+    console.log('\nScanning for potential timestamps:');
+    for (let offset = 0; offset <= data.length - 8; offset += 4) {
+      try {
+        const value = data.readBigUInt64LE(offset);
+        const timestamp = Number(value);
+        
+        if (timestamp > 1600000000 && timestamp < 2000000000) { // Reasonable Unix timestamp range
+          const date = new Date(timestamp * 1000);
+          console.log(`Offset ${offset}: ${timestamp} = ${date.toISOString()}`);
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    // Examine authority field (should be at offset 8)
+    console.log('\nAuthority field check:');
+    const authorityBytes = data.slice(8, 40);
+    const authority = new PublicKey(authorityBytes);
+    console.log(`Authority at offset 8: ${authority.toBase58()}`);
+    
+    // Check if this matches Takisoul's wallet
+    const takisoulWallet = '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA';
+    console.log(`Expected Takisoul wallet: ${takisoulWallet}`);
+    console.log(`Authority matches: ${authority.toBase58() === takisoulWallet}`);
+    
+    // Try different offset interpretations for deposits
+    console.log('\nTrying different deposit offset interpretations:');
+    
+    const possibleDepositOffsets = [136, 168, 200, 232, 264];
+    
+    for (const startOffset of possibleDepositOffsets) {
+      console.log(`\nTrying deposit start at offset ${startOffset}:`);
       
-      for (let i = 0; i < 5; i++) { // Check first 5 deposit slots
-        const depositOffset = depositAreaStart + (i * 80);
-        if (depositOffset + 80 > data.length) break;
+      for (let i = 0; i < 3; i++) { // Check first 3 potential deposits
+        const offset = startOffset + (i * 184); // Assuming 184 bytes per deposit
+        
+        if (offset + 32 > data.length) break;
         
         try {
-          const isUsed = data.readUInt8(depositOffset);
-          const amount = data.readBigUInt64LE(depositOffset + 8);
-          const lockupKind = data.readUInt8(depositOffset + 32);
-          
-          console.log(`  Deposit ${i}: isUsed=${isUsed}, amount=${Number(amount)/1e6}, lockup=${lockupKind}`);
+          // Try reading as amount at different sub-offsets
+          for (let subOffset = 0; subOffset <= 24; subOffset += 8) {
+            try {
+              const value = data.readBigUInt64LE(offset + subOffset);
+              const tokens = Number(value) / 1e6;
+              
+              if (tokens > 1000 && tokens < 10000000) {
+                console.log(`  Deposit ${i}, suboffset +${subOffset}: ${tokens.toLocaleString()} ISLAND`);
+              }
+            } catch (e) {
+              continue;
+            }
+          }
         } catch (e) {
-          console.log(`  Deposit ${i}: Parse error`);
+          continue;
         }
       }
     }
-
-    // Method 3: Hex dump of relevant sections
-    console.log(`\n--- Hex dump of deposit area (offset 232-400) ---`);
-    if (data.length > 400) {
-      const hexSection = data.slice(232, 400).toString('hex');
-      for (let i = 0; i < hexSection.length; i += 32) {
-        const offset = 232 + (i / 2);
-        console.log(`${offset.toString().padStart(4, '0')}: ${hexSection.slice(i, i + 32)}`);
-      }
-    }
-
+    
   } catch (error) {
-    console.error(`Error analyzing account ${accountPubkey}:`, error.message);
+    console.error('Error debugging VSR structure:', error.message);
   }
 }
 
-/**
- * Debug the known VSR accounts for Takisoul
- */
-async function debugTakisoulAccounts() {
-  console.log('DEBUGGING TAKISOUL VSR ACCOUNT STRUCTURE');
-  console.log('========================================');
-  
-  // Takisoul's known VSR account
-  const takisoulVSR = 'GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG';
-  await analyzeVSRAccount(takisoulVSR);
-}
-
-debugTakisoulAccounts().catch(console.error);
+// Run debug
+debugVSRStructure().catch(console.error);
