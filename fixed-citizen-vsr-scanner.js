@@ -126,13 +126,8 @@ function parseCanonicalVSRDeposits(data, walletAddress) {
           if (amount >= 1000 && amount <= 50000000 && !seenAmounts.has(key)) {
             seenAmounts.add(key);
             
-            // Apply specific filtering for known wallets
-            if (walletAddress === '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4') {
-              // Whale's Friend: only allow 12,625.58, exclude the 1,000 ISLAND
-              if (Math.abs(amount - 12625.580931) > 0.01) {
-                continue;
-              }
-            }
+            // No artificial filtering - use authentic on-chain data
+            // Whale's Friend legitimately has both 1,000 and 12,625.58 ISLAND deposits
             
             let lockupKind = 0;
             let lockupEndTs = 0;
