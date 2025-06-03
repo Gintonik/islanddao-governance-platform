@@ -1,6 +1,6 @@
 /**
- * Debug Delegation Structure
- * Investigates Voter account authority patterns to understand delegation relationships
+ * Debug Delegation Account Structure
+ * Analyze specific delegation accounts to understand why deposits aren't being parsed
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -12,140 +12,132 @@ const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
 /**
- * Parse authority and voterAuthority from Voter account
+ * Deep analysis of a specific delegation account
  */
-function parseVoterAuthorities(data) {
-  try {
-    if (data.length < 96) return null;
-    
-    // authority at offset 8, voterAuthority at offset 40
-    const authority = new PublicKey(data.slice(8, 40)).toBase58();
-    const voterAuthority = new PublicKey(data.slice(40, 72)).toBase58();
-    
-    return { authority, voterAuthority };
-  } catch (error) {
-    return null;
+async function analyzeDelegationAccount(accountPubkey) {
+  console.log(`\nAnalyzing delegation account: ${accountPubkey}`);
+  
+  const accountInfo = await connection.getAccountInfo(new PublicKey(accountPubkey));
+  if (!accountInfo) {
+    console.log('Account not found');
+    return;
   }
+  
+  const data = accountInfo.data;
+  console.log(`Account size: ${data.length} bytes`);
+  
+  // Parse authorities
+  if (data.length >= 104) {
+    const authority = new PublicKey(data.slice(8, 40)).toBase58();
+    const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
+    console.log(`Authority: ${authority}`);
+    console.log(`VoterAuthority: ${voterAuthority}`);
+  }
+  
+  // Scan for any 8-byte amounts throughout the account
+  console.log('\nScanning for amounts:');
+  const foundAmounts = [];
+  
+  for (let offset = 0; offset <= data.length - 8; offset += 8) {
+    try {
+      const rawAmount = Number(data.readBigUInt64LE(offset));
+      if (rawAmount > 0) {
+        const islandAmount = rawAmount / 1e6;
+        
+        if (islandAmount >= 1000 && islandAmount <= 50000000) {
+          foundAmounts.push({
+            offset: offset,
+            rawAmount: rawAmount,
+            islandAmount: islandAmount
+          });
+          console.log(`  Offset ${offset}: ${islandAmount.toFixed(3)} ISLAND (raw: ${rawAmount})`);
+        }
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+  
+  if (foundAmounts.length === 0) {
+    console.log('  No significant amounts found');
+  }
+  
+  // Try standard VSR deposit parsing
+  console.log('\nTrying standard VSR deposit parsing:');
+  const timestamp = Math.floor(Date.now() / 1000);
+  
+  for (let i = 0; i < 32; i++) {
+    const offset = 104 + (87 * i);
+    if (offset + 48 <= data.length) {
+      try {
+        const isUsedByte = data[offset];
+        const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+        
+        if (rawAmount > 0) {
+          const islandAmount = rawAmount / 1e6;
+          
+          if (islandAmount >= 1) {
+            const lockupKind = data[offset + 24];
+            const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+            const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
+            const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+            
+            console.log(`  Deposit ${i}: ${islandAmount.toFixed(3)} ISLAND × ${multiplier.toFixed(2)}x = ${(islandAmount * multiplier).toFixed(3)} (used: ${isUsedByte}, lockup: ${lockupKind})`);
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+  }
+  
+  return foundAmounts;
 }
 
 /**
- * Analyze delegation patterns in VSR accounts
+ * Analyze all delegation accounts for 3PKhzE9w
  */
-async function analyzeDelegationPatterns() {
-  console.log('🔍 ANALYZING DELEGATION PATTERNS IN VSR ACCOUNTS');
-  console.log('================================================');
+async function analyzeAllDelegations() {
+  console.log('DELEGATION ACCOUNT STRUCTURE ANALYSIS');
+  console.log('====================================');
   
-  try {
-    // Load all VSR Voter accounts
-    console.log('📊 Loading all VSR Voter accounts...');
-    const voterAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-    console.log(`   Found ${voterAccounts.length} total accounts`);
-    
-    let totalVoterAccounts = 0;
-    let delegationCandidates = 0;
-    let uniqueAuthorities = new Set();
-    let uniqueVoterAuthorities = new Set();
-    let delegationMap = new Map();
-    
-    // Analyze all accounts
-    for (const { pubkey, account } of voterAccounts) {
-      const data = account.data;
-      
-      // Skip non-Voter accounts (check discriminator)
-      if (data.length < 100) continue;
-      
-      const authorities = parseVoterAuthorities(data);
-      if (!authorities) continue;
-      
-      totalVoterAccounts++;
-      const { authority, voterAuthority } = authorities;
-      
-      uniqueAuthorities.add(authority);
-      uniqueVoterAuthorities.add(voterAuthority);
-      
-      // Check for delegation pattern: voterAuthority !== authority
-      if (voterAuthority !== authority) {
-        delegationCandidates++;
-        
-        if (!delegationMap.has(voterAuthority)) {
-          delegationMap.set(voterAuthority, []);
-        }
-        delegationMap.get(voterAuthority).push({
-          account: pubkey.toBase58(),
-          authority,
-          voterAuthority
-        });
-        
-        if (delegationCandidates <= 20) {
-          console.log(`🔗 Delegation candidate ${delegationCandidates}:`);
-          console.log(`   Account: ${pubkey.toBase58().substring(0,8)}...`);
-          console.log(`   Authority: ${authority.substring(0,8)}...`);
-          console.log(`   VoterAuthority: ${voterAuthority.substring(0,8)}...`);
-        }
-      }
-    }
-    
-    console.log('\n📊 DELEGATION ANALYSIS SUMMARY:');
-    console.log(`   Total Voter Accounts: ${totalVoterAccounts}`);
-    console.log(`   Unique Authorities: ${uniqueAuthorities.size}`);
-    console.log(`   Unique Voter Authorities: ${uniqueVoterAuthorities.size}`);
-    console.log(`   Delegation Candidates: ${delegationCandidates}`);
-    
-    if (delegationCandidates > 0) {
-      console.log('\n🎯 TOP DELEGATION TARGETS:');
-      const sortedDelegations = Array.from(delegationMap.entries())
-        .sort((a, b) => b[1].length - a[1].length)
-        .slice(0, 10);
-        
-      for (const [voterAuthority, delegations] of sortedDelegations) {
-        console.log(`   ${voterAuthority.substring(0,8)}... receives ${delegations.length} delegation(s)`);
-        
-        // Check if this matches our test wallet
-        if (voterAuthority === '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4') {
-          console.log(`   🎯 MATCH: Test wallet found with ${delegations.length} delegations!`);
-          for (const delegation of delegations) {
-            console.log(`      From: ${delegation.authority.substring(0,8)}...`);
-          }
-        }
-      }
-      
-      // Also check all delegations for our test wallet
-      if (delegationMap.has('4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4')) {
-        const testDelegations = delegationMap.get('4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4');
-        console.log(`\n🎯 TEST WALLET DELEGATIONS FOUND: ${testDelegations.length}`);
-        for (const delegation of testDelegations) {
-          console.log(`   From: ${delegation.authority}`);
-          console.log(`   Account: ${delegation.account}`);
-        }
-      } else {
-        console.log('\n❌ Test wallet 4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4 not found in delegation targets');
-      }
-    } else {
-      console.log('\n❌ NO DELEGATION PATTERNS FOUND');
-      console.log('   All Voter accounts have authority === voterAuthority');
-    }
-    
-    return {
-      totalVoterAccounts,
-      delegationCandidates,
-      delegationMap
-    };
-    
-  } catch (error) {
-    console.error('❌ Error analyzing delegation patterns:', error);
-    throw error;
+  const targetWallet = '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt';
+  
+  // Known delegation accounts from previous scan
+  const delegationAccounts = [
+    'N7qqtGiSKbk15nKSj1JsyGBAdpYqB1ohtQW6JAoo7Qa', // from ELEXG9cT
+    '2QqyEyU1pjj1YXR3aUGV5feBDUDwHvxoFgnAhMNvyibb', // from 6GC6bAce
+    '7YMyAEU3vJ9iPQmJiK7U9JyPMXghChkAmHNFXXdvb4CN', // from F9V4Lwo4
+    '9bcDrX3JCvPjvoMcbuLoExH1E8ZenUU9VDSCTTDGjt8D', // from EGYbpow8
+    'GMb1DmHWxg163Yy3EdfArzTkhpGSqVWPeVNEXYWR7aWM', // from 7vrFDrK9
+    'HB2ZmBRgTC3m3jZVNujmwXEFAYkzrXLgFWBZb2VksTdm'  // from 84pGFuy1
+  ];
+  
+  let totalFoundAmounts = 0;
+  
+  for (const accountPubkey of delegationAccounts) {
+    const amounts = await analyzeDelegationAccount(accountPubkey);
+    totalFoundAmounts += amounts.length;
+  }
+  
+  console.log(`\nSummary: Found ${totalFoundAmounts} significant amounts across ${delegationAccounts.length} delegation accounts`);
+  
+  if (totalFoundAmounts === 0) {
+    console.log('\nThe delegation accounts contain no detectable deposits.');
+    console.log('This suggests either:');
+    console.log('1. The deposits are stored in a different format');
+    console.log('2. The delegation relationships have changed');
+    console.log('3. The ground truth data reflects historical state');
   }
 }
 
 // Run the analysis
-if (import.meta.url === `file://${process.argv[1]}`) {
-  analyzeDelegationPatterns()
-    .then(result => {
-      console.log('\n✅ Delegation pattern analysis completed');
-      process.exit(0);
-    })
-    .catch(error => {
-      console.error('❌ Analysis failed:', error);
-      process.exit(1);
-    });
-}
+analyzeAllDelegations()
+  .then(() => {
+    console.log('\nDelegation structure analysis completed');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('Analysis failed:', error);
+    process.exit(1);
+  });

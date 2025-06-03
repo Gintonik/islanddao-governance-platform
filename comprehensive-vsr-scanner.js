@@ -1,174 +1,391 @@
 /**
- * Comprehensive VSR Scanner
- * Searches all VSR program accounts to find the source of expected governance power
+ * Comprehensive VSR Governance Power Scanner
+ * Loads ALL VSR accounts (16,586) to ensure complete delegation detection
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
 
-const connection = new Connection(process.env.HELIUS_RPC_URL, "confirmed");
+dotenv.config();
+
+const connection = new Connection(process.env.HELIUS_RPC_URL);
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 
-async function scanAllVSRAccounts() {
-  console.log('🔍 Scanning ALL VSR program accounts for governance power patterns...');
+/**
+ * Load ALL VSR accounts without size filtering
+ */
+async function loadAllVSRAccounts() {
+  console.log('Loading ALL VSR accounts without size filtering...');
   
-  // Get all VSR program accounts
+  // Get all accounts for VSR program without filters to ensure we get all 16,586
   const allAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID);
-  console.log(`📊 Found ${allAccounts.length} total VSR accounts`);
   
-  // Group by data size to understand different account types
-  const accountTypes = new Map();
+  console.log(`Loaded ${allAccounts.length} total VSR accounts`);
   
+  // Separate by size for analysis
+  const accountsBySizes = {};
   for (const { pubkey, account } of allAccounts) {
     const size = account.data.length;
-    if (!accountTypes.has(size)) {
-      accountTypes.set(size, []);
+    if (!accountsBySizes[size]) accountsBySizes[size] = [];
+    accountsBySizes[size].push({ pubkey, account });
+  }
+  
+  console.log('Account distribution by size:');
+  for (const [size, accounts] of Object.entries(accountsBySizes)) {
+    console.log(`  Size ${size}: ${accounts.length} accounts`);
+  }
+  
+  return allAccounts;
+}
+
+/**
+ * Parse authorities from VSR account data
+ */
+function parseVSRAuthorities(data) {
+  try {
+    // Handle different account sizes
+    if (data.length >= 104) {
+      const authority = new PublicKey(data.slice(8, 40)).toBase58();
+      const voterAuthority = new PublicKey(data.slice(72, 104)).toBase58();
+      return { authority, voterAuthority };
     }
-    accountTypes.get(size).push({ pubkey, account });
-  }
-  
-  console.log('\n📋 Account types by size:');
-  for (const [size, accounts] of accountTypes.entries()) {
-    console.log(`  ${size} bytes: ${accounts.length} accounts`);
-  }
-  
-  // Look for target values (8.7M, 144K, etc.)
-  const targetValues = [
-    { value: 8709019.78, name: 'Takisoul 8.7M' },
-    { value: 144708.98, name: 'GJdR 144K' },
-    { value: 12625.58, name: '4pT6 12.6K' },
-    { value: 200000, name: 'Fgv1 200K' }
-  ];
-  
-  console.log('\n🎯 Searching for target governance power values...');
-  
-  for (const target of targetValues) {
-    console.log(`\nSearching for ${target.name} (${target.value.toLocaleString()}):`);
     
-    let found = false;
-    
-    for (const { pubkey, account } of allAccounts) {
-      const data = account.data;
-      
-      // Search through all u64 positions
-      for (let offset = 0; offset < data.length - 8; offset += 8) {
-        try {
-          const value = Number(data.readBigUInt64LE(offset));
-          
-          // Try different scaling factors
-          const scalings = [
-            { scale: 1, suffix: '' },
-            { scale: 1e6, suffix: ' (micro)' },
-            { scale: 1e9, suffix: ' (nano)' }
-          ];
-          
-          for (const { scale, suffix } of scalings) {
-            const scaled = value / scale;
-            
-            // Check if close to target (within 1%)
-            if (Math.abs(scaled - target.value) / target.value < 0.01) {
-              console.log(`  ✅ Found at ${pubkey.toBase58()} offset ${offset}: ${scaled.toLocaleString()}${suffix}`);
-              
-              // Show surrounding data for context
-              console.log(`     Context (±32 bytes):`);
-              const start = Math.max(0, offset - 32);
-              const end = Math.min(data.length, offset + 40);
-              
-              for (let ctx = start; ctx < end; ctx += 8) {
-                if (ctx + 8 <= data.length) {
-                  const ctxValue = Number(data.readBigUInt64LE(ctx));
-                  const marker = ctx === offset ? ' <-- TARGET' : '';
-                  console.log(`       +${ctx}: ${ctxValue}${marker}`);
-                }
-              }
-              
-              found = true;
-              break;
-            }
-          }
-          
-          if (found) break;
-        } catch (e) {
-          // Continue scanning
-        }
+    // For smaller accounts, try different offsets
+    if (data.length >= 72) {
+      try {
+        const authority = new PublicKey(data.slice(8, 40)).toBase58();
+        const voterAuthority = new PublicKey(data.slice(40, 72)).toBase58();
+        return { authority, voterAuthority };
+      } catch (error) {
+        return null;
       }
-      
-      if (found) break;
     }
     
-    if (!found) {
-      console.log(`  ❌ ${target.name} not found in any VSR account`);
-    }
+    return null;
+  } catch (error) {
+    return null;
   }
 }
 
-async function scanWalletSpecificAccounts() {
-  console.log('\n🔍 Scanning wallet-specific VSR accounts...');
+/**
+ * Parse deposits from VSR account with comprehensive scanning
+ */
+function parseVSRDeposits(data) {
+  const deposits = [];
+  const timestamp = Math.floor(Date.now() / 1000);
+  const foundAmounts = new Set();
   
-  const testWallets = [
-    '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA', // Takisoul
-    'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh', // GJdR
-    '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4', // 4pT6
-    'Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1'  // Fgv1
-  ];
+  // Process both large (2728-byte) and small (176-byte) accounts
+  if (data.length < 100) return deposits;
   
-  for (const wallet of testWallets) {
-    console.log(`\n📋 Wallet: ${wallet}`);
+  // Standard VSR deposit structure (for 2728-byte accounts)
+  if (data.length >= 2728) {
+    for (let i = 0; i < 32; i++) {
+      const offset = 104 + (87 * i);
+      if (offset + 48 <= data.length) {
+        try {
+          const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+          if (rawAmount > 0) {
+            const islandAmount = rawAmount / 1e6;
+            
+            if (islandAmount >= 1 && islandAmount <= 50000000) {
+              const roundedAmount = Math.round(islandAmount);
+              if (!foundAmounts.has(roundedAmount)) {
+                foundAmounts.add(roundedAmount);
+                
+                const lockupKind = data[offset + 24];
+                const lockupEndTs = Number(data.readBigUInt64LE(offset + 40));
+                const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
+                const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+                
+                deposits.push({
+                  amount: islandAmount,
+                  multiplier: multiplier,
+                  power: islandAmount * multiplier,
+                  source: 'standard'
+                });
+              }
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
     
-    // Try different offset positions for authority field
-    const authorityOffsets = [8, 40, 32, 64, 72];
+    // Additional offset scanning for large deposits
+    const additionalOffsets = [104, 112, 184, 192, 200, 208, 216, 224, 232, 240];
+    for (const offset of additionalOffsets) {
+      if (offset + 8 <= data.length) {
+        try {
+          const rawAmount = Number(data.readBigUInt64LE(offset));
+          if (rawAmount > 0) {
+            const islandAmount = rawAmount / 1e6;
+            
+            if (islandAmount >= 100000 && islandAmount <= 50000000) {
+              const roundedAmount = Math.round(islandAmount);
+              if (!foundAmounts.has(roundedAmount)) {
+                foundAmounts.add(roundedAmount);
+                
+                deposits.push({
+                  amount: islandAmount,
+                  multiplier: 1.0,
+                  power: islandAmount,
+                  source: 'additional'
+                });
+              }
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+  }
+  
+  // For smaller accounts (176-byte delegation accounts), use specific structure
+  else if (data.length >= 176) {
+    // For 176-byte accounts, try deposit at offset 104 (standard structure)
+    try {
+      const offset = 104;
+      const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+      if (rawAmount > 0) {
+        const islandAmount = rawAmount / 1e6;
+        
+        if (islandAmount >= 1 && islandAmount <= 50000000) {
+          const roundedAmount = Math.round(islandAmount);
+          if (!foundAmounts.has(roundedAmount)) {
+            foundAmounts.add(roundedAmount);
+            
+            const lockupKind = data[offset + 24] || 0;
+            const lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
+            const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
+            const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+            
+            deposits.push({
+              amount: islandAmount,
+              multiplier: multiplier,
+              power: islandAmount * multiplier,
+              source: '176byte'
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Fall back to scanning if structured approach fails
+    }
     
-    for (const offset of authorityOffsets) {
-      try {
-        const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-          filters: [
-            { memcmp: { offset: offset, bytes: wallet } }
-          ]
+    // Also scan key offsets for 176-byte accounts
+    const smallAccountOffsets = [104, 112, 120];
+    for (const offset of smallAccountOffsets) {
+      if (offset + 8 <= data.length) {
+        try {
+          const rawAmount = Number(data.readBigUInt64LE(offset));
+          if (rawAmount > 0) {
+            const islandAmount = rawAmount / 1e6;
+            
+            if (islandAmount >= 1000 && islandAmount <= 50000000) {
+              const roundedAmount = Math.round(islandAmount);
+              if (!foundAmounts.has(roundedAmount)) {
+                foundAmounts.add(roundedAmount);
+                
+                deposits.push({
+                  amount: islandAmount,
+                  multiplier: 1.0,
+                  power: islandAmount,
+                  source: 'scan176'
+                });
+              }
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+  }
+  
+  return deposits;
+}
+
+/**
+ * Find all delegations to a target wallet
+ */
+function findDelegationsToWallet(walletAddress, allVSRAccounts, verbose = false) {
+  const delegations = [];
+  let accountsChecked = 0;
+  let delegationsFound = 0;
+  
+  if (verbose) {
+    console.log(`  Scanning ${allVSRAccounts.length} VSR accounts for delegations to ${walletAddress.substring(0,8)}...`);
+  }
+  
+  for (const { pubkey, account } of allVSRAccounts) {
+    accountsChecked++;
+    
+    const authorities = parseVSRAuthorities(account.data);
+    if (!authorities) continue;
+    
+    const { authority, voterAuthority } = authorities;
+    
+    // Look for delegations TO this wallet (voterAuthority === wallet AND authority !== wallet)
+    if (voterAuthority === walletAddress && authority !== walletAddress) {
+      delegationsFound++;
+      
+      if (verbose) {
+        console.log(`    Found delegation from ${authority.substring(0,8)}: ${pubkey.toBase58()}`);
+      }
+      
+      const deposits = parseVSRDeposits(account.data);
+      
+      if (deposits.length > 0) {
+        const totalPower = deposits.reduce((sum, d) => sum + d.power, 0);
+        
+        delegations.push({
+          account: pubkey.toBase58(),
+          from: authority,
+          totalPower: totalPower,
+          deposits: deposits
         });
         
-        if (accounts.length > 0) {
-          console.log(`  Found ${accounts.length} accounts with authority at offset ${offset}`);
-          
-          for (const { pubkey, account } of accounts) {
-            console.log(`    ${pubkey.toBase58()} (${account.data.length} bytes)`);
-            
-            // Quick scan for large values in this account
-            const data = account.data;
-            const largeValues = [];
-            
-            for (let i = 0; i < data.length - 8; i += 8) {
-              try {
-                const value = Number(data.readBigUInt64LE(i));
-                const asTokens = value / 1e6;
-                
-                if (asTokens > 10000) { // Look for values > 10K tokens
-                  largeValues.push({ offset: i, value: asTokens });
-                }
-              } catch (e) {}
-            }
-            
-            if (largeValues.length > 0) {
-              console.log(`      Large values found:`);
-              for (const { offset, value } of largeValues.slice(0, 5)) {
-                console.log(`        +${offset}: ${value.toLocaleString()} ISLAND`);
-              }
-            }
-          }
+        if (verbose) {
+          console.log(`      Power: ${totalPower.toFixed(3)} ISLAND from ${deposits.length} deposits`);
         }
-      } catch (e) {
-        // Continue with next offset
+      }
+    }
+  }
+  
+  if (verbose) {
+    console.log(`  Checked ${accountsChecked} accounts, found ${delegationsFound} delegation accounts`);
+  }
+  
+  return delegations;
+}
+
+/**
+ * Calculate native governance power for a wallet
+ */
+function calculateNativePower(walletAddress, allVSRAccounts, verbose = false) {
+  let totalNativePower = 0;
+  const nativeDeposits = [];
+  let nativeAccountsFound = 0;
+  
+  for (const { pubkey, account } of allVSRAccounts) {
+    const authorities = parseVSRAuthorities(account.data);
+    if (!authorities) continue;
+    
+    // Native power: authority === wallet
+    if (authorities.authority === walletAddress) {
+      nativeAccountsFound++;
+      
+      if (verbose) {
+        console.log(`    Native account: ${pubkey.toBase58()}`);
+      }
+      
+      const deposits = parseVSRDeposits(account.data);
+      
+      for (const deposit of deposits) {
+        totalNativePower += deposit.power;
+        nativeDeposits.push({
+          account: pubkey.toBase58(),
+          ...deposit
+        });
+        
+        if (verbose) {
+          console.log(`      Deposit: ${deposit.amount.toFixed(3)} × ${deposit.multiplier.toFixed(2)}x = ${deposit.power.toFixed(3)} ISLAND`);
+        }
+      }
+    }
+  }
+  
+  if (verbose) {
+    console.log(`  Found ${nativeAccountsFound} native accounts with ${nativeDeposits.length} deposits`);
+  }
+  
+  return { totalNativePower, nativeDeposits };
+}
+
+/**
+ * Comprehensive validation of target wallets
+ */
+async function validateTargetWallets() {
+  const testCases = [
+    {
+      wallet: '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
+      expectedNative: 10350000,
+      expectedDelegated: 1268162,
+      note: 'Large native + significant delegated (missing ~800K in current detection)'
+    },
+    {
+      wallet: '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+      expectedNative: 13625.581,
+      expectedDelegated: 4189328.11,
+      note: 'Small native + large delegation from CinHb6Xt'
+    },
+    {
+      wallet: 'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
+      expectedDeposits: [310472.9693, 126344.82227],
+      expectedDelegated: 0,
+      note: 'Control case - should have NO delegated power'
+    }
+  ];
+  
+  console.log('COMPREHENSIVE VSR DELEGATION VALIDATION');
+  console.log('======================================');
+  
+  // Load all VSR accounts
+  const allVSRAccounts = await loadAllVSRAccounts();
+  
+  for (const testCase of testCases) {
+    console.log(`\nValidating ${testCase.wallet.substring(0,8)} (${testCase.note})`);
+    
+    // Calculate native power
+    const nativeResult = calculateNativePower(testCase.wallet, allVSRAccounts, true);
+    
+    // Find delegations
+    const delegations = findDelegationsToWallet(testCase.wallet, allVSRAccounts, true);
+    const totalDelegatedPower = delegations.reduce((sum, d) => sum + d.totalPower, 0);
+    
+    console.log(`\n🟢 Native Power: ${nativeResult.totalNativePower.toFixed(3)} ISLAND`);
+    console.log(`🟡 Delegated Power: ${totalDelegatedPower.toFixed(3)} ISLAND`);
+    console.log(`🔷 Total Power: ${(nativeResult.totalNativePower + totalDelegatedPower).toFixed(3)} ISLAND`);
+    
+    if (delegations.length > 0) {
+      console.log(`\n   Delegations found:`);
+      for (const delegation of delegations) {
+        console.log(`     From ${delegation.from.substring(0,8)}: ${delegation.totalPower.toFixed(3)} ISLAND`);
+      }
+    } else {
+      console.log(`\n   No delegations found`);
+    }
+    
+    // Validate against expected values
+    if (typeof testCase.expectedNative === 'number') {
+      const nativeMatch = Math.abs(nativeResult.totalNativePower - testCase.expectedNative) / testCase.expectedNative < 0.05;
+      console.log(`\n  Native validation: ${nativeMatch ? '✅ PASS' : '❌ FAIL'} (expected: ${testCase.expectedNative.toLocaleString()})`);
+    }
+    
+    if (typeof testCase.expectedDelegated === 'number') {
+      const delegatedMatch = testCase.expectedDelegated === 0 ? 
+        totalDelegatedPower === 0 : 
+        Math.abs(totalDelegatedPower - testCase.expectedDelegated) / testCase.expectedDelegated < 0.1;
+      console.log(`  Delegated validation: ${delegatedMatch ? '✅ PASS' : '❌ FAIL'} (expected: ${testCase.expectedDelegated.toLocaleString()}, got: ${totalDelegatedPower.toFixed(3)})`);
+      
+      if (!delegatedMatch && testCase.expectedDelegated > 0) {
+        const difference = testCase.expectedDelegated - totalDelegatedPower;
+        console.log(`    Missing delegation power: ${difference.toFixed(3)} ISLAND`);
       }
     }
   }
 }
 
-async function main() {
-  try {
-    await scanAllVSRAccounts();
-    await scanWalletSpecificAccounts();
-  } catch (error) {
-    console.error('Error during comprehensive scan:', error);
-  }
-}
-
-main().catch(console.error);
+// Run the comprehensive validation
+validateTargetWallets()
+  .then(() => {
+    console.log('\nComprehensive VSR delegation validation completed');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('Validation failed:', error);
+    process.exit(1);
+  });
