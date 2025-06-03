@@ -1,0 +1,86 @@
+// File: audit-key-wallets.js
+
+import * as anchor from '@coral-xyz/anchor';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { deserializeAccountRaw } from '@coral-xyz/anchor/dist/cjs/program/namespace/account';
+import vsrIdl from './vsr-idl.json' assert { type: 'json' };
+import dotenv from 'dotenv';
+dotenv.config();
+
+const connection = new Connection(process.env.HELIUS_RPC_URL, 'confirmed');
+const provider = new anchor.AnchorProvider(connection, {} as any, {});
+const program = new anchor.Program(vsrIdl, new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ'), provider);
+
+// Wallets to audit
+const WALLET_KEYS = {
+  takisoul: '7pPJt2xoEoPDNwfw2Hikzcc28JYkFmv6G4q7Mgnzvh5Z',
+  delegationRecipient: '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+};
+
+function calculateMultiplier(lockup) {
+  if (lockup.lockupKind === 0 || lockup.lockupEndTs.eqn(0)) return 1.0;
+  const now = Math.floor(Date.now() / 1000);
+  const secondsRemaining = Math.max(0, lockup.lockupEndTs.toNumber() - now);
+  const years = secondsRemaining / (365.25 * 24 * 3600);
+  return Math.min(1 + years, 5);
+}
+
+function isRelevant(wallet, authority, voterAuthority) {
+  return wallet === authority || wallet === voterAuthority;
+}
+
+async function auditWallet(walletLabel, walletBase58) {
+  const wallet = new PublicKey(walletBase58);
+  const accounts = await connection.getProgramAccounts(program.programId, {
+    filters: [{ dataSize: 2728 }],
+  });
+
+  let nativeTotal = 0;
+  let delegatedTotal = 0;
+
+  console.log(`\n🔍 Auditing ${walletLabel}: ${walletBase58}`);
+
+  for (const { account } of accounts) {
+    const decoded = deserializeAccountRaw(program.idl, 'voter', account.data);
+    const authority = decoded.authority.toBase58();
+    const voterAuthority = decoded.voterAuthority.toBase58();
+
+    const matchesNative = authority === walletBase58;
+    const matchesDelegated = voterAuthority === walletBase58 && authority !== walletBase58;
+
+    if (!matchesNative && !matchesDelegated) continue;
+
+    decoded.depositEntries.forEach((entry, index) => {
+      const amount = entry.amountDepositedNative.toNumber() / 1e9;
+      const multiplier = calculateMultiplier(entry.lockup);
+      const power = amount * multiplier;
+
+      if (amount === 0) return;
+
+      const type = matchesNative ? '🟢 Native' : '🔵 Delegated';
+      const reason = matchesNative
+        ? 'authority === wallet'
+        : 'voterAuthority === wallet && authority !== wallet';
+
+      if (matchesNative) nativeTotal += power;
+      else delegatedTotal += power;
+
+      console.log(
+        `${type} | Deposit #${index} | Amount: ${amount.toFixed(6)} | Multiplier: ${multiplier.toFixed(
+          2
+        )} | Power: ${power.toFixed(2)}\n  ↳ Authority: ${authority} | VoterAuthority: ${voterAuthority} | Reason: ${reason}`
+      );
+    });
+  }
+
+  console.log(`\n✅ Summary for ${walletLabel} (${walletBase58}):`);
+  console.log(`   - Native Power: ${nativeTotal.toFixed(2)}`);
+  console.log(`   - Delegated Power: ${delegatedTotal.toFixed(2)}`);
+  console.log(`   - Total: ${(nativeTotal + delegatedTotal).toFixed(2)}\n`);
+}
+
+(async () => {
+  for (const [label, wallet] of Object.entries(WALLET_KEYS)) {
+    await auditWallet(label, wallet);
+  }
+})();
