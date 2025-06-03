@@ -587,12 +587,16 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         }
       }
     } else {
-      // No actual delegations found - check if inference mode should trigger
-      const vwrDelta = vwrTotal - nativeGovernancePower;
-      const deltaPercentage = nativeGovernancePower > 0 ? (vwrDelta / nativeGovernancePower) : 0;
+      // No actual delegations found - determine mode based on deposit detection
+      const delta = vwrTotal - nativeGovernancePower;
+      const hasSignificantNativeDeposits = nativeGovernancePower > 1000;
+      const shouldUseInference = delegationScanSucceeded && 
+                                !hasSignificantNativeDeposits && 
+                                delta > 10000 && 
+                                vwrTotal > nativeGovernancePower * 2;
       
-      if (delegationScanSucceeded && deltaPercentage > 0.05 && vwrDelta > 1000) {
-        // INFERENCE MODE: Use VWR total with inferred delegation
+      if (shouldUseInference) {
+        // INFERENCE MODE: Use only when no significant native deposits detected
         inferenceUsed = true;
         const inferredNative = nativeGovernancePower;
         const inferredDelegated = vwrTotal - nativeGovernancePower;
@@ -603,24 +607,24 @@ async function calculateNativeAndDelegatedPower(walletAddress, allVoterAccounts,
         
         console.log(`🤖 Inferred Mode Used: ${inferenceUsed}`);
         console.log(`Wallet ${walletAddress} | Inference Mode - Native: ${nativeGovernancePower.toFixed(3)} | Inferred Delegated: ${delegatedGovernancePower.toFixed(3)} | VWR Total: ${vwrTotal.toFixed(3)}`);
-        console.log(`⚠️  Using VWR inference mode due to missing delegations (scan succeeded, ${deltaPercentage.toFixed(1)}% delta)`);
+        console.log(`⚠️  Using VWR inference mode (no significant native deposits detected)`);
         
         if (verbose) {
           console.log(`     🔍 Inference mode: ${nativeGovernancePower.toFixed(3)} native + ${delegatedGovernancePower.toFixed(3)} inferred delegated = ${totalGovernancePower.toFixed(3)} ISLAND`);
         }
       } else {
-        // STRICT MODE: Use detected native only
+        // STRICT MODE: Use VWR total as native power when significant deposits detected
         delegatedGovernancePower = 0;
-        totalGovernancePower = nativeGovernancePower;
+        totalGovernancePower = vwrTotal; // Use VWR total as authoritative native power
+        nativeGovernancePower = vwrTotal;
         
-        const vwrDelta = vwrTotal - nativeGovernancePower;
         const scanStatus = delegationScanSucceeded ? "scan succeeded" : "scan failed";
         
         console.log(`🤖 Inferred Mode Used: ${inferenceUsed}`);
-        console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: 0 | VWR Total: ${vwrTotal.toFixed(3)} | Delta: ${vwrDelta.toFixed(3)} | (${scanStatus})`);
+        console.log(`Wallet ${walletAddress} | Strict Mode - Native: ${nativeGovernancePower.toFixed(3)} | Delegated: 0 | VWR Total: ${vwrTotal.toFixed(3)} | (${scanStatus})`);
         
         if (verbose) {
-          console.log(`     ✅ Strict mode (native only): ${nativeGovernancePower.toFixed(3)} ISLAND (${scanStatus})`);
+          console.log(`     ✅ Strict mode (VWR as native): ${nativeGovernancePower.toFixed(3)} ISLAND (${scanStatus})`);
         }
       }
     }

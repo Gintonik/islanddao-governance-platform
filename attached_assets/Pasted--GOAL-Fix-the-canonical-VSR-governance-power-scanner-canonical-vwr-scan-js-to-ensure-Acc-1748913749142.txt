@@ -1,0 +1,68 @@
+🧠 GOAL:
+Fix the canonical VSR governance power scanner (`canonical-vwr-scan.js`) to ensure:
+- Accurate separation of **native** and **delegated** governance power
+- No inference of delegation unless delegation relationships exist **on-chain**
+- VoterWeightRecord (VWR) totals are only used for inference when delegation detection succeeds AND finds no delegations
+
+🔍 CONTEXT:
+Some test wallets (e.g. `kruHL3zJ...`) currently show large VWR totals but few detected native deposits. The scanner wrongly infers delegated power instead of correctly attributing it to native power.
+
+This happens because:
+- Some deposits are **missed during parsing**
+- The inference mode is **too aggressive** (triggers from any VWR vs deposits delta)
+
+We must apply consistent rules for all wallets.
+
+📜 REQUIREMENTS:
+
+1. ✅ **Strict Delegation Detection**:
+   - A deposit is considered **delegated** only if:
+     - `deposit.voterAuthority === walletAddress`
+     - AND `deposit.authority !== walletAddress`
+
+2. ✅ **Strict Native Detection**:
+   - A deposit is **native** if:
+     - `deposit.voterAuthority === walletAddress`
+     - AND `deposit.authority === walletAddress`
+
+3. ✅ **VWR Inference Mode (Only When Appropriate)**:
+   - Use VWR inference **only if:**
+     - Delegation scan **succeeds**
+     - No actual delegation found (0 incoming deposits)
+     - AND deposit scan shows **few or no owned deposits**
+
+4. 🚫 Do **not** infer delegation for wallets like `kruHL3zJ...`, where the owner has confirmed deposits with lockups + multipliers.
+   - Set validation rule:
+     - `kruHL3zJ`: **STRICT MODE**
+     - Native: ~1,368,236.699 ISLAND
+     - Delegated: 0
+
+5. 🧪 VALIDATION CASES (Current Expectations):
+
+```json
+[
+  {
+    "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+    "expected_native": 1368236.699,
+    "expected_delegated": 0,
+    "mode": "strict"
+  },
+  {
+    "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+    "expected_native": 10353647.013,
+    "expected_delegated": 1268162.0,
+    "mode": "inference"
+  },
+  {
+    "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+    "expected_native": 3361730.15,
+    "expected_delegated": 1598919.1,
+    "mode": "strict"
+  },
+  {
+    "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+    "expected_native": 200000.0,
+    "expected_delegated": 0,
+    "mode": "strict"
+  }
+]
