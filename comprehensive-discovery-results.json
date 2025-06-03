@@ -1,0 +1,236 @@
+{
+  "timestamp": "2025-06-03T18:54:34.923Z",
+  "scannerVersion": "comprehensive-citizen-discovery",
+  "totalCitizens": 20,
+  "discoveredCitizens": 20,
+  "discoveryMethods": [
+    "high_value_similarity",
+    "known_mapping"
+  ],
+  "methodBreakdown": {
+    "high_value_similarity": 17,
+    "known_mapping": 3
+  },
+  "results": [
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "name": "kruHL3zJ",
+      "nativePower": 333202240893865.7,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "GAKhEMyFNRha6kNaRczq7BZpcYuc2sbiW47mLLi19TWs"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+      "name": "2NZ9hwrG",
+      "nativePower": 91277692177771.67,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXopd6ENpf5YwfJcrCVLzM8KqqCtSRc4ohK"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "name": "37TGrYNu",
+      "nativePower": 87393078701295.28,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXtUscDJxDNkrmUCRuCfLXGDa4D4oVrV5nL"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "name": "3PKhzE9w",
+      "nativePower": 84742302719042.45,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXjoF5j9wLUape4H9m6bttFNJPBktd4XXvL"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "name": "2qYMBZwJ",
+      "nativePower": 82574351908659.53,
+      "matchedAccounts": 1,
+      "totalDeposits": 8,
+      "authorities": [
+        "HmvAJyd1ADXrSrcwv5X27Lj92tgn2JVJCJY6vzo63f5t"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "name": "ADjG92YT",
+      "nativePower": 80878523738361.2,
+      "matchedAccounts": 1,
+      "totalDeposits": 8,
+      "authorities": [
+        "3BTi3G7aSKKdU5wfG37Wh8WCSY2xXhejtD2uBvaKiJCr"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+      "name": "3s6VUe21",
+      "nativePower": 80773700124411.67,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXtXexUh68eos4eYGsMNn4QrRyCn59bNMBX"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+      "name": "B93csAjD",
+      "nativePower": 78580606811236.77,
+      "matchedAccounts": 1,
+      "totalDeposits": 8,
+      "authorities": [
+        "HmvAJyd1ADXovo2gqU1hbgzVLTqG4C7cKfHfQVgg51dG"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "name": "6aJo6zRi",
+      "nativePower": 78035932873770.05,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXgiN4qX3BRaDm8xy2W927RYaa6K8K297Cx"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "name": "9RSpFWGn",
+      "nativePower": 77853818341874.97,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXkvBk2SHNLZETSHA7kByGzuA9WciRD3k2s"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "name": "BPmVp1b4",
+      "nativePower": 77204743533781.14,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXwaxQkcFw2YoK7cFHoBYZoUnad9y9Ftxg3"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "name": "9WW4oiMy",
+      "nativePower": 74339185388381.47,
+      "matchedAccounts": 1,
+      "totalDeposits": 8,
+      "authorities": [
+        "HmvAJyd1ADXxqReaNsJ587UBuMUQxEwmMzjBqiY3SfUD"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
+      "name": "CdCAQnq1",
+      "nativePower": 72444442499763.02,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXnWiTZcQu8BS1Ny9nHfk3n41ndnLb1mg3E"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+      "name": "DraTvYwq",
+      "nativePower": 72037792110022.22,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXtHKRxnFdg8Pb6YKzEw2FZDEj9HxkL2sRq"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
+      "name": "EViz4YGr",
+      "nativePower": 71385268144729.3,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXekDxRiWnyV3oqPidtERtd4oxan2vS3Yn8"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "name": "Fywb7YDC",
+      "nativePower": 68467913119115.32,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADY1n2kQJeydXVCZ1yW6sjDpocvhwTmGUKdF"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "name": "Fgv1zrwB",
+      "nativePower": 66995088352039,
+      "matchedAccounts": 1,
+      "totalDeposits": 6,
+      "authorities": [
+        "HmvAJyd1ADXok1DLLkwMYk1CJDxcLxc9jJ5Aestqigbz"
+      ],
+      "discoveryMethod": "high_value_similarity"
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "name": "7pPJt2xo",
+      "nativePower": 15127234.646564785,
+      "matchedAccounts": 1,
+      "totalDeposits": 7,
+      "authorities": [
+        "QxTebcJ4ouDLJvWoGBvdw3Au6Bjd9TTRx7nMuTkVgvH"
+      ],
+      "discoveryMethod": "known_mapping"
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "name": "GJdRQcsy",
+      "nativePower": 194537.2390093537,
+      "matchedAccounts": 1,
+      "totalDeposits": 7,
+      "authorities": [
+        "GQkBRZffdsKwx4GTNR96c6v6aM59DfqyHjwzArobDoT3"
+      ],
+      "discoveryMethod": "known_mapping"
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "name": "4pT6ESaM",
+      "nativePower": 25251.161862,
+      "matchedAccounts": 1,
+      "totalDeposits": 2,
+      "authorities": [
+        "9ZXrSQWB1YqA5wezKBpsR3HDcYjhs9GeDz8YqNA4WvuB"
+      ],
+      "discoveryMethod": "known_mapping"
+    }
+  ]
+}
