@@ -143,58 +143,56 @@ function parseVSRDeposits(data) {
     }
   }
   
-  // For smaller accounts (176-byte delegation accounts), use specific structure
+  // For smaller accounts (176-byte delegation accounts), use single parsing method
   else if (data.length >= 176) {
-    // For 176-byte accounts, try deposit at offset 104 (standard structure)
-    try {
-      const offset = 104;
-      const rawAmount = Number(data.readBigUInt64LE(offset + 8));
-      if (rawAmount > 0) {
-        const islandAmount = rawAmount / 1e6;
-        
-        if (islandAmount >= 1 && islandAmount <= 50000000) {
-          const roundedAmount = Math.round(islandAmount);
-          if (!foundAmounts.has(roundedAmount)) {
-            foundAmounts.add(roundedAmount);
-            
-            const lockupKind = data[offset + 24] || 0;
-            const lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
-            const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
-            const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
-            
-            deposits.push({
-              amount: islandAmount,
-              multiplier: multiplier,
-              power: islandAmount * multiplier,
-              source: '176byte'
-            });
-          }
-        }
-      }
-    } catch (error) {
-      // Fall back to scanning if structured approach fails
-    }
-    
-    // Also scan key offsets for 176-byte accounts
+    // For 176-byte accounts, use comprehensive offset scanning with deduplication
     const smallAccountOffsets = [104, 112, 120];
     for (const offset of smallAccountOffsets) {
       if (offset + 8 <= data.length) {
         try {
-          const rawAmount = Number(data.readBigUInt64LE(offset));
-          if (rawAmount > 0) {
-            const islandAmount = rawAmount / 1e6;
-            
-            if (islandAmount >= 1000 && islandAmount <= 50000000) {
-              const roundedAmount = Math.round(islandAmount);
-              if (!foundAmounts.has(roundedAmount)) {
-                foundAmounts.add(roundedAmount);
-                
-                deposits.push({
-                  amount: islandAmount,
-                  multiplier: 1.0,
-                  power: islandAmount,
-                  source: 'scan176'
-                });
+          // Try structured parsing first (with lockup info)
+          if (offset === 104 && offset + 48 <= data.length) {
+            const rawAmount = Number(data.readBigUInt64LE(offset + 8));
+            if (rawAmount > 0) {
+              const islandAmount = rawAmount / 1e6;
+              
+              if (islandAmount >= 1 && islandAmount <= 50000000) {
+                const roundedAmount = Math.round(islandAmount);
+                if (!foundAmounts.has(roundedAmount)) {
+                  foundAmounts.add(roundedAmount);
+                  
+                  const lockupKind = data[offset + 24] || 0;
+                  const lockupEndTs = Number(data.readBigUInt64LE(offset + 40)) || 0;
+                  const isActiveLockup = lockupKind !== 0 && lockupEndTs > timestamp;
+                  const multiplier = isActiveLockup ? Math.min(1 + (lockupEndTs - timestamp) / (4 * 365 * 24 * 3600), 5) : 1;
+                  
+                  deposits.push({
+                    amount: islandAmount,
+                    multiplier: multiplier,
+                    power: islandAmount * multiplier,
+                    source: '176byte-structured'
+                  });
+                }
+              }
+            }
+          } else {
+            // For other offsets, use direct amount scanning
+            const rawAmount = Number(data.readBigUInt64LE(offset));
+            if (rawAmount > 0) {
+              const islandAmount = rawAmount / 1e6;
+              
+              if (islandAmount >= 1000 && islandAmount <= 50000000) {
+                const roundedAmount = Math.round(islandAmount);
+                if (!foundAmounts.has(roundedAmount)) {
+                  foundAmounts.add(roundedAmount);
+                  
+                  deposits.push({
+                    amount: islandAmount,
+                    multiplier: 1.0,
+                    power: islandAmount,
+                    source: '176byte-scan'
+                  });
+                }
               }
             }
           }
