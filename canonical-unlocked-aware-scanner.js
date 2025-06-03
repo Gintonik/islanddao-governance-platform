@@ -24,11 +24,36 @@ const REGISTRAR_PARAMS = {
   saturationSecs: 31_536_000
 };
 
-function calculateMultiplier(lockupKind, endTs, now = Date.now() / 1000) {
-  if (lockupKind === 0) return 1.0; // Unlocked deposits
-  const timeLeft = Math.max(0, endTs - now);
-  const ratio = Math.min(1, timeLeft / REGISTRAR_PARAMS.saturationSecs);
-  return (REGISTRAR_PARAMS.baseline + REGISTRAR_PARAMS.maxExtra * ratio) / 1e9;
+function calculateMultiplier(lockup, now = Date.now() / 1000) {
+  if (lockup.kind === 0) return 1.0; // Unlocked deposits
+
+  const start = lockup.startTs || 0;
+  const end = lockup.endTs || 0;
+  const timeLeft = Math.max(0, end - now);
+  const totalDuration = Math.max(1, end - start);
+  const saturation = REGISTRAR_PARAMS.saturationSecs;
+
+  let multiplierRatio = 0;
+
+  if (lockup.kind === 1) { // cliff
+    multiplierRatio = timeLeft >= saturation ? 1 : timeLeft / saturation;
+  } else if (lockup.kind === 2 || lockup.kind === 3) { // constant or vesting
+    const unlockedRatio = Math.min(1, (now - start) / totalDuration);
+    const remainingRatio = 1 - unlockedRatio;
+    multiplierRatio = Math.min(1, remainingRatio * (totalDuration / saturation));
+  } else {
+    // Fallback for other lockup kinds
+    multiplierRatio = Math.min(1, timeLeft / saturation);
+  }
+
+  const multiplier = (REGISTRAR_PARAMS.baseline + REGISTRAR_PARAMS.maxExtra * multiplierRatio) / 1e9;
+  
+  // Log lockup details for debugging
+  if (lockup.kind > 0) {
+    console.log(`[LOCKUP] Kind: ${lockup.kind}, Start: ${start}, End: ${end}, Multiplier: ${multiplier.toFixed(3)}`);
+  }
+  
+  return multiplier;
 }
 
 // Phantom deposit filter - removes 1k and 11k marker deposits
@@ -142,8 +167,7 @@ function parseVoterAccountData(data, accountPubkey) {
           }
           
           const multiplier = calculateMultiplier(
-            deposit.lockup.kind, 
-            deposit.lockup.endTs, 
+            deposit.lockup, 
             currentTime
           );
           
