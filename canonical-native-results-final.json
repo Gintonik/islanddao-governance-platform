@@ -1,90 +1,135 @@
 {
-  "timestamp": "2025-06-03T18:00:00.000Z",
-  "scannerVersion": "canonical-native-governance-locked",
-  "validationStatus": "AUTHENTIC_BLOCKCHAIN_DATA",
-  "dataSource": "Current Solana VSR accounts",
-  "note": "Results reflect authentic on-chain governance power as of scan timestamp",
-  
-  "targetValidation": {
-    "takisoul": {
+  "timestamp": "2025-06-03T18:20:03.686Z",
+  "scannerVersion": "canonical-native-authority-scanner",
+  "validationStatus": "SOME_TARGETS_NEED_REVIEW",
+  "methodology": {
+    "authorityMatching": "Comprehensive authority list per wallet including all aliases",
+    "accountDiscovery": "Match voter.authority against wallet authority list (not account.owner)",
+    "lockupExtraction": "Byte search +0 to +160 from deposit offset",
+    "multiplierFormula": "min(5, 1 + min((endTs - now) / 31556952, 4))",
+    "deduplication": "[amount, multiplier] composite key",
+    "phantomFiltering": "1000 ISLAND deposits with no lockup and empty config"
+  },
+  "targetValidation": [
+    {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "historicalTarget": 8709019.78,
-      "currentAuthentic": 7401278.188,
-      "status": "Historical target differs from current blockchain state",
+      "name": "Takisoul",
+      "expectedPower": 8700000,
+      "actualPower": 7564207.4161157925,
+      "difference": -1135792.5838842075,
+      "percentageError": 13.055087171082846,
+      "isValid": false,
+      "controlledAccounts": 1,
+      "totalDeposits": 4,
       "deposits": [
         {
-          "amount": 690.0,
-          "multiplier": 1.043,
-          "votingPower": 719.94,
-          "lockupUntil": "2025-06-19T13:39:19.000Z"
+          "amount": 690,
+          "lockupEndTs": 1750340359,
+          "multiplier": 1.0432728461544685,
+          "votingPower": 719.8582638465832,
+          "offset": 112,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": "2025-06-19"
         },
         {
-          "amount": 1500000.0,
-          "multiplier": 1.0,
-          "votingPower": 1500000.0,
-          "lockupUntil": null
+          "amount": 1500000,
+          "lockupEndTs": 1752407321,
+          "multiplier": 1.1087722644759845,
+          "votingPower": 1663158.3967139767,
+          "offset": 184,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": "2025-07-13"
         },
         {
-          "amount": 2000000.0,
-          "multiplier": 1.109,
-          "votingPower": 2217773.62,
-          "lockupUntil": "2025-07-13T11:48:41.000Z"
+          "amount": 2000000,
+          "lockupEndTs": 1752407321,
+          "multiplier": 1.1087722644759845,
+          "votingPower": 2217544.528951969,
+          "offset": 264,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": "2025-07-13"
         },
         {
           "amount": 3682784.632186,
-          "multiplier": 1.0,
-          "votingPower": 3682784.63,
-          "lockupUntil": null
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "offset": 344,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": null
         }
       ]
     },
-    "whalesFriend": {
+    {
       "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
-      "historicalTarget": 12625.58,
-      "currentAuthentic": 12625.581,
-      "status": "EXACT_MATCH",
+      "name": "Whale's Friend",
+      "expectedPower": 12625.58,
+      "actualPower": 12625.580931,
+      "difference": 0.0009310000004916219,
+      "percentageError": 0.000007373918667432482,
+      "isValid": true,
+      "controlledAccounts": 2,
+      "totalDeposits": 1,
       "deposits": [
         {
           "amount": 12625.580931,
-          "multiplier": 1.0,
-          "votingPower": 12625.58,
-          "lockupUntil": null
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 12625.580931,
+          "offset": 104,
+          "accountPubkey": "AErp8UYUay7uBE9i6ULtSDgQP5d3W66n9RJH5QpUG3Uh",
+          "lockupDate": null
         }
       ]
     },
-    "gjdRQcsy": {
-      "wallet": "GJdRQcsyWZ4vDSxmbC5JrJQfCDdq7QfSMZH4zK8LRZue",
-      "historicalTarget": 144708.98,
-      "currentAuthentic": 0.0,
-      "status": "No VSR accounts found on current blockchain",
-      "deposits": []
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "name": "GJdRQcsy",
+      "expectedPower": 144000,
+      "actualPower": 99453.62429224877,
+      "difference": -44546.37570775123,
+      "percentageError": 30.934983130382797,
+      "isValid": false,
+      "controlledAccounts": 1,
+      "totalDeposits": 4,
+      "deposits": [
+        {
+          "amount": 3913,
+          "lockupEndTs": 1752580684,
+          "multiplier": 1.1142657991177367,
+          "votingPower": 4360.122071947704,
+          "offset": 112,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-07-15"
+        },
+        {
+          "amount": 10000,
+          "lockupEndTs": 1759555596,
+          "multiplier": 1.3352919615937577,
+          "votingPower": 13352.919615937577,
+          "offset": 184,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-10-04"
+        },
+        {
+          "amount": 37626.982836,
+          "lockupEndTs": 1759555596,
+          "multiplier": 1.3352919615937577,
+          "votingPower": 50243.0077199371,
+          "offset": 264,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-10-04"
+        },
+        {
+          "amount": 25738.998886,
+          "lockupEndTs": 1756035028,
+          "multiplier": 1.2237296028463098,
+          "votingPower": 31497.57488442639,
+          "offset": 344,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-08-24"
+        }
+      ]
     }
-  },
-  
-  "methodology": {
-    "authorityMatching": "Direct authority + Wallet reference + Verified aliases",
-    "offsetMethod": "Working offsets [104, 112, 184, 192, 200, 208, 264, 272, 344, 352]",
-    "lockupParsing": "Strict per-deposit timestamp search (+0 to +128 bytes)",
-    "multiplierCalculation": "Canonical VSR formula: min(5, 1 + min(yearsRemaining, 4))",
-    "yearCalculation": "yearsRemaining = (timestamp - now) / 31556952",
-    "phantomFiltering": "Empty config detection for 1,000 ISLAND deposits",
-    "perDepositCalculation": true,
-    "expiredTimestampHandling": "Filtered out timestamps <= current time"
-  },
-  
-  "summary": {
-    "scannerImplementation": "COMPLETE",
-    "perDepositMultipliers": "IMPLEMENTED",
-    "canonicalVSRFormula": "APPLIED",
-    "phantomDepositFiltering": "ACTIVE",
-    "authenticBlockchainData": "VERIFIED",
-    "productionReady": true
-  },
-  
-  "conclusion": {
-    "message": "Canonical native governance scanner successfully implemented with per-deposit multiplier calculations",
-    "dataIntegrity": "Results reflect authentic current blockchain state",
-    "historicalNote": "Target values may represent calculations from different time periods or conditions",
-    "nextSteps": "Scanner ready for production deployment with daily governance power monitoring"
-  }
+  ]
 }
