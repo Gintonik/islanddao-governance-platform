@@ -1,0 +1,46 @@
+You are fixing the canonical native governance power scanner in `canonical-native-scanner.js` for IslandDAO. Your goal is to produce fully accurate native governance power numbers **based solely on authentic VSR on-chain data**, without hardcoding any exceptions.
+
+Do NOT apply any user-specific filters or manual exclusions. Instead:
+
+---
+
+1. ✅ **Comprehensive VSR Account Scanning**:
+   - Scan all ~6,096 VSR accounts from the Voter Stake Registry program.
+   - For each account:
+     - Extract `authority` (offset 8–40)
+     - Extract `voter_authority` (offset 72–104)
+
+2. ✅ **Canonical Native Ownership Logic**:
+   - For each VSR account:
+     - If `authority === walletAddress && voter_authority === walletAddress`, treat as native
+     - This avoids counting delegated deposits
+
+3. ✅ **Parse All Deposits (32 max per VSR)**:
+   - Use proven offset-based parsing for deposits:
+     - Check `isUsed` at offset 104 + (size * i)
+     - Parse `amount` at offset 112 + (size * i)
+     - Parse `lockup.kind`, `startTs`, `cliffTs`, `endTs` at standard byte positions
+   - Only count deposits where `isUsed == true`
+
+4. ✅ **Apply Canonical Multiplier Calculation**:
+   - For each deposit:
+     - If lockup expired → 1.0x multiplier
+     - If still active:
+       - Constant lockup: multiplier = now < endTs ? bonus : 1.0
+       - Cliff lockup: if now < cliffTs → bonus
+       - Vested lockup: always 1.0
+   - Multiply amount × multiplier to get governance power
+
+5. ✅ **No Manual Overrides Allowed**:
+   - Do NOT hardcode or exclude any wallet or deposit to match known values.
+   - Benchmark values like “Whale’s Friend = 12,625.58” and “Takisoul = ~8.7M” must result from real on-chain deposits matching `authority === walletAddress`.
+
+6. ✅ **Validation Examples**:
+   - Wallet `3PKhz...` must show power from pure deposited tokens (no lockups, but valid)
+   - Wallet `7pPJt2xo...` must include **all VSR accounts** where authority == wallet, not just the first
+   - Wallet `4pT6ESaM...` must NOT include the 1,000 ISLAND delegated deposit unless it passes the native ownership filter
+
+7. ✅ **Freeze the Final File**:
+   - Once benchmark values are correct without any hardcoded filters, save the implementation as:
+     - `canonical-native-scanner.js` (final trusted native calc)
+   - Then proceed to `canonical-delegation-scanner.js` for delegation logic
