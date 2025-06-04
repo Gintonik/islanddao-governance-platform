@@ -23,6 +23,39 @@ app.get('/collection', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'collection.html'));
 });
 
+// Function to fetch single NFT metadata using Helius API
+async function fetchNFTMetadata(nftAddress) {
+  try {
+    const heliusUrl = process.env.HELIUS_API_KEY;
+    
+    const response = await fetch(heliusUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'get-asset',
+        method: 'getAsset',
+        params: {
+          id: nftAddress
+        }
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.result) {
+      return data.result;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching NFT metadata:', error);
+    return null;
+  }
+}
+
 // Function to fetch NFTs for a wallet using Helius API
 async function fetchWalletNFTs(walletAddress) {
   try {
@@ -122,19 +155,40 @@ app.get('/api/nfts', async (req, res) => {
     let allNfts = [];
     
     for (const citizen of result.rows) {
-      try {
-        const nftData = JSON.parse(citizen.nft_data);
-        if (Array.isArray(nftData) && nftData.length > 0) {
-          // Add owner info to each NFT
-          const nftsWithOwner = nftData.map(nft => ({
-            ...nft,
-            owner_wallet: citizen.wallet_address,
-            owner_nickname: citizen.nickname
-          }));
-          allNfts = allNfts.concat(nftsWithOwner);
+      if (citizen.primary_nft && citizen.primary_nft.trim() !== '') {
+        try {
+          // Fetch real NFT data from Helius API
+          const nftData = await fetchNFTMetadata(citizen.primary_nft);
+          
+          if (nftData) {
+            const nft = {
+              id: citizen.primary_nft,
+              name: nftData.content?.metadata?.name || `PERKS #${citizen.primary_nft.slice(-4)}`,
+              content: nftData.content,
+              owner_wallet: citizen.wallet,
+              owner_nickname: citizen.nickname || 'Unknown Citizen'
+            };
+            allNfts.push(nft);
+          }
+        } catch (error) {
+          console.error(`Error fetching NFT data for ${citizen.nickname}:`, error);
+          // Fallback to basic info if API fails
+          const nft = {
+            id: citizen.primary_nft,
+            name: `PERKS #${citizen.primary_nft.slice(-4)}`,
+            content: {
+              metadata: {
+                name: `PERKS #${citizen.primary_nft.slice(-4)}`
+              },
+              links: {
+                image: 'https://via.placeholder.com/300?text=NFT'
+              }
+            },
+            owner_wallet: citizen.wallet,
+            owner_nickname: citizen.nickname || 'Unknown Citizen'
+          };
+          allNfts.push(nft);
         }
-      } catch (parseError) {
-        console.error(`Error parsing NFT data for ${citizen.nickname}:`, parseError);
       }
     }
     
