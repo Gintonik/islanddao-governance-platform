@@ -2006,6 +2006,12 @@
                         mapContainer.style.cursor = '';
                     }
                     
+                    // Also reset cursor on map canvas
+                    const mapCanvas = mapContainer?.querySelector('canvas');
+                    if (mapCanvas) {
+                        mapCanvas.style.cursor = '';
+                    }
+                    
                     openPinForm();
                 } else {
                     // Close citizen panel when clicking on map
@@ -3403,25 +3409,26 @@
         // Disconnect wallet function
         async function disconnectWallet() {
             try {
-                const lastWallet = localStorage.getItem('lastConnectedWallet');
-                if (lastWallet && WALLET_CONFIGS[lastWallet]) {
-                    const wallet = WALLET_CONFIGS[lastWallet];
-                    const provider = wallet.provider();
-                    if (provider && provider.disconnect) {
-                        await provider.disconnect();
-                    }
+                if (simpleWallet && simpleWallet.isConnected()) {
+                    await simpleWallet.disconnect();
                 }
                 
+                // Clear all wallet state
                 currentWallet = null;
+                walletNfts = [];
+                selectedPfp = null;
+                selectedPrimary = null;
                 localStorage.removeItem('lastConnectedWallet');
                 updateWalletUI();
-                showNotification('Wallet disconnected', 'info');
+                showNotification('Wallet disconnected', 'success');
                 
             } catch (error) {
                 console.error('Disconnect failed:', error);
                 // Force clear state even if disconnect fails
                 currentWallet = null;
                 walletNfts = [];
+                selectedPfp = null;
+                selectedPrimary = null;
                 localStorage.removeItem('lastConnectedWallet');
                 updateWalletUI();
                 showNotification('Wallet disconnected', 'success');
@@ -3433,10 +3440,16 @@
             isPickingLocation = true;
             showNotification('Click on the map to place your pin', 'info');
             
-            // Change cursor to pin icon
+            // Change cursor to crosshair for pin placement
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
-                mapContainer.style.cursor = 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMzQgMiA1IDUuMTM0IDUgOUM1IDEzLjU4OSAxMS42IDIxLjcgMTEuOCAyMS45QzExLjkwNSAyMi4wMyAxMi4wOTUgMjIuMDMgMTIuMiAyMS45QzEyLjQgMjEuNyAxOSAxMy41ODkgMTkgOUMxOSA1LjEzNCAxNS44NjYgMiAxMiAyWk0xMiAxMi41QzEwLjA2NyAxMi41IDguNSAxMC45MzMgOC41IDlDOC41IDcuMDY3IDEwLjA2NyA1LjUgMTIgNS41QzEzLjkzMyA1LjUgMTUuNSA3LjA2NyAxNS41IDlDMTUuNSAxMC45MzMgMTMuOTMzIDEyLjUgMTIgMTIuNVoiIGZpbGw9IiM0ZmFjZmUiLz4KPC9zdmc+") 12 24, pointer';
+                mapContainer.style.cursor = 'crosshair';
+            }
+            
+            // Also set cursor on map canvas if it exists
+            const mapCanvas = mapContainer?.querySelector('canvas');
+            if (mapCanvas) {
+                mapCanvas.style.cursor = 'crosshair';
             }
         }
 
