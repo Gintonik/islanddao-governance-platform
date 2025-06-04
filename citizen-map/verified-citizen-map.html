@@ -1406,30 +1406,33 @@
 
         // ===== APPLICATION INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', initializeApp);
-
+        
+        // Initialize application
         async function initializeApp() {
             try {
-                // Add a small delay to ensure DOM is fully ready
-                setTimeout(async () => {
-                    try {
-                        initializeMap();
-                        setupEventListeners();
-                        await loadCitizens();
-                        await loadGovernanceStats();
-                        populateWalletOptions();
-                        initializeTheme();
-                        startAutoRefresh(); // Start automatic updates
-                        console.log('Application initialized successfully');
-                    } catch (initError) {
-                        console.error('Initialization error:', initError);
-                        showNotification('Application failed to load. Please refresh the page.', 'error');
-                    }
-                }, 100);
+                // Initialize wallet adapter first
+                initializeWalletAdapter();
+                
+                // Initialize map
+                await initializeMap();
+                
+                // Load citizens data
+                await loadCitizens();
+                
+                // Update stats
+                await loadGovernanceStats();
+                
+                // Set up auto-refresh
+                setInterval(updateGovernanceStats, 60000); // Update every minute
+                
+                console.log('Application initialized successfully');
             } catch (error) {
-                console.error('App initialization failed:', error);
-                showNotification('Application failed to load. Please refresh the page.', 'error');
+                console.error('Error initializing application:', error);
+                showNotification('Error loading application. Please refresh the page.', 'error');
             }
         }
+
+        // Remove duplicate - already defined above
 
         // ===== REAL-TIME UPDATES =====
         let lastUpdateTime = Date.now();
@@ -1668,8 +1671,9 @@
                 return;
             } else {
                 // Show wallet selection modal
-                document.getElementById('walletModal').style.display = 'block';
-                populateWalletOptions();
+                const modal = document.getElementById('walletModal');
+                modal.style.display = 'flex';
+                await populateWalletOptions();
             }
         }
 
@@ -1697,77 +1701,6 @@
                     console.warn('Signature verification failed:', sigError);
                     showNotification('Wallet connected but signature verification failed. Some features may be limited.', 'warning');
                 }
-                
-                // Load user's NFTs
-                try {
-                    await loadUserNfts();
-                } catch (nftError) {
-                    console.warn('Failed to load NFTs:', nftError);
-                    showNotification('Connected to wallet, but failed to load NFTs. You may need a PERKS NFT to create pins.', 'info');
-                }
-
-                console.log(`Attempting to connect to ${walletConfig.name}...`);
-                
-                // Handle different wallet connection patterns
-                let response;
-                let publicKey;
-                
-                if (walletType === 'phantom') {
-                    response = await provider.connect({ onlyIfTrusted: false });
-                    if (!response || !response.publicKey) {
-                        throw new Error('Phantom connection failed');
-                    }
-                    publicKey = response.publicKey.toString();
-                } else if (walletType === 'solflare') {
-                    // Solflare returns boolean true on connect, publicKey is separate
-                    await provider.connect();
-                    if (!provider.publicKey) {
-                        throw new Error('Solflare connection failed - no public key');
-                    }
-                    publicKey = provider.publicKey.toString();
-                } else if (walletType === 'backpack') {
-                    response = await provider.connect();
-                    if (!response || !response.publicKey) {
-                        throw new Error('Backpack connection failed');
-                    }
-                    publicKey = response.publicKey.toString();
-                } else {
-                    response = await provider.connect();
-                    if (!response || !response.publicKey) {
-                        throw new Error('Connection failed');
-                    }
-                    publicKey = response.publicKey.toString();
-                }
-                
-                console.log('Connected with public key:', publicKey);
-                
-                // Verify wallet ownership with signature
-                const verificationMessage = generateVerificationMessage();
-                const encodedMessage = new TextEncoder().encode(verificationMessage);
-                
-                let signature;
-                try {
-                    if (walletType === 'phantom' || walletType === 'solflare') {
-                        signature = await provider.signMessage(encodedMessage, 'utf8');
-                    } else {
-                        signature = await provider.signMessage(encodedMessage);
-                    }
-                    
-                    if (!signature || !signature.signature) {
-                        throw new Error('Signature verification failed');
-                    }
-                } catch (sigError) {
-                    console.warn('Signature verification failed:', sigError);
-                    showNotification('Wallet connected but signature verification failed. Some features may be limited.', 'warning');
-                }
-                
-                // Set connected wallet
-                currentWallet = publicKey;
-                
-                // Update UI
-                updateWalletUI();
-                closeWalletModal();
-                showNotification(`Successfully connected to ${walletConfig.name}!`, 'success');
                 
                 // Load user's NFTs
                 try {
@@ -1825,8 +1758,14 @@
         }
 
         // Disconnect wallet function
-        function disconnectWallet() {
+        async function disconnectWallet() {
             console.log('Disconnecting wallet...');
+            try {
+                await walletAdapter.disconnect();
+            } catch (error) {
+                console.warn('Error disconnecting wallet:', error);
+            }
+            
             currentWallet = null;
             walletNfts = [];
             selectedPfp = null;
