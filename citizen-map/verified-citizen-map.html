@@ -2063,16 +2063,47 @@
         async function disconnectWallet() {
             console.log('Disconnecting wallet...');
             try {
-                await simpleWallet.disconnect();
+                // Disconnect from SimpleWallet
+                if (simpleWallet && simpleWallet.isConnected()) {
+                    await simpleWallet.disconnect();
+                }
+                
+                // Also try to disconnect from the provider directly
+                const connectedWallet = simpleWallet?.connectedWallet;
+                if (connectedWallet) {
+                    const walletConfigs = {
+                        phantom: () => window.phantom?.solana,
+                        solflare: () => window.solflare,
+                        backpack: () => window.backpack,
+                        coinbase: () => window.coinbaseSolana
+                    };
+                    
+                    const provider = walletConfigs[connectedWallet]?.();
+                    if (provider && provider.disconnect) {
+                        await provider.disconnect();
+                    }
+                }
+                
+                // Clear all wallet state
+                walletNfts = [];
+                selectedPfp = null;
+                selectedPrimary = null;
+                updateWalletUI();
+                showNotification('Wallet disconnected successfully', 'success');
+                
             } catch (error) {
-                console.warn('Error disconnecting wallet:', error);
+                console.error('Disconnect failed:', error);
+                // Force clear state even if disconnect fails
+                walletNfts = [];
+                selectedPfp = null;
+                selectedPrimary = null;
+                if (simpleWallet) {
+                    simpleWallet.connectedWallet = null;
+                    simpleWallet.publicKey = null;
+                }
+                updateWalletUI();
+                showNotification('Wallet disconnected', 'success');
             }
-            
-            walletNfts = [];
-            selectedPfp = null;
-            selectedPrimary = null;
-            updateWalletUI();
-            showNotification('Wallet disconnected successfully', 'success');
         }
 
         // ===== NFT LOADING =====
