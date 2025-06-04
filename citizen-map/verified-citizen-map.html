@@ -1809,28 +1809,40 @@
 
         // ===== NFT LOADING =====
         async function loadUserNfts() {
-            if (!currentWallet) return;
+            if (!currentWallet) {
+                console.log('No wallet connected, skipping NFT loading');
+                return;
+            }
 
             try {
+                console.log('Loading NFTs for wallet:', currentWallet);
                 showNotification('Loading your NFTs...', 'info');
+                
                 const response = await fetch(`/api/wallet-nfts?wallet=${currentWallet}`);
+                console.log('NFT API response status:', response.status);
                 
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch NFTs: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('NFT API error response:', errorText);
+                    throw new Error(`Failed to fetch NFTs: ${response.status} - ${errorText}`);
                 }
                 
                 const result = await response.json();
+                console.log('NFT API result:', result);
+                
                 walletNfts = result.nfts || result || [];
+                console.log('Parsed NFTs:', walletNfts);
+                
                 updateNftGrid();
                 
                 if (walletNfts.length === 0) {
-                    showNotification('No PERKS NFTs found in your wallet', 'error');
+                    showNotification('No PERKS NFTs found in your wallet. You need a PERKS NFT to create citizen pins.', 'warning');
                 } else {
-                    showNotification(`Found ${walletNfts.length} PERKS NFTs!`, 'success');
+                    showNotification(`Found ${walletNfts.length} PERKS NFT${walletNfts.length > 1 ? 's' : ''}!`, 'success');
                 }
             } catch (error) {
                 console.error('Error loading user NFTs:', error);
-                showNotification('Failed to load your NFTs. Please try again.', 'error');
+                showNotification(`Failed to load your NFTs: ${error.message}`, 'error');
                 walletNfts = [];
             }
         }
