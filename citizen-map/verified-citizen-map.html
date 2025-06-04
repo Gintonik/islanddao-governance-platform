@@ -1340,7 +1340,7 @@
         </div>
         
         <div class="controls">
-            <button id="addPinBtn" class="control-btn add-pin-btn" title="Add Your Pin" onclick="handleAddPinClick()">+</button>
+            <button id="addPinBtn" class="control-btn add-pin-btn" title="Add Your Pin">+</button>
         </div>
     </div>
 
@@ -3337,23 +3337,7 @@
         // Wallet button click handler
         // Removed - using SimpleWallet system with proper event handlers
 
-        // Add pin button click handler
-        function handleAddPinClick() {
-            console.log('Add pin clicked, currentWallet:', currentWallet);
-            
-            if (currentWallet) {
-                // Check if wallet has PERKS NFTs
-                if (walletNfts && walletNfts.length > 0) {
-                    console.log('Starting pin creation process');
-                    startPinCreation();
-                } else {
-                    showNotification("This wallet doesn't own any IslandDAO PERKS", 'error');
-                }
-            } else {
-                console.log('Showing wallet modal for pin creation');
-                showWalletModal();
-            }
-        }
+        // Removed duplicate - handleAddPin function handles this correctly
 
         // Disconnect wallet function
         async function disconnectWallet() {
