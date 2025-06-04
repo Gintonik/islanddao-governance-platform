@@ -1435,162 +1435,28 @@
         let citizenMarkers = [];
         let simpleWallet = null;
 
-        // ===== WALLET CONNECTION SYSTEM =====
-        
-        // Wallet configurations using official logos
-        const WALLET_CONFIGS = {
-            phantom: {
-                name: 'Phantom',
-                icon: './phantom-icon.jpeg',
-                url: 'https://phantom.app',
-                detect: () => window.phantom?.solana?.isPhantom,
-                provider: () => window.phantom?.solana
-            },
-            solflare: {
-                name: 'Solflare', 
-                icon: './Solflare_id5j73wBTF_0.png',
-                url: 'https://solflare.com',
-                detect: () => window.solflare?.isSolflare,
-                provider: () => window.solflare
-            },
-            backpack: {
-                name: 'Backpack',
-                icon: './Standalone_Icon_Red.png',
-                url: 'https://backpack.app',
-                detect: () => window.backpack?.isBackpack,
-                provider: () => window.backpack
-            },
-            coinbase: {
-                name: 'Coinbase Wallet',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMwMDUyRkYiLz4KPHJlY3QgeD0iMTMiIHk9IjEzIiB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHJ4PSIyIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=',
-                url: 'https://www.coinbase.com/wallet',
-                detect: () => window.coinbaseSolana,
-                provider: () => window.coinbaseSolana
-            }
-        };
+        // ===== WALLET CONNECTION SYSTEM (Using SimpleWallet) =====
 
-        // Wallet modal functions
+        // Wallet modal functions using SimpleWallet
         window.showWalletModal = () => {
-            populateWalletList();
-            const modal = document.getElementById('wallet-modal-overlay');
-            if (modal) {
-                modal.style.display = 'flex';
+            if (simpleWallet) {
+                simpleWallet.showModal();
             }
         };
 
         function closeWalletModal() {
-            const modal = document.getElementById('wallet-modal-overlay');
-            if (modal) {
-                modal.style.display = 'none';
+            if (simpleWallet) {
+                simpleWallet.closeModal();
             }
         }
         
         window.closeWalletModal = closeWalletModal;
 
-        function populateWalletList() {
-            const walletList = document.getElementById('wallet-list');
-            walletList.innerHTML = '';
+        // Removed - using SimpleWallet's built-in wallet list
 
-            Object.keys(WALLET_CONFIGS).forEach(walletKey => {
-                const wallet = WALLET_CONFIGS[walletKey];
-                const isDetected = wallet.detect();
-                
-                const btn = document.createElement('button');
-                btn.disabled = !isDetected;
-                
-                btn.innerHTML = `
-                    <div class="wallet-item-info">
-                        <img src="${wallet.icon}" alt="${wallet.name}" style="width: 40px; height: 40px; margin-right: 16px; border-radius: 8px; object-fit: contain; flex-shrink: 0;" crossorigin="anonymous" />
-                        <div class="wallet-item-name">${wallet.name}</div>
-                    </div>
-                    <span class="wallet-item-status ${isDetected ? 'detected' : ''}">${isDetected ? 'Detected' : 'Not installed'}</span>
-                `;
+        // Removed - using SimpleWallet's connect method
 
-                if (isDetected) {
-                    btn.onclick = async () => {
-                        console.log('Wallet button clicked in modal:', walletKey);
-                        // Force close modal immediately when wallet is clicked
-                        closeWalletModal();
-                        await connectWallet(walletKey, wallet);
-                    };
-                } else {
-                    btn.onclick = () => {
-                        window.open(wallet.url, '_blank');
-                    };
-                }
-
-                walletList.appendChild(btn);
-            });
-        }
-
-        async function connectWallet(walletKey, wallet) {
-            try {
-                console.log('Connecting to wallet:', walletKey);
-                const provider = wallet.provider();
-                if (!provider) throw new Error(`${wallet.name} not available`);
-
-                const response = await provider.connect();
-                
-                // Handle different wallet response formats
-                let publicKey;
-                if (response && response.publicKey) {
-                    publicKey = response.publicKey.toString();
-                } else if (provider.publicKey) {
-                    publicKey = provider.publicKey.toString();
-                } else {
-                    throw new Error('Unable to get public key from wallet');
-                }
-                
-                currentWallet = publicKey;
-                localStorage.setItem('lastConnectedWallet', walletKey);
-                
-                console.log('Setting currentWallet to:', currentWallet);
-                
-                // Force immediate button update
-                const walletBtn = document.getElementById('walletBtn');
-                const walletText = document.getElementById('walletText');
-                const walletIcon = document.getElementById('walletIcon');
-                
-                if (walletBtn && walletText && walletIcon) {
-                    walletText.textContent = 'Disconnect';
-                    walletIcon.textContent = '✅';
-                    walletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
-                    walletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
-                    walletBtn.style.color = '#21E8A3';
-                    
-                    // Remove old click handler and add disconnect handler
-                    walletBtn.onclick = disconnectWallet;
-                }
-                
-                showNotification('Wallet Connected', 'success');
-                
-                // Load NFTs after connection - don't let this block UI update
-                try {
-                    await loadUserNfts();
-                } catch (nftError) {
-                    console.error('Error loading NFTs (non-blocking):', nftError);
-                }
-                
-            } catch (error) {
-                console.error('Error connecting wallet:', error);
-                closeWalletModal(); // Make sure modal closes on error too
-                showNotification(`Failed to connect: ${error.message}`, 'error');
-            }
-        }
-
-        async function attemptAutoConnect() {
-            const lastWallet = localStorage.getItem('lastConnectedWallet');
-            if (lastWallet && WALLET_CONFIGS[lastWallet]) {
-                const wallet = WALLET_CONFIGS[lastWallet];
-                if (wallet.detect()) {
-                    try {
-                        await connectWallet(lastWallet, wallet);
-                    } catch (error) {
-                        console.log('Auto-connect failed:', error);
-                    }
-                }
-            }
-        }
+        // Auto-connect handled by SimpleWallet
 
         function updateWalletUI() {
             console.log('updateWalletUI called, currentWallet:', currentWallet);
@@ -2128,32 +1994,9 @@
                 
                 submitBtn.textContent = 'Requesting Signature...';
                 
-                // Step 1: Create a wrapper for the connected wallet
+                // Step 1: Verify wallet using SimpleWallet
                 console.log('Starting wallet verification...');
-                const walletWrapper = {
-                    isConnected: () => !!currentWallet,
-                    getPublicKey: () => ({ toString: () => currentWallet }),
-                    getConnectedWallet: () => localStorage.getItem('lastConnectedWallet') || 'phantom',
-                    signMessage: async (message) => {
-                        const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
-                        const walletConfig = WALLET_CONFIGS[walletKey];
-                        const provider = walletConfig.provider();
-                        
-                        if (walletKey === 'phantom' || walletKey === 'solflare') {
-                            return await provider.signMessage(message, 'utf8');
-                        } else {
-                            return await provider.signMessage(message);
-                        }
-                    },
-                    signTransaction: async (transaction) => {
-                        const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
-                        const walletConfig = WALLET_CONFIGS[walletKey];
-                        const provider = walletConfig.provider();
-                        return await provider.signTransaction(transaction);
-                    }
-                };
-                
-                const verificationData = await walletVerifier.verifyWallet(walletWrapper, connection);
+                const verificationData = await walletVerifier.verifyWallet(simpleWallet, connection);
                 console.log('Wallet verification successful:', verificationData);
                 
                 submitBtn.textContent = 'Creating Pin...';
