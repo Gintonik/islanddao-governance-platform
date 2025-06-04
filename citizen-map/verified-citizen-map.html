@@ -1935,53 +1935,7 @@
             return `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
         }
 
-        // Enhanced wallet connection using universal adapter
-        async function connectWallet(walletIdentifier) {
-            try {
-                console.log('Connecting to wallet:', walletIdentifier);
-                
-                // Connect using the new wallet system
-                const wallet = WALLET_CONFIGS[walletIdentifier];
-                if (!wallet) throw new Error(`Wallet ${walletIdentifier} not configured`);
-                
-                const provider = wallet.provider();
-                if (!provider) throw new Error(`${wallet.name} not available`);
-                
-                const response = await provider.connect();
-                currentWallet = response.publicKey.toString();
-                
-                // Verify wallet ownership with signature
-                const verificationMessage = generateVerificationMessage();
-                
-                try {
-                    const signature = await provider.signMessage(verificationMessage, 'utf8');
-                    console.log('Signature verification successful');
-                } catch (sigError) {
-                    console.warn('Signature verification failed:', sigError);
-                    showNotification('Wallet connected but signature verification failed. Some features may be limited.', 'warning');
-                }
-                
-                // Load user's NFTs
-                try {
-                    await loadUserNfts();
-                } catch (nftError) {
-                    console.warn('Failed to load NFTs:', nftError);
-                    showNotification('Connected to wallet, but failed to load NFTs. You may need a PERKS NFT to create pins.', 'info');
-                }
-                
-            } catch (error) {
-                console.error('Error connecting wallet:', error);
-                
-                // Provide specific error messages
-                if (error.code === 4001) {
-                    showNotification('Connection rejected by user', 'error');
-                } else if (error.code === -32002) {
-                    showNotification('Connection request already pending. Please check your wallet.', 'error');
-                } else {
-                    showNotification(`Failed to connect: ${error.message}`, 'error');
-                }
-            }
-        }
+        // Remove duplicate connectWallet function - using the one defined earlier
 
         // Update wallet UI
         function updateWalletUI() {
