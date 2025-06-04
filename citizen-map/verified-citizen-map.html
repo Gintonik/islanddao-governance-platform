@@ -1505,18 +1505,17 @@
         // Update daily sync countdown to next 12:00 UTC
         function updateDailySyncCountdown() {
             const now = new Date();
-            const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
             
             // Calculate next 12:00 UTC
-            const nextSync = new Date(utcNow);
+            const nextSync = new Date();
             nextSync.setUTCHours(12, 0, 0, 0);
             
             // If we've passed 12:00 UTC today, set to tomorrow
-            if (utcNow.getUTCHours() >= 12) {
+            if (now.getUTCHours() >= 12) {
                 nextSync.setUTCDate(nextSync.getUTCDate() + 1);
             }
             
-            const timeUntilSync = nextSync.getTime() - utcNow.getTime();
+            const timeUntilSync = nextSync.getTime() - now.getTime();
             const hoursRemaining = Math.floor(timeUntilSync / (1000 * 60 * 60));
             const minutesRemaining = Math.floor((timeUntilSync % (1000 * 60 * 60)) / (1000 * 60));
             
