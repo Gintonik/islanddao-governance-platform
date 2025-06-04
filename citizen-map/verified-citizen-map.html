@@ -2000,16 +2000,16 @@
                     isPickingLocation = false;
                     document.getElementById('addPinBtn').textContent = '+';
                     
-                    // Reset cursor to default
-                    const mapContainer = document.getElementById('map');
-                    if (mapContainer) {
-                        mapContainer.style.cursor = '';
-                    }
-                    
-                    // Also reset cursor on map canvas
-                    const mapCanvas = mapContainer?.querySelector('canvas');
-                    if (mapCanvas) {
-                        mapCanvas.style.cursor = '';
+                    // Reset cursor to default using Leaflet's method
+                    if (map && map.getContainer) {
+                        const container = map.getContainer();
+                        container.style.cursor = '';
+                        
+                        // Reset cursor on all child elements
+                        const allElements = container.querySelectorAll('*');
+                        allElements.forEach(el => {
+                            el.style.cursor = '';
+                        });
                     }
                     
                     openPinForm();
@@ -3440,16 +3440,16 @@
             isPickingLocation = true;
             showNotification('Click on the map to place your pin', 'info');
             
-            // Change cursor to crosshair for pin placement
-            const mapContainer = document.getElementById('map');
-            if (mapContainer) {
-                mapContainer.style.cursor = 'crosshair';
-            }
-            
-            // Also set cursor on map canvas if it exists
-            const mapCanvas = mapContainer?.querySelector('canvas');
-            if (mapCanvas) {
-                mapCanvas.style.cursor = 'crosshair';
+            // Change cursor using Leaflet's method
+            if (map && map.getContainer) {
+                const container = map.getContainer();
+                container.style.cursor = 'crosshair';
+                
+                // Also target all child elements that might override cursor
+                const allElements = container.querySelectorAll('*');
+                allElements.forEach(el => {
+                    el.style.cursor = 'crosshair !important';
+                });
             }
         }
 
