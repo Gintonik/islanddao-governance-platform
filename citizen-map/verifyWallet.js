@@ -219,6 +219,7 @@ class WalletVerifier {
             } catch (error) {
                 const errorMessage = error.message || error.toString() || 'Unknown error';
                 const errorName = error.name || '';
+                const errorCode = error.code;
                 
                 // Step 3: Fallback to transaction signature for hardware wallets
                 if (errorMessage.includes('Ledger') ||
