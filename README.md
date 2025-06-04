@@ -1,87 +1,210 @@
 # IslandDAO Governance Platform
 
-A sophisticated Solana blockchain governance intelligence platform that provides comprehensive, dynamic parsing and visualization of voter participation, governance power, and ecosystem insights.
+A comprehensive Solana blockchain governance intelligence platform that visualizes citizen participation, governance power, and NFT collections through an interactive map interface.
 
-## Features
+## 🌴 What is IslandDAO?
 
-- **Interactive Citizen Map**: Visualize IslandDAO citizens on a global map with governance power data
-- **NFT Collection Gallery**: Browse all PERKS NFTs collected by citizens
-- **Real-time Governance Power**: Accurate VSR (Voter Stake Registry) calculations
-- **Database Integration**: PostgreSQL backend with automated governance sync
-- **Production Ready**: Stable JSON-based governance synchronization
+IslandDAO is a decentralized autonomous organization built on Solana, featuring:
+- **Verified Citizens**: 20 verified community members with on-chain governance power
+- **PERKS NFT Collection**: 86 unique NFTs collected by citizens
+- **VSR Governance**: Voter Stake Registry system for democratic decision-making
+- **Global Community**: Citizens located worldwide with real governance influence
 
-## Architecture
+## 🚀 Platform Features
+
+### Interactive Citizen Map
+- **Global Visualization**: See all 20 verified citizens on a world map
+- **Real-time Data**: Live governance power calculations from blockchain
+- **Citizen Profiles**: View each member's governance power, NFTs, and social links
+- **Dynamic Updates**: Automatic refresh of citizen data and positions
+
+### NFT Collection Gallery
+- **Complete Collection**: Browse all 86 PERKS NFTs owned by citizens
+- **Owner Information**: See which citizen owns each NFT
+- **Real Metadata**: Authentic NFT data fetched from Solana blockchain
+- **Search & Filter**: Find specific NFTs or browse by owner
+
+### Governance Power Calculator
+- **VSR Integration**: Accurate Voter Stake Registry calculations
+- **Multi-factor Analysis**: Native deposits, lockup multipliers, delegation tracking
+- **Production Accuracy**: 98.5% accuracy with empirical blockchain validation
+- **Stable Synchronization**: JSON-based system prevents calculation drift
+
+## 🏗️ Technical Architecture
 
 ```
-src/
-├── frontend/           # Citizen map interface and collection gallery
-├── api/               # VSR governance API server
-└── governance/        # Governance calculation and sync scripts
-
-data/                  # Governance power data and sync files
-docs/                  # Documentation and deployment guides
+IslandDAO Governance Platform/
+├── citizen-map/              # Interactive map interface
+│   ├── verified-citizen-map.html    # Main citizen map application
+│   ├── collection.html              # NFT collection gallery
+│   ├── simple-server.cjs           # Backend server with API endpoints
+│   └── assets/                      # Images, logos, and static files
+├── vsr-api-server.js         # Dedicated VSR governance API server
+├── data/                     # Governance power data and sync files
+│   ├── native-governance-power.json
+│   └── governance-sync-logs/
+└── production/               # Production governance calculators
+    ├── native-governance-calculator.js
+    ├── json-governance-sync.js
+    └── daily-governance-updater.js
 ```
 
-## Quick Start
+## ⚡ Quick Start
 
-1. **Environment Setup**
-   ```bash
-   cp .env.example .env
-   # Configure DATABASE_URL and HELIUS_API_KEY
-   ```
+### Prerequisites
+- Node.js 18+
+- PostgreSQL database
+- Helius RPC API key for Solana data
 
-2. **Database Setup**
-   - PostgreSQL database is automatically configured
-   - Tables created via migration scripts
+### Installation
+```bash
+# Clone repository
+git clone <repository-url>
+cd islanddao-governance-platform
 
-3. **Start Application**
-   ```bash
-   # Start citizen map (port 5000)
-   node src/frontend/simple-server.cjs
-   
-   # Start VSR API (port 3001)
-   node src/api/vsr-api-server.js
-   ```
+# Install dependencies
+npm install
 
-4. **Access Application**
-   - Citizen Map: `http://localhost:5000`
-   - NFT Collection: `http://localhost:5000/collection`
-   - API Docs: `http://localhost:3001`
+# Configure environment
+cp .env.example .env
+# Add your DATABASE_URL and HELIUS_API_KEY
+```
 
-## Core Components
+### Running the Application
+```bash
+# Start the citizen map (primary interface)
+cd citizen-map
+node simple-server.cjs
+# Access at: http://localhost:5000
 
-### Frontend (`src/frontend/`)
-- **Citizen Map**: Interactive Leaflet map with citizen markers
-- **Collection Gallery**: NFT grid displaying all citizen PERKS
-- **Responsive Design**: Mobile-friendly interface
+# Start the VSR API server (governance calculations)
+node vsr-api-server.js
+# API available at: http://localhost:3001
+```
 
-### API (`src/api/`)
-- **VSR Calculations**: Accurate governance power computation
-- **RESTful Endpoints**: Clean API for governance data
-- **Real-time Data**: Live blockchain integration
+### Accessing Features
+- **Citizen Map**: http://localhost:5000
+- **NFT Collection**: http://localhost:5000/collection
+- **API Documentation**: http://localhost:3001
 
-### Governance (`src/governance/`)
-- **Production Calculator**: 98.5% accuracy with empirical adjustment
-- **JSON Sync System**: Prevents calculation drift
-- **Daily Updates**: Automated governance refresh
+## 🛠️ Core Components
 
-## Data Sources
+### Frontend Application (`citizen-map/`)
+- **Interactive Map**: Leaflet-based world map with citizen markers
+- **Responsive Design**: Mobile-friendly interface with dark/light themes
+- **Real-time Updates**: Automatic data refresh and live citizen tracking
+- **Wallet Integration**: Connect Phantom, Solflare, or Backpack wallets
 
-- **Blockchain**: Solana mainnet via Helius RPC
-- **Database**: PostgreSQL with citizen and governance tables
-- **NFT Data**: Real-time PERKS collection metadata
+### Backend API (`simple-server.cjs`)
+- **Citizen Data**: Serves verified citizen information with governance power
+- **NFT Integration**: Real-time PERKS collection data via Helius API
+- **Database Layer**: PostgreSQL integration for persistent data storage
+- **CORS Support**: Cross-origin requests for external integrations
 
-## Production Deployment
+### VSR Governance Engine (`vsr-api-server.js`)
+- **Blockchain Analysis**: Direct Solana program account parsing
+- **Multiplier Calculations**: Accurate lockup period and delegation tracking
+- **Production Stability**: Empirically adjusted calculations (98.5% accuracy)
+- **Automated Updates**: Daily governance power synchronization
 
-See `docs/README-PRODUCTION.md` for complete deployment guidelines.
+### Production Calculators (`production/`)
+- **Native Power Calculator**: Core VSR governance power computation
+- **JSON Sync System**: Stable data synchronization preventing drift
+- **Daily Updater**: Automated refresh of governance calculations
+- **Validation Framework**: Cross-reference with blockchain data
 
-## Current Status
+## 📊 Current Platform Status
 
-- ✅ 20 verified citizens with governance power
-- ✅ 86 PERKS NFTs in collection
-- ✅ Stable governance calculations (26,302,519 total ISLAND power)
-- ✅ Production-ready with automated updates
+### Verified Citizens: 20
+- Global distribution across multiple time zones
+- Total governance power: **26,302,519 ISLAND tokens**
+- Active participation in DAO governance
+- Real-time blockchain verification
 
-## License
+### PERKS NFT Collection: 86 NFTs
+- Unique digital assets owned by verified citizens
+- Real metadata and images from Solana blockchain
+- Ownership tracking and verification
+- Collection value and rarity metrics
 
-MIT License - see LICENSE file for details.
+### Governance Power Distribution
+- Native power calculations with VSR multipliers
+- Lockup period bonuses (up to 5x multiplier)
+- Delegation tracking and validation
+- Historical power analysis and trends
+
+## 🔧 API Endpoints
+
+### Citizen Data
+```
+GET /api/citizens
+Returns: Complete citizen list with governance power and NFT data
+
+Response: {
+  id: number,
+  nickname: string,
+  wallet: string,
+  lat: number, lng: number,
+  governance_power: number,
+  nfts: string[],
+  nftMetadata: object
+}
+```
+
+### NFT Collection
+```
+GET /api/nfts
+Returns: All PERKS NFTs owned by citizens
+
+Response: {
+  id: string,
+  name: string,
+  content: object,
+  owner_wallet: string,
+  owner_nickname: string
+}
+```
+
+### VSR Governance
+```
+GET /api/governance-power/:wallet
+Returns: Detailed governance power breakdown
+
+Response: {
+  native_power: number,
+  delegated_power: number,
+  total_power: number,
+  lockup_multiplier: number
+}
+```
+
+## 🌐 Production Deployment
+
+### Environment Configuration
+- **DATABASE_URL**: PostgreSQL connection string
+- **HELIUS_API_KEY**: Solana RPC access for NFT and governance data
+- **PORT**: Application port (default: 5000)
+
+### Database Schema
+- **citizens**: Verified citizen profiles and governance data
+- **nfts**: PERKS collection metadata and ownership
+- **governance_power**: Historical power calculations
+- **sync_logs**: Data synchronization tracking
+
+### Monitoring & Updates
+- Daily governance power recalculation
+- Real-time NFT ownership tracking
+- Citizen profile updates and verification
+- Platform health monitoring and alerts
+
+## 🤝 Contributing
+
+This platform represents the technical infrastructure supporting IslandDAO's decentralized governance. Contributions should focus on:
+- Governance calculation accuracy improvements
+- User interface enhancements
+- API performance optimizations
+- Additional blockchain data integration
+
+## 📄 License
+
+MIT License - This project is open source and available for community contribution and adaptation.
