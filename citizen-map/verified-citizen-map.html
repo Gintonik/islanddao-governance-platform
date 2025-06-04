@@ -1548,13 +1548,30 @@
                 
                 console.log('Setting currentWallet to:', currentWallet);
                 
-                // Update UI immediately
-                console.log('Updating wallet UI...');
-                updateWalletUI();
+                // Force immediate button update
+                const walletBtn = document.getElementById('walletBtn');
+                const walletText = document.getElementById('walletText');
+                const walletIcon = document.getElementById('walletIcon');
+                
+                if (walletBtn && walletText && walletIcon) {
+                    walletText.textContent = 'Disconnect';
+                    walletIcon.textContent = '✅';
+                    walletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
+                    walletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
+                    walletBtn.style.color = '#21E8A3';
+                    
+                    // Remove old click handler and add disconnect handler
+                    walletBtn.onclick = disconnectWallet;
+                }
+                
                 showNotification('Wallet Connected', 'success');
                 
-                // Load NFTs after connection
-                await loadUserNfts();
+                // Load NFTs after connection - don't let this block UI update
+                try {
+                    await loadUserNfts();
+                } catch (nftError) {
+                    console.error('Error loading NFTs (non-blocking):', nftError);
+                }
                 
             } catch (error) {
                 console.error('Error connecting wallet:', error);
