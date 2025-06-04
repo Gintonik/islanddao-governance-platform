@@ -895,15 +895,15 @@
         
         card.innerHTML = `
           <img 
-            src="${nft.imageUrl}" 
-            alt="${nft.name}" 
+            src="${nft.content?.links?.image || nft.imageUrl || 'https://via.placeholder.com/300?text=NFT'}" 
+            alt="${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}" 
             class="nft-image"
             onerror="this.src='https://via.placeholder.com/300?text=NFT';"
           >
           <div class="nft-info">
-            <div class="nft-name">${nft.name}</div>
-            <div class="nft-owner">Owner: ${formatAddress(nft.owner)}</div>
-            <div class="nft-id">ID: ${formatAddress(nft.id)}</div>
+            <div class="nft-name">${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}</div>
+            <div class="nft-owner">${nft.owner_nickname || 'Unknown Citizen'}</div>
+            <div class="nft-wallet">${formatAddress(nft.owner_wallet)}</div>
           </div>
         `;
         

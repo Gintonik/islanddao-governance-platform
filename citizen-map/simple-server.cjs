@@ -105,6 +105,46 @@ app.get('/api/citizens', async (req, res) => {
   }
 });
 
+// API endpoint to get all NFTs from all citizens for the collection page
+app.get('/api/nfts', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        c.wallet,
+        c.nickname,
+        c.primary_nft
+      FROM citizens c 
+      WHERE c.primary_nft IS NOT NULL 
+      AND c.primary_nft != ''
+      ORDER BY c.nickname
+    `);
+    
+    let allNfts = [];
+    
+    for (const citizen of result.rows) {
+      try {
+        const nftData = JSON.parse(citizen.nft_data);
+        if (Array.isArray(nftData) && nftData.length > 0) {
+          // Add owner info to each NFT
+          const nftsWithOwner = nftData.map(nft => ({
+            ...nft,
+            owner_wallet: citizen.wallet_address,
+            owner_nickname: citizen.nickname
+          }));
+          allNfts = allNfts.concat(nftsWithOwner);
+        }
+      } catch (parseError) {
+        console.error(`Error parsing NFT data for ${citizen.nickname}:`, parseError);
+      }
+    }
+    
+    res.json(allNfts);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch NFTs' });
+  }
+});
+
 app.listen(port, '0.0.0.0', () => {
   console.log(`Citizen Map server running at http://localhost:${port}`);
 });
