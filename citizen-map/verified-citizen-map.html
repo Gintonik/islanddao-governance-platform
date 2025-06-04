@@ -1426,6 +1426,7 @@
         // ===== GLOBAL STATE =====
         let map;
         let isDarkTheme = true;
+        let currentWallet = null;
         let walletNfts = [];
         let selectedLocation = null;
         let selectedPfp = null;
@@ -1435,7 +1436,38 @@
         let simpleWallet = null;
 
         // ===== WALLET CONNECTION SYSTEM =====
-        // Using SimpleWallet for all wallet connections
+        
+        // Wallet configurations using official logos
+        const WALLET_CONFIGS = {
+            phantom: {
+                name: 'Phantom',
+                icon: './phantom-icon.jpeg',
+                url: 'https://phantom.app',
+                detect: () => window.phantom?.solana?.isPhantom,
+                provider: () => window.phantom?.solana
+            },
+            solflare: {
+                name: 'Solflare', 
+                icon: './Solflare_id5j73wBTF_0.png',
+                url: 'https://solflare.com',
+                detect: () => window.solflare?.isSolflare,
+                provider: () => window.solflare
+            },
+            backpack: {
+                name: 'Backpack',
+                icon: './Standalone_Icon_Red.png',
+                url: 'https://backpack.app',
+                detect: () => window.backpack?.isBackpack,
+                provider: () => window.backpack
+            },
+            coinbase: {
+                name: 'Coinbase Wallet',
+                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMwMDUyRkYiLz4KPHJlY3QgeD0iMTMiIHk9IjEzIiB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHJ4PSIyIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=',
+                url: 'https://www.coinbase.com/wallet',
+                detect: () => window.coinbaseSolana,
+                provider: () => window.coinbaseSolana
+            }
+        };
 
         // Wallet modal functions
         window.showWalletModal = () => {
@@ -2096,23 +2128,17 @@
                 
                 submitBtn.textContent = 'Requesting Signature...';
                 
-                // Step 1: Verify wallet ownership using current connected wallet
+                // Step 1: Create a wrapper for the connected wallet
                 console.log('Starting wallet verification...');
-                
-                if (!currentWallet) {
-                    throw new Error('Please connect your wallet first');
-                }
-                
-                const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
-                const walletConfig = WALLET_CONFIGS[walletKey];
-                const provider = walletConfig.provider();
-                
-                // Create wallet wrapper for verification
                 const walletWrapper = {
                     isConnected: () => !!currentWallet,
                     getPublicKey: () => ({ toString: () => currentWallet }),
-                    getConnectedWallet: () => walletKey,
+                    getConnectedWallet: () => localStorage.getItem('lastConnectedWallet') || 'phantom',
                     signMessage: async (message) => {
+                        const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
+                        const walletConfig = WALLET_CONFIGS[walletKey];
+                        const provider = walletConfig.provider();
+                        
                         if (walletKey === 'phantom' || walletKey === 'solflare') {
                             return await provider.signMessage(message, 'utf8');
                         } else {
@@ -2120,6 +2146,9 @@
                         }
                     },
                     signTransaction: async (transaction) => {
+                        const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
+                        const walletConfig = WALLET_CONFIGS[walletKey];
+                        const provider = walletConfig.provider();
                         return await provider.signTransaction(transaction);
                     }
                 };
