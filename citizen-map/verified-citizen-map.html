@@ -2108,8 +2108,8 @@
         async function handleSubmitPin(e) {
             e.preventDefault();
 
-            if (!currentWallet || !selectedLocation || !selectedPfp) {
-                showNotification('Please complete all required fields', 'error');
+            if (!currentWallet || !selectedLocation) {
+                showNotification('Please select a location on the map', 'error');
                 return;
             }
 
