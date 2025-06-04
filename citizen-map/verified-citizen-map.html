@@ -11,8 +11,12 @@
     
     <!-- Solana Web3.js -->
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <!-- Unified Wallet Component -->
-    <script src="./unified-wallet.js"></script>
+    
+    <!-- Wallet Standard -->
+    <script src="https://unpkg.com/@solana/wallet-standard@1.0.0/lib/index.iife.js"></script>
+    
+    <!-- Simple Wallet Connector -->
+    <script src="./simple-wallet.js"></script>
     <style>
         /* Hide scrollbars for all browsers */
         .card-face::-webkit-scrollbar,
@@ -1365,16 +1369,15 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
 
-        // ===== UNIFIED WALLET =====
-        let unifiedWallet;
+        // ===== SIMPLE WALLET =====
+        let simpleWallet;
         
-        // Initialize unified wallet
+        // Initialize simple wallet
         function initializeWalletAdapter() {
-            unifiedWallet = new UnifiedWallet();
-            window.unifiedWallet = unifiedWallet; // Make available globally for modal
+            simpleWallet = window.simpleWallet;
 
             // Set up event listeners
-            unifiedWallet.on('connect', async (data) => {
+            simpleWallet.on('connect', async (data) => {
                 console.log('Wallet connected event:', data);
                 currentWallet = data.publicKey;
                 updateWalletUI();
@@ -1383,7 +1386,7 @@
                 // Verify wallet ownership with signature
                 try {
                     const verificationMessage = generateVerificationMessage();
-                    const signature = await unifiedWallet.signMessage(verificationMessage);
+                    const signature = await simpleWallet.signMessage(verificationMessage);
                     console.log('Signature verification successful');
                 } catch (sigError) {
                     console.warn('Signature verification failed:', sigError);
@@ -1398,13 +1401,13 @@
                 }
             });
 
-            unifiedWallet.on('disconnect', () => {
+            simpleWallet.on('disconnect', () => {
                 currentWallet = null;
                 updateWalletUI();
                 showNotification('Wallet disconnected', 'info');
             });
 
-            unifiedWallet.on('error', (error) => {
+            simpleWallet.on('error', (error) => {
                 console.error('Wallet error:', error);
                 showNotification(`Wallet error: ${error.message}`, 'error');
             });
@@ -1657,12 +1660,12 @@
                 // Already connected - wallet button is just for display
                 return;
             } else {
-                // Show unified wallet modal
-                console.log('Showing unified wallet modal');
-                if (window.unifiedWallet) {
-                    await window.unifiedWallet.showModal();
+                // Show simple wallet modal
+                console.log('Showing simple wallet modal');
+                if (window.simpleWallet) {
+                    await window.simpleWallet.showModal();
                 } else {
-                    console.error('Unified wallet not initialized');
+                    console.error('Simple wallet not initialized');
                     showNotification('Wallet system not ready. Please refresh the page.', 'error');
                 }
             }
@@ -1752,7 +1755,7 @@
         async function disconnectWallet() {
             console.log('Disconnecting wallet...');
             try {
-                await unifiedWallet.disconnect();
+                await simpleWallet.disconnect();
             } catch (error) {
                 console.warn('Error disconnecting wallet:', error);
             }
@@ -1818,8 +1821,9 @@
             walletNfts.forEach(nft => {
                 const nftElement = document.createElement('div');
                 nftElement.className = 'nft-item';
+                const imageUrl = nft.imageUrl || nft.image || '';
                 nftElement.innerHTML = `
-                    <img src="${nft.imageUrl}" alt="${nft.name}" class="nft-image">
+                    <img src="${imageUrl}" alt="${nft.name}" class="nft-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJLIGltYWdlPC90ZXh0Pgo8L3N2Zz4='">
                     <div class="nft-name">${nft.name}</div>
                 `;
 
