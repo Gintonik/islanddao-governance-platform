@@ -1437,16 +1437,18 @@
 
         // ===== WALLET CONNECTION SYSTEM (Using SimpleWallet) =====
 
-        // Wallet modal functions using SimpleWallet
+        // Wallet modal functions using our custom modal
         window.showWalletModal = () => {
-            if (simpleWallet) {
-                simpleWallet.showModal();
+            const modal = document.getElementById('wallet-modal-overlay');
+            if (modal) {
+                modal.style.display = 'flex';
             }
         };
 
         function closeWalletModal() {
-            if (simpleWallet) {
-                simpleWallet.closeModal();
+            const modal = document.getElementById('wallet-modal-overlay');
+            if (modal) {
+                modal.style.display = 'none';
             }
         }
         
@@ -1840,10 +1842,11 @@
                 addPinBtn.style.opacity = '0.7';
                 addPinBtn.style.cursor = 'not-allowed';
                 
-                // Set connect handler to show SimpleWallet modal
+                // Set connect handler to show our custom modal
                 walletBtn.onclick = () => {
-                    if (simpleWallet) {
-                        simpleWallet.showModal();
+                    const modal = document.getElementById('wallet-modal-overlay');
+                    if (modal) {
+                        modal.style.display = 'flex';
                     }
                 };
             }
@@ -1947,7 +1950,10 @@
         function handleAddPin() {
             if (!simpleWallet || !simpleWallet.isConnected()) {
                 // Open wallet connection modal if not connected
-                window.showWalletModal();
+                const modal = document.getElementById('wallet-modal-overlay');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
                 showNotification('Please connect your wallet to add a pin', 'info');
                 return;
             }
