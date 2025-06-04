@@ -1817,14 +1817,8 @@
                 // Already connected - wallet button is just for display
                 return;
             } else {
-                // Show simple wallet modal
-                console.log('Showing simple wallet modal');
-                if (walletAdapter) {
-                    await walletAdapter.select();
-                } else {
-                    console.error('Simple wallet not initialized');
-                    showNotification('Wallet system not ready. Please refresh the page.', 'error');
-                }
+                // This is handled by the newer handleWalletButtonClick function
+                showWalletModal();
             }
         }
 
@@ -1839,14 +1833,21 @@
             try {
                 console.log('Connecting to wallet:', walletIdentifier);
                 
-                // Connect using the universal adapter
-                const result = await walletAdapter.connect(walletIdentifier);
+                // Connect using the new wallet system
+                const wallet = WALLET_CONFIGS[walletIdentifier];
+                if (!wallet) throw new Error(`Wallet ${walletIdentifier} not configured`);
+                
+                const provider = wallet.provider();
+                if (!provider) throw new Error(`${wallet.name} not available`);
+                
+                const response = await provider.connect();
+                currentWallet = response.publicKey.toString();
                 
                 // Verify wallet ownership with signature
                 const verificationMessage = generateVerificationMessage();
                 
                 try {
-                    const signature = await walletAdapter.signMessage(verificationMessage);
+                    const signature = await provider.signMessage(verificationMessage, 'utf8');
                     console.log('Signature verification successful');
                 } catch (sigError) {
                     console.warn('Signature verification failed:', sigError);
