@@ -25,21 +25,21 @@ class SimpleWallet {
             {
                 name: 'Phantom',
                 identifier: 'phantom',
-                icon: 'https://raw.githubusercontent.com/solana-labs/wallet-adapter/master/packages/wallets/icons/phantom.svg',
+                icon: 'https://phantom.app/img/phantom-logo.svg',
                 provider: () => window.solana,
                 detect: () => window.solana && window.solana.isPhantom
             },
             {
                 name: 'Solflare',
                 identifier: 'solflare', 
-                icon: 'https://raw.githubusercontent.com/solana-labs/wallet-adapter/master/packages/wallets/icons/solflare.svg',
+                icon: 'https://solflare.com/images/logo.svg',
                 provider: () => window.solflare,
                 detect: () => window.solflare && window.solflare.isSolflare
             },
             {
                 name: 'Backpack',
                 identifier: 'backpack',
-                icon: 'https://raw.githubusercontent.com/solana-labs/wallet-adapter/master/packages/wallets/icons/backpack.svg',
+                icon: 'https://backpack.app/icon.png',
                 provider: () => window.backpack,
                 detect: () => window.backpack && window.backpack.isBackpack
             }

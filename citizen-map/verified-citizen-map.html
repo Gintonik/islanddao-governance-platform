@@ -1835,7 +1835,7 @@
 
                 // Request wallet signature using simple wallet
                 const encodedMessage = new TextEncoder().encode(message);
-                const signedMessage = await enhancedWallet.signMessage(encodedMessage);
+                const signedMessage = await simpleWallet.signMessage(encodedMessage);
                 
                 // Prepare pin data
                 const pinData = {
