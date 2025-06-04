@@ -18,6 +18,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
 });
 
+// Serve the collection page
+app.get('/collection', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'collection.html'));
+});
+
 // Function to fetch NFTs for a wallet using Helius API
 async function fetchWalletNFTs(walletAddress) {
   try {
