@@ -3390,22 +3390,7 @@
             }
         }
 
-        // Update wallet UI
-        function updateWalletUI() {
-            const walletBtn = document.getElementById('walletBtn');
-            const walletIcon = document.getElementById('walletIcon');
-            const walletText = document.getElementById('walletText');
-            
-            if (currentWallet && walletBtn) {
-                walletIcon.textContent = '🔗';
-                walletText.textContent = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`;
-                walletBtn.classList.add('wallet-connected');
-            } else if (walletBtn) {
-                walletIcon.textContent = '🔗';
-                walletText.textContent = 'Connect Wallet';
-                walletBtn.classList.remove('wallet-connected');
-            }
-        }
+        // Duplicate updateWalletUI function removed - using main one above
 
         // Removed duplicate initialization - handled in initializeApp
 
