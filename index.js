@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 
 // Try to start the CommonJS production server first
 try {
-  execSync('node production-server.js', { stdio: 'inherit' });
+  execSync('node production-server.cjs', { stdio: 'inherit' });
 } catch (error) {
   console.error('Production server failed:', error);
   // Fallback to index.cjs
