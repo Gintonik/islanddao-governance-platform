@@ -3367,15 +3367,25 @@
         }
 
         // Show notification
+        let notificationTimeout;
+        
         function showNotification(message, type = 'info') {
             const notification = document.getElementById('notification');
+            
+            // Clear any existing timeout
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            
             notification.textContent = message;
             notification.className = `notification ${type}`;
             notification.classList.add('show');
 
-            setTimeout(() => {
+            // Set new timeout with longer duration
+            notificationTimeout = setTimeout(() => {
                 notification.classList.remove('show');
-            }, 4000);
+                notificationTimeout = null;
+            }, 6000);
         }
 
         // Copy to clipboard utility
