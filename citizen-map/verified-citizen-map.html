@@ -2214,9 +2214,6 @@
                 map.on('zoomend', createSmartMarkers);
                 
                 console.log(`Loaded ${citizens.length} citizens with smart anti-overlap positioning`);
-                
-                // Update live stats with real data
-                updateLiveStats(citizens);
             } catch (error) {
                 console.error('Error loading citizens:', error);
                 showNotification('Failed to load citizen data', 'error');
