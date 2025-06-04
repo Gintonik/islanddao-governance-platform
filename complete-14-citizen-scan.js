@@ -1,6 +1,6 @@
 /**
- * Final Corrected VSR Calculator
- * Using the corrected baseline formula: BASE = 1B, MAX_EXTRA = 3B
+ * Complete 14 Citizen Scan
+ * Ensure all citizens with governance power are found
  */
 
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -37,7 +37,7 @@ function calculateMultiplier(lockup, now = Date.now() / 1000) {
   return (BASE + bonus) / 1e9;
 }
 
-function parseVSRDepositsCorrect(data, currentTime) {
+function parseVSRDeposits(data, currentTime) {
   const deposits = [];
   const processedAmounts = new Set();
   
@@ -47,7 +47,6 @@ function parseVSRDepositsCorrect(data, currentTime) {
   
   for (let i = 0; i < maxDeposits; i++) {
     const offset = 104 + (i * depositEntrySize);
-    
     if (offset + depositEntrySize > data.length) break;
     
     try {
@@ -72,8 +71,6 @@ function parseVSRDepositsCorrect(data, currentTime) {
             multiplier,
             power,
             lockupKind,
-            startTs,
-            endTs,
             isLocked: lockupKind > 0,
             source: 'formalEntry'
           });
@@ -144,8 +141,6 @@ function parseVSRDepositsCorrect(data, currentTime) {
                 multiplier,
                 power,
                 lockupKind: lockupInfo.kind,
-                startTs: lockupInfo.startTs,
-                endTs: lockupInfo.endTs,
                 isLocked: true,
                 source: 'multiLockup'
               });
@@ -179,8 +174,6 @@ function parseVSRDepositsCorrect(data, currentTime) {
               multiplier: 1.0,
               power: amount,
               lockupKind: 0,
-              startTs: 0,
-              endTs: 0,
               isLocked: false,
               source: 'unlocked'
             });
@@ -195,16 +188,10 @@ function parseVSRDepositsCorrect(data, currentTime) {
   return deposits;
 }
 
-async function scanAllCitizensFinal() {
-  console.log('FINAL CORRECTED VSR CALCULATOR');
-  console.log('==============================');
-  console.log('Using corrected baseline: BASE=1B, MAX_EXTRA=3B\n');
-  
+async function scanComplete14Citizens() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   const citizensResult = await pool.query('SELECT wallet FROM citizens ORDER BY wallet');
   const citizenWallets = citizensResult.rows.map(row => row.wallet);
-  
-  console.log(`Scanning ${citizenWallets.length} citizen wallets...\n`);
   
   const allVSR = await connection.getProgramAccounts(VSR_PROGRAM_ID, { 
     filters: [{ dataSize: 2728 }] 
@@ -212,7 +199,6 @@ async function scanAllCitizensFinal() {
   
   const currentTime = Date.now() / 1000;
   const results = [];
-  let scannedCount = 0;
   
   for (const walletAddress of citizenWallets) {
     let totalPower = 0;
@@ -230,7 +216,7 @@ async function scanAllCitizensFinal() {
         }
         
         if (authority === walletAddress) {
-          const deposits = parseVSRDepositsCorrect(data, currentTime);
+          const deposits = parseVSRDeposits(data, currentTime);
           
           for (const deposit of deposits) {
             totalPower += deposit.power;
@@ -256,40 +242,20 @@ async function scanAllCitizensFinal() {
         unlocked: unlockedPower,
         deposits: allDeposits
       });
-      
-      console.log(`${walletAddress} - ${totalPower.toLocaleString()} ISLAND`);
-      console.log(`  Locked: ${lockedPower.toLocaleString()} ISLAND`);
-      console.log(`  Unlocked: ${unlockedPower.toLocaleString()} ISLAND`);
-      
-      if (allDeposits.length > 0) {
-        console.log(`  Deposits (${allDeposits.length}):`);
-        for (const deposit of allDeposits) {
-          if (deposit.isLocked) {
-            const lockupTypes = ['', 'Cliff', 'Constant', 'Vesting', 'Monthly'];
-            const lockupName = lockupTypes[deposit.lockupKind] || 'Unknown';
-            const timeLeft = deposit.endTs > 0 ? Math.floor((deposit.endTs - currentTime) / 86400) : 0;
-            console.log(`    ${deposit.amount.toLocaleString()} × ${deposit.multiplier.toFixed(3)} = ${deposit.power.toLocaleString()} [${lockupName} - ${timeLeft}d left]`);
-          } else {
-            console.log(`    ${deposit.amount.toLocaleString()} × ${deposit.multiplier.toFixed(3)} = ${deposit.power.toLocaleString()} [Unlocked]`);
-          }
-        }
-      }
-      console.log('');
     }
   }
   
-  console.log('FINAL NATIVE GOVERNANCE POWER - ALL 14 CITIZENS');
-  console.log('===============================================');
+  console.log('ALL 14 CITIZENS WITH NATIVE GOVERNANCE POWER');
+  console.log('===========================================');
+  
   for (const result of results) {
     console.log(`${result.address} - ${result.total.toLocaleString()} ISLAND`);
   }
   
-  console.log(`\nTotal citizens with governance power: ${results.length}/20`);
-  const grandTotal = results.reduce((sum, r) => sum + r.total, 0);
-  console.log(`Total governance power: ${grandTotal.toLocaleString()} ISLAND`);
+  console.log(`\nFound ${results.length} citizens with governance power`);
   
   await pool.end();
   return results;
 }
 
-scanAllCitizensFinal().catch(console.error);
+scanComplete14Citizens().catch(console.error);
