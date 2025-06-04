@@ -257,6 +257,22 @@ cron.schedule('0 0 * * *', syncGovernanceData, {
   timezone: 'UTC'
 });
 
+// Add API endpoint for wallet NFTs
+app.get('/api/wallet-nfts', async (req, res) => {
+  try {
+    const { wallet } = req.query;
+    if (!wallet) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+    
+    const nfts = await fetchWalletNFTs(wallet);
+    res.json({ nfts });
+  } catch (error) {
+    console.error('Error fetching wallet NFTs:', error);
+    res.status(500).json({ error: 'Failed to fetch NFTs' });
+  }
+});
+
 // Add API endpoint for governance stats
 app.get('/api/governance-stats', async (req, res) => {
   try {
