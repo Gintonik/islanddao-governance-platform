@@ -199,106 +199,9 @@
             animation: markerAppear 0.3s ease-out forwards;
         }
 
-        .wallet-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            backdrop-filter: blur(5px);
-        }
+        /* Old wallet modal styles removed - using simple wallet component */
 
-        .wallet-modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--bg-secondary);
-            padding: 24px;
-            border-radius: 16px;
-            border: 1px solid var(--border-subtle);
-            min-width: 400px;
-            max-width: 90vw;
-            box-shadow: var(--shadow-soft);
-        }
-
-        .wallet-modal h3 {
-            text-align: center;
-            margin-bottom: 24px;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 18px;
-        }
-
-        .wallet-options {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .wallet-option {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: var(--bg-primary);
-        }
-
-        .wallet-option:hover {
-            border-color: var(--accent-primary);
-            background: var(--panel-hover);
-            box-shadow: 0 0 0 1px var(--accent-glow);
-        }
-
-        .wallet-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
-
-        .wallet-info {
-            flex: 1;
-        }
-
-        .wallet-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .wallet-status {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: var(--panel-hover);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            transition: all 0.2s ease;
-        }
-
-        .close-modal:hover {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border-color: var(--accent-primary);
-        }
+        /* All old wallet modal CSS removed - using simple wallet component */
 
         .map-container {
             height: calc(100vh - 80px);
@@ -1903,10 +1806,9 @@
                 const authResponse = await fetch('/api/auth/generate-message');
                 const { message, timestamp } = await authResponse.json();
 
-                // Request wallet signature
-                const provider = getCurrentWalletProvider();
+                // Request wallet signature using simple wallet
                 const encodedMessage = new TextEncoder().encode(message);
-                const signedMessage = await provider.signMessage(encodedMessage, 'utf8');
+                const signedMessage = await simpleWallet.signMessage(encodedMessage);
                 
                 // Prepare pin data
                 const pinData = {
@@ -1956,14 +1858,7 @@
             }
         }
 
-        // Get current wallet provider
-        function getCurrentWalletProvider() {
-            if (window.solana && window.solana.isPhantom) return window.solana;
-            if (window.solflare && window.solflare.isSolflare) return window.solflare;
-            if (window.backpack) return window.backpack;
-            if (window.coinbaseSolana) return window.coinbaseSolana;
-            return null;
-        }
+        // Old wallet provider function removed - using simple wallet component
 
         // Update live stats with authentic citizen data
         function updateLiveStats(citizens) {
