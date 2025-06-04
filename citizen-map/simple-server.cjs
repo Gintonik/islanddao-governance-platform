@@ -252,8 +252,8 @@ async function syncGovernanceData() {
   }
 }
 
-// Schedule daily sync at 12:00 UTC
-cron.schedule('0 12 * * *', syncGovernanceData, {
+// Schedule daily sync at 00:00 UTC (midnight)
+cron.schedule('0 0 * * *', syncGovernanceData, {
   timezone: 'UTC'
 });
 
@@ -284,5 +284,5 @@ app.get('/api/governance-stats', async (req, res) => {
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Citizen Map server running at http://localhost:${port}`);
-  console.log('Daily governance sync scheduled for 12:00 UTC');
+  console.log('Daily governance sync scheduled for 00:00 UTC');
 });
