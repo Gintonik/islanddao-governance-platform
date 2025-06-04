@@ -1,0 +1,496 @@
+{
+  "timestamp": "2025-06-04T00:26:03.108Z",
+  "totalCitizens": 20,
+  "citizensWithPower": 14,
+  "totalGovernancePower": 37511405.69012861,
+  "totalLocked": 20496099.922527615,
+  "totalUnlocked": 17015305.767601,
+  "citizens": [
+    {
+      "address": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "total": 591328.7391380001,
+      "locked": 575230.9452780001,
+      "unlocked": 16097.79386,
+      "deposits": [
+        {
+          "amount": 78857.030444,
+          "multiplier": 6,
+          "power": 473142.182664,
+          "lockupKind": 3,
+          "startTs": 1733465904,
+          "endTs": 1828073904,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 17014.793769,
+          "multiplier": 6,
+          "power": 102088.762614,
+          "lockupKind": 3,
+          "startTs": 1734080635,
+          "endTs": 1828688635,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 264
+        },
+        {
+          "amount": 16097.79386,
+          "multiplier": 1,
+          "power": 16097.79386,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "address": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "total": 536529.257549,
+      "locked": 0,
+      "unlocked": 536529.257549,
+      "deposits": [
+        {
+          "amount": 3500,
+          "multiplier": 1,
+          "power": 3500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 13369.680516,
+          "multiplier": 1,
+          "power": 13369.680516,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 264
+        },
+        {
+          "amount": 519659.577033,
+          "multiplier": 1,
+          "power": 519659.577033,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "address": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "total": 10393142.749205,
+      "locked": 0,
+      "unlocked": 10393142.749205,
+      "deposits": [
+        {
+          "amount": 500,
+          "multiplier": 1,
+          "power": 500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 28619.140733,
+          "multiplier": 1,
+          "power": 28619.140733,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        },
+        {
+          "amount": 10353647.013,
+          "multiplier": 1,
+          "power": 10353647.013,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 104
+        },
+        {
+          "amount": 10376.595472,
+          "multiplier": 1,
+          "power": 10376.595472,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "address": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "total": 12625.580931,
+      "locked": 0,
+      "unlocked": 12625.580931,
+      "deposits": [
+        {
+          "amount": 12625.580931,
+          "multiplier": 1,
+          "power": 12625.580931,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "address": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "total": 897211.8194876509,
+      "locked": 847211.8194876509,
+      "unlocked": 50000,
+      "deposits": [
+        {
+          "amount": 21500,
+          "multiplier": 4.533732164859205,
+          "power": 97475.24154447291,
+          "lockupKind": 1,
+          "startTs": 1721919355,
+          "endTs": 1765119355,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 49202.733486,
+          "multiplier": 4.540204006563923,
+          "power": 223390.44770703407,
+          "lockupKind": 1,
+          "startTs": 1727257787,
+          "endTs": 1765187387,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 264
+        },
+        {
+          "amount": 116304.347827,
+          "multiplier": 4.525592895452812,
+          "power": 526346.130236144,
+          "lockupKind": 1,
+          "startTs": 1733238595,
+          "endTs": 1765033795,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 344
+        },
+        {
+          "amount": 50000,
+          "multiplier": 1,
+          "power": 50000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "address": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "total": 18934935.63828921,
+      "locked": 16934935.63828921,
+      "unlocked": 2000000,
+      "deposits": [
+        {
+          "amount": 1500000,
+          "multiplier": 3.127815498192538,
+          "power": 4691723.247288807,
+          "lockupKind": 3,
+          "startTs": 1718804359,
+          "endTs": 1750340359,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 2000000,
+          "multiplier": 1,
+          "power": 2000000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 264
+        },
+        {
+          "amount": 3682784.632186,
+          "multiplier": 3.324444303367576,
+          "power": 12243212.391000401,
+          "lockupKind": 3,
+          "startTs": 1747223321,
+          "endTs": 1752407321,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "address": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "total": 126779.222404,
+      "locked": 0,
+      "unlocked": 126779.222404,
+      "deposits": [
+        {
+          "amount": 126779.222404,
+          "multiplier": 1,
+          "power": 126779.222404,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "address": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "total": 124693.845135,
+      "locked": 0,
+      "unlocked": 124693.845135,
+      "deposits": [
+        {
+          "amount": 124693.845135,
+          "multiplier": 1,
+          "power": 124693.845135,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "address": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "total": 4879,
+      "locked": 0,
+      "unlocked": 4879,
+      "deposits": [
+        {
+          "amount": 4879,
+          "multiplier": 1,
+          "power": 4879,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "address": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "total": 29484.464683,
+      "locked": 0,
+      "unlocked": 29484.464683,
+      "deposits": [
+        {
+          "amount": 29484.464683,
+          "multiplier": 1,
+          "power": 29484.464683,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 104
+        }
+      ]
+    },
+    {
+      "address": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "total": 200000,
+      "locked": 0,
+      "unlocked": 200000,
+      "deposits": [
+        {
+          "amount": 200000,
+          "multiplier": 1,
+          "power": 200000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        }
+      ]
+    },
+    {
+      "address": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "total": 3363730.150474,
+      "locked": 0,
+      "unlocked": 3363730.150474,
+      "deposits": [
+        {
+          "amount": 3361730.150474,
+          "multiplier": 1,
+          "power": 3361730.150474,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 112
+        },
+        {
+          "amount": 1071.428571,
+          "multiplier": 1,
+          "power": 1071.428571,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 428.571429,
+          "multiplier": 1,
+          "power": 428.571429,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 264
+        },
+        {
+          "amount": 500,
+          "multiplier": 1,
+          "power": 500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "multiLockup",
+          "offset": 344
+        }
+      ]
+    },
+    {
+      "address": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "total": 275883.7036967525,
+      "locked": 275883.7036967525,
+      "unlocked": 0,
+      "deposits": [
+        {
+          "amount": 10000,
+          "multiplier": 3.27447522041476,
+          "power": 32744.7522041476,
+          "lockupKind": 2,
+          "startTs": 1738742046,
+          "endTs": 1751882046,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 37626.982836,
+          "multiplier": 3.3409362173706203,
+          "power": 125709.3497071751,
+          "lockupKind": 4,
+          "startTs": 1742212684,
+          "endTs": 1752580684,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 264
+        },
+        {
+          "amount": 25738.998886,
+          "multiplier": 4.00445524324581,
+          "power": 103070.66904494078,
+          "lockupKind": 3,
+          "startTs": 1744003596,
+          "endTs": 1759555596,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 344
+        },
+        {
+          "amount": 3913,
+          "multiplier": 3.669545806411716,
+          "power": 14358.932740489045,
+          "lockupKind": 3,
+          "startTs": 1748259028,
+          "endTs": 1756035028,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 424
+        }
+      ]
+    },
+    {
+      "address": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "total": 2020181.5191360002,
+      "locked": 1862837.8157760003,
+      "unlocked": 157343.70335999998,
+      "deposits": [
+        {
+          "amount": 30998.881087,
+          "multiplier": 1,
+          "power": 30998.881087,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1720921219,
+          "isLocked": false,
+          "source": "formalEntry",
+          "offset": 104
+        },
+        {
+          "amount": 310472.969296,
+          "multiplier": 6,
+          "power": 1862837.8157760003,
+          "lockupKind": 3,
+          "startTs": 1720921219,
+          "endTs": 1783993219,
+          "isLocked": true,
+          "source": "multiLockup",
+          "offset": 184
+        },
+        {
+          "amount": 126344.822273,
+          "multiplier": 1,
+          "power": 126344.822273,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "isLocked": false,
+          "source": "unlocked",
+          "offset": 104
+        }
+      ]
+    }
+  ]
+}
