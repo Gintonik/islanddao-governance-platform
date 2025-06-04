@@ -1795,17 +1795,7 @@
 
         // Old populateWalletOptions function removed - using unified wallet component
 
-        // Handle wallet connection
-        async function handleWalletConnect() {
-            console.log('Wallet button clicked, currentWallet:', currentWallet);
-            if (currentWallet) {
-                // Already connected - wallet button is just for display
-                return;
-            } else {
-                // This is handled by the newer handleWalletButtonClick function
-                showWalletModal();
-            }
-        }
+        // Removed old wallet handler - using SimpleWallet system
 
         // Generate verification message with timestamp
         function generateVerificationMessage() {
@@ -3132,17 +3122,7 @@
         }
 
         // Wallet button click handler
-        function handleWalletButtonClick() {
-            console.log('Wallet button clicked, currentWallet:', currentWallet);
-            
-            if (currentWallet) {
-                console.log('Disconnecting wallet');
-                disconnectWallet();
-            } else {
-                console.log('Showing wallet modal');
-                showWalletModal();
-            }
-        }
+        // Removed - using SimpleWallet system with proper event handlers
 
         // Add pin button click handler
         function handleAddPinClick() {
