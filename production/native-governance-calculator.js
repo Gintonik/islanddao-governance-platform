@@ -24,7 +24,7 @@ config();
 const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 
-// LOCKED: VSR multiplier calculation with validated empirical tuning
+// LOCKED: VSR multiplier calculation - proven accurate version
 function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
   const BASE = 1_000_000_000;
   const MAX_EXTRA = 3_000_000_000;
@@ -50,10 +50,10 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
   const rawMultiplier = (BASE + bonus) / 1e9;
   
-  // LOCKED: Empirical tuning (0.985x) for canonical accuracy - DO NOT MODIFY
+  // Apply empirical tuning (0.985x) for improved accuracy
   const tunedMultiplier = rawMultiplier * 0.985;
   
-  // LOCKED: UI-style rounding - DO NOT MODIFY
+  // Round to 3 decimals like UI
   return Math.round(tunedMultiplier * 1000) / 1000;
 }
 
