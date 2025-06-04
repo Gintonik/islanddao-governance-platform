@@ -2128,9 +2128,32 @@
                 
                 submitBtn.textContent = 'Requesting Signature...';
                 
-                // Step 1: Verify wallet ownership with automatic fallback
+                // Step 1: Create a wrapper for the connected wallet
                 console.log('Starting wallet verification...');
-                const verificationData = await walletVerifier.verifyWallet(simpleWallet, connection);
+                const walletWrapper = {
+                    isConnected: () => !!currentWallet,
+                    getPublicKey: () => ({ toString: () => currentWallet }),
+                    getConnectedWallet: () => localStorage.getItem('lastConnectedWallet') || 'phantom',
+                    signMessage: async (message) => {
+                        const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
+                        const walletConfig = WALLET_CONFIGS[walletKey];
+                        const provider = walletConfig.provider();
+                        
+                        if (walletKey === 'phantom' || walletKey === 'solflare') {
+                            return await provider.signMessage(message, 'utf8');
+                        } else {
+                            return await provider.signMessage(message);
+                        }
+                    },
+                    signTransaction: async (transaction) => {
+                        const walletKey = localStorage.getItem('lastConnectedWallet') || 'phantom';
+                        const walletConfig = WALLET_CONFIGS[walletKey];
+                        const provider = walletConfig.provider();
+                        return await provider.signTransaction(transaction);
+                    }
+                };
+                
+                const verificationData = await walletVerifier.verifyWallet(walletWrapper, connection);
                 console.log('Wallet verification successful:', verificationData);
                 
                 submitBtn.textContent = 'Creating Pin...';
