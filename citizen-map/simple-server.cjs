@@ -337,7 +337,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
 
     // Check if citizen already exists
     const existingCitizen = await pool.query(
-      'SELECT id FROM citizens WHERE wallet_address = $1',
+      'SELECT id FROM citizens WHERE wallet = $1',
       [wallet_address]
     );
 
@@ -349,7 +349,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           twitter_handle = $6, telegram_handle = $7, discord_handle = $8,
           primary_nft = $9, pfp_nft = $10, image_url = $11,
           nft_ids = $12, verified = true, updated_at = NOW()
-        WHERE wallet_address = $1
+        WHERE wallet = $1
         RETURNING *
       `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url, JSON.stringify(nfts)]);
       
@@ -358,7 +358,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       // Insert new citizen
       const result = await pool.query(`
         INSERT INTO citizens (
-          wallet_address, lat, lng, nickname, bio, 
+          wallet, lat, lng, nickname, bio, 
           twitter_handle, telegram_handle, discord_handle,
           primary_nft, pfp_nft, image_url, nft_ids, 
           verified, created_at, updated_at
