@@ -1264,18 +1264,18 @@
         <div class="stats-overlay">
             <div class="stats-title">Live Stats</div>
             <div class="stat-item">
-                <span class="stat-label">Total Citizens:</span>
-                <span class="stat-value" id="totalCitizens">0</span>
+                <span class="stat-label">Citizen Pins:</span>
+                <span class="stat-value" id="citizenPins">0</span>
             </div>
             <div class="stat-separator"></div>
             <div class="stat-item">
-                <span class="stat-label">Active Voters:</span>
-                <span class="stat-value" id="activeCitizens">0</span>
+                <span class="stat-label">PERKS Collected:</span>
+                <span class="stat-value" id="perksCollected">0</span>
             </div>
             <div class="stat-separator"></div>
             <div class="stat-item">
-                <span class="stat-label">Next Sync:</span>
-                <span class="stat-value" id="nextSync">12:00 UTC</span>
+                <span class="stat-label">Daily Sync:</span>
+                <span class="stat-value" id="dailySync">--:--</span>
             </div>
         </div>
         
@@ -1428,6 +1428,11 @@
                     console.error('Auto-refresh error:', error);
                 }
             }, 10000);
+            
+            // Update countdown timer every minute
+            setInterval(() => {
+                updateDailySyncCountdown();
+            }, 60000);
         }
 
         async function checkForUpdates() {
@@ -1451,40 +1456,72 @@
             }
         }
 
-        // Load governance statistics
+        // Load and update live stats
         async function loadGovernanceStats() {
             try {
-                const response = await fetch('/api/governance-stats');
+                const response = await fetch('/api/citizens');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const stats = await response.json();
+                const citizens = await response.json();
                 
-                // Update stats display
-                document.getElementById('totalCitizens').textContent = stats.totalCitizens || 0;
-                document.getElementById('activeCitizens').textContent = stats.activeCitizens || 0;
+                // Count citizen pins
+                const citizenPins = citizens.length;
+                
+                // Count total PERKS collected
+                let totalPerks = 0;
+                citizens.forEach(citizen => {
+                    if (citizen.nft_ids) {
+                        try {
+                            const nftIds = Array.isArray(citizen.nft_ids) ? citizen.nft_ids : JSON.parse(citizen.nft_ids);
+                            totalPerks += nftIds.length;
+                        } catch (e) {
+                            // Handle parsing errors gracefully
+                        }
+                    }
+                });
+                
+                // Update display
+                document.getElementById('citizenPins').textContent = citizenPins;
+                document.getElementById('perksCollected').textContent = totalPerks;
+                
+                // Update daily sync countdown
+                updateDailySyncCountdown();
                 
             } catch (error) {
-                console.error('Error loading governance stats:', error);
-                // Fallback to count from loaded citizens
-                const citizens = await getCitizenCount();
-                document.getElementById('totalCitizens').textContent = citizens.total || 0;
-                document.getElementById('activeCitizens').textContent = citizens.active || 0;
+                console.error('Error loading stats:', error);
+                // Set fallback values
+                document.getElementById('citizenPins').textContent = '0';
+                document.getElementById('perksCollected').textContent = '0';
+                document.getElementById('dailySync').textContent = '--:--';
             }
         }
 
-        // Get citizen count fallback
-        async function getCitizenCount() {
-            try {
-                const response = await fetch('/api/citizens');
-                const citizens = await response.json();
-                const activeCitizens = citizens.filter(c => c.native_governance_power > 0).length;
-                return {
-                    total: citizens.length,
-                    active: activeCitizens
-                };
-            } catch (error) {
-                return { total: 0, active: 0 };
+        // Update daily sync countdown to next 12:00 UTC
+        function updateDailySyncCountdown() {
+            const now = new Date();
+            const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+            
+            // Calculate next 12:00 UTC
+            const nextSync = new Date(utcNow);
+            nextSync.setUTCHours(12, 0, 0, 0);
+            
+            // If we've passed 12:00 UTC today, set to tomorrow
+            if (utcNow.getUTCHours() >= 12) {
+                nextSync.setUTCDate(nextSync.getUTCDate() + 1);
+            }
+            
+            const timeUntilSync = nextSync.getTime() - utcNow.getTime();
+            const hoursRemaining = Math.floor(timeUntilSync / (1000 * 60 * 60));
+            const minutesRemaining = Math.floor((timeUntilSync % (1000 * 60 * 60)) / (1000 * 60));
+            
+            const dailySyncElement = document.getElementById('dailySync');
+            if (dailySyncElement) {
+                if (hoursRemaining > 0) {
+                    dailySyncElement.textContent = `${hoursRemaining}h ${minutesRemaining}m`;
+                } else {
+                    dailySyncElement.textContent = `${minutesRemaining}m`;
+                }
             }
         }
 
