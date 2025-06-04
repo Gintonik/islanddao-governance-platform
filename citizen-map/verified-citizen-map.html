@@ -16,7 +16,7 @@
     <script src="https://unpkg.com/@solana/wallet-standard@1.0.0/lib/index.iife.js"></script>
     
     <!-- Simple Wallet Connector -->
-    <script src="./simple-wallet.js"></script>
+    <script src="./enhanced-wallet.js"></script>
     <style>
         /* Hide scrollbars for all browsers */
         .card-face::-webkit-scrollbar,
@@ -1299,24 +1299,24 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
 
-        // ===== SIMPLE WALLET =====
-        let simpleWallet;
+        // ===== ENHANCED WALLET =====
+        let enhancedWallet;
         
-        // Initialize simple wallet
+        // Initialize enhanced wallet with hardware support
         function initializeWalletAdapter() {
-            simpleWallet = window.simpleWallet;
+            enhancedWallet = new EnhancedWallet();
 
             // Set up event listeners
-            simpleWallet.on('connect', async (data) => {
+            enhancedWallet.on('connect', async (data) => {
                 console.log('Wallet connected event:', data);
                 currentWallet = data.publicKey;
                 updateWalletUI();
-                showNotification(`Connected to ${data.wallet}!`, 'success');
+                showNotification(`Connected to wallet!`, 'success');
                 
                 // Verify wallet ownership with signature
                 try {
                     const verificationMessage = generateVerificationMessage();
-                    const signature = await simpleWallet.signMessage(verificationMessage);
+                    const signature = await enhancedWallet.signMessage(verificationMessage);
                     console.log('Signature verification successful');
                 } catch (sigError) {
                     console.warn('Signature verification failed:', sigError);
@@ -1331,7 +1331,7 @@
                 }
             });
 
-            simpleWallet.on('disconnect', () => {
+            enhancedWallet.on('disconnect', () => {
                 currentWallet = null;
                 updateWalletUI();
                 showNotification('Wallet disconnected', 'info');
