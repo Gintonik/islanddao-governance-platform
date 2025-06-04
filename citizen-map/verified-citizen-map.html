@@ -1384,12 +1384,19 @@
             });
 
             // Set up event listeners
-            walletAdapter.on('connect', (data) => {
+            walletAdapter.on('connect', async (data) => {
+                console.log('Wallet connected event:', data);
                 currentWallet = data.publicKey;
                 updateWalletUI();
                 closeWalletModal();
                 showNotification(`Connected to ${data.wallet}!`, 'success');
-                loadUserNfts();
+                
+                // Load NFTs after successful connection
+                try {
+                    await loadUserNfts();
+                } catch (error) {
+                    console.error('Failed to load NFTs after connection:', error);
+                }
             });
 
             walletAdapter.on('disconnect', () => {
