@@ -1642,32 +1642,59 @@
             });
         }
 
-        // Populate wallet options
-        function populateWalletOptions() {
+        // Populate wallet options using universal adapter
+        async function populateWalletOptions() {
             const walletOptionsContainer = document.getElementById('walletOptions');
-            walletOptionsContainer.innerHTML = '';
+            walletOptionsContainer.innerHTML = '<div class="loading">Detecting wallets...</div>';
 
-            Object.entries(walletProviders).forEach(([key, wallet]) => {
-                const isDetected = wallet.detected();
-                const walletElement = document.createElement('div');
-                walletElement.className = 'wallet-option';
-                walletElement.innerHTML = `
-                    <img src="${wallet.icon}" alt="${wallet.name}" class="wallet-icon">
-                    <div class="wallet-info">
-                        <div class="wallet-name">${wallet.name}</div>
-                        <div class="wallet-status">${isDetected ? 'Detected' : 'Not installed'}</div>
-                    </div>
-                `;
-
-                if (isDetected) {
-                    walletElement.addEventListener('click', () => connectWallet(key));
-                } else {
-                    walletElement.style.opacity = '0.5';
-                    walletElement.style.cursor = 'not-allowed';
+            try {
+                const detectedWallets = await walletAdapter.detectWallets();
+                const allWallets = walletAdapter.getSupportedWallets();
+                
+                walletOptionsContainer.innerHTML = '';
+                
+                if (detectedWallets.length === 0) {
+                    walletOptionsContainer.innerHTML = `
+                        <div class="no-wallets">
+                            <p>No Solana wallets detected.</p>
+                            <p>Please install a wallet extension:</p>
+                            <div class="wallet-suggestions">
+                                <a href="https://phantom.app" target="_blank">Phantom</a>
+                                <a href="https://solflare.com" target="_blank">Solflare</a>
+                                <a href="https://backpack.app" target="_blank">Backpack</a>
+                            </div>
+                        </div>
+                    `;
+                    return;
                 }
+                
+                allWallets.forEach((wallet) => {
+                    const isDetected = detectedWallets.some(detected => detected.identifier === wallet.identifier);
+                    
+                    const walletElement = document.createElement('div');
+                    walletElement.className = `wallet-option ${isDetected ? 'detected' : 'not-detected'}`;
+                    walletElement.innerHTML = `
+                        <img src="${wallet.icon}" alt="${wallet.name}" class="wallet-icon" onerror="this.textContent='💼'">
+                        <div class="wallet-info">
+                            <div class="wallet-name">${wallet.name}</div>
+                            <div class="wallet-status">${isDetected ? 'Detected' : 'Not Installed'}</div>
+                        </div>
+                    `;
 
-                walletOptionsContainer.appendChild(walletElement);
-            });
+                    if (isDetected) {
+                        walletElement.addEventListener('click', () => connectWallet(wallet.identifier));
+                    } else {
+                        walletElement.style.opacity = '0.5';
+                        walletElement.style.cursor = 'not-allowed';
+                    }
+
+                    walletOptionsContainer.appendChild(walletElement);
+                });
+                
+            } catch (error) {
+                console.error('Error populating wallet options:', error);
+                walletOptionsContainer.innerHTML = '<div class="error">Error loading wallet options. Please refresh and try again.</div>';
+            }
         }
 
         // Handle wallet connection
