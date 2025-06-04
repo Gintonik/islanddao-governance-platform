@@ -1535,7 +1535,7 @@
                 
                 closeWalletModal();
                 updateWalletUI();
-                showNotification(`Connected to ${wallet.name}!`, 'success');
+                showNotification(`Wallet Connected`, 'success');
                 
                 // Load NFTs after connection
                 await loadUserNfts();
@@ -1558,6 +1558,47 @@
                     }
                 }
             }
+        }
+
+        function updateWalletUI() {
+            const walletBtn = document.getElementById('walletBtn');
+            const walletText = document.getElementById('walletText');
+            const walletIcon = document.getElementById('walletIcon');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            if (currentWallet) {
+                // Show connected state
+                walletText.textContent = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`;
+                walletIcon.textContent = '✅';
+                walletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
+                walletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
+                disconnectBtn.style.display = 'block';
+            } else {
+                // Show disconnected state
+                walletText.textContent = 'Connect Wallet';
+                walletIcon.textContent = '🔗';
+                walletBtn.style.background = '';
+                walletBtn.style.borderColor = '';
+                disconnectBtn.style.display = 'none';
+            }
+        }
+
+        function handleWalletButtonClick() {
+            if (currentWallet) {
+                // Already connected, do nothing or show wallet info
+                return;
+            } else {
+                // Not connected, show wallet modal
+                showWalletModal();
+            }
+        }
+
+        function disconnectWallet() {
+            currentWallet = null;
+            walletNfts = [];
+            localStorage.removeItem('lastConnectedWallet');
+            updateWalletUI();
+            showNotification('Wallet disconnected', 'info');
         }
 
         // Initialize wallet system
@@ -1954,9 +1995,9 @@
                 updateNftGrid();
                 
                 if (walletNfts.length === 0) {
-                    showNotification('No PERKS NFTs found in your wallet. You need a PERKS NFT to create citizen pins.', 'warning');
+                    showNotification('No IslandDAO PERKS Found', 'warning');
                 } else {
-                    showNotification(`Found ${walletNfts.length} PERKS NFT${walletNfts.length > 1 ? 's' : ''}!`, 'success');
+                    showNotification(`${walletNfts.length} IslandDAO PERKS Found`, 'info');
                 }
             } catch (error) {
                 console.error('Error loading user NFTs:', error);
