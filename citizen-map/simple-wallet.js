@@ -378,15 +378,18 @@ class SimpleWallet {
         } catch (error) {
             console.error('Signature error:', error);
             
+            const errorMessage = error.message || error.toString() || 'Unknown error';
+            const errorCode = error.code;
+            
             // Provide user-friendly error messages
-            if (error.message.includes('User rejected')) {
-                throw new Error('Signature request was cancelled by user');
-            } else if (error.message.includes('not supported')) {
+            if (errorMessage.includes('User rejected') || errorMessage.includes('cancelled')) {
+                throw new Error('Transaction cancelled');
+            } else if (errorMessage.includes('not supported')) {
                 throw new Error(`${this.getConnectedWallet()} does not support message signing`);
-            } else if (error.code === 4001) {
-                throw new Error('Signature request was rejected by user');
+            } else if (errorCode === 4001) {
+                throw new Error('Transaction cancelled');
             } else {
-                throw new Error(`Failed to sign message: ${error.message}`);
+                throw new Error(`Transaction cancelled`);
             }
         }
     }
@@ -414,15 +417,18 @@ class SimpleWallet {
         } catch (error) {
             console.error('Transaction signature error:', error);
             
+            const errorMessage = error.message || error.toString() || 'Unknown error';
+            const errorCode = error.code;
+            
             // Provide user-friendly error messages
-            if (error.message.includes('User rejected')) {
-                throw new Error('Transaction signature was cancelled by user');
-            } else if (error.message.includes('not supported')) {
+            if (errorMessage.includes('User rejected') || errorMessage.includes('cancelled')) {
+                throw new Error('Transaction cancelled');
+            } else if (errorMessage.includes('not supported')) {
                 throw new Error(`${this.getConnectedWallet()} does not support transaction signing`);
-            } else if (error.code === 4001) {
-                throw new Error('Transaction signature was rejected by user');
+            } else if (errorCode === 4001) {
+                throw new Error('Transaction cancelled');
             } else {
-                throw new Error(`Failed to sign transaction: ${error.message}`);
+                throw new Error(`Transaction cancelled`);
             }
         }
     }
