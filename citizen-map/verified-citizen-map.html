@@ -1773,7 +1773,7 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            document.getElementById('walletBtn').addEventListener('click', handleWalletConnect);
+            // Wallet button handled by updateWalletUI function
             document.getElementById('addPinBtn').addEventListener('click', handleAddPin);
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             document.getElementById('pinForm').addEventListener('submit', handleSubmitPin);
@@ -3194,21 +3194,7 @@
             }
         }
 
-        // Initialize SimpleWallet instance
-        function initializeWallet() {
-            try {
-                simpleWallet = new SimpleWallet();
-                console.log('SimpleWallet initialized successfully');
-            } catch (error) {
-                console.error('Failed to initialize SimpleWallet:', error);
-            }
-        }
-
-        // Initialize app on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeWallet();
-            initializeApp();
-        });
+        // Removed duplicate initialization - handled in initializeApp
 
         // Close modals when clicking outside
         window.addEventListener('click', function(e) {
