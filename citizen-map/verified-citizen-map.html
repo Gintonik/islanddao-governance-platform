@@ -3419,7 +3419,12 @@
                 
             } catch (error) {
                 console.error('Disconnect failed:', error);
-                showNotification('Failed to disconnect wallet', 'error');
+                // Force clear state even if disconnect fails
+                currentWallet = null;
+                walletNfts = [];
+                localStorage.removeItem('lastConnectedWallet');
+                updateWalletUI();
+                showNotification('Wallet disconnected', 'success');
             }
         }
 
