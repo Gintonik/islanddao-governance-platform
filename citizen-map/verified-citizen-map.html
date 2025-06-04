@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Solana Web3.js -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <style>
         /* Hide scrollbars for all browsers */
         .card-face::-webkit-scrollbar,
@@ -1369,24 +1372,61 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
 
-        // ===== WALLET CONFIGURATION =====
+        // ===== ENHANCED WALLET CONFIGURATION =====
         const walletProviders = {
             phantom: {
                 name: 'Phantom',
                 icon: './phantom-logo.png',
-                detected: () => window.solana?.isPhantom
+                detected: () => {
+                    return window.solana && window.solana.isPhantom;
+                },
+                provider: () => window.solana
             },
             solflare: {
                 name: 'Solflare',
                 icon: './solflare-logo.png',
-                detected: () => window.solflare?.isSolflare
+                detected: () => {
+                    return window.solflare && window.solflare.isSolflare;
+                },
+                provider: () => window.solflare
             },
             backpack: {
                 name: 'Backpack',
                 icon: './backpack-logo.png',
-                detected: () => window.backpack
+                detected: () => {
+                    return window.backpack && window.backpack.isBackpack;
+                },
+                provider: () => window.backpack
             }
         };
+
+        // Enhanced wallet detection with retry mechanism
+        let walletDetectionRetries = 0;
+        const maxRetries = 10;
+
+        function detectWallets() {
+            return new Promise((resolve) => {
+                function checkWallets() {
+                    const detected = {};
+                    let foundAny = false;
+
+                    Object.entries(walletProviders).forEach(([key, wallet]) => {
+                        if (wallet.detected()) {
+                            detected[key] = wallet;
+                            foundAny = true;
+                        }
+                    });
+
+                    if (foundAny || walletDetectionRetries >= maxRetries) {
+                        resolve(detected);
+                    } else {
+                        walletDetectionRetries++;
+                        setTimeout(checkWallets, 100);
+                    }
+                }
+                checkWallets();
+            });
+        }
 
         // ===== APPLICATION INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', initializeApp);
@@ -1663,38 +1703,38 @@
             return `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
         }
 
-        // Connect to specific wallet with signature verification
+        // Enhanced wallet connection with improved error handling
         async function connectWallet(walletType) {
             try {
                 console.log('Connecting to wallet:', walletType);
-                let provider;
                 
-                switch (walletType) {
-                    case 'phantom':
-                        provider = window.solana;
-                        if (provider && !provider.isPhantom) {
-                            provider = null;
-                        }
-                        break;
-                    case 'solflare':
-                        provider = window.solflare;
-                        break;
-                    case 'backpack':
-                        provider = window.backpack;
-                        break;
-                    default:
-                        throw new Error('Unsupported wallet type: ' + walletType);
+                const walletConfig = walletProviders[walletType];
+                if (!walletConfig) {
+                    throw new Error(`Unsupported wallet type: ${walletType}`);
                 }
 
-                console.log('Provider found:', !!provider, provider);
+                // Check if wallet is detected
+                if (!walletConfig.detected()) {
+                    throw new Error(`${walletConfig.name} wallet not detected. Please install the wallet extension and refresh the page.`);
+                }
 
+                const provider = walletConfig.provider();
                 if (!provider) {
-                    throw new Error(`${walletProviders[walletType].name} wallet not found. Please install the wallet extension.`);
+                    throw new Error(`${walletConfig.name} wallet provider not available.`);
                 }
 
-                // Step 1: Connect to wallet
-                console.log('Attempting to connect...');
-                const response = await provider.connect();
+                console.log(`Attempting to connect to ${walletConfig.name}...`);
+                
+                // Different connection methods for different wallets
+                let response;
+                if (walletType === 'phantom' || walletType === 'solflare') {
+                    response = await provider.connect({ onlyIfTrusted: false });
+                } else if (walletType === 'backpack') {
+                    response = await provider.connect();
+                } else {
+                    response = await provider.connect();
+                }
+                
                 console.log('Connection response:', response);
                 
                 if (!response || !response.publicKey) {
@@ -1704,26 +1744,33 @@
                 const publicKey = response.publicKey.toString();
                 console.log('Connected with public key:', publicKey);
                 
-                // For now, skip signature verification to test basic connection
-                // Step 2: Set verified wallet
+                // Set connected wallet
                 currentWallet = publicKey;
                 
                 // Update UI
                 updateWalletUI();
                 closeWalletModal();
-                showNotification(`Connected to ${walletProviders[walletType].name}!`, 'success');
+                showNotification(`Successfully connected to ${walletConfig.name}!`, 'success');
                 
                 // Load user's NFTs
                 try {
                     await loadUserNfts();
                 } catch (nftError) {
                     console.warn('Failed to load NFTs:', nftError);
-                    // Don't fail connection if NFT loading fails
+                    showNotification('Connected to wallet, but failed to load NFTs. You may need a PERKS NFT to create pins.', 'info');
                 }
                 
             } catch (error) {
                 console.error('Error connecting wallet:', error);
-                showNotification(`Failed to connect wallet: ${error.message}`, 'error');
+                
+                // Provide specific error messages
+                if (error.code === 4001) {
+                    showNotification('Connection rejected by user', 'error');
+                } else if (error.code === -32002) {
+                    showNotification('Connection request already pending. Please check your wallet.', 'error');
+                } else {
+                    showNotification(`Failed to connect: ${error.message}`, 'error');
+                }
             }
         }
 
