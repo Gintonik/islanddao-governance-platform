@@ -1,13 +1,8 @@
-// Production server for IslandDAO Governance Platform
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import pg from 'pg';
-
-const { Pool } = pg;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Direct inline server implementation to avoid module issues
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { Pool } = require('pg');
 
 const port = process.env.PORT || 5000;
 
