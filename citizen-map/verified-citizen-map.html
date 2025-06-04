@@ -2260,12 +2260,17 @@
                 submitBtn.textContent = 'Creating Pin...';
                 
                 // Step 2: Prepare citizen data
+                const selectedNft = walletNfts.find(nft => nft.mint === selectedPfp);
+                console.log('Selected NFT:', selectedNft);
+                console.log('Selected PFP:', selectedPfp);
+                console.log('Wallet NFTs:', walletNfts);
+                
                 const citizenData = {
                     lat: selectedLocation.lat,
                     lng: selectedLocation.lng,
                     primary_nft: selectedPrimary,
                     pfp_nft: selectedPfp,
-                    image_url: walletNfts.find(nft => nft.mint === selectedPfp)?.image,
+                    image_url: selectedNft?.image,
                     nickname: document.getElementById('nickname').value,
                     bio: document.getElementById('bio').value,
                     twitter_handle: document.getElementById('twitter').value,
@@ -2273,6 +2278,8 @@
                     discord_handle: document.getElementById('discord').value,
                     nfts: [selectedPrimary]
                 };
+                
+                console.log('Citizen data prepared:', citizenData);
                 
                 console.log('Citizen data prepared:', citizenData);
                 
@@ -3248,10 +3255,16 @@
         // Create popup content for citizens
         function createPopupContent(citizen, isVerified) {
             const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-            let imageUrl = 'https://via.placeholder.com/80';
+            let imageUrl = citizen.image_url;
             
-            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
+            // If no image_url stored, try to get from NFT metadata
+            if (!imageUrl && pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
                 imageUrl = citizen.nftMetadata[pfpNft].image;
+            }
+            
+            // If still no image, use fallback
+            if (!imageUrl) {
+                imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiM0ZmFjZmUiLz4KPHRleHQgeD0iNDAiIHk9IjQ1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJLPC90ZXh0Pgo8L3N2Zz4K';
             }
 
             const citizenName = citizen.nickname || 
