@@ -92,29 +92,27 @@ class WalletVerifier {
             
             this.log('Message signature failed', errorMessage);
             
-            // Check if it's a user cancellation
+            // Check for hardware wallet errors first (before checking cancellation)
+            if (errorMessage.includes('Ledger') ||
+                errorMessage.includes('unsupportedOperation') ||
+                errorMessage.includes('off chain messages') ||
+                errorMessage.includes('not yet supported') ||
+                errorMessage.includes('not supported') || 
+                errorName === 'NotSupportedError' ||
+                errorMessage.includes('does not support') ||
+                errorMessage.includes('WalletSignMessageError') ||
+                errorMessage.includes('WalletNotConnectedError') ||
+                (errorMessage.includes('Transaction cancelled') && errorCode !== 4001)) {
+                this.log('Hardware wallet or unsupported operation detected, will try transaction fallback');
+                throw error; // Let caller handle fallback
+            }
+            
+            // Check if it's a user cancellation (after hardware wallet check)
             if (errorMessage.includes('User rejected') || 
                 errorMessage.includes('cancelled') ||
                 errorMessage.includes('Transaction cancelled') ||
                 errorCode === 4001) {
                 throw new Error('Signature canceled. Try again or switch wallet.');
-            }
-            
-            // Check for Ledger hardware wallet errors
-            if (errorMessage.includes('Ledger') ||
-                errorMessage.includes('unsupportedOperation') ||
-                errorMessage.includes('off chain messages') ||
-                errorMessage.includes('not yet supported')) {
-                this.log('Hardware wallet detected, will try transaction fallback');
-                throw error; // Let caller handle fallback
-            }
-            
-            // Check if signMessage is not supported (other hardware wallets)
-            if (errorMessage.includes('not supported') || 
-                errorName === 'NotSupportedError' ||
-                errorMessage.includes('does not support')) {
-                this.log('SignMessage not supported, will try transaction fallback');
-                throw error; // Let caller handle fallback
             }
             
             throw error;

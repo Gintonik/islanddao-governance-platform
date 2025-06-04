@@ -3506,7 +3506,10 @@
             // Debounce the API call
             usernameCheckTimeout = setTimeout(async () => {
                 try {
-                    const response = await fetch(`/api/check-username?username=${encodeURIComponent(username.trim())}`);
+                    // Include current wallet address to allow same user to keep their username when moving pins
+                    const walletAddress = simpleWallet && simpleWallet.isConnected() ? simpleWallet.getPublicKey() : '';
+                    const url = `/api/check-username?username=${encodeURIComponent(username.trim())}${walletAddress ? `&wallet=${walletAddress}` : ''}`;
+                    const response = await fetch(url);
                     const data = await response.json();
                     
                     if (data.available) {

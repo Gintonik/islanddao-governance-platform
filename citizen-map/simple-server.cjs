@@ -276,7 +276,7 @@ app.get('/api/wallet-nfts', async (req, res) => {
 // Add API endpoint to check username availability
 app.get('/api/check-username', async (req, res) => {
   try {
-    const { username } = req.query;
+    const { username, wallet } = req.query;
     if (!username) {
       return res.status(400).json({ error: 'Username required' });
     }
@@ -294,10 +294,17 @@ app.get('/api/check-username', async (req, res) => {
       return;
     }
     
-    const result = await pool.query(
-      'SELECT id FROM citizens WHERE LOWER(nickname) = LOWER($1)',
-      [trimmedUsername]
-    );
+    // Check if username exists for other wallets
+    let query = 'SELECT id, wallet FROM citizens WHERE LOWER(nickname) = LOWER($1)';
+    let params = [trimmedUsername];
+    
+    if (wallet) {
+      // If wallet is provided, exclude current wallet from check
+      query += ' AND wallet != $2';
+      params.push(wallet);
+    }
+    
+    const result = await pool.query(query, params);
     
     const available = result.rows.length === 0;
     res.json({ 
