@@ -1414,7 +1414,10 @@
                 initializeWalletAdapter();
                 
                 // Initialize map
-                await initializeMap();
+                initializeMap();
+                
+                // Set up event listeners
+                setupEventListeners();
                 
                 // Load citizens data
                 await loadCitizens();
@@ -1422,8 +1425,11 @@
                 // Update stats
                 await loadGovernanceStats();
                 
-                // Set up auto-refresh
-                setInterval(updateGovernanceStats, 60000); // Update every minute
+                // Initialize theme
+                initializeTheme();
+                
+                // Start auto-refresh
+                startAutoRefresh();
                 
                 console.log('Application initialized successfully');
             } catch (error) {
