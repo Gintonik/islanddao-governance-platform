@@ -309,14 +309,85 @@ class SimpleWallet {
             throw new Error('No wallet connected');
         }
 
-        const walletConfig = this.wallets.get(this.connectedWallet);
-        const provider = walletConfig.provider();
-        const encodedMessage = typeof message === 'string' ? new TextEncoder().encode(message) : message;
+        try {
+            const walletConfig = this.wallets.get(this.connectedWallet);
+            const provider = walletConfig.provider();
+            
+            if (!provider || !provider.signMessage) {
+                throw new Error(`${walletConfig.name} does not support message signing`);
+            }
 
-        if (this.connectedWallet === 'phantom' || this.connectedWallet === 'solflare') {
-            return await provider.signMessage(encodedMessage, 'utf8');
-        } else {
-            return await provider.signMessage(encodedMessage);
+            // Ensure message is properly encoded as Uint8Array
+            let encodedMessage;
+            if (typeof message === 'string') {
+                encodedMessage = new TextEncoder().encode(message);
+            } else if (message instanceof Uint8Array) {
+                encodedMessage = message;
+            } else {
+                throw new Error('Message must be string or Uint8Array');
+            }
+
+            console.log(`Signing message with ${walletConfig.name}...`);
+            
+            // Handle different wallet signature formats
+            let signResult;
+            
+            if (this.connectedWallet === 'phantom') {
+                // Phantom expects message and encoding parameter
+                signResult = await provider.signMessage(encodedMessage, 'utf8');
+            } else if (this.connectedWallet === 'solflare') {
+                // Solflare has similar API to Phantom
+                signResult = await provider.signMessage(encodedMessage, 'utf8');
+            } else if (this.connectedWallet === 'backpack') {
+                // Backpack uses standard signMessage
+                signResult = await provider.signMessage(encodedMessage);
+            } else if (this.connectedWallet === 'coinbase') {
+                // Coinbase Wallet format
+                signResult = await provider.signMessage(encodedMessage);
+            } else if (this.connectedWallet === 'glow') {
+                // Glow Wallet format
+                signResult = await provider.signMessage(encodedMessage);
+            } else if (this.connectedWallet === 'exodus') {
+                // Exodus Wallet format
+                signResult = await provider.signMessage(encodedMessage);
+            } else if (this.connectedWallet === 'trust') {
+                // Trust Wallet format
+                signResult = await provider.signMessage(encodedMessage);
+            } else {
+                // Default for other wallets
+                signResult = await provider.signMessage(encodedMessage);
+            }
+
+            // Normalize signature format across all wallets
+            if (signResult && signResult.signature) {
+                // Most wallets return { signature: Uint8Array, publicKey: PublicKey }
+                return {
+                    signature: signResult.signature,
+                    publicKey: signResult.publicKey || this.publicKey
+                };
+            } else if (signResult instanceof Uint8Array) {
+                // Some wallets return signature directly
+                return {
+                    signature: signResult,
+                    publicKey: this.publicKey
+                };
+            } else {
+                throw new Error('Invalid signature response from wallet');
+            }
+
+        } catch (error) {
+            console.error('Signature error:', error);
+            
+            // Provide user-friendly error messages
+            if (error.message.includes('User rejected')) {
+                throw new Error('Signature request was cancelled by user');
+            } else if (error.message.includes('not supported')) {
+                throw new Error(`${this.getConnectedWallet()} does not support message signing`);
+            } else if (error.code === 4001) {
+                throw new Error('Signature request was rejected by user');
+            } else {
+                throw new Error(`Failed to sign message: ${error.message}`);
+            }
         }
     }
 
