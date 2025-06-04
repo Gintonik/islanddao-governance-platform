@@ -1600,9 +1600,9 @@
         let simpleWallet = null;
         let solanaConnection = null;
 
-        // Create Solana connection for hardware wallet fallback
+        // Create Solana connection for hardware wallet fallback using Helius RPC
         if (window.solanaWeb3) {
-            solanaConnection = new window.solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+            solanaConnection = new window.solanaWeb3.Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
         }
 
         // ===== WALLET CONNECTION SYSTEM (Using SimpleWallet) =====
