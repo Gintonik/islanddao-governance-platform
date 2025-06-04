@@ -1444,32 +1444,32 @@
 
         // ===== WALLET CONNECTION SYSTEM =====
         
-        // Wallet configurations with official logos
+        // Wallet configurations with working official logos
         const WALLET_CONFIGS = {
             phantom: {
                 name: 'Phantom',
-                icon: 'https://cdn.phantom.app/assets/phantom_icon_black.svg',
+                icon: 'https://phantom.app/img/phantom-logo.svg',
                 url: 'https://phantom.app',
                 detect: () => window.phantom?.solana?.isPhantom,
                 provider: () => window.phantom?.solana
             },
             solflare: {
                 name: 'Solflare', 
-                icon: 'https://raw.githubusercontent.com/solflare-wallet/brandkit/master/assets/icon/solflare-icon.svg',
+                icon: 'https://solflare.com/images/logo.svg',
                 url: 'https://solflare.com',
                 detect: () => window.solflare?.isSolflare,
                 provider: () => window.solflare
             },
             backpack: {
                 name: 'Backpack',
-                icon: 'https://backpack.app/media/Backpack_App_Icon.svg',
+                icon: 'https://backpack.app/icon.png',
                 url: 'https://backpack.app',
                 detect: () => window.backpack?.isBackpack,
                 provider: () => window.backpack
             },
             coinbase: {
                 name: 'Coinbase Wallet',
-                icon: 'https://assets.coinbase.com/assets/app-icon-512x512.svg',
+                icon: 'https://images.ctfassets.net/q5ulk4bp65r7/3VbZqohOorINNZM8tGEzJn/72d6e35936b7cef3a1f0a3ae7b123fa7/coinbase-wallet.png',
                 url: 'https://www.coinbase.com/wallet',
                 detect: () => window.coinbaseSolana,
                 provider: () => window.coinbaseSolana
@@ -1505,7 +1505,7 @@
                 
                 btn.innerHTML = `
                     <div class="wallet-item-info">
-                        <img src="${wallet.icon}" alt="${wallet.name}" style="width: 40px; height: 40px; margin-right: 16px; border-radius: 8px; background: white; padding: 6px; object-fit: contain; flex-shrink: 0;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzMzMzMzMyIvPgo8dGV4dCB4PSIyMCIgeT0iMjQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VzwvdGV4dD4KICA8L3N2Zz4K'" />
+                        <img src="${wallet.icon}" alt="${wallet.name}" style="width: 40px; height: 40px; margin-right: 16px; border-radius: 8px; background: white; padding: 6px; object-fit: contain; flex-shrink: 0;" crossorigin="anonymous" />
                         <div class="wallet-item-name">${wallet.name}</div>
                     </div>
                     <span class="wallet-item-status ${isDetected ? 'detected' : ''}">${isDetected ? 'Detected' : 'Not installed'}</span>
