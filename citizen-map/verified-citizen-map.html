@@ -2124,13 +2124,25 @@
             submitBtn.textContent = 'Creating Pin...';
 
             try {
+                console.log('Starting pin creation process');
+                
                 // Generate verification message
+                console.log('Fetching auth message...');
                 const authResponse = await fetch('/api/auth/generate-message');
+                console.log('Auth response status:', authResponse.status);
+                
+                if (!authResponse.ok) {
+                    throw new Error(`Auth API failed: ${authResponse.status}`);
+                }
+                
                 const { message, timestamp } = await authResponse.json();
+                console.log('Auth message received:', message);
 
                 // Request wallet signature using simple wallet
+                console.log('Requesting wallet signature...');
                 const encodedMessage = new TextEncoder().encode(message);
                 const signedMessage = await simpleWallet.signMessage(encodedMessage);
+                console.log('Signature received:', signedMessage);
                 
                 // Prepare pin data
                 const pinData = {
@@ -2150,6 +2162,8 @@
                     nfts: [selectedPrimary]
                 };
 
+                console.log('Submitting pin data:', pinData);
+                
                 // Submit to verified endpoint
                 const response = await fetch('/api/save-citizen-verified', {
                     method: 'POST',
@@ -2159,7 +2173,9 @@
                     body: JSON.stringify(pinData)
                 });
 
+                console.log('API response status:', response.status);
                 const result = await response.json();
+                console.log('API response data:', result);
 
                 if (response.ok) {
                     showNotification('Verified pin created successfully!', 'success');
@@ -2173,6 +2189,7 @@
 
             } catch (error) {
                 console.error('Error creating pin:', error);
+                console.error('Error details:', error.message, error.stack);
                 showNotification('Failed to create verified pin. Please try again.', 'error');
             } finally {
                 submitBtn.classList.remove('loading');
