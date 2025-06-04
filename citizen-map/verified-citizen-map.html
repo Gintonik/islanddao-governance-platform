@@ -1361,7 +1361,7 @@
     <div id="wallet-modal-overlay" style="display: none;">
         <div id="wallet-modal" class="wallet-modal">
             <div class="wallet-modal-header">
-                <h2>Connect a wallet on Solana to continue</h2>
+                <h2>Connect your Solana Wallet</h2>
                 <button class="wallet-modal-close" onclick="closeWalletModal()">×</button>
             </div>
             <div id="wallet-list" class="wallet-modal-list"></div>
@@ -1444,32 +1444,32 @@
 
         // ===== WALLET CONNECTION SYSTEM =====
         
-        // Wallet configurations with embedded SVG icons
+        // Wallet configurations using official logos from the images provided
         const WALLET_CONFIGS = {
             phantom: {
                 name: 'Phantom',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTA4IiBoZWlnaHQ9IjEwOCIgdmlld0JveD0iMCAwIDEwOCAxMDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiByeD0iMjYiIGZpbGw9InVybCgjcGFpbnQwX2xpbmVhcl8xXzIpIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNTQgODRDNzAuNTY4NSA4NCA4NCA3MC41Njg1IDg0IDU0QzgzIDM3LjQzMTUgNzAuNTY4NSAyNCA1NCAyNEM0NC45MzI1IDI0IDM3LjAwMTMgMjguNDE5MSAzMi4xNjg4IDM0LjgzOTlDMjQuNjA3OCA0NS41NDQ4IDI0IDU4Ljg2NjUgMjQgNjlDMjQgNzAuMjA3MiAyNCA3MS4zNzY2IDI0IDcyLjUwOTdDMjQgNzguNDA3NiAyOC44NDUgODQgMzYgODRDNDAuOTk5OCA4NCA0My4yODA3IDc5Ljg5OTIgNDMuNzE4OCA3Ni45MTY0QzQ0LjA0OTkgNzQuNzgyIDQ0LjQyNjcgNzAuNzgyIDQ3LjA0MzcgNjguNTMxM0M0OS4xNTE5IDY2LjcwNzQgNTIuMTkwOCA2NS4zNDEgNTQuNzY1NyA2NS4zNDFDNTcuNDQ4NSA2NS4zNDEgNjAuMTM0NCA2Ni40NTg0IDYxLjk1NjIgNjguNTMxM0M2My4yNjU2IDY5Ljk3NjEgNjMuNzE4OCA3Mi4wNjI3IDY0IDc0LjQzOTVDNjQuMjgxMiA3Ni44MTYzIDY0LjIgNzguOTA5NSA2NCA4MS4yODYzQzY0IDgyLjM0NDYgNjQuOTkxOCA4My4zNjg4IDY2LjI2MjMgODMuMzY4OEM2Ny41MzI4IDgzLjM2ODggNjggODMuMzY5IDY4IDgyLjMxQzY4IDc5LjYyIDY4IDc2LjkzIDY4IDc0LjI0QzY4IDcxLjIzMzYgNjggNjguMjI3MyA2OCA2NS4yMjA5QzY4IDYzLjI4MTMgNjggNjEuMzQxOCA2OCA1OS40MDIyQzY3Ljk5OTggNTUuMTQ4IDY4IDUwLjg5MzcgNjggNDYuNjM5NEM2OCA0MS42Mjk1IDY3LjQwNzIgMzYuOTAzNyA2NS4zNTg5IDMyLjU1MTFDNTU1LjYyMSAyOC4xOTg1IDY0LjEzOTYgMjQuNzQ2IDU2LjQxMDQgMjIuNTg1OUM0OC42ODEyIDIwLjQyNTggNDAuOTc2NCAyMCAzMi4yNjEgMjBDMjEuMjk4OSAyMCAxMC41NDI5IDI0Ljc3MTQgMy4yODkwNSAzMi42MDFDLTMuOTY0NzkgNDAuNDMwNiAtOSA1MC45ODQyIC05IDYyQy05IDczLjAxNTggLTMuOTY0NzkgODMuNTY5NCAzLjI4OTA1IDkxLjM5OUMxMC41NDI5IDk5LjIyODYgMjEuMjk4OSAxMDQgMzIuMjYxIDEwNEM0NC45MzI1IDEwNCA1Ny41Njg1IDk3LjU2ODUgNjQgODRINTRaIiBmaWxsPSJ3aGl0ZSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJwYWludDBfbGluZWFyXzFfMiIgeDE9IjUwJSIgeTE9IjAlIiB4Mj0iNTAlIiB5Mj0iMTAwJSI+CjxzdG9wIHN0b3AtY29sb3I9IiM1MzQ1RkYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkY1REU1Ii8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHN2Zz4=',
+                icon: './attached_assets/idR6oY_G_y_logos.png',
                 url: 'https://phantom.app',
                 detect: () => window.phantom?.solana?.isPhantom,
                 provider: () => window.phantom?.solana
             },
             solflare: {
                 name: 'Solflare', 
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+CjxwYXRoIGQ9Ik0yOS4yOTI5IDE1LjcwNzFDMjYuNTg1OCAxOC40MTQyIDIyLjk0MjggMjAgMTkuMDAwNCAyMEM5LjAwMDQgMjAgMTMuMDAwNCAyNiAyMC4wMDA0IDI2QzI1LjUyMjkgMjYgMzAuMDAwNCAyMS41MjI5IDMwLjAwMDQgMTZDMzAuMDAwNCAxNS41NzU3IDI5LjY3NzkgMTUuNjA2OSAyOS4yOTI5IDE1LjcwNzFaIiBmaWxsPSJ3aGl0ZSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudCIgeDE9IjUwJSIgeTE9IjAlIiB4Mj0iNTAlIiB5Mj0iMTAwJSI+CjxzdG9wIHN0b3AtY29sb3I9IiNGRkM5NDAiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkY0OTAwIi8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHN2Zz4=',
+                icon: './attached_assets/Solflare_id5j73wBTF_0.png',
                 url: 'https://solflare.com',
                 detect: () => window.solflare?.isSolflare,
                 provider: () => window.solflare
             },
             backpack: {
                 name: 'Backpack',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iYmxhY2siLz4KPHBhdGggZD0ibTEwIDE2IDEwIC02IDEwIDYgLTEwIDEwLTEwLTEweiIgZmlsbD0id2hpdGUiLz4KPHN2Zz4=',
+                icon: './attached_assets/Standalone_Icon_Red.png',
                 url: 'https://backpack.app',
                 detect: () => window.backpack?.isBackpack,
                 provider: () => window.backpack
             },
             coinbase: {
                 name: 'Coinbase Wallet',
-                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMwMDUyRkYiLz4KPHBhdGggZD0iTTIwIDEwQzE0LjQ3NzIgMTAgMTAgMTQuNDc3MiAxMCAyMEMxMCAyNS41MjI4IDE0LjQ3NzIgMzAgMjAgMzBDMjUuNTIyOCAzMCAzMCAyNS41MjI4IDMwIDIwQzMwIDE0LjQ3NzIgMjUuNTIyOCAxMCAyMCAxMFoiIGZpbGw9IndoaXRlIi8+CjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjgiIGhlaWdodD0iOCIgcng9IjIiIGZpbGw9IiMwMDUyRkYiLz4KPHN2Zz4=',
+                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMwMDUyRkYiLz4KPHJlY3QgeD0iMTMiIHk9IjEzIiB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHJ4PSIyIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=',
                 url: 'https://www.coinbase.com/wallet',
                 detect: () => window.coinbaseSolana,
                 provider: () => window.coinbaseSolana
