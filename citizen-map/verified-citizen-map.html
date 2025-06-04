@@ -1337,7 +1337,7 @@
                 showNotification('Wallet disconnected', 'info');
             });
 
-            simpleWallet.on('error', (error) => {
+            enhancedWallet.on('error', (error) => {
                 console.error('Wallet error:', error);
                 showNotification(`Wallet error: ${error.message}`, 'error');
             });
@@ -1592,8 +1592,8 @@
             } else {
                 // Show simple wallet modal
                 console.log('Showing simple wallet modal');
-                if (window.simpleWallet) {
-                    await window.simpleWallet.showModal();
+                if (enhancedWallet) {
+                    await enhancedWallet.showModal();
                 } else {
                     console.error('Simple wallet not initialized');
                     showNotification('Wallet system not ready. Please refresh the page.', 'error');
@@ -1685,7 +1685,7 @@
         async function disconnectWallet() {
             console.log('Disconnecting wallet...');
             try {
-                await simpleWallet.disconnect();
+                await enhancedWallet.disconnect();
             } catch (error) {
                 console.warn('Error disconnecting wallet:', error);
             }
@@ -1835,7 +1835,7 @@
 
                 // Request wallet signature using simple wallet
                 const encodedMessage = new TextEncoder().encode(message);
-                const signedMessage = await simpleWallet.signMessage(encodedMessage);
+                const signedMessage = await enhancedWallet.signMessage(encodedMessage);
                 
                 // Prepare pin data
                 const pinData = {
