@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IslandDAO Citizen Map - Verified</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: #ffffff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60A5FA, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(96, 165, 250, 0.2);
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .btn:hover {
+            background: rgba(96, 165, 250, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #60A5FA, #A78BFA);
+            border: none;
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+        }
+
+        /* Map Container */
+        #map {
+            height: 100vh;
+            width: 100vw;
+            z-index: 1;
+        }
+
+        /* Pin Creation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1a1a3e 0%, #2a2a5e 100%);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            margin-bottom: 24px;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #60A5FA;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        /* NFT Grid */
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .nft-card {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .nft-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .nft-card.selected {
+            border-color: #60A5FA;
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+        }
+
+        .nft-card img {
+            width: 100%;
+            height: calc(100% - 24px);
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .nft-card .nft-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            font-size: 10px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: #ffffff;
+            font-weight: 500;
+            z-index: 3000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10B981, #059669);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .controls {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            .modal {
+                padding: 24px 20px;
+                margin: 20px;
+                max-width: calc(100% - 40px);
+            }
+
+            .nft-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nft-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏝️ IslandDAO Citizens</div>
+            <div class="controls">
+                <button id="walletButton" class="btn primary">Connect Wallet</button>
+                <button id="addPinBtn" class="btn">+ Add Pin</button>
+                <button id="themeToggle" class="btn">🌙</button>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- Pin Creation Modal -->
+        <div id="pinModal" class="modal-overlay">
+            <div class="modal">
+                <h2>📍 Create Citizen Pin</h2>
+                
+                <div class="form-group">
+                    <label>Select NFT Profile Picture:</label>
+                    <div id="nftGrid" class="nft-grid">
+                        <!-- NFTs will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="citizenName">Display Name (Optional):</label>
+                    <input type="text" id="citizenName" placeholder="Enter your display name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="citizenBio">Bio (Optional):</label>
+                    <textarea id="citizenBio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn" onclick="closePinModal()">Cancel</button>
+                    <button id="submitPin" class="btn primary">Create Pin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="simple-wallet.js"></script>
+    <script src="verifyWallet.js"></script>
+    <script>
+        'use strict';
+        
+        // ===== GLOBAL STATE =====
+        let map;
+        let isDarkTheme = true;
+        let walletNfts = [];
+        let selectedLocation = null;
+        let selectedPfp = null;
+        let isPickingLocation = false;
+        let citizenMarkers = [];
+        let simpleWallet = null;
+        let walletVerifier = null;
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize SimpleWallet
+                simpleWallet = new SimpleWallet();
+                walletVerifier = new WalletVerifier({ debug: true });
+                
+                // Set up wallet event listeners
+                simpleWallet.on('connect', async (data) => {
+                    updateWalletUI();
+                    await loadUserNfts();
+                    showNotification(`Connected to ${data.walletName}`, 'success');
+                });
+                
+                simpleWallet.on('disconnect', () => {
+                    updateWalletUI();
+                    walletNfts = [];
+                    showNotification('Wallet disconnected', 'info');
+                });
+                
+                // Initialize map
+                initializeMap();
+                
+                // Load existing citizens
+                await loadCitizens();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                console.log('Application initialized successfully');
+            } catch (error) {
+                console.error('Error initializing application:', error);
+            }
+        });
+
+        // ===== MAP INITIALIZATION =====
+        function initializeMap() {
+            map = L.map('map', {
+                center: [20, 0],
+                zoom: 3,
+                zoomControl: false,
+                worldCopyJump: true
+            });
+
+            // Add dark theme tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors © CARTO',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add zoom control to bottom right
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
+
+            // Map click handler for pin placement
+            map.on('click', function(e) {
+                if (isPickingLocation) {
+                    selectedLocation = e.latlng;
+                    showPinModal();
+                    isPickingLocation = false;
+                    map.getContainer().style.cursor = '';
+                }
+            });
+        }
+
+        // ===== WALLET FUNCTIONS =====
+        function updateWalletUI() {
+            const walletButton = document.getElementById('walletButton');
+            
+            if (simpleWallet && simpleWallet.isConnected()) {
+                const publicKey = simpleWallet.getPublicKey();
+                walletButton.textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
+                walletButton.onclick = () => simpleWallet.disconnect();
+            } else {
+                walletButton.textContent = 'Connect Wallet';
+                walletButton.onclick = () => simpleWallet.showModal();
+            }
+        }
+
+        // ===== NFT FUNCTIONS =====
+        async function loadUserNfts() {
+            if (!simpleWallet || !simpleWallet.isConnected()) return;
+            
+            try {
+                const walletAddress = simpleWallet.getPublicKey();
+                console.log('Loading NFTs for wallet:', walletAddress);
+                
+                const response = await fetch(`/api/nfts/${walletAddress}`);
+                const data = await response.json();
+                
+                console.log('NFT API response status:', response.status);
+                console.log('NFT API result:', data);
+                
+                if (data.nfts && Array.isArray(data.nfts)) {
+                    walletNfts = data.nfts;
+                    console.log('Parsed NFTs:', walletNfts);
+                } else {
+                    walletNfts = [];
+                    console.log('No NFTs found or invalid response format');
+                }
+            } catch (error) {
+                console.error('Error loading NFTs:', error);
+                walletNfts = [];
+            }
+        }
+
+        function populateNftGrid() {
+            const nftGrid = document.getElementById('nftGrid');
+            nftGrid.innerHTML = '';
+            
+            if (!walletNfts || walletNfts.length === 0) {
+                nftGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #888;">No NFTs found in wallet</p>';
+                return;
+            }
+            
+            walletNfts.forEach((nft, index) => {
+                const nftCard = document.createElement('div');
+                nftCard.className = 'nft-card';
+                nftCard.innerHTML = `
+                    <img src="${nft.image}" alt="${nft.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2NjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD48L3N2Zz4='" />
+                    <div class="nft-name">${nft.name}</div>
+                `;
+                
+                nftCard.onclick = () => selectNft(nft, nftCard);
+                nftGrid.appendChild(nftCard);
+            });
+        }
+
+        function selectNft(nft, cardElement) {
+            // Remove previous selection
+            document.querySelectorAll('.nft-card').forEach(card => card.classList.remove('selected'));
+            
+            // Select new NFT
+            cardElement.classList.add('selected');
+            selectedPfp = nft;
+        }
+
+        // ===== PIN CREATION =====
+        function showAddPinMode() {
+            if (!simpleWallet || !simpleWallet.isConnected()) {
+                console.log('Add pin clicked, wallet not connected');
+                showNotification('Please connect your wallet first', 'error');
+                return;
+            }
+            
+            console.log('Starting pin creation process');
+            isPickingLocation = true;
+            map.getContainer().style.cursor = 'crosshair';
+            showNotification('Click on the map to place your pin', 'info');
+        }
+
+        function showPinModal() {
+            populateNftGrid();
+            document.getElementById('pinModal').style.display = 'flex';
+        }
+
+        function closePinModal() {
+            document.getElementById('pinModal').style.display = 'none';
+            selectedLocation = null;
+            selectedPfp = null;
+            
+            // Clear form
+            document.getElementById('citizenName').value = '';
+            document.getElementById('citizenBio').value = '';
+            
+            // Clear NFT selection
+            document.querySelectorAll('.nft-card').forEach(card => card.classList.remove('selected'));
+        }
+
+        async function submitPin() {
+            if (!selectedLocation) {
+                showNotification('Please select a location on the map', 'error');
+                return;
+            }
+            
+            if (!selectedPfp) {
+                showNotification('Please select an NFT profile picture', 'error');
+                return;
+            }
+            
+            if (!simpleWallet || !simpleWallet.isConnected()) {
+                showNotification('Please connect your wallet first', 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitPin');
+            const originalText = submitBtn.textContent;
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Requesting Signature...';
+                
+                // Create Solana connection
+                const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+                
+                console.log('Starting wallet verification...');
+                const verificationData = await walletVerifier.verifyWallet(simpleWallet, connection);
+                console.log('Wallet verification successful:', verificationData);
+                
+                submitBtn.textContent = 'Creating Pin...';
+                
+                // Prepare citizen data
+                const citizenData = {
+                    walletAddress: simpleWallet.getPublicKey(),
+                    lat: selectedLocation.lat,
+                    lng: selectedLocation.lng,
+                    name: document.getElementById('citizenName').value || 'Anonymous Citizen',
+                    bio: document.getElementById('citizenBio').value || '',
+                    pfpUrl: selectedPfp.image,
+                    nftMint: selectedPfp.mint,
+                    nftName: selectedPfp.name,
+                    collection: selectedPfp.collection,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('Submitting verified citizen data...');
+                const result = await walletVerifier.submitVerifiedCitizen(verificationData, citizenData);
+                console.log('Pin creation result:', result);
+                
+                if (result.success) {
+                    showNotification('Citizen pin created successfully!', 'success');
+                    closePinModal();
+                    await loadCitizens(); // Reload citizens to show new pin
+                } else {
+                    throw new Error(result.error || 'Failed to create pin');
+                }
+                
+            } catch (error) {
+                console.error('Error creating verified pin:', error);
+                showNotification(`Error creating pin: ${error.message}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+
+        // ===== CITIZEN LOADING =====
+        async function loadCitizens() {
+            try {
+                const response = await fetch('/api/citizens');
+                const data = await response.json();
+                
+                if (data.citizens) {
+                    displayCitizens(data.citizens);
+                    console.log(`Loaded ${data.citizens.length} citizens with smart anti-overlap positioning`);
+                }
+            } catch (error) {
+                console.error('Error loading citizens:', error);
+            }
+        }
+
+        function displayCitizens(citizens) {
+            // Clear existing markers
+            citizenMarkers.forEach(marker => map.removeLayer(marker));
+            citizenMarkers = [];
+            
+            citizens.forEach(citizen => {
+                const marker = L.marker([citizen.lat, citizen.lng], {
+                    icon: L.divIcon({
+                        className: 'citizen-marker',
+                        html: `
+                            <div style="
+                                width: 40px;
+                                height: 40px;
+                                border-radius: 50%;
+                                background-image: url('${citizen.pfp_url}');
+                                background-size: cover;
+                                background-position: center;
+                                border: 3px solid #60A5FA;
+                                box-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+                                cursor: pointer;
+                            "></div>
+                        `,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    })
+                });
+                
+                marker.bindPopup(`
+                    <div style="text-align: center; color: #333;">
+                        <img src="${citizen.pfp_url}" style="width: 80px; height: 80px; border-radius: 12px; margin-bottom: 8px; object-fit: cover;" />
+                        <h3 style="margin: 8px 0; color: #333;">${citizen.name}</h3>
+                        <p style="margin: 4px 0; color: #666; font-size: 12px;">${citizen.nft_name}</p>
+                        ${citizen.bio ? `<p style="margin: 8px 0; color: #555; font-size: 14px;">${citizen.bio}</p>` : ''}
+                        <p style="margin: 4px 0; color: #888; font-size: 11px;">${citizen.wallet_address.slice(0, 4)}...${citizen.wallet_address.slice(-4)}</p>
+                    </div>
+                `);
+                
+                marker.addTo(map);
+                citizenMarkers.push(marker);
+            });
+        }
+
+        // ===== EVENT LISTENERS =====
+        function setupEventListeners() {
+            document.getElementById('addPinBtn').addEventListener('click', showAddPinMode);
+            document.getElementById('submitPin').addEventListener('click', submitPin);
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Close modal when clicking outside
+            document.getElementById('pinModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePinModal();
+                }
+            });
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function toggleTheme() {
+            // Theme toggle implementation if needed
+            isDarkTheme = !isDarkTheme;
+            document.getElementById('themeToggle').textContent = isDarkTheme ? '🌙' : '☀️';
+        }
+
+        // ===== GLOBAL FUNCTIONS =====
+        window.closePinModal = closePinModal;
+    </script>
+</body>
+</html>
