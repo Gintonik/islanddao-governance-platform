@@ -1,6 +1,8 @@
 const express = require('express');
 const path = require('path');
 const { Pool } = require('pg');
+const cron = require('node-cron');
+const fs = require('fs');
 
 const app = express();
 const port = 5000;
@@ -12,6 +14,8 @@ const pool = new Pool({
 
 app.use(express.static(__dirname));
 app.use(express.json());
+
+
 
 // Serve the main map
 app.get('/', (req, res) => {
@@ -107,7 +111,6 @@ async function fetchWalletNFTs(walletAddress) {
 // Load governance data
 let governanceData = {};
 try {
-  const fs = require('fs');
   const governanceFile = path.join(__dirname, '..', 'data', 'native-governance-power.json');
   if (fs.existsSync(governanceFile)) {
     governanceData = JSON.parse(fs.readFileSync(governanceFile, 'utf8'));
@@ -205,6 +208,81 @@ app.get('/api/nfts', async (req, res) => {
   }
 });
 
+// Governance data sync function
+async function syncGovernanceData() {
+  try {
+    console.log('Starting daily governance data sync at 12:00 UTC...');
+    
+    // Update governance power from JSON data
+    if (governanceData && governanceData.citizens) {
+      for (const citizen of governanceData.citizens) {
+        try {
+          await pool.query(
+            'UPDATE citizens SET native_governance_power = $1, governance_power = $1, updated_at = NOW() WHERE wallet = $2',
+            [citizen.native_governance_power, citizen.wallet]
+          );
+        } catch (error) {
+          console.error(`Error updating governance power for ${citizen.wallet}:`, error);
+        }
+      }
+      console.log(`Updated governance power for ${governanceData.citizens.length} citizens`);
+    }
+    
+    // Refresh NFT data for all citizens
+    const result = await pool.query('SELECT wallet FROM citizens');
+    const citizens = result.rows;
+    
+    for (const citizen of citizens) {
+      try {
+        const nfts = await fetchWalletNFTs(citizen.wallet);
+        const nftIds = nfts.map(nft => nft.mint);
+        
+        await pool.query(
+          'UPDATE citizens SET nft_ids = $1, nft_metadata = $2, updated_at = NOW() WHERE wallet = $3',
+          [JSON.stringify(nftIds), JSON.stringify(nfts), citizen.wallet]
+        );
+      } catch (error) {
+        console.error(`Error updating NFTs for ${citizen.wallet}:`, error);
+      }
+    }
+    
+    console.log('Daily governance and NFT data sync completed successfully');
+  } catch (error) {
+    console.error('Error during daily sync:', error);
+  }
+}
+
+// Schedule daily sync at 12:00 UTC
+cron.schedule('0 12 * * *', syncGovernanceData, {
+  timezone: 'UTC'
+});
+
+// Add API endpoint for governance stats
+app.get('/api/governance-stats', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        COUNT(*) as total_citizens,
+        COUNT(CASE WHEN native_governance_power > 0 THEN 1 END) as active_citizens,
+        COALESCE(SUM(native_governance_power), 0) as total_governance_power,
+        COALESCE(AVG(CASE WHEN native_governance_power > 0 THEN native_governance_power END), 0) as avg_power_active
+      FROM citizens
+    `);
+    
+    const stats = result.rows[0];
+    res.json({
+      totalCitizens: parseInt(stats.total_citizens),
+      activeCitizens: parseInt(stats.active_citizens),
+      totalGovernancePower: parseFloat(stats.total_governance_power),
+      avgPowerActive: parseFloat(stats.avg_power_active)
+    });
+  } catch (error) {
+    console.error('Error fetching governance stats:', error);
+    res.status(500).json({ error: 'Failed to fetch governance stats' });
+  }
+});
+
 app.listen(port, '0.0.0.0', () => {
   console.log(`Citizen Map server running at http://localhost:${port}`);
+  console.log('Daily governance sync scheduled for 12:00 UTC');
 });
