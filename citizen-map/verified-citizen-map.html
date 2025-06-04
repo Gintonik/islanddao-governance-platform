@@ -3068,7 +3068,7 @@
                                 
                                 <!-- Timestamp -->
                                 <div style="font-size: 11px; color: var(--text-secondary); text-align: center;">
-                                    Joined: ${new Date(citizen.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    Joined: ${citizen.created_at ? new Date(citizen.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Recently'}
                                 </div>
                             </div>
                         </div>

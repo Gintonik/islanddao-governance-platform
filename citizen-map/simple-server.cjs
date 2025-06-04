@@ -302,34 +302,15 @@ app.get('/api/wallet-nfts', async (req, res) => {
     
     const nfts = await fetchWalletNFTs(wallet);
     
-    // Check if this is a new wallet and calculate governance power for preview
+    // Check if this is a new wallet (without calculating governance power to save RPC credits)
     const existingCitizen = await pool.query('SELECT id FROM citizens WHERE wallet = $1', [wallet]);
+    const isNewWallet = existingCitizen.rows.length === 0;
     
-    if (existingCitizen.rows.length === 0 && nfts.length > 0) {
-      // New wallet with NFTs - calculate governance power for preview
-      console.log(`New wallet ${wallet} detected with ${nfts.length} NFTs - calculating governance power`);
-      
-      try {
-        const vsrResponse = await fetch(`http://localhost:3001/governance-power/${wallet}`);
-        if (vsrResponse.ok) {
-          const vsrData = await vsrResponse.json();
-          const governancePower = vsrData.totalGovernancePower || 0;
-          console.log(`Calculated governance power for new wallet ${wallet}: ${governancePower}`);
-          
-          res.json({ 
-            nfts,
-            governance_power: governancePower,
-            is_new_wallet: true,
-            message: `Found ${nfts.length} PERKS NFTs and ${governancePower} governance power`
-          });
-          return;
-        }
-      } catch (error) {
-        console.error(`Error calculating governance power for ${wallet}:`, error);
-      }
-    }
-    
-    res.json({ nfts, is_new_wallet: false });
+    res.json({ 
+      nfts, 
+      is_new_wallet: isNewWallet,
+      message: isNewWallet && nfts.length > 0 ? `Found ${nfts.length} PERKS NFTs - governance power will be calculated when you create your pin` : undefined
+    });
   } catch (error) {
     console.error('Error fetching wallet NFTs:', error);
     res.status(500).json({ error: 'Failed to fetch NFTs' });
@@ -497,48 +478,19 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     );
 
     if (existingCitizen.rows.length > 0) {
-      // Update existing citizen with fresh NFT data and governance power
-      console.log(`Updating existing citizen ${wallet_address} - refreshing NFT data and governance power`);
+      // Update existing citizen - only update pin location and profile, preserve existing governance data
+      console.log(`Updating existing citizen ${wallet_address} - preserving governance data to save RPC credits`);
       
-      // Fetch updated NFT data
-      let nftData = [];
-      let nftIds = [];
-      try {
-        nftData = await fetchWalletNFTs(wallet_address);
-        nftIds = nftData.map(nft => nft.mint);
-        console.log(`Refreshed ${nftData.length} NFTs for existing citizen ${wallet_address}`);
-      } catch (error) {
-        console.error(`Error fetching NFTs for ${wallet_address}:`, error);
-      }
-      
-      // Calculate updated governance power
-      let governancePower = 0;
-      try {
-        const vsrResponse = await fetch(`http://localhost:3001/governance-power/${wallet_address}`);
-        if (vsrResponse.ok) {
-          const vsrData = await vsrResponse.json();
-          governancePower = vsrData.totalGovernancePower || 0;
-          console.log(`Updated governance power for ${wallet_address}: ${governancePower}`);
-        }
-      } catch (error) {
-        console.error(`Error calculating governance power for ${wallet_address}:`, error);
-      }
-      
-      // Update citizen with complete data
       const result = await pool.query(`
         UPDATE citizens SET 
           lat = $2, lng = $3, nickname = $4, bio = $5, 
           twitter_handle = $6, telegram_handle = $7, discord_handle = $8,
-          primary_nft = $9, pfp_nft = $10, image_url = $11, 
-          nft_ids = $12, nft_metadata = $13, 
-          native_governance_power = $14, governance_power = $15, updated_at = NOW()
+          primary_nft = $9, pfp_nft = $10, image_url = $11, updated_at = NOW()
         WHERE wallet = $1
         RETURNING *
-      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, 
-          primary_nft, pfp_nft, image_url, JSON.stringify(nftIds), JSON.stringify(nftData), 
-          governancePower, governancePower]);
+      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url]);
       
-      console.log(`Updated citizen ${wallet_address} with ${nftData.length} NFTs and ${governancePower} governance power`);
+      console.log(`Updated existing citizen ${wallet_address} pin location and profile`);
       res.json({ success: true, citizen: result.rows[0], action: 'updated' });
     } else {
       // Insert new citizen - fetch NFT data and calculate governance power
