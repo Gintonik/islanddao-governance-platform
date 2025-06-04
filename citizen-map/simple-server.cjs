@@ -143,52 +143,58 @@ app.get('/api/nfts', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
+        n.mint_id,
+        n.name as nft_name,
+        n.image_url,
+        n.json_uri,
         c.wallet,
-        c.nickname,
-        c.primary_nft
-      FROM citizens c 
-      WHERE c.primary_nft IS NOT NULL 
-      AND c.primary_nft != ''
-      ORDER BY c.nickname
+        c.nickname
+      FROM citizen_nfts cn
+      JOIN nfts n ON cn.nft_id = n.mint_id
+      JOIN citizens c ON cn.citizen_id = c.id
+      ORDER BY c.nickname, n.name
     `);
     
     let allNfts = [];
     
-    for (const citizen of result.rows) {
-      if (citizen.primary_nft && citizen.primary_nft.trim() !== '') {
-        try {
-          // Fetch real NFT data from Helius API
-          const nftData = await fetchNFTMetadata(citizen.primary_nft);
-          
-          if (nftData) {
-            const nft = {
-              id: citizen.primary_nft,
-              name: nftData.content?.metadata?.name || `PERKS #${citizen.primary_nft.slice(-4)}`,
-              content: nftData.content,
-              owner_wallet: citizen.wallet,
-              owner_nickname: citizen.nickname || 'Unknown Citizen'
-            };
-            allNfts.push(nft);
-          }
-        } catch (error) {
-          console.error(`Error fetching NFT data for ${citizen.nickname}:`, error);
-          // Fallback to basic info if API fails
-          const nft = {
-            id: citizen.primary_nft,
-            name: `PERKS #${citizen.primary_nft.slice(-4)}`,
-            content: {
-              metadata: {
-                name: `PERKS #${citizen.primary_nft.slice(-4)}`
-              },
-              links: {
-                image: 'https://via.placeholder.com/300?text=NFT'
-              }
+    for (const row of result.rows) {
+      try {
+        // Fetch real NFT data from Helius API for complete metadata
+        const nftData = await fetchNFTMetadata(row.mint_id);
+        
+        const nft = {
+          id: row.mint_id,
+          name: nftData?.content?.metadata?.name || row.nft_name || `NFT #${row.mint_id.slice(-4)}`,
+          content: nftData?.content || {
+            metadata: {
+              name: row.nft_name || `NFT #${row.mint_id.slice(-4)}`
             },
-            owner_wallet: citizen.wallet,
-            owner_nickname: citizen.nickname || 'Unknown Citizen'
-          };
-          allNfts.push(nft);
-        }
+            links: {
+              image: row.image_url || 'https://via.placeholder.com/300?text=NFT'
+            }
+          },
+          owner_wallet: row.wallet,
+          owner_nickname: row.nickname || 'Unknown Citizen'
+        };
+        allNfts.push(nft);
+      } catch (error) {
+        console.error(`Error processing NFT ${row.mint_id} for ${row.nickname}:`, error);
+        // Use database info as fallback
+        const nft = {
+          id: row.mint_id,
+          name: row.nft_name || `NFT #${row.mint_id.slice(-4)}`,
+          content: {
+            metadata: {
+              name: row.nft_name || `NFT #${row.mint_id.slice(-4)}`
+            },
+            links: {
+              image: row.image_url || 'https://via.placeholder.com/300?text=NFT'
+            }
+          },
+          owner_wallet: row.wallet,
+          owner_nickname: row.nickname || 'Unknown Citizen'
+        };
+        allNfts.push(nft);
       }
     }
     
