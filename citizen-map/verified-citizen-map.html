@@ -1418,6 +1418,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="simple-wallet.js"></script>
     <script src="verifyWallet.js"></script>
     <script>
         'use strict';
@@ -1432,6 +1433,7 @@
         let selectedPrimary = null;
         let isPickingLocation = false;
         let citizenMarkers = [];
+        let simpleWallet = null;
 
         // ===== WALLET CONNECTION SYSTEM =====
         
@@ -3321,6 +3323,22 @@
                 walletBtn.classList.remove('wallet-connected');
             }
         }
+
+        // Initialize SimpleWallet instance
+        function initializeWallet() {
+            try {
+                simpleWallet = new SimpleWallet();
+                console.log('SimpleWallet initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize SimpleWallet:', error);
+            }
+        }
+
+        // Initialize app on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWallet();
+            initializeApp();
+        });
 
         // Close modals when clicking outside
         window.addEventListener('click', function(e) {
