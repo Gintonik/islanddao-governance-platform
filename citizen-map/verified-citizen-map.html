@@ -885,9 +885,10 @@
             cursor: pointer;
             transition: all 0.3s ease;
             overflow: hidden;
-            background: var(--panel-bg);
+            background: transparent;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .nft-item .nft-name {
@@ -913,21 +914,24 @@
 
         .nft-image {
             width: 100%;
-            height: 80px;
-            object-fit: contain;
+            height: 90px;
+            object-fit: cover;
             object-position: center;
             display: block;
-            background: #000;
+            border-radius: 6px;
         }
 
         .nft-name {
-            padding: 0.4rem;
-            font-size: 0.75rem;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.3rem;
+            font-size: 0.7rem;
             text-align: center;
             background: rgba(0, 0, 0, 0.8);
             color: #FAFAFA;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: auto;
+            backdrop-filter: blur(5px);
         }
 
         [data-theme="light"] .nft-name {
