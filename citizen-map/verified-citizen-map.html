@@ -1652,12 +1652,19 @@
 
         // Handle wallet connection
         async function handleWalletConnect() {
+            console.log('Wallet button clicked, currentWallet:', currentWallet);
             if (currentWallet) {
                 // Already connected - wallet button is just for display
                 return;
             } else {
                 // Show unified wallet modal
-                await unifiedWallet.showModal();
+                console.log('Showing unified wallet modal');
+                if (window.unifiedWallet) {
+                    await window.unifiedWallet.showModal();
+                } else {
+                    console.error('Unified wallet not initialized');
+                    showNotification('Wallet system not ready. Please refresh the page.', 'error');
+                }
             }
         }
 

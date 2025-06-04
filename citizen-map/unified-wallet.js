@@ -80,7 +80,7 @@ class UnifiedWallet {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    z-index: 10000;
+                    z-index: 99999;
                 }
                 
                 .wallet-modal-backdrop {
