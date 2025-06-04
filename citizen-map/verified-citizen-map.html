@@ -1444,25 +1444,25 @@
 
         // ===== WALLET CONNECTION SYSTEM =====
         
-        // Wallet configurations using official logos from the images provided
+        // Wallet configurations using official logos
         const WALLET_CONFIGS = {
             phantom: {
                 name: 'Phantom',
-                icon: './attached_assets/idR6oY_G_y_logos.png',
+                icon: './idR6oY_G_y_logos.png',
                 url: 'https://phantom.app',
                 detect: () => window.phantom?.solana?.isPhantom,
                 provider: () => window.phantom?.solana
             },
             solflare: {
                 name: 'Solflare', 
-                icon: './attached_assets/Solflare_id5j73wBTF_0.png',
+                icon: './Solflare_id5j73wBTF_0.png',
                 url: 'https://solflare.com',
                 detect: () => window.solflare?.isSolflare,
                 provider: () => window.solflare
             },
             backpack: {
                 name: 'Backpack',
-                icon: './attached_assets/Standalone_Icon_Red.png',
+                icon: './Standalone_Icon_Red.png',
                 url: 'https://backpack.app',
                 detect: () => window.backpack?.isBackpack,
                 provider: () => window.backpack
