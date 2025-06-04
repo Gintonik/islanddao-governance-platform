@@ -115,12 +115,6 @@ node vsr-api-server.js
 
 ## 📊 Current Platform Status
 
-### Verified Citizens: 20
-- Global distribution across multiple time zones
-- Total governance power: **26,302,519 ISLAND tokens**
-- Active participation in DAO governance
-- Real-time blockchain verification
-
 ### PERKS NFT Collection: 86 NFTs
 - Unique digital assets owned by verified citizens
 - Real metadata and images from Solana blockchain
@@ -129,9 +123,9 @@ node vsr-api-server.js
 
 ### Governance Power Distribution
 - Native power calculations with VSR multipliers
-- Lockup period bonuses (up to 5x multiplier)
-- Delegation tracking and validation
-- Historical power analysis and trends
+- Lockup period bonuses
+- Delegation tracking and validation (under consruction)
+- Historical power analysis and trends (under construction)
 
 ## 🔧 API Endpoints
 
