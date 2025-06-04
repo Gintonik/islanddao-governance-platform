@@ -871,6 +871,12 @@
             border: 2px solid rgba(33, 232, 163, 0.2);
             border-radius: 8px;
             padding: 1rem;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        .nft-grid::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
         }
 
         .nft-item {
