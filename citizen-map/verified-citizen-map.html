@@ -1598,6 +1598,12 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
         let simpleWallet = null;
+        let solanaConnection = null;
+
+        // Create Solana connection for hardware wallet fallback
+        if (window.solanaWeb3) {
+            solanaConnection = new window.solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+        }
 
         // ===== WALLET CONNECTION SYSTEM (Using SimpleWallet) =====
 
@@ -2259,19 +2265,18 @@
             try {
                 console.log('Starting verified pin creation process');
                 
-                // Initialize wallet verifier with Solana connection
-                const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+                // Initialize wallet verifier with Solana connection for hardware wallet support
                 const walletVerifier = new WalletVerifier({
-                    connection: connection,
+                    connection: solanaConnection,
                     debug: true,
                     apiBaseUrl: ''
                 });
                 
                 submitBtn.textContent = 'Requesting Signature...';
                 
-                // Step 1: Verify wallet using SimpleWallet
+                // Step 1: Verify wallet using SimpleWallet (supports hardware wallet fallback)
                 console.log('Starting wallet verification...');
-                const verificationData = await walletVerifier.verifyWallet(simpleWallet, connection);
+                const verificationData = await walletVerifier.verifyWallet(simpleWallet, solanaConnection);
                 console.log('Wallet verification successful:', verificationData);
                 
                 submitBtn.textContent = 'Creating Pin...';

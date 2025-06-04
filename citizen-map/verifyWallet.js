@@ -95,7 +95,16 @@ class WalletVerifier {
                 throw new Error('Signature canceled. Try again or switch wallet.');
             }
             
-            // Check if signMessage is not supported (hardware wallets)
+            // Check for Ledger hardware wallet errors
+            if (error.message.includes('Ledger') ||
+                error.message.includes('unsupportedOperation') ||
+                error.message.includes('off chain messages') ||
+                error.message.includes('not yet supported')) {
+                this.log('Hardware wallet detected, will try transaction fallback');
+                throw error; // Let caller handle fallback
+            }
+            
+            // Check if signMessage is not supported (other hardware wallets)
             if (error.message.includes('not supported') || 
                 error.name === 'NotSupportedError' ||
                 error.message.includes('does not support')) {
@@ -206,7 +215,11 @@ class WalletVerifier {
                 
             } catch (error) {
                 // Step 3: Fallback to transaction signature for hardware wallets
-                if (error.message.includes('not supported') || 
+                if (error.message.includes('Ledger') ||
+                    error.message.includes('unsupportedOperation') ||
+                    error.message.includes('off chain messages') ||
+                    error.message.includes('not yet supported') ||
+                    error.message.includes('not supported') || 
                     error.name === 'NotSupportedError' ||
                     error.message.includes('does not support')) {
                     

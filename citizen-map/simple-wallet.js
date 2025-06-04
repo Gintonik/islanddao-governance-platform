@@ -391,6 +391,42 @@ class SimpleWallet {
         }
     }
 
+    async signTransaction(transaction) {
+        if (!this.connectedWallet) {
+            throw new Error('No wallet connected');
+        }
+
+        try {
+            const walletConfig = this.wallets.get(this.connectedWallet);
+            const provider = walletConfig.provider();
+            
+            if (!provider || !provider.signTransaction) {
+                throw new Error(`${walletConfig.name} does not support transaction signing`);
+            }
+
+            console.log(`Signing transaction with ${walletConfig.name}...`);
+            
+            // Sign the transaction
+            const signedTransaction = await provider.signTransaction(transaction);
+            
+            return signedTransaction;
+
+        } catch (error) {
+            console.error('Transaction signature error:', error);
+            
+            // Provide user-friendly error messages
+            if (error.message.includes('User rejected')) {
+                throw new Error('Transaction signature was cancelled by user');
+            } else if (error.message.includes('not supported')) {
+                throw new Error(`${this.getConnectedWallet()} does not support transaction signing`);
+            } else if (error.code === 4001) {
+                throw new Error('Transaction signature was rejected by user');
+            } else {
+                throw new Error(`Failed to sign transaction: ${error.message}`);
+            }
+        }
+    }
+
     on(event, callback) {
         if (!this.listeners.has(event)) {
             this.listeners.set(event, []);
