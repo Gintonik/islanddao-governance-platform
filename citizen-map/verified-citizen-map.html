@@ -11,6 +11,8 @@
     
     <!-- Solana Web3.js -->
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <!-- Custom Wallet Adapter -->
+    <script src="./wallet-adapter.js"></script>
     <style>
         /* Hide scrollbars for all browsers */
         .card-face::-webkit-scrollbar,
@@ -1372,59 +1374,33 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
 
-        // ===== ENHANCED WALLET CONFIGURATION =====
-        const walletProviders = {
-            phantom: {
-                name: 'Phantom',
-                icon: './phantom-logo.png',
-                detected: () => {
-                    return window.solana && window.solana.isPhantom;
-                },
-                provider: () => window.solana
-            },
-            solflare: {
-                name: 'Solflare',
-                icon: './solflare-logo.png',
-                detected: () => {
-                    return window.solflare && window.solflare.isSolflare;
-                },
-                provider: () => window.solflare
-            },
-            backpack: {
-                name: 'Backpack',
-                icon: './backpack-logo.png',
-                detected: () => {
-                    return window.backpack && window.backpack.isBackpack;
-                },
-                provider: () => window.backpack
-            }
-        };
+        // ===== UNIVERSAL WALLET ADAPTER =====
+        let walletAdapter;
+        
+        // Initialize wallet adapter
+        function initializeWalletAdapter() {
+            walletAdapter = new SolanaWalletAdapter({
+                autoConnect: false
+            });
 
-        // Enhanced wallet detection with retry mechanism
-        let walletDetectionRetries = 0;
-        const maxRetries = 10;
+            // Set up event listeners
+            walletAdapter.on('connect', (data) => {
+                currentWallet = data.publicKey;
+                updateWalletUI();
+                closeWalletModal();
+                showNotification(`Connected to ${data.wallet}!`, 'success');
+                loadUserNfts();
+            });
 
-        function detectWallets() {
-            return new Promise((resolve) => {
-                function checkWallets() {
-                    const detected = {};
-                    let foundAny = false;
+            walletAdapter.on('disconnect', () => {
+                currentWallet = null;
+                updateWalletUI();
+                showNotification('Wallet disconnected', 'info');
+            });
 
-                    Object.entries(walletProviders).forEach(([key, wallet]) => {
-                        if (wallet.detected()) {
-                            detected[key] = wallet;
-                            foundAny = true;
-                        }
-                    });
-
-                    if (foundAny || walletDetectionRetries >= maxRetries) {
-                        resolve(detected);
-                    } else {
-                        walletDetectionRetries++;
-                        setTimeout(checkWallets, 100);
-                    }
-                }
-                checkWallets();
+            walletAdapter.on('error', (error) => {
+                console.error('Wallet adapter error:', error);
+                showNotification(`Wallet error: ${error.message}`, 'error');
             });
         }
 
@@ -1703,46 +1679,87 @@
             return `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
         }
 
-        // Enhanced wallet connection with improved error handling
-        async function connectWallet(walletType) {
+        // Enhanced wallet connection using universal adapter
+        async function connectWallet(walletIdentifier) {
             try {
-                console.log('Connecting to wallet:', walletType);
+                console.log('Connecting to wallet:', walletIdentifier);
                 
-                const walletConfig = walletProviders[walletType];
-                if (!walletConfig) {
-                    throw new Error(`Unsupported wallet type: ${walletType}`);
+                // Connect using the universal adapter
+                const result = await walletAdapter.connect(walletIdentifier);
+                
+                // Verify wallet ownership with signature
+                const verificationMessage = generateVerificationMessage();
+                
+                try {
+                    const signature = await walletAdapter.signMessage(verificationMessage);
+                    console.log('Signature verification successful');
+                } catch (sigError) {
+                    console.warn('Signature verification failed:', sigError);
+                    showNotification('Wallet connected but signature verification failed. Some features may be limited.', 'warning');
                 }
-
-                // Check if wallet is detected
-                if (!walletConfig.detected()) {
-                    throw new Error(`${walletConfig.name} wallet not detected. Please install the wallet extension and refresh the page.`);
-                }
-
-                const provider = walletConfig.provider();
-                if (!provider) {
-                    throw new Error(`${walletConfig.name} wallet provider not available.`);
+                
+                // Load user's NFTs
+                try {
+                    await loadUserNfts();
+                } catch (nftError) {
+                    console.warn('Failed to load NFTs:', nftError);
+                    showNotification('Connected to wallet, but failed to load NFTs. You may need a PERKS NFT to create pins.', 'info');
                 }
 
                 console.log(`Attempting to connect to ${walletConfig.name}...`);
                 
-                // Different connection methods for different wallets
+                // Handle different wallet connection patterns
                 let response;
-                if (walletType === 'phantom' || walletType === 'solflare') {
+                let publicKey;
+                
+                if (walletType === 'phantom') {
                     response = await provider.connect({ onlyIfTrusted: false });
+                    if (!response || !response.publicKey) {
+                        throw new Error('Phantom connection failed');
+                    }
+                    publicKey = response.publicKey.toString();
+                } else if (walletType === 'solflare') {
+                    // Solflare returns boolean true on connect, publicKey is separate
+                    await provider.connect();
+                    if (!provider.publicKey) {
+                        throw new Error('Solflare connection failed - no public key');
+                    }
+                    publicKey = provider.publicKey.toString();
                 } else if (walletType === 'backpack') {
                     response = await provider.connect();
+                    if (!response || !response.publicKey) {
+                        throw new Error('Backpack connection failed');
+                    }
+                    publicKey = response.publicKey.toString();
                 } else {
                     response = await provider.connect();
+                    if (!response || !response.publicKey) {
+                        throw new Error('Connection failed');
+                    }
+                    publicKey = response.publicKey.toString();
                 }
                 
-                console.log('Connection response:', response);
-                
-                if (!response || !response.publicKey) {
-                    throw new Error('Failed to get public key from wallet');
-                }
-                
-                const publicKey = response.publicKey.toString();
                 console.log('Connected with public key:', publicKey);
+                
+                // Verify wallet ownership with signature
+                const verificationMessage = generateVerificationMessage();
+                const encodedMessage = new TextEncoder().encode(verificationMessage);
+                
+                let signature;
+                try {
+                    if (walletType === 'phantom' || walletType === 'solflare') {
+                        signature = await provider.signMessage(encodedMessage, 'utf8');
+                    } else {
+                        signature = await provider.signMessage(encodedMessage);
+                    }
+                    
+                    if (!signature || !signature.signature) {
+                        throw new Error('Signature verification failed');
+                    }
+                } catch (sigError) {
+                    console.warn('Signature verification failed:', sigError);
+                    showNotification('Wallet connected but signature verification failed. Some features may be limited.', 'warning');
+                }
                 
                 // Set connected wallet
                 currentWallet = publicKey;
