@@ -141,43 +141,32 @@ app.get('/api/citizens', async (req, res) => {
 // API endpoint to get all NFTs from all citizens for the collection page
 app.get('/api/nfts', async (req, res) => {
   try {
-    // Get all citizens
-    const citizensResult = await pool.query(`
-      SELECT id, wallet, nickname 
-      FROM citizens 
-      WHERE wallet IS NOT NULL 
-      ORDER BY nickname
-    `);
+    const result = await pool.query('SELECT * FROM citizens WHERE wallet IS NOT NULL ORDER BY nickname');
+    const citizens = result.rows;
     
     let allNfts = [];
     
-    for (const citizen of citizensResult.rows) {
+    // Use existing NFT fetching logic from citizens endpoint
+    for (const citizen of citizens) {
       try {
-        console.log(`Fetching NFTs for ${citizen.nickname}...`);
+        const nfts = await fetchWalletNFTs(citizen.wallet);
         
-        // Fetch all NFTs for this citizen's wallet
-        const walletNfts = await fetchWalletNFTs(citizen.wallet);
-        
-        if (walletNfts && walletNfts.length > 0) {
-          // Filter for PERKS collection NFTs and add owner info
-          const perksNfts = walletNfts.filter(nft => 
-            nft.grouping && 
-            nft.grouping.some(group => 
-              group.group_key === 'collection' && 
-              group.group_value === 'PERKS'
-            )
-          );
-          
-          for (const nft of perksNfts) {
-            allNfts.push({
-              id: nft.id,
-              name: nft.content?.metadata?.name || `PERKS #${nft.id.slice(-4)}`,
-              content: nft.content,
-              owner_wallet: citizen.wallet,
-              owner_nickname: citizen.nickname || 'Unknown Citizen'
-            });
-          }
-        }
+        nfts.forEach(nft => {
+          allNfts.push({
+            id: nft.mint,
+            name: nft.name,
+            content: {
+              metadata: {
+                name: nft.name
+              },
+              links: {
+                image: nft.image
+              }
+            },
+            owner_wallet: citizen.wallet,
+            owner_nickname: citizen.nickname || 'Unknown Citizen'
+          });
+        });
       } catch (error) {
         console.error(`Error fetching NFTs for ${citizen.nickname}:`, error);
       }
