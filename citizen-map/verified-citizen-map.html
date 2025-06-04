@@ -16,7 +16,7 @@
     <script src="https://unpkg.com/@solana/wallet-standard@1.0.0/lib/index.iife.js"></script>
     
     <!-- Simple Wallet Connector -->
-    <script src="./simple-wallet.js"></script>
+    <script type="module" src="./wallet-init.js"></script>
     <style>
         /* Hide scrollbars for all browsers */
         .card-face::-webkit-scrollbar,
@@ -1299,15 +1299,18 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
 
-        // ===== SIMPLE WALLET =====
-        let simpleWallet;
+        // ===== MULTI-WALLET CONNECTOR =====
+        let walletAdapter;
         
-        // Initialize simple wallet
+        // Initialize multi-wallet adapter
         function initializeWalletAdapter() {
-            simpleWallet = new SimpleWallet();
+            walletAdapter = createWalletAdapter({
+                wallets: ['Phantom', 'Solflare', 'Backpack', 'Coinbase'],
+                autoConnect: true
+            });
 
             // Set up event listeners
-            simpleWallet.on('connect', async (data) => {
+            walletAdapter.on('connect', async (data) => {
                 console.log('Wallet connected event:', data);
                 currentWallet = data.publicKey;
                 updateWalletUI();
@@ -1316,7 +1319,7 @@
                 // Verify wallet ownership with signature
                 try {
                     const verificationMessage = generateVerificationMessage();
-                    const signature = await simpleWallet.signMessage(verificationMessage);
+                    const signature = await walletAdapter.signMessage(verificationMessage);
                     console.log('Signature verification successful');
                 } catch (sigError) {
                     console.warn('Signature verification failed:', sigError);
@@ -1331,13 +1334,13 @@
                 }
             });
 
-            simpleWallet.on('disconnect', () => {
+            walletAdapter.on('disconnect', () => {
                 currentWallet = null;
                 updateWalletUI();
                 showNotification('Wallet disconnected', 'info');
             });
 
-            simpleWallet.on('error', (error) => {
+            walletAdapter.on('error', (error) => {
                 console.error('Wallet error:', error);
                 showNotification(`Wallet error: ${error.message}`, 'error');
             });
@@ -1592,8 +1595,8 @@
             } else {
                 // Show simple wallet modal
                 console.log('Showing simple wallet modal');
-                if (simpleWallet) {
-                    await simpleWallet.showModal();
+                if (walletAdapter) {
+                    await walletAdapter.select();
                 } else {
                     console.error('Simple wallet not initialized');
                     showNotification('Wallet system not ready. Please refresh the page.', 'error');
