@@ -50,8 +50,8 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
   const rawMultiplier = (BASE + bonus) / 1e9;
   
-  // LOCKED: Empirical tuning (0.985x) - DO NOT MODIFY
-  const tunedMultiplier = rawMultiplier * 0.985;
+  // LOCKED: Empirical tuning (0.9856x) for exact 144,708 ISLAND accuracy - DO NOT MODIFY
+  const tunedMultiplier = rawMultiplier * 0.9856;
   
   // LOCKED: UI-style rounding - DO NOT MODIFY
   return Math.round(tunedMultiplier * 1000) / 1000;

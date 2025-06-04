@@ -1,11 +1,11 @@
 {
   "summary": {
     "totalCitizens": 14,
-    "totalNativeGovernancePower": 26302519.986543953,
-    "totalLockedPower": 11287214.218942953,
+    "totalNativeGovernancePower": 26310896.051174015,
+    "totalLockedPower": 11295590.283573017,
     "totalUnlockedPower": 15015305.767601002,
     "shadowDepositsFiltered": 4,
-    "calculatedAt": "2025-06-04T01:50:25.697Z",
+    "calculatedAt": "2025-06-04T01:55:41.208Z",
     "version": "1.0.0"
   },
   "citizens": [
@@ -60,19 +60,19 @@
           "note": "1000 ISLAND delegation/shadow marker"
         }
       ],
-      "calculatedAt": "2025-06-04T01:50:25.247Z",
+      "calculatedAt": "2025-06-04T01:55:40.723Z",
       "version": "1.0.0"
     },
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
-      "totalPower": 9075351.160370544,
-      "lockedPower": 9075351.160370544,
+      "totalPower": 9082533.94500273,
+      "lockedPower": 9082533.94500273,
       "unlockedPower": 0,
       "deposits": [
         {
           "amount": 1500000,
-          "multiplier": 1.11,
-          "power": 1665000.0000000002,
+          "multiplier": 1.111,
+          "power": 1666500,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -87,8 +87,8 @@
         },
         {
           "amount": 2000000,
-          "multiplier": 1.304,
-          "power": 2608000,
+          "multiplier": 1.305,
+          "power": 2610000,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -103,8 +103,8 @@
         },
         {
           "amount": 3682784.632186,
-          "multiplier": 1.304,
-          "power": 4802351.160370544,
+          "multiplier": 1.305,
+          "power": 4806033.945002729,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -119,7 +119,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.375Z",
+      "calculatedAt": "2025-06-04T01:55:40.863Z",
       "version": "1.0.0"
     },
     {
@@ -179,19 +179,19 @@
           "note": "1000 ISLAND delegation/shadow marker"
         }
       ],
-      "calculatedAt": "2025-06-04T01:50:25.642Z",
+      "calculatedAt": "2025-06-04T01:55:41.148Z",
       "version": "1.0.0"
     },
     {
       "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
-      "totalPower": 1380607.20238624,
-      "lockedPower": 1223263.49902624,
+      "totalPower": 1381228.148324832,
+      "lockedPower": 1223884.4449648322,
       "unlockedPower": 157343.70335999998,
       "deposits": [
         {
           "amount": 310472.969296,
-          "multiplier": 3.94,
-          "power": 1223263.49902624,
+          "multiplier": 3.942,
+          "power": 1223884.4449648322,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -224,7 +224,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.697Z",
+      "calculatedAt": "2025-06-04T01:55:41.208Z",
       "version": "1.0.0"
     },
     {
@@ -262,19 +262,19 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.218Z",
+      "calculatedAt": "2025-06-04T01:55:40.690Z",
       "version": "1.0.0"
     },
     {
       "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
-      "totalPower": 516147.15222772094,
-      "lockedPower": 466147.15222772094,
+      "totalPower": 516450.463656861,
+      "lockedPower": 466450.463656861,
       "unlockedPower": 50000,
       "deposits": [
         {
           "amount": 21500,
-          "multiplier": 2.502,
-          "power": 53792.99999999999,
+          "multiplier": 2.503,
+          "power": 53814.5,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -289,8 +289,8 @@
         },
         {
           "amount": 49202.733486,
-          "multiplier": 2.502,
-          "power": 123105.23918197198,
+          "multiplier": 2.503,
+          "power": 123154.441915458,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -305,8 +305,8 @@
         },
         {
           "amount": 116304.347827,
-          "multiplier": 2.487,
-          "power": 289248.913045749,
+          "multiplier": 2.489,
+          "power": 289481.521741403,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -330,19 +330,19 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.349Z",
+      "calculatedAt": "2025-06-04T01:55:40.822Z",
       "version": "1.0.0"
     },
     {
       "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
-      "totalPower": 393832.78125922,
-      "lockedPower": 377734.98739922,
+      "totalPower": 394024.524907646,
+      "lockedPower": 377926.731047646,
       "unlockedPower": 16097.79386,
       "deposits": [
         {
           "amount": 78857.030444,
-          "multiplier": 3.94,
-          "power": 310696.69994936,
+          "multiplier": 3.942,
+          "power": 310854.41401024803,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -357,8 +357,8 @@
         },
         {
           "amount": 17014.793769,
-          "multiplier": 3.94,
-          "power": 67038.28744986,
+          "multiplier": 3.942,
+          "power": 67072.317037398,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -382,7 +382,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.190Z",
+      "calculatedAt": "2025-06-04T01:55:40.647Z",
       "version": "1.0.0"
     },
     {
@@ -402,19 +402,19 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.614Z",
+      "calculatedAt": "2025-06-04T01:55:41.120Z",
       "version": "1.0.0"
     },
     {
       "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
-      "totalPower": 144717.419919228,
-      "lockedPower": 144717.419919228,
+      "totalPower": 144794.69890095002,
+      "lockedPower": 144794.69890095002,
       "unlockedPower": 0,
       "deposits": [
         {
           "amount": 10000,
-          "multiplier": 1.32,
-          "power": 13200,
+          "multiplier": 1.321,
+          "power": 13210,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -429,8 +429,8 @@
         },
         {
           "amount": 37626.982836,
-          "multiplier": 1.974,
-          "power": 74275.664118264,
+          "multiplier": 1.975,
+          "power": 74313.29110110001,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -445,8 +445,8 @@
         },
         {
           "amount": 25738.998886,
-          "multiplier": 1.974,
-          "power": 50808.783800964,
+          "multiplier": 1.975,
+          "power": 50834.522799850005,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -461,8 +461,8 @@
         },
         {
           "amount": 3913,
-          "multiplier": 1.644,
-          "power": 6432.972,
+          "multiplier": 1.645,
+          "power": 6436.885,
           "isLocked": true,
           "classification": "active_lockup",
           "lockupDetails": {
@@ -477,7 +477,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.668Z",
+      "calculatedAt": "2025-06-04T01:55:41.181Z",
       "version": "1.0.0"
     },
     {
@@ -497,7 +497,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.401Z",
+      "calculatedAt": "2025-06-04T01:55:40.889Z",
       "version": "1.0.0"
     },
     {
@@ -517,7 +517,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.427Z",
+      "calculatedAt": "2025-06-04T01:55:40.917Z",
       "version": "1.0.0"
     },
     {
@@ -537,7 +537,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.508Z",
+      "calculatedAt": "2025-06-04T01:55:41.002Z",
       "version": "1.0.0"
     },
     {
@@ -564,7 +564,7 @@
           "note": "1000 ISLAND delegation/shadow marker"
         }
       ],
-      "calculatedAt": "2025-06-04T01:50:25.315Z",
+      "calculatedAt": "2025-06-04T01:55:40.788Z",
       "version": "1.0.0"
     },
     {
@@ -584,7 +584,7 @@
         }
       ],
       "shadowDeposits": [],
-      "calculatedAt": "2025-06-04T01:50:25.452Z",
+      "calculatedAt": "2025-06-04T01:55:40.947Z",
       "version": "1.0.0"
     }
   ]

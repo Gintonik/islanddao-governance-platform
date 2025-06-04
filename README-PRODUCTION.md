@@ -1,4 +1,4 @@
-# IslandDAO Governance Intelligence Platform
+# IslandDAO PERKS Collection Citizen Map V0.1
 
 A sophisticated Solana blockchain governance intelligence platform that provides comprehensive, dynamic parsing and visualization of voter participation, governance power, and ecosystem insights for IslandDAO citizens.
 
@@ -37,12 +37,6 @@ The native governance power calculator uses authentic Voter Stake Registry accou
 3. **Multiplier Calculation**: Applies time-dependent multipliers using authentic VSR formula
 4. **Empirical Tuning**: 0.985x adjustment for perfect accuracy alignment
 
-### Validation Results
-
-- **GJdRQcsy**: 144,717 ISLAND (Expected: 144,708) - **100.0% accuracy**
-- **Total Citizens**: 14 with governance power
-- **Total Native Power**: 26,304,020 ISLAND
-- **Locked Power**: 11,288,714 ISLAND (42.9%)
 
 ## Getting Started
 
