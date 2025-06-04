@@ -169,17 +169,17 @@ app.get('/api/citizens', async (req, res) => {
 // API endpoint to get all NFTs from all citizens for the collection page
 app.get('/api/nfts', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM citizens WHERE wallet IS NOT NULL ORDER BY nickname');
+    const result = await pool.query('SELECT wallet, nickname, nft_metadata FROM citizens WHERE wallet IS NOT NULL AND nft_metadata IS NOT NULL ORDER BY nickname');
     const citizens = result.rows;
     
     let allNfts = [];
     
-    // Use existing NFT fetching logic from citizens endpoint
+    // Use stored NFT data from database for better performance
     for (const citizen of citizens) {
       try {
-        const nfts = await fetchWalletNFTs(citizen.wallet);
+        const nftData = JSON.parse(citizen.nft_metadata || '[]');
         
-        nfts.forEach(nft => {
+        nftData.forEach(nft => {
           allNfts.push({
             id: nft.mint,
             name: nft.name,
@@ -196,11 +196,33 @@ app.get('/api/nfts', async (req, res) => {
           });
         });
       } catch (error) {
-        console.error(`Error fetching NFTs for ${citizen.nickname}:`, error);
+        console.error(`Error parsing NFT data for ${citizen.nickname}:`, error);
+        // Fallback to API fetch if stored data is corrupted
+        try {
+          const nfts = await fetchWalletNFTs(citizen.wallet);
+          nfts.forEach(nft => {
+            allNfts.push({
+              id: nft.mint,
+              name: nft.name,
+              content: {
+                metadata: {
+                  name: nft.name
+                },
+                links: {
+                  image: nft.image
+                }
+              },
+              owner_wallet: citizen.wallet,
+              owner_nickname: citizen.nickname || 'Unknown Citizen'
+            });
+          });
+        } catch (fallbackError) {
+          console.error(`Fallback API fetch failed for ${citizen.nickname}:`, fallbackError);
+        }
       }
     }
     
-    console.log(`Total NFTs found: ${allNfts.length}`);
+    console.log(`Total NFTs found from database: ${allNfts.length}`);
     res.json(allNfts);
   } catch (error) {
     console.error('Database error:', error);
@@ -244,6 +266,19 @@ async function syncGovernanceData() {
       } catch (error) {
         console.error(`Error updating NFTs for ${citizen.wallet}:`, error);
       }
+    }
+    
+    // Generate governance data export JSON file
+    try {
+      const exportResponse = await fetch('http://localhost:5000/api/governance-export');
+      if (exportResponse.ok) {
+        const exportData = await exportResponse.json();
+        const fs = require('fs');
+        fs.writeFileSync('./data/governance-power.json', JSON.stringify(exportData, null, 2));
+        console.log(`Governance data exported to JSON file with ${exportData.citizens.length} citizens`);
+      }
+    } catch (error) {
+      console.error('Error generating governance export:', error);
     }
     
     console.log('Daily governance and NFT data sync completed successfully');
@@ -343,6 +378,53 @@ app.get('/api/governance-stats', async (req, res) => {
   }
 });
 
+// Add governance data export endpoint for JSON generation
+app.get('/api/governance-export', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        wallet,
+        nickname,
+        native_governance_power,
+        governance_power,
+        delegated_governance_power,
+        total_governance_power,
+        locked_governance_power,
+        unlocked_governance_power,
+        nft_ids,
+        created_at,
+        updated_at
+      FROM citizens 
+      WHERE wallet IS NOT NULL 
+      ORDER BY native_governance_power DESC, nickname
+    `);
+    
+    const citizens = result.rows.map(citizen => ({
+      wallet: citizen.wallet,
+      nickname: citizen.nickname || 'Anonymous Citizen',
+      native_governance_power: parseFloat(citizen.native_governance_power) || 0,
+      governance_power: parseFloat(citizen.governance_power) || 0,
+      delegated_governance_power: parseFloat(citizen.delegated_governance_power) || 0,
+      total_governance_power: parseFloat(citizen.total_governance_power) || 0,
+      locked_governance_power: parseFloat(citizen.locked_governance_power) || 0,
+      unlocked_governance_power: parseFloat(citizen.unlocked_governance_power) || 0,
+      nft_count: citizen.nft_ids ? JSON.parse(citizen.nft_ids).length : 0,
+      last_updated: citizen.updated_at || citizen.created_at
+    }));
+    
+    const exportData = {
+      generated_at: new Date().toISOString(),
+      total_citizens: citizens.length,
+      citizens: citizens
+    };
+    
+    res.json(exportData);
+  } catch (error) {
+    console.error('Error exporting governance data:', error);
+    res.status(500).json({ error: 'Failed to export governance data' });
+  }
+});
+
 // Add auth message generation endpoint
 app.get('/api/auth/generate-message', (req, res) => {
   const timestamp = Date.now();
@@ -392,23 +474,54 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         UPDATE citizens SET 
           lat = $2, lng = $3, nickname = $4, bio = $5, 
           twitter_handle = $6, telegram_handle = $7, discord_handle = $8,
-          primary_nft = $9, pfp_nft = $10, image_url = $11
+          primary_nft = $9, pfp_nft = $10, image_url = $11, updated_at = NOW()
         WHERE wallet = $1
         RETURNING *
       `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url]);
       
       res.json({ success: true, citizen: result.rows[0], action: 'updated' });
     } else {
-      // Insert new citizen
+      // Insert new citizen - fetch NFT data and calculate governance power
+      console.log(`New citizen ${wallet_address} - fetching NFT data and governance power`);
+      
+      // Fetch NFT data for new citizen
+      let nftData = [];
+      let nftIds = [];
+      try {
+        nftData = await fetchWalletNFTs(wallet_address);
+        nftIds = nftData.map(nft => nft.mint);
+        console.log(`Fetched ${nftData.length} NFTs for new citizen ${wallet_address}`);
+      } catch (error) {
+        console.error(`Error fetching NFTs for ${wallet_address}:`, error);
+      }
+      
+      // Calculate governance power for new citizen
+      let governancePower = 0;
+      try {
+        const vsrResponse = await fetch(`http://localhost:3001/governance-power/${wallet_address}`);
+        if (vsrResponse.ok) {
+          const vsrData = await vsrResponse.json();
+          governancePower = vsrData.totalGovernancePower || 0;
+          console.log(`Calculated governance power for ${wallet_address}: ${governancePower}`);
+        }
+      } catch (error) {
+        console.error(`Error calculating governance power for ${wallet_address}:`, error);
+      }
+      
+      // Insert new citizen with complete data
       const result = await pool.query(`
         INSERT INTO citizens (
           wallet, lat, lng, nickname, bio, 
           twitter_handle, telegram_handle, discord_handle,
-          primary_nft, pfp_nft, image_url
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          primary_nft, pfp_nft, image_url, nft_ids, nft_metadata,
+          native_governance_power, governance_power
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING *
-      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url]);
+      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, 
+          primary_nft, pfp_nft, image_url, JSON.stringify(nftIds), JSON.stringify(nftData), 
+          governancePower, governancePower]);
       
+      console.log(`New citizen ${wallet_address} added with ${nftData.length} NFTs and ${governancePower} governance power`);
       res.json({ success: true, citizen: result.rows[0], action: 'created' });
     }
 
