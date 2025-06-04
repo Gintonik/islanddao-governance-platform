@@ -301,7 +301,35 @@ app.get('/api/wallet-nfts', async (req, res) => {
     }
     
     const nfts = await fetchWalletNFTs(wallet);
-    res.json({ nfts });
+    
+    // Check if this is a new wallet and calculate governance power for preview
+    const existingCitizen = await pool.query('SELECT id FROM citizens WHERE wallet = $1', [wallet]);
+    
+    if (existingCitizen.rows.length === 0 && nfts.length > 0) {
+      // New wallet with NFTs - calculate governance power for preview
+      console.log(`New wallet ${wallet} detected with ${nfts.length} NFTs - calculating governance power`);
+      
+      try {
+        const vsrResponse = await fetch(`http://localhost:3001/governance-power/${wallet}`);
+        if (vsrResponse.ok) {
+          const vsrData = await vsrResponse.json();
+          const governancePower = vsrData.totalGovernancePower || 0;
+          console.log(`Calculated governance power for new wallet ${wallet}: ${governancePower}`);
+          
+          res.json({ 
+            nfts,
+            governance_power: governancePower,
+            is_new_wallet: true,
+            message: `Found ${nfts.length} PERKS NFTs and ${governancePower} governance power`
+          });
+          return;
+        }
+      } catch (error) {
+        console.error(`Error calculating governance power for ${wallet}:`, error);
+      }
+    }
+    
+    res.json({ nfts, is_new_wallet: false });
   } catch (error) {
     console.error('Error fetching wallet NFTs:', error);
     res.status(500).json({ error: 'Failed to fetch NFTs' });
