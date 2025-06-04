@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERKS NFT Collection - IslandDAO</title>
+  <style>
+    :root {
+      --bg-primary: #0F0F0F;
+      --bg-secondary: #1A1A1A;
+      --text-primary: #FFFFFF;
+      --text-secondary: #AFAFAF;
+      --accent-primary: #21E8A3;
+      --accent-glow: rgba(33, 232, 163, 0.3);
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: rgba(15, 15, 15, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      height: 28px;
+      width: auto;
+    }
+
+    .title {
+      color: #AFAFAF;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0;
+      margin: 0;
+    }
+    
+    .nav-container {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    
+    .nav-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--accent-primary);
+      background: rgba(33, 232, 163, 0.1);
+    }
+
+    .nav-link.active {
+      color: var(--accent-primary);
+      background: rgba(33, 232, 163, 0.1);
+      border: 1px solid rgba(33, 232, 163, 0.3);
+    }
+
+    .theme-toggle {
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .wallet-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wallet-connect-btn {
+      background: rgba(33, 232, 163, 0.1);
+      color: #21E8A3;
+      border: 1px solid rgba(33, 232, 163, 0.3);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .wallet-connect-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+      opacity: 0.95;
+    }
+
+    .wallet-connected {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+    }
+
+    .wallet-connected:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(33, 232, 163, 0.2);
+      opacity: 0.95;
+    }
+
+    .disconnect-wallet-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .disconnect-wallet-btn:hover {
+      background: #b91c1c;
+    }
+
+    .wallet-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      backdrop-filter: blur(5px);
+    }
+
+    .wallet-modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      min-width: 400px;
+      max-width: 90vw;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .wallet-modal h3 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .wallet-options {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--bg-primary);
+    }
+
+    .wallet-option:hover {
+      border-color: var(--accent-primary);
+      background: rgba(33, 232, 163, 0.05);
+    }
+
+    .wallet-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .wallet-info h4 {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .wallet-info p {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+      text-decoration: none;
+      padding: 8px 16px;
+      margin: 0 5px;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-item:hover {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item.active {
+      color: white;
+      background-color: #4c6ef5;
+    }
+    
+    .header-right {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .nav-link {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #222;
+      color: #f5f5f5;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .nav-link:hover {
+      background-color: #333;
+    }
+    
+    .nav-link.primary {
+      background-color: #9945FF;
+    }
+    
+    .nav-link.primary:hover {
+      background-color: #8930e8;
+    }
+    
+    .search-bar {
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    
+    .search-input {
+      flex: 1;
+      max-width: 400px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-secondary);
+    }
+    
+    .search-button {
+      padding: 12px 24px;
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .search-button:hover {
+      background: #1BC491;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 15px;
+      margin-bottom: 40px;
+      width: 100%;
+    }
+
+    @media (max-width: 1400px) {
+      .nft-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    @media (max-width: 1000px) {
+      .nft-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .nft-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 400px) {
+      .nft-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    .nft-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+    }
+    
+    .nft-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      border-color: var(--accent-primary);
+    }
+    
+    .nft-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      background: var(--bg-primary);
+      transition: transform 0.3s ease;
+    }
+
+    .nft-card:hover .nft-image {
+      transform: scale(1.05);
+    }
+    
+    .nft-info {
+      padding: 1rem;
+    }
+    
+    .nft-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--accent-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .nft-owner {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .nft-id {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      opacity: 0.7;
+      word-break: break-all;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .load-more {
+      display: block;
+      width: 240px;
+      margin: 0 auto 3rem;
+      padding: 16px 32px;
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    
+    .load-more:hover {
+      background: #1BC491;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    
+    .loading {
+      text-align: center;
+      margin: 2rem 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-subtle);
+      border-radius: 50%;
+      border-top-color: var(--accent-primary);
+      animation: spin 1s linear infinite;
+      margin-right: 12px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .message {
+      text-align: center;
+      margin: 2rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+    
+    .message.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Light theme styles */
+    body.light {
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8F9FA;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6B7280;
+      --border-subtle: rgba(0, 0, 0, 0.1);
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    body.light .header {
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <img src="/citizen-map/islanddao-logo.png" alt="IslandDAO" class="logo">
+      <h1 class="title">PERKS Collection</h1>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-container" style="display: flex; gap: 6px; align-items: center;">
+      <a href="/verified-map" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Citizen Map</a>
+      <a href="/collection" style="color: #21E8A3; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; background: rgba(33, 232, 163, 0.1); border: 1px solid rgba(33, 232, 163, 0.3);">Collection</a>
+      <button id="themeToggle" class="nav-button" style="color: #AFAFAF; background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 10px; border-radius: 4px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">🌙</button>
+    </div>
+    
+    <div class="wallet-section">
+      <button id="disconnectBtn" class="disconnect-wallet-btn" style="display: none;" onclick="disconnectWallet()">
+        Disconnect
+      </button>
+      <button id="walletBtn" class="wallet-connect-btn">
+        <span id="walletIcon">🔗</span>
+        <span id="walletText">Connect Wallet</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    
+    <div class="search-bar">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by wallet address...">
+      <button id="searchButton" class="search-button">Search</button>
+    </div>
+    
+    <div id="nft-grid" class="nft-grid">
+      <!-- NFT cards will be loaded here -->
+    </div>
+    
+    <div id="loading" class="loading" style="display: none;">
+      <div class="loading-spinner"></div>
+      <span>Loading NFTs...</span>
+    </div>
+    
+    <button id="loadAllButton" class="load-more">Load All NFTs</button>
+    
+    <footer>
+      <p>PERKS NFT Collection Explorer | Powered by PostgreSQL Database</p>
+    </footer>
+  </div>
+
+  <!-- Wallet Connection Modal -->
+  <div id="walletModal" class="wallet-modal">
+    <div class="wallet-modal-content">
+      <h3>Connect Your Wallet</h3>
+      <div class="wallet-options">
+        <div class="wallet-option" data-wallet="phantom">
+          <img src="/citizen-map/phantom-logo.png" alt="Phantom" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Phantom</h4>
+            <p>Connect using Phantom wallet</p>
+          </div>
+        </div>
+        <div class="wallet-option" data-wallet="solflare">
+          <img src="/citizen-map/solflare-logo.png" alt="Solflare" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Solflare</h4>
+            <p>Connect using Solflare wallet</p>
+          </div>
+        </div>
+        <div class="wallet-option" data-wallet="backpack">
+          <img src="/citizen-map/backpack-logo.png" alt="Backpack" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Backpack</h4>
+            <p>Connect using Backpack wallet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Constants and variables
+    const API_URL = '/api/nfts';
+    const WALLET_API_URL = '/api/wallet-nfts';
+    const PER_PAGE = 16;
+    
+    let allNfts = [];
+    let displayedNfts = [];
+    let isLoading = false;
+    
+    // DOM elements
+    const nftGrid = document.getElementById('nft-grid');
+    const loadingElement = document.getElementById('loading');
+    const loadAllButton = document.getElementById('loadAllButton');
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      const isLight = document.body.classList.contains('light');
+      themeToggle.textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.body.classList.add('light');
+      themeToggle.textContent = '☀️';
+    }
+
+    // Wallet connection functionality
+    const walletBtn = document.getElementById('walletBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const walletModal = document.getElementById('walletModal');
+    let connectedWallet = null;
+    let walletProvider = null;
+
+    // Wallet connection with signature verification
+    async function connectWallet(walletType) {
+      try {
+        let wallet;
+        
+        if (walletType === 'phantom' && window.solana && window.solana.isPhantom) {
+          wallet = window.solana;
+        } else if (walletType === 'solflare' && window.solflare) {
+          wallet = window.solflare;
+        } else if (walletType === 'backpack' && window.backpack) {
+          wallet = window.backpack;
+        } else {
+          alert(`Please install ${walletType} wallet`);
+          return;
+        }
+
+        // Connect to wallet
+        const response = await wallet.connect();
+        const publicKey = response.publicKey.toString();
+        
+        // Request signature for verification
+        const timestamp = Date.now();
+        const message = `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
+        const encodedMessage = new TextEncoder().encode(message);
+        
+        const signature = await wallet.signMessage(encodedMessage);
+        
+        // Store wallet connection in localStorage for persistence
+        localStorage.setItem('connected_wallet', publicKey);
+        localStorage.setItem('wallet_type', walletType);
+        
+        connectedWallet = publicKey;
+        walletProvider = wallet;
+        
+        updateWalletUI();
+        walletModal.style.display = 'none';
+        
+      } catch (error) {
+        console.error('Wallet connection failed:', error);
+        alert('Wallet connection failed. Please try again.');
+      }
+    }
+
+    function disconnectWallet() {
+      if (walletProvider) {
+        walletProvider.disconnect();
+      }
+      // Clear localStorage
+      localStorage.removeItem('connected_wallet');
+      localStorage.removeItem('wallet_type');
+      
+      connectedWallet = null;
+      walletProvider = null;
+      updateWalletUI();
+    }
+
+    function updateWalletUI() {
+      const walletIcon = document.getElementById('walletIcon');
+      const walletText = document.getElementById('walletText');
+      
+      if (connectedWallet) {
+        walletIcon.textContent = '🔗';
+        walletText.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
+        walletBtn.classList.add('wallet-connected');
+        disconnectBtn.style.display = 'block';
+      } else {
+        walletIcon.textContent = '🔗';
+        walletText.textContent = 'Connect Wallet';
+        walletBtn.classList.remove('wallet-connected');
+        disconnectBtn.style.display = 'none';
+      }
+    }
+
+    // Check for existing wallet connection on page load
+    function checkExistingConnection() {
+      const savedWallet = localStorage.getItem('connected_wallet');
+      if (savedWallet) {
+        connectedWallet = savedWallet;
+        updateWalletUI();
+      }
+    }
+
+    function openWalletModal() {
+      if (connectedWallet) {
+        // If already connected, show wallet info or disconnect
+        return;
+      }
+      walletModal.style.display = 'block';
+    }
+
+    function closeWalletModal() {
+      walletModal.style.display = 'none';
+    }
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      checkExistingConnection(); // Check for persisted wallet connection
+      fetchInitialNfts();
+      
+      // Event listeners
+      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+      walletBtn.addEventListener('click', openWalletModal);
+      disconnectBtn.addEventListener('click', disconnectWallet);
+      loadAllButton.addEventListener('click', loadAllNfts);
+      searchButton.addEventListener('click', searchNfts);
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          searchNfts();
+        }
+      });
+
+      // Wallet modal event listeners
+      walletModal.addEventListener('click', (e) => {
+        if (e.target === walletModal) {
+          closeWalletModal();
+        }
+      });
+
+      document.querySelectorAll('.wallet-option').forEach(option => {
+        option.addEventListener('click', () => {
+          const walletType = option.getAttribute('data-wallet');
+          connectWallet(walletType);
+        });
+      });
+      
+      // Detect scroll for infinite loading
+      window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 && !isLoading) {
+          loadMoreNfts();
+        }
+      });
+    });
+    
+    // Fetch initial batch of NFTs
+    async function fetchInitialNfts() {
+      setLoading(true);
+      
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch NFTs: ${response.status}`);
+        }
+        
+        allNfts = await response.json();
+        
+        // Display first batch
+        displayedNfts = allNfts.slice(0, PER_PAGE);
+        renderNfts(displayedNfts);
+        
+        if (allNfts.length <= PER_PAGE) {
+          loadAllButton.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error fetching NFTs:', error);
+        showMessage(`Error loading NFTs: ${error.message}`, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    // Load more NFTs when scrolling
+    function loadMoreNfts() {
+      const currentCount = displayedNfts.length;
+      
+      if (currentCount < allNfts.length && !isLoading) {
+        setLoading(true);
+        
+        // Get next batch
+        const nextBatch = allNfts.slice(currentCount, currentCount + PER_PAGE);
+        displayedNfts = [...displayedNfts, ...nextBatch];
+        
+        // Render new NFTs
+        renderNfts(displayedNfts);
+        
+        // Hide load all button if all NFTs loaded
+        if (displayedNfts.length >= allNfts.length) {
+          loadAllButton.style.display = 'none';
+        }
+        
+        setLoading(false);
+      }
+    }
+    
+    // Load all NFTs at once
+    function loadAllNfts() {
+      setLoading(true);
+      
+      displayedNfts = [...allNfts];
+      renderNfts(displayedNfts);
+      
+      loadAllButton.style.display = 'none';
+      
+      setLoading(false);
+    }
+    
+    // Search NFTs by wallet address
+    async function searchNfts() {
+      const searchTerm = searchInput.value.trim();
+      
+      if (!searchTerm) {
+        // If search is empty, show all NFTs
+        displayedNfts = allNfts.slice(0, PER_PAGE);
+        renderNfts(displayedNfts);
+        
+        loadAllButton.style.display = 'block';
+        return;
+      }
+      
+      setLoading(true);
+      
+      try {
+        const response = await fetch(`${WALLET_API_URL}?wallet=${searchTerm}`);
+        
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
+        }
+        
+        const results = await response.json();
+        
+        if (results.length === 0) {
+          showMessage('No NFTs found for this wallet address.', false);
+        }
+        
+        displayedNfts = results;
+        renderNfts(displayedNfts);
+        
+        // Hide load all button during search results
+        loadAllButton.style.display = 'none';
+      } catch (error) {
+        console.error('Error searching NFTs:', error);
+        showMessage(`Error searching NFTs: ${error.message}`, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    // Render NFTs to the grid
+    function renderNfts(nfts) {
+      // Clear any message
+      clearMessage();
+      
+      // If first render, clear the grid
+      if (nfts === displayedNfts) {
+        nftGrid.innerHTML = '';
+      }
+      
+      // Create and append NFT cards
+      nfts.forEach(nft => {
+        // Check if this NFT is already displayed
+        const existingCard = document.getElementById(`nft-${nft.id}`);
+        if (existingCard) return;
+        
+        const card = document.createElement('div');
+        card.id = `nft-${nft.id}`;
+        card.className = 'nft-card';
+        
+        card.innerHTML = `
+          <img 
+            src="${nft.content?.links?.image || nft.imageUrl || 'https://via.placeholder.com/300?text=NFT'}" 
+            alt="${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}" 
+            class="nft-image"
+            onerror="this.src='https://via.placeholder.com/300?text=NFT';"
+          >
+          <div class="nft-info">
+            <div class="nft-name">${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}</div>
+            <div class="nft-owner">${nft.owner_nickname || 'Unknown Citizen'}</div>
+            <div class="nft-wallet">${formatAddress(nft.owner_wallet)}</div>
+          </div>
+        `;
+        
+        nftGrid.appendChild(card);
+      });
+    }
+    
+    // Format wallet/NFT address for display
+    function formatAddress(address) {
+      if (!address) return 'Unknown';
+      if (address.length <= 16) return address;
+      
+      return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    }
+    
+    // Show loading state
+    function setLoading(loading) {
+      isLoading = loading;
+      loadingElement.style.display = loading ? 'block' : 'none';
+    }
+    
+    // Show a message to the user
+    function showMessage(text, isError = false) {
+      // Remove existing message
+      clearMessage();
+      
+      const messageElement = document.createElement('div');
+      messageElement.id = 'message';
+      messageElement.className = `message ${isError ? 'error' : ''}`;
+      messageElement.textContent = text;
+      
+      // Insert after the NFT grid
+      nftGrid.insertAdjacentElement('afterend', messageElement);
+    }
+    
+    // Clear any displayed message
+    function clearMessage() {
+      const existingMessage = document.getElementById('message');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+    }
+  </script>
+</body>
+</html>

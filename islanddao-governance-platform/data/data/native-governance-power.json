@@ -1,0 +1,591 @@
+{
+  "summary": {
+    "totalCitizens": 14,
+    "totalNativeGovernancePower": 26302519.986543953,
+    "totalLockedPower": 11287214.218942953,
+    "totalUnlockedPower": 15015305.767601002,
+    "shadowDepositsFiltered": 4,
+    "calculatedAt": "2025-06-04T01:56:54.143Z",
+    "version": "1.0.0"
+  },
+  "citizens": [
+    {
+      "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "totalPower": 10393142.749205,
+      "lockedPower": 0,
+      "unlockedPower": 10393142.749205,
+      "deposits": [
+        {
+          "amount": 500,
+          "multiplier": 1,
+          "power": 500,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 184
+        },
+        {
+          "amount": 28619.140733,
+          "multiplier": 1,
+          "power": 28619.140733,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        },
+        {
+          "amount": 10353647.013,
+          "multiplier": 1,
+          "power": 10353647.013,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 104
+        },
+        {
+          "amount": 10376.595472,
+          "multiplier": 1,
+          "power": 10376.595472,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        }
+      ],
+      "shadowDeposits": [
+        {
+          "amount": 1000,
+          "type": "delegation_marker",
+          "offset": 112,
+          "note": "1000 ISLAND delegation/shadow marker"
+        }
+      ],
+      "calculatedAt": "2025-06-04T01:56:53.555Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "totalPower": 9075351.160370544,
+      "lockedPower": 9075351.160370544,
+      "unlockedPower": 0,
+      "deposits": [
+        {
+          "amount": 1500000,
+          "multiplier": 1.11,
+          "power": 1665000.0000000002,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2024-06-19",
+            "endDate": "2025-06-19",
+            "remainingDays": 16,
+            "totalDurationDays": 365
+          },
+          "offset": 184
+        },
+        {
+          "amount": 2000000,
+          "multiplier": 1.304,
+          "power": 2608000,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2025-05-14",
+            "endDate": "2025-07-13",
+            "remainingDays": 40,
+            "totalDurationDays": 60
+          },
+          "offset": 264
+        },
+        {
+          "amount": 3682784.632186,
+          "multiplier": 1.304,
+          "power": 4802351.160370544,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2025-05-14",
+            "endDate": "2025-07-13",
+            "remainingDays": 40,
+            "totalDurationDays": 60
+          },
+          "offset": 344
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.700Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "totalPower": 3363730.150474,
+      "lockedPower": 0,
+      "unlockedPower": 3363730.150474,
+      "deposits": [
+        {
+          "amount": 3361730.150474,
+          "multiplier": 1,
+          "power": 3361730.150474,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        },
+        {
+          "amount": 1071.428571,
+          "multiplier": 1,
+          "power": 1071.428571,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 184
+        },
+        {
+          "amount": 428.571429,
+          "multiplier": 1,
+          "power": 428.571429,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 264
+        },
+        {
+          "amount": 500,
+          "multiplier": 1,
+          "power": 500,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 344
+        }
+      ],
+      "shadowDeposits": [
+        {
+          "amount": 11000,
+          "type": "delegation_marker",
+          "offset": 104,
+          "note": "11000 ISLAND delegation/shadow marker"
+        },
+        {
+          "amount": 1000,
+          "type": "delegation_marker",
+          "offset": 112,
+          "note": "1000 ISLAND delegation/shadow marker"
+        }
+      ],
+      "calculatedAt": "2025-06-04T01:56:54.073Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "totalPower": 1380607.20238624,
+      "lockedPower": 1223263.49902624,
+      "unlockedPower": 157343.70335999998,
+      "deposits": [
+        {
+          "amount": 310472.969296,
+          "multiplier": 3.94,
+          "power": 1223263.49902624,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2024-07-14",
+            "endDate": "2026-07-14",
+            "remainingDays": 405,
+            "totalDurationDays": 730
+          },
+          "offset": 184
+        },
+        {
+          "amount": 126344.822273,
+          "multiplier": 1,
+          "power": 126344.822273,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 104
+        },
+        {
+          "amount": 30998.881087,
+          "multiplier": 1,
+          "power": 30998.881087,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:54.143Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "totalPower": 536529.257549,
+      "lockedPower": 0,
+      "unlockedPower": 536529.257549,
+      "deposits": [
+        {
+          "amount": 3500,
+          "multiplier": 1,
+          "power": 3500,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 184
+        },
+        {
+          "amount": 13369.680516,
+          "multiplier": 1,
+          "power": 13369.680516,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 264
+        },
+        {
+          "amount": 519659.577033,
+          "multiplier": 1,
+          "power": 519659.577033,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 344
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.516Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "totalPower": 516147.15222772094,
+      "lockedPower": 466147.15222772094,
+      "unlockedPower": 50000,
+      "deposits": [
+        {
+          "amount": 21500,
+          "multiplier": 2.502,
+          "power": 53792.99999999999,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Cliff",
+            "isActive": true,
+            "startDate": "2024-09-25",
+            "endDate": "2025-12-08",
+            "remainingDays": 188,
+            "totalDurationDays": 439
+          },
+          "offset": 184
+        },
+        {
+          "amount": 49202.733486,
+          "multiplier": 2.502,
+          "power": 123105.23918197198,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Cliff",
+            "isActive": true,
+            "startDate": "2024-09-25",
+            "endDate": "2025-12-08",
+            "remainingDays": 188,
+            "totalDurationDays": 439
+          },
+          "offset": 264
+        },
+        {
+          "amount": 116304.347827,
+          "multiplier": 2.487,
+          "power": 289248.913045749,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Cliff",
+            "isActive": true,
+            "startDate": "2024-12-03",
+            "endDate": "2025-12-06",
+            "remainingDays": 186,
+            "totalDurationDays": 368
+          },
+          "offset": 344
+        },
+        {
+          "amount": 50000,
+          "multiplier": 1,
+          "power": 50000,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.656Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "totalPower": 393832.78125922,
+      "lockedPower": 377734.98739922,
+      "unlockedPower": 16097.79386,
+      "deposits": [
+        {
+          "amount": 78857.030444,
+          "multiplier": 3.94,
+          "power": 310696.69994936,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2024-12-06",
+            "endDate": "2027-12-06",
+            "remainingDays": 916,
+            "totalDurationDays": 1095
+          },
+          "offset": 184
+        },
+        {
+          "amount": 17014.793769,
+          "multiplier": 3.94,
+          "power": 67038.28744986,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2024-12-13",
+            "endDate": "2027-12-13",
+            "remainingDays": 923,
+            "totalDurationDays": 1095
+          },
+          "offset": 264
+        },
+        {
+          "amount": 16097.79386,
+          "multiplier": 1,
+          "power": 16097.79386,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.481Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "totalPower": 200000,
+      "lockedPower": 0,
+      "unlockedPower": 200000,
+      "deposits": [
+        {
+          "amount": 200000,
+          "multiplier": 1,
+          "power": 200000,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:54.023Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "totalPower": 144717.419919228,
+      "lockedPower": 144717.419919228,
+      "unlockedPower": 0,
+      "deposits": [
+        {
+          "amount": 10000,
+          "multiplier": 1.32,
+          "power": 13200,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Monthly",
+            "isActive": true,
+            "startDate": "2025-03-17",
+            "endDate": "2025-07-15",
+            "remainingDays": 42,
+            "totalDurationDays": 120
+          },
+          "offset": 184
+        },
+        {
+          "amount": 37626.982836,
+          "multiplier": 1.974,
+          "power": 74275.664118264,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2025-04-07",
+            "endDate": "2025-10-04",
+            "remainingDays": 123,
+            "totalDurationDays": 180
+          },
+          "offset": 264
+        },
+        {
+          "amount": 25738.998886,
+          "multiplier": 1.974,
+          "power": 50808.783800964,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2025-04-07",
+            "endDate": "2025-10-04",
+            "remainingDays": 123,
+            "totalDurationDays": 180
+          },
+          "offset": 344
+        },
+        {
+          "amount": 3913,
+          "multiplier": 1.644,
+          "power": 6432.972,
+          "isLocked": true,
+          "classification": "active_lockup",
+          "lockupDetails": {
+            "type": "Vesting",
+            "isActive": true,
+            "startDate": "2025-05-26",
+            "endDate": "2025-08-24",
+            "remainingDays": 82,
+            "totalDurationDays": 90
+          },
+          "offset": 424
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:54.106Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "totalPower": 126779.222404,
+      "lockedPower": 0,
+      "unlockedPower": 126779.222404,
+      "deposits": [
+        {
+          "amount": 126779.222404,
+          "multiplier": 1,
+          "power": 126779.222404,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 112
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.736Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "totalPower": 124693.845135,
+      "lockedPower": 0,
+      "unlockedPower": 124693.845135,
+      "deposits": [
+        {
+          "amount": 124693.845135,
+          "multiplier": 1,
+          "power": 124693.845135,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 104
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.778Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "totalPower": 29484.464683,
+      "lockedPower": 0,
+      "unlockedPower": 29484.464683,
+      "deposits": [
+        {
+          "amount": 29484.464683,
+          "multiplier": 1,
+          "power": 29484.464683,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 104
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.880Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "totalPower": 12625.580931,
+      "lockedPower": 0,
+      "unlockedPower": 12625.580931,
+      "deposits": [
+        {
+          "amount": 12625.580931,
+          "multiplier": 1,
+          "power": 12625.580931,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 104
+        }
+      ],
+      "shadowDeposits": [
+        {
+          "amount": 1000,
+          "type": "delegation_marker",
+          "offset": 104,
+          "note": "1000 ISLAND delegation/shadow marker"
+        }
+      ],
+      "calculatedAt": "2025-06-04T01:56:53.627Z",
+      "version": "1.0.0"
+    },
+    {
+      "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "totalPower": 4879,
+      "lockedPower": 0,
+      "unlockedPower": 4879,
+      "deposits": [
+        {
+          "amount": 4879,
+          "multiplier": 1,
+          "power": 4879,
+          "isLocked": false,
+          "classification": "unlocked",
+          "lockupDetails": null,
+          "offset": 104
+        }
+      ],
+      "shadowDeposits": [],
+      "calculatedAt": "2025-06-04T01:56:53.816Z",
+      "version": "1.0.0"
+    }
+  ]
+}
