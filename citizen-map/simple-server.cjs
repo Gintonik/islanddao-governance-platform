@@ -347,11 +347,10 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         UPDATE citizens SET 
           lat = $2, lng = $3, nickname = $4, bio = $5, 
           twitter_handle = $6, telegram_handle = $7, discord_handle = $8,
-          primary_nft = $9, pfp_nft = $10, image_url = $11,
-          nft_ids = $12, verified = true, updated_at = NOW()
+          primary_nft = $9, pfp_nft = $10, image_url = $11
         WHERE wallet = $1
         RETURNING *
-      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url, JSON.stringify(nfts)]);
+      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url]);
       
       res.json({ success: true, citizen: result.rows[0], action: 'updated' });
     } else {
@@ -360,11 +359,10 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         INSERT INTO citizens (
           wallet, lat, lng, nickname, bio, 
           twitter_handle, telegram_handle, discord_handle,
-          primary_nft, pfp_nft, image_url, nft_ids, 
-          verified, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, NOW(), NOW())
+          primary_nft, pfp_nft, image_url
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *
-      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url, JSON.stringify(nfts)]);
+      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url]);
       
       res.json({ success: true, citizen: result.rows[0], action: 'created' });
     }
