@@ -273,6 +273,44 @@ app.get('/api/wallet-nfts', async (req, res) => {
   }
 });
 
+// Add API endpoint to check username availability
+app.get('/api/check-username', async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) {
+      return res.status(400).json({ error: 'Username required' });
+    }
+    
+    const trimmedUsername = username.trim();
+    
+    // Allow multiple "Anonymous Citizen" entries
+    if (trimmedUsername.toLowerCase() === 'anonymous citizen') {
+      const available = true;
+      res.json({ 
+        available,
+        username: trimmedUsername,
+        message: 'Username is available'
+      });
+      return;
+    }
+    
+    const result = await pool.query(
+      'SELECT id FROM citizens WHERE LOWER(nickname) = LOWER($1)',
+      [trimmedUsername]
+    );
+    
+    const available = result.rows.length === 0;
+    res.json({ 
+      available,
+      username: username.trim(),
+      message: available ? 'Username is available' : 'Username is already taken'
+    });
+  } catch (error) {
+    console.error('Error checking username:', error);
+    res.status(500).json({ error: 'Failed to check username' });
+  }
+});
+
 // Add API endpoint for governance stats
 app.get('/api/governance-stats', async (req, res) => {
   try {

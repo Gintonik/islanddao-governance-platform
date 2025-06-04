@@ -961,6 +961,33 @@
             cursor: crosshair !important;
         }
 
+        /* Username validation styles */
+        .username-validation {
+            font-size: 12px;
+            margin-top: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .username-available {
+            color: #21E8A3;
+            background: rgba(33, 232, 163, 0.1);
+            border: 1px solid rgba(33, 232, 163, 0.3);
+        }
+
+        .username-taken {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .username-checking {
+            color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
         [data-theme="light"] .nft-text-label {
             color: #333333 !important;
             background: rgba(255, 255, 255, 0.95) !important;
@@ -1535,7 +1562,8 @@
                 
                 <div class="form-group">
                     <label for="nickname">Nickname (optional)</label>
-                    <input type="text" id="nickname" maxlength="32" placeholder="Display name">
+                    <input type="text" id="nickname" maxlength="32" placeholder="Display name" oninput="checkUsernameAvailability(this.value)">
+                    <div id="username-validation" class="username-validation" style="display: none;"></div>
                 </div>
                 
                 <div class="form-group">
@@ -2264,6 +2292,13 @@
 
             try {
                 console.log('Starting verified pin creation process');
+                
+                // Check username availability before proceeding
+                const nickname = document.getElementById('nickname').value.trim();
+                if (nickname && !isUsernameAvailable) {
+                    showNotification('Username is already taken. Please choose a different one.', 'error');
+                    return;
+                }
                 
                 // Initialize wallet verifier with Solana connection for hardware wallet support
                 const walletVerifier = new WalletVerifier({
@@ -3442,6 +3477,54 @@
                 updateWalletUI();
                 showNotification('Wallet disconnected', 'success');
             }
+        }
+
+        // Username validation
+        let usernameCheckTimeout;
+        let isUsernameAvailable = true;
+
+        async function checkUsernameAvailability(username) {
+            const validationDiv = document.getElementById('username-validation');
+            
+            // Clear previous timeout
+            if (usernameCheckTimeout) {
+                clearTimeout(usernameCheckTimeout);
+            }
+            
+            // Hide validation if empty
+            if (!username || username.trim().length === 0) {
+                validationDiv.style.display = 'none';
+                isUsernameAvailable = true;
+                return;
+            }
+            
+            // Show checking state
+            validationDiv.style.display = 'block';
+            validationDiv.className = 'username-validation username-checking';
+            validationDiv.textContent = 'Checking availability...';
+            
+            // Debounce the API call
+            usernameCheckTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/check-username?username=${encodeURIComponent(username.trim())}`);
+                    const data = await response.json();
+                    
+                    if (data.available) {
+                        validationDiv.className = 'username-validation username-available';
+                        validationDiv.textContent = '✓ Username is available';
+                        isUsernameAvailable = true;
+                    } else {
+                        validationDiv.className = 'username-validation username-taken';
+                        validationDiv.textContent = '⚠ Username is already taken';
+                        isUsernameAvailable = false;
+                    }
+                } catch (error) {
+                    console.error('Error checking username:', error);
+                    validationDiv.className = 'username-validation username-taken';
+                    validationDiv.textContent = 'Error checking username';
+                    isUsernameAvailable = false;
+                }
+            }, 500); // 500ms debounce
         }
 
         // Start pin creation process
