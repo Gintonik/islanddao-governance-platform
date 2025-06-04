@@ -35,7 +35,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd /home/runner/workspace/citizen-map && node simple-server.cjs"
+args = "cd citizen-map && node simple-server.cjs"
 waitForPort = 5000
 
 [[workflows.workflow]]
