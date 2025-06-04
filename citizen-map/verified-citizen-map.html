@@ -1289,16 +1289,7 @@
         </div>
     </div>
 
-    <!-- Wallet Selection Modal -->
-    <div id="walletModal" class="wallet-modal">
-        <div class="wallet-modal-content">
-            <button class="close-modal" onclick="closeWalletModal()">&times;</button>
-            <h3>Connect Your Wallet</h3>
-            <div class="wallet-options" id="walletOptions">
-                <!-- Wallet options will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
+    <!-- Old wallet modal removed - using unified wallet component -->
 
     <!-- Pin Creation Form Modal -->
     <div id="pinFormModal" class="pin-form-modal">
@@ -1657,60 +1648,7 @@
             });
         }
 
-        // Populate wallet options using universal adapter
-        async function populateWalletOptions() {
-            const walletOptionsContainer = document.getElementById('walletOptions');
-            walletOptionsContainer.innerHTML = '<div class="loading">Detecting wallets...</div>';
-
-            try {
-                const detectedWallets = await walletAdapter.detectWallets();
-                const allWallets = walletAdapter.getSupportedWallets();
-                
-                walletOptionsContainer.innerHTML = '';
-                
-                if (detectedWallets.length === 0) {
-                    walletOptionsContainer.innerHTML = `
-                        <div class="no-wallets">
-                            <p>No Solana wallets detected.</p>
-                            <p>Please install a wallet extension:</p>
-                            <div class="wallet-suggestions">
-                                <a href="https://phantom.app" target="_blank">Phantom</a>
-                                <a href="https://solflare.com" target="_blank">Solflare</a>
-                                <a href="https://backpack.app" target="_blank">Backpack</a>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                allWallets.forEach((wallet) => {
-                    const isDetected = detectedWallets.some(detected => detected.identifier === wallet.identifier);
-                    
-                    const walletElement = document.createElement('div');
-                    walletElement.className = `wallet-option ${isDetected ? 'detected' : 'not-detected'}`;
-                    walletElement.innerHTML = `
-                        <img src="${wallet.icon}" alt="${wallet.name}" class="wallet-icon" onerror="this.textContent='💼'">
-                        <div class="wallet-info">
-                            <div class="wallet-name">${wallet.name}</div>
-                            <div class="wallet-status">${isDetected ? 'Detected' : 'Not Installed'}</div>
-                        </div>
-                    `;
-
-                    if (isDetected) {
-                        walletElement.addEventListener('click', () => connectWallet(wallet.identifier));
-                    } else {
-                        walletElement.style.opacity = '0.5';
-                        walletElement.style.cursor = 'not-allowed';
-                    }
-
-                    walletOptionsContainer.appendChild(walletElement);
-                });
-                
-            } catch (error) {
-                console.error('Error populating wallet options:', error);
-                walletOptionsContainer.innerHTML = '<div class="error">Error loading wallet options. Please refresh and try again.</div>';
-            }
-        }
+        // Old populateWalletOptions function removed - using unified wallet component
 
         // Handle wallet connection
         async function handleWalletConnect() {
