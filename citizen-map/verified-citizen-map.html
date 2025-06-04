@@ -2055,12 +2055,7 @@
                 addPinBtn.style.cursor = 'not-allowed';
                 
                 // Set connect handler to show our custom modal
-                walletBtn.onclick = () => {
-                    const modal = document.getElementById('wallet-modal-overlay');
-                    if (modal) {
-                        modal.style.display = 'flex';
-                    }
-                };
+                walletBtn.onclick = showWalletModal;
             }
         }
 
