@@ -1439,11 +1439,125 @@
 
         // Wallet modal functions using our custom modal
         window.showWalletModal = () => {
+            populateWalletList();
             const modal = document.getElementById('wallet-modal-overlay');
             if (modal) {
                 modal.style.display = 'flex';
             }
         };
+
+        function populateWalletList() {
+            const walletList = document.getElementById('wallet-list');
+            walletList.innerHTML = '';
+
+            const wallets = [
+                {
+                    name: 'Phantom',
+                    identifier: 'phantom',
+                    icon: './phantom-icon.jpeg',
+                    detect: () => window.phantom?.solana?.isPhantom,
+                    provider: () => window.phantom?.solana
+                },
+                {
+                    name: 'Solflare',
+                    identifier: 'solflare', 
+                    icon: './Solflare_id5j73wBTF_0.png',
+                    detect: () => window.solflare?.isSolflare,
+                    provider: () => window.solflare
+                },
+                {
+                    name: 'Backpack',
+                    identifier: 'backpack',
+                    icon: './Standalone_Icon_Red.png',
+                    detect: () => window.backpack?.isBackpack,
+                    provider: () => window.backpack
+                }
+            ];
+
+            wallets.forEach(wallet => {
+                const isDetected = wallet.detect();
+                
+                const btn = document.createElement('button');
+                btn.disabled = !isDetected;
+                btn.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    cursor: ${isDetected ? 'pointer' : 'not-allowed'};
+                    opacity: ${isDetected ? '1' : '0.6'};
+                    transition: all 0.2s ease;
+                    font-family: inherit;
+                    color: white;
+                    font-size: 16px;
+                `;
+                
+                btn.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <img src="${wallet.icon}" alt="${wallet.name}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" crossorigin="anonymous" />
+                        <div style="text-align: left;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">${wallet.name}</div>
+                        </div>
+                    </div>
+                    <span style="color: ${isDetected ? '#00d4aa' : '#888'}; font-size: 14px;">${isDetected ? 'Detected' : 'Not installed'}</span>
+                `;
+
+                if (isDetected) {
+                    btn.onmouseover = () => {
+                        btn.style.background = '#333';
+                        btn.style.borderColor = '#555';
+                    };
+                    btn.onmouseout = () => {
+                        btn.style.background = '#2a2a2a';
+                        btn.style.borderColor = '#444';
+                    };
+                    btn.onclick = async () => {
+                        closeWalletModal();
+                        await connectWallet(wallet);
+                    };
+                } else {
+                    btn.onclick = () => {
+                        window.open(`https://${wallet.identifier}.app`, '_blank');
+                    };
+                }
+
+                walletList.appendChild(btn);
+            });
+        }
+
+        async function connectWallet(wallet) {
+            try {
+                console.log('Connecting to wallet:', wallet.name);
+                const provider = wallet.provider();
+                
+                if (!provider) {
+                    throw new Error(`${wallet.name} provider not found`);
+                }
+                
+                await provider.connect();
+                const publicKey = provider.publicKey.toString();
+                
+                // Update SimpleWallet state
+                if (simpleWallet) {
+                    simpleWallet.connectedWallet = wallet.identifier;
+                    simpleWallet.publicKey = publicKey;
+                }
+                
+                console.log('Wallet connected:', publicKey);
+                updateWalletUI();
+                loadUserNfts();
+                showNotification(`Connected to ${wallet.name}`, 'success');
+                
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                showNotification(`Failed to connect: ${error.message}`, 'error');
+            }
+        }
 
         function closeWalletModal() {
             const modal = document.getElementById('wallet-modal-overlay');
