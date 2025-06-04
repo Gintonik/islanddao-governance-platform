@@ -1274,11 +1274,6 @@
             </div>
             <div class="stat-separator"></div>
             <div class="stat-item">
-                <span class="stat-label">Total Gov Power:</span>
-                <span class="stat-value" id="totalGovernancePower">0</span>
-            </div>
-            <div class="stat-separator"></div>
-            <div class="stat-item">
                 <span class="stat-label">Next Sync:</span>
                 <span class="stat-value" id="nextSync">12:00 UTC</span>
             </div>
@@ -1404,6 +1399,7 @@
                         initializeMap();
                         setupEventListeners();
                         await loadCitizens();
+                        await loadGovernanceStats();
                         populateWalletOptions();
                         initializeTheme();
                         startAutoRefresh(); // Start automatic updates
@@ -1447,8 +1443,48 @@
                     console.log('New citizens detected, refreshing map...');
                     await loadCitizens();
                 }
+                
+                // Update governance stats
+                await loadGovernanceStats();
             } catch (error) {
                 console.error('Error checking for updates:', error);
+            }
+        }
+
+        // Load governance statistics
+        async function loadGovernanceStats() {
+            try {
+                const response = await fetch('/api/governance-stats');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const stats = await response.json();
+                
+                // Update stats display
+                document.getElementById('totalCitizens').textContent = stats.totalCitizens || 0;
+                document.getElementById('activeCitizens').textContent = stats.activeCitizens || 0;
+                
+            } catch (error) {
+                console.error('Error loading governance stats:', error);
+                // Fallback to count from loaded citizens
+                const citizens = await getCitizenCount();
+                document.getElementById('totalCitizens').textContent = citizens.total || 0;
+                document.getElementById('activeCitizens').textContent = citizens.active || 0;
+            }
+        }
+
+        // Get citizen count fallback
+        async function getCitizenCount() {
+            try {
+                const response = await fetch('/api/citizens');
+                const citizens = await response.json();
+                const activeCitizens = citizens.filter(c => c.native_governance_power > 0).length;
+                return {
+                    total: citizens.length,
+                    active: activeCitizens
+                };
+            } catch (error) {
+                return { total: 0, active: 0 };
             }
         }
 
