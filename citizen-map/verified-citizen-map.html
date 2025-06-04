@@ -1316,9 +1316,6 @@
         </div>
         
         <div class="wallet-section">
-            <button id="disconnectBtn" class="disconnect-wallet-btn" style="display: none;" onclick="disconnectWallet()">
-                Disconnect
-            </button>
             <button id="walletBtn" class="wallet-connect-btn" onclick="handleWalletButtonClick()">
                 <span id="walletIcon">🔗</span>
                 <span id="walletText">Connect Wallet</span>
@@ -1564,33 +1561,27 @@
             const walletBtn = document.getElementById('walletBtn');
             const walletText = document.getElementById('walletText');
             const walletIcon = document.getElementById('walletIcon');
-            const disconnectBtn = document.getElementById('disconnectBtn');
             
             if (currentWallet) {
-                // Show connected state
-                walletText.textContent = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`;
-                walletIcon.textContent = '✅';
+                // Show connected state - button becomes Disconnect
+                walletText.textContent = 'Disconnect';
+                walletIcon.textContent = '🔗';
                 walletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
                 walletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
-                disconnectBtn.style.display = 'block';
+                walletBtn.onclick = disconnectWallet;
             } else {
                 // Show disconnected state
                 walletText.textContent = 'Connect Wallet';
                 walletIcon.textContent = '🔗';
                 walletBtn.style.background = '';
                 walletBtn.style.borderColor = '';
-                disconnectBtn.style.display = 'none';
+                walletBtn.onclick = handleWalletButtonClick;
             }
         }
 
         function handleWalletButtonClick() {
-            if (currentWallet) {
-                // Already connected, do nothing or show wallet info
-                return;
-            } else {
-                // Not connected, show wallet modal
-                showWalletModal();
-            }
+            // Not connected, show wallet modal
+            showWalletModal();
         }
 
         function disconnectWallet() {
@@ -3231,8 +3222,13 @@
             console.log('Add pin clicked, currentWallet:', currentWallet);
             
             if (currentWallet) {
-                console.log('Starting pin creation process');
-                startPinCreation();
+                // Check if wallet has PERKS NFTs
+                if (walletNfts && walletNfts.length > 0) {
+                    console.log('Starting pin creation process');
+                    startPinCreation();
+                } else {
+                    showNotification("This wallet doesn't own any IslandDAO PERKS", 'error');
+                }
             } else {
                 console.log('Showing wallet modal for pin creation');
                 showWalletModal();
