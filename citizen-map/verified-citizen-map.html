@@ -1570,7 +1570,7 @@
                 console.log('Application initialized successfully');
             } catch (error) {
                 console.error('Error initializing application:', error);
-                showNotification('Error loading application. Please refresh the page.', 'error');
+                // Remove error notification that was causing stuck overlay
             }
         }
 
