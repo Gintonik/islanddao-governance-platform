@@ -1443,32 +1443,32 @@
 
         // ===== WALLET CONNECTION SYSTEM =====
         
-        // Wallet configurations
+        // Wallet configurations with official logos
         const WALLET_CONFIGS = {
             phantom: {
                 name: 'Phantom',
-                icon: 'https://phantom.app/img/phantom-logo.svg',
+                icon: 'https://cdn.phantom.app/assets/phantom_icon_black.svg',
                 url: 'https://phantom.app',
                 detect: () => window.phantom?.solana?.isPhantom,
                 provider: () => window.phantom?.solana
             },
             solflare: {
                 name: 'Solflare', 
-                icon: 'https://solflare.com/images/logo.svg',
+                icon: 'https://raw.githubusercontent.com/solflare-wallet/brandkit/master/assets/icon/solflare-icon.svg',
                 url: 'https://solflare.com',
                 detect: () => window.solflare?.isSolflare,
                 provider: () => window.solflare
             },
             backpack: {
                 name: 'Backpack',
-                icon: 'https://backpack.app/icon.png',
+                icon: 'https://backpack.app/media/Backpack_App_Icon.svg',
                 url: 'https://backpack.app',
                 detect: () => window.backpack?.isBackpack,
                 provider: () => window.backpack
             },
             coinbase: {
                 name: 'Coinbase Wallet',
-                icon: 'https://images.ctfassets.net/q5ulk4bp65r7/3VbZqohOorINNZM8tGEzJn/72d6e35936b7cef3a1f0a3ae7b123fa7/coinbase-wallet.png',
+                icon: 'https://assets.coinbase.com/assets/app-icon-512x512.svg',
                 url: 'https://www.coinbase.com/wallet',
                 detect: () => window.coinbaseSolana,
                 provider: () => window.coinbaseSolana
