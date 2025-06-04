@@ -1478,11 +1478,17 @@
         // Wallet modal functions
         window.showWalletModal = () => {
             populateWalletList();
-            document.getElementById('wallet-modal-overlay').style.display = 'flex';
+            const modal = document.getElementById('wallet-modal-overlay');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
         };
 
         window.closeWalletModal = () => {
-            document.getElementById('wallet-modal-overlay').style.display = 'none';
+            const modal = document.getElementById('wallet-modal-overlay');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         };
 
         function populateWalletList() {
