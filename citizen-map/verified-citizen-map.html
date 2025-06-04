@@ -1510,6 +1510,9 @@
 
                 if (isDetected) {
                     btn.onclick = async () => {
+                        console.log('Wallet button clicked in modal:', walletKey);
+                        // Force close modal immediately when wallet is clicked
+                        closeWalletModal();
                         await connectWallet(walletKey, wallet);
                     };
                 } else {
