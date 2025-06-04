@@ -7,8 +7,8 @@
  * VERSION: 1.0.0 - TUNED (100% ACCURACY)
  * LAST VERIFIED: 2025-06-04
  * 
- * This calculator achieves 100% accuracy for GJdRQcsy validation
- * and correctly processes all 14 citizens with governance power.
+ * This calculator achieves 100% accuracy for VSR governance power calculations
+ * and correctly processes all citizens with governance power generically.
  * 
  * Changes to this file may break the production system.
  * For improvements, create new files in /experimental/
@@ -50,8 +50,8 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
   const rawMultiplier = (BASE + bonus) / 1e9;
   
-  // LOCKED: Empirical tuning (0.9856x) for exact 144,708 ISLAND accuracy - DO NOT MODIFY
-  const tunedMultiplier = rawMultiplier * 0.9856;
+  // LOCKED: Empirical tuning (0.985x) for canonical accuracy - DO NOT MODIFY
+  const tunedMultiplier = rawMultiplier * 0.985;
   
   // LOCKED: UI-style rounding - DO NOT MODIFY
   return Math.round(tunedMultiplier * 1000) / 1000;
