@@ -227,7 +227,10 @@ class WalletVerifier {
                     errorMessage.includes('not yet supported') ||
                     errorMessage.includes('not supported') || 
                     errorName === 'NotSupportedError' ||
-                    errorMessage.includes('does not support')) {
+                    errorMessage.includes('does not support') ||
+                    errorMessage.includes('WalletSignMessageError') ||
+                    errorMessage.includes('WalletNotConnectedError') ||
+                    (errorMessage.includes('Transaction cancelled') && errorCode !== 4001)) {
                     
                     this.log('Using transaction fallback for hardware wallet...');
                     verificationResult = await this.verifyWithTransaction(wallet, message);
