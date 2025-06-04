@@ -79,6 +79,14 @@ async function fetchWalletNFTs(walletAddress) {
   }
 }
 
+// Load authentic governance power data
+let governanceData = null;
+try {
+  governanceData = require('./data/native-governance-power.json');
+} catch (error) {
+  console.log('No governance data file found, will use database values');
+}
+
 // API endpoint for citizens data with NFT information
 app.get('/api/citizens', async (req, res) => {
   try {
@@ -89,7 +97,7 @@ app.get('/api/citizens', async (req, res) => {
     const result = await pool.query('SELECT * FROM citizens ORDER BY native_governance_power DESC NULLS LAST');
     const citizens = result.rows;
     
-    // Add NFT data for each citizen
+    // Add NFT data and authentic governance power for each citizen
     const citizensWithNfts = await Promise.all(citizens.map(async (citizen) => {
       const nfts = await fetchWalletNFTs(citizen.wallet);
       const nftMetadata = {};
@@ -103,11 +111,23 @@ app.get('/api/citizens', async (req, res) => {
         };
       });
       
-      return {
+      // Add authentic governance power from JSON data
+      let enhancedCitizen = {
         ...citizen,
         nfts: nftIds,
         nftMetadata: nftMetadata
       };
+      
+      if (governanceData && governanceData.citizens) {
+        const governanceCitizen = governanceData.citizens.find(gc => gc.wallet === citizen.wallet);
+        if (governanceCitizen) {
+          enhancedCitizen.native_governance_power = governanceCitizen.totalPower;
+          enhancedCitizen.locked_governance_power = governanceCitizen.lockedPower;
+          enhancedCitizen.unlocked_governance_power = governanceCitizen.unlockedPower;
+        }
+      }
+      
+      return enhancedCitizen;
     }));
     
     res.json(citizensWithNfts);

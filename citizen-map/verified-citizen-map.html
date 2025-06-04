@@ -1893,17 +1893,27 @@
         function updateLiveStats(citizens) {
             const citizenCount = citizens.length;
             let totalPerks = 0;
+            let totalGovernancePower = 0;
+            let activeGovernanceCitizens = 0;
             
-            // Calculate total PERKS NFTs across all citizens
+            // Calculate stats from authentic citizen data
             citizens.forEach(citizen => {
                 if (citizen.nfts && Array.isArray(citizen.nfts)) {
                     totalPerks += citizen.nfts.length;
+                }
+                
+                const governancePower = parseFloat(citizen.native_governance_power) || 0;
+                if (governancePower > 0) {
+                    totalGovernancePower += governancePower;
+                    activeGovernanceCitizens++;
                 }
             });
             
             // Update the display with smooth counter animation
             animateCounter('citizenCount', citizenCount);
             animateCounter('perksCount', totalPerks);
+            animateCounter('governancePowerCount', Math.round(totalGovernancePower));
+            animateCounter('activeGovernanceCount', activeGovernanceCitizens);
             
             // Start the refresh countdown timer
             startRefreshCountdown();
