@@ -1320,7 +1320,7 @@
             <button id="disconnectBtn" class="disconnect-wallet-btn" style="display: none;" onclick="disconnectWallet()">
                 Disconnect
             </button>
-            <button id="walletBtn" class="wallet-connect-btn">
+            <button id="walletBtn" class="wallet-connect-btn" onclick="handleWalletButtonClick()">
                 <span id="walletIcon">🔗</span>
                 <span id="walletText">Connect Wallet</span>
             </button>
@@ -1350,7 +1350,7 @@
         </div>
         
         <div class="controls">
-            <button id="addPinBtn" class="control-btn add-pin-btn" title="Add Your Pin">+</button>
+            <button id="addPinBtn" class="control-btn add-pin-btn" title="Add Your Pin" onclick="handleAddPinClick()">+</button>
         </div>
     </div>
 
@@ -1567,11 +1567,14 @@
         // Initialize application
         async function initializeApp() {
             try {
-                // Initialize wallet adapter first
-                initializeWalletAdapter();
+                // Initialize theme first
+                initializeTheme();
                 
                 // Initialize map
                 initializeMap();
+                
+                // Initialize wallet adapter
+                initializeWalletAdapter();
                 
                 // Set up event listeners
                 setupEventListeners();
@@ -3138,7 +3141,10 @@
 
         // Close wallet modal
         function closeWalletModal() {
-            document.getElementById('walletModal').style.display = 'none';
+            const modal = document.getElementById('wallet-modal-overlay');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         // Show notification
@@ -3160,9 +3166,87 @@
             });
         }
 
+        // Wallet button click handler
+        function handleWalletButtonClick() {
+            console.log('Wallet button clicked, currentWallet:', currentWallet);
+            
+            if (currentWallet) {
+                console.log('Disconnecting wallet');
+                disconnectWallet();
+            } else {
+                console.log('Showing wallet modal');
+                showWalletModal();
+            }
+        }
+
+        // Add pin button click handler
+        function handleAddPinClick() {
+            console.log('Add pin clicked, currentWallet:', currentWallet);
+            
+            if (currentWallet) {
+                console.log('Starting pin creation process');
+                startPinCreation();
+            } else {
+                console.log('Showing wallet modal for pin creation');
+                showWalletModal();
+            }
+        }
+
+        // Disconnect wallet function
+        async function disconnectWallet() {
+            try {
+                const lastWallet = localStorage.getItem('lastConnectedWallet');
+                if (lastWallet && WALLET_CONFIGS[lastWallet]) {
+                    const wallet = WALLET_CONFIGS[lastWallet];
+                    const provider = wallet.provider();
+                    if (provider && provider.disconnect) {
+                        await provider.disconnect();
+                    }
+                }
+                
+                currentWallet = null;
+                localStorage.removeItem('lastConnectedWallet');
+                updateWalletUI();
+                showNotification('Wallet disconnected', 'info');
+                
+            } catch (error) {
+                console.error('Disconnect failed:', error);
+                showNotification('Failed to disconnect wallet', 'error');
+            }
+        }
+
+        // Start pin creation process
+        function startPinCreation() {
+            isPickingLocation = true;
+            showNotification('Click on the map to place your pin', 'info');
+            
+            // Change cursor to crosshair
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.style.cursor = 'crosshair';
+            }
+        }
+
+        // Update wallet UI
+        function updateWalletUI() {
+            const walletBtn = document.getElementById('walletBtn');
+            const walletIcon = document.getElementById('walletIcon');
+            const walletText = document.getElementById('walletText');
+            
+            if (currentWallet && walletBtn) {
+                walletIcon.textContent = '🔗';
+                walletText.textContent = `${currentWallet.slice(0, 4)}...${currentWallet.slice(-4)}`;
+                walletBtn.classList.add('wallet-connected');
+            } else if (walletBtn) {
+                walletIcon.textContent = '🔗';
+                walletText.textContent = 'Connect Wallet';
+                walletBtn.classList.remove('wallet-connected');
+            }
+        }
+
         // Close modals when clicking outside
         window.addEventListener('click', function(e) {
-            const walletModal = document.getElementById('walletModal');
+            const walletModal = document.getElementById('wallet-modal-overlay');
             const pinModal = document.getElementById('pinFormModal');
             
             if (e.target === walletModal) {
