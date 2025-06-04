@@ -1316,7 +1316,7 @@
         </div>
         
         <div class="wallet-section">
-            <button id="walletBtn" class="wallet-connect-btn" onclick="handleWalletButtonClick()">
+            <button id="walletBtn" class="wallet-connect-btn">
                 <span id="walletIcon">🔗</span>
                 <span id="walletText">Connect Wallet</span>
             </button>
@@ -1369,7 +1369,7 @@
             <button class="close-modal" onclick="closePinForm()">&times;</button>
             <form id="pinForm">
                 <div class="form-group">
-                    <label>Select your IslandDAO Citizen Profile Picture</label>
+                    <label>Select your IslandDAO Citizen PFP</label>
                     <div id="nftGrid" class="nft-grid">
                         <p>Connect your wallet to see your NFTs</p>
                     </div>
@@ -1574,23 +1574,28 @@
 
         function updateWalletUI() {
             const walletBtn = document.getElementById('walletBtn');
-            const walletText = document.getElementById('walletText');
-            const walletIcon = document.getElementById('walletIcon');
+            if (!walletBtn) return;
+            
+            // Remove existing event listeners
+            walletBtn.replaceWith(walletBtn.cloneNode(true));
+            const newWalletBtn = document.getElementById('walletBtn');
+            const walletText = newWalletBtn.querySelector('#walletText');
+            const walletIcon = newWalletBtn.querySelector('#walletIcon');
             
             if (currentWallet) {
                 // Show connected state - button becomes Disconnect
                 walletText.textContent = 'Disconnect';
-                walletIcon.textContent = '🔗';
-                walletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
-                walletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
-                walletBtn.onclick = disconnectWallet;
+                walletIcon.textContent = '✅';
+                newWalletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
+                newWalletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
+                newWalletBtn.addEventListener('click', disconnectWallet);
             } else {
                 // Show disconnected state
                 walletText.textContent = 'Connect Wallet';
                 walletIcon.textContent = '🔗';
-                walletBtn.style.background = '';
-                walletBtn.style.borderColor = '';
-                walletBtn.onclick = handleWalletButtonClick;
+                newWalletBtn.style.background = '';
+                newWalletBtn.style.borderColor = '';
+                newWalletBtn.addEventListener('click', handleWalletButtonClick);
             }
         }
 
