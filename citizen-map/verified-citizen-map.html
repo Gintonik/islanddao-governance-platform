@@ -1999,6 +1999,13 @@
                     showNotification('Location selected! Now fill out your profile.', 'success');
                     isPickingLocation = false;
                     document.getElementById('addPinBtn').textContent = '+';
+                    
+                    // Reset cursor to default
+                    const mapContainer = document.getElementById('map');
+                    if (mapContainer) {
+                        mapContainer.style.cursor = '';
+                    }
+                    
                     openPinForm();
                 } else {
                     // Close citizen panel when clicking on map
@@ -2281,13 +2288,13 @@
                 
                 console.log('Citizen data prepared:', citizenData);
                 
-                console.log('Citizen data prepared:', citizenData);
-                
                 // Step 3: Submit verified citizen data
                 const result = await walletVerifier.submitVerifiedCitizen(verificationData, citizenData);
                 console.log('Pin creation successful:', result);
 
-                showNotification(`Verified pin created successfully using ${verificationData.fallbackMethod} verification!`, 'success');
+                // Show appropriate message based on action
+                const actionMessage = result.action === 'created' ? 'Pin Created' : 'Pin Moved';
+                showNotification(`${actionMessage} successfully using ${verificationData.fallbackMethod} verification!`, 'success');
                 closePinForm();
                 loadCitizens(); // Reload the map
                 // Trigger refresh for all other users
@@ -3411,10 +3418,10 @@
             isPickingLocation = true;
             showNotification('Click on the map to place your pin', 'info');
             
-            // Change cursor to crosshair
+            // Change cursor to pin icon
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
-                mapContainer.style.cursor = 'crosshair';
+                mapContainer.style.cursor = 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMzQgMiA1IDUuMTM0IDUgOUM1IDEzLjU4OSAxMS42IDIxLjcgMTEuOCAyMS45QzExLjkwNSAyMi4wMyAxMi4wOTUgMjIuMDMgMTIuMiAyMS45QzEyLjQgMjEuNyAxOSAxMy41ODkgMTkgOUMxOSA1LjEzNCAxNS44NjYgMiAxMiAyWk0xMiAxMi41QzEwLjA2NyAxMi41IDguNSAxMC45MzMgOC41IDlDOC41IDcuMDY3IDEwLjA2NyA1LjUgMTIgNS41QzEzLjkzMyA1LjUgMTUuNSA3LjA2NyAxNS41IDlDMTUuNSAxMC45MzMgMTMuOTMzIDEyLjUgMTIgMTIuNVoiIGZpbGw9IiM0ZmFjZmUiLz4KPC9zdmc+") 12 24, pointer';
             }
         }
 
