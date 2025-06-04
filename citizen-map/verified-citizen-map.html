@@ -1480,12 +1480,14 @@
             }
         };
 
-        window.closeWalletModal = () => {
+        function closeWalletModal() {
             const modal = document.getElementById('wallet-modal-overlay');
             if (modal) {
                 modal.style.display = 'none';
             }
-        };
+        }
+        
+        window.closeWalletModal = closeWalletModal;
 
         function populateWalletList() {
             const walletList = document.getElementById('wallet-list');
@@ -1542,9 +1544,11 @@
                 localStorage.setItem('lastConnectedWallet', walletKey);
                 
                 // Close modal first
+                console.log('Closing wallet modal...');
                 closeWalletModal();
                 
                 // Update UI
+                console.log('Updating wallet UI...');
                 updateWalletUI();
                 showNotification('Wallet Connected', 'success');
                 
@@ -1635,6 +1639,7 @@
         // Initialize wallet system
         function initializeWalletAdapter() {
             populateWalletList();
+            updateWalletUI(); // Ensure initial UI state
             attemptAutoConnect();
         }
 
