@@ -1417,6 +1417,8 @@
     <div id="notification" class="notification"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="verifyWallet.js"></script>
     <script>
         'use strict';
         
@@ -2109,39 +2111,35 @@
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.classList.add('loading');
-            submitBtn.textContent = 'Creating Pin...';
+            submitBtn.textContent = 'Verifying Wallet...';
 
             try {
-                console.log('Starting pin creation process');
+                console.log('Starting verified pin creation process');
                 
-                // Generate verification message
-                console.log('Fetching auth message...');
-                const authResponse = await fetch('/api/auth/generate-message');
-                console.log('Auth response status:', authResponse.status);
+                // Initialize wallet verifier with Solana connection
+                const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+                const walletVerifier = new WalletVerifier({
+                    connection: connection,
+                    debug: true,
+                    apiBaseUrl: ''
+                });
                 
-                if (!authResponse.ok) {
-                    throw new Error(`Auth API failed: ${authResponse.status}`);
-                }
+                submitBtn.textContent = 'Requesting Signature...';
                 
-                const { message, timestamp } = await authResponse.json();
-                console.log('Auth message received:', message);
-
-                // Request wallet signature using simple wallet
-                console.log('Requesting wallet signature...');
-                const encodedMessage = new TextEncoder().encode(message);
-                const signedMessage = await simpleWallet.signMessage(encodedMessage);
-                console.log('Signature received:', signedMessage);
+                // Step 1: Verify wallet ownership with automatic fallback
+                console.log('Starting wallet verification...');
+                const verificationData = await walletVerifier.verifyWallet(simpleWallet, connection);
+                console.log('Wallet verification successful:', verificationData);
                 
-                // Prepare pin data
-                const pinData = {
-                    wallet_address: currentWallet,
-                    original_message: message,
-                    signature: Array.from(signedMessage.signature).join(','), // Convert to string for now
+                submitBtn.textContent = 'Creating Pin...';
+                
+                // Step 2: Prepare citizen data
+                const citizenData = {
                     lat: selectedLocation.lat,
                     lng: selectedLocation.lng,
                     primary_nft: selectedPrimary,
                     pfp_nft: selectedPfp,
-                    image_url: walletNfts.find(nft => nft.id === selectedPfp)?.imageUrl,
+                    image_url: walletNfts.find(nft => nft.id === selectedPfp)?.imageUrl || walletNfts.find(nft => nft.id === selectedPfp)?.image,
                     nickname: document.getElementById('nickname').value,
                     bio: document.getElementById('bio').value,
                     twitter_handle: document.getElementById('twitter').value,
@@ -2149,36 +2147,32 @@
                     discord_handle: document.getElementById('discord').value,
                     nfts: [selectedPrimary]
                 };
-
-                console.log('Submitting pin data:', pinData);
                 
-                // Submit to verified endpoint
-                const response = await fetch('/api/save-citizen-verified', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(pinData)
-                });
+                console.log('Citizen data prepared:', citizenData);
+                
+                // Step 3: Submit verified citizen data
+                const result = await walletVerifier.submitVerifiedCitizen(verificationData, citizenData);
+                console.log('Pin creation successful:', result);
 
-                console.log('API response status:', response.status);
-                const result = await response.json();
-                console.log('API response data:', result);
-
-                if (response.ok) {
-                    showNotification('Verified pin created successfully!', 'success');
-                    closePinForm();
-                    loadCitizens(); // Reload the map
-                    // Trigger refresh for all other users
-                    broadcastUpdate();
-                } else {
-                    throw new Error(result.error || 'Failed to create pin');
-                }
+                showNotification(`Verified pin created successfully using ${verificationData.fallbackMethod} verification!`, 'success');
+                closePinForm();
+                loadCitizens(); // Reload the map
+                // Trigger refresh for all other users
+                broadcastUpdate();
 
             } catch (error) {
-                console.error('Error creating pin:', error);
-                console.error('Error details:', error.message, error.stack);
-                showNotification('Failed to create verified pin. Please try again.', 'error');
+                console.error('Error creating verified pin:', error);
+                
+                // Display user-friendly error messages
+                if (error.message.includes('canceled') || error.message.includes('rejected')) {
+                    showNotification('Signature canceled. Try again or switch wallet.', 'warning');
+                } else if (error.message.includes('not connected')) {
+                    showNotification('Please connect your wallet first.', 'error');
+                } else if (error.message.includes('PERKS NFT')) {
+                    showNotification('You need to own a PERKS NFT to create a verified pin.', 'error');
+                } else {
+                    showNotification(`Verification failed: ${error.message}`, 'error');
+                }
             } finally {
                 submitBtn.classList.remove('loading');
                 submitBtn.textContent = 'Create Verified Pin';

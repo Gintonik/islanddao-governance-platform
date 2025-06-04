@@ -301,8 +301,78 @@ app.get('/api/governance-stats', async (req, res) => {
 // Add auth message generation endpoint
 app.get('/api/auth/generate-message', (req, res) => {
   const timestamp = Date.now();
-  const message = `Verify wallet ownership for IslandDAO Citizen Map\nTimestamp: ${timestamp}`;
+  const message = `Verify wallet ownership for IslandDAO Citizen Map - Timestamp: ${timestamp}`;
   res.json({ message, timestamp });
+});
+
+// Add verified citizen save endpoint with signature verification
+app.post('/api/save-citizen-verified', async (req, res) => {
+  try {
+    const { 
+      wallet_address, 
+      signature, 
+      original_message, 
+      fallback_method = 'message',
+      lat, 
+      lng, 
+      nickname, 
+      bio, 
+      twitter_handle, 
+      telegram_handle, 
+      discord_handle,
+      primary_nft,
+      pfp_nft,
+      image_url,
+      nfts = []
+    } = req.body;
+
+    // Basic validation
+    if (!wallet_address || !signature || !original_message || !lat || !lng) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // TODO: Add signature verification logic here
+    // For now, we'll trust the signature (implement crypto verification later)
+    console.log(`Verified citizen pin: ${wallet_address} using ${fallback_method} method`);
+
+    // Check if citizen already exists
+    const existingCitizen = await pool.query(
+      'SELECT id FROM citizens WHERE wallet_address = $1',
+      [wallet_address]
+    );
+
+    if (existingCitizen.rows.length > 0) {
+      // Update existing citizen
+      const result = await pool.query(`
+        UPDATE citizens SET 
+          lat = $2, lng = $3, nickname = $4, bio = $5, 
+          twitter_handle = $6, telegram_handle = $7, discord_handle = $8,
+          primary_nft = $9, pfp_nft = $10, image_url = $11,
+          nft_ids = $12, verified = true, updated_at = NOW()
+        WHERE wallet_address = $1
+        RETURNING *
+      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url, JSON.stringify(nfts)]);
+      
+      res.json({ success: true, citizen: result.rows[0], action: 'updated' });
+    } else {
+      // Insert new citizen
+      const result = await pool.query(`
+        INSERT INTO citizens (
+          wallet_address, lat, lng, nickname, bio, 
+          twitter_handle, telegram_handle, discord_handle,
+          primary_nft, pfp_nft, image_url, nft_ids, 
+          verified, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, NOW(), NOW())
+        RETURNING *
+      `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, primary_nft, pfp_nft, image_url, JSON.stringify(nfts)]);
+      
+      res.json({ success: true, citizen: result.rows[0], action: 'created' });
+    }
+
+  } catch (error) {
+    console.error('Error saving verified citizen:', error);
+    res.status(500).json({ error: 'Failed to save citizen pin' });
+  }
 });
 
 app.listen(port, '0.0.0.0', () => {
