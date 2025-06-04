@@ -298,6 +298,13 @@ app.get('/api/governance-stats', async (req, res) => {
   }
 });
 
+// Add auth message generation endpoint
+app.get('/api/auth/generate-message', (req, res) => {
+  const timestamp = Date.now();
+  const message = `Verify wallet ownership for IslandDAO Citizen Map\nTimestamp: ${timestamp}`;
+  res.json({ message, timestamp });
+});
+
 app.listen(port, '0.0.0.0', () => {
   console.log(`Citizen Map server running at http://localhost:${port}`);
   console.log('Daily governance sync scheduled for 00:00 UTC');
