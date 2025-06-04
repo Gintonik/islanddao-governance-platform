@@ -11,8 +11,8 @@
     
     <!-- Solana Web3.js -->
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <!-- Custom Wallet Adapter -->
-    <script src="./wallet-adapter.js"></script>
+    <!-- Unified Wallet Component -->
+    <script src="./unified-wallet.js"></script>
     <style>
         /* Hide scrollbars for all browsers */
         .card-face::-webkit-scrollbar,
@@ -1374,22 +1374,30 @@
         let isPickingLocation = false;
         let citizenMarkers = [];
 
-        // ===== UNIVERSAL WALLET ADAPTER =====
-        let walletAdapter;
+        // ===== UNIFIED WALLET =====
+        let unifiedWallet;
         
-        // Initialize wallet adapter
+        // Initialize unified wallet
         function initializeWalletAdapter() {
-            walletAdapter = new SolanaWalletAdapter({
-                autoConnect: false
-            });
+            unifiedWallet = new UnifiedWallet();
+            window.unifiedWallet = unifiedWallet; // Make available globally for modal
 
             // Set up event listeners
-            walletAdapter.on('connect', async (data) => {
+            unifiedWallet.on('connect', async (data) => {
                 console.log('Wallet connected event:', data);
                 currentWallet = data.publicKey;
                 updateWalletUI();
-                closeWalletModal();
                 showNotification(`Connected to ${data.wallet}!`, 'success');
+                
+                // Verify wallet ownership with signature
+                try {
+                    const verificationMessage = generateVerificationMessage();
+                    const signature = await unifiedWallet.signMessage(verificationMessage);
+                    console.log('Signature verification successful');
+                } catch (sigError) {
+                    console.warn('Signature verification failed:', sigError);
+                    showNotification('Wallet connected but signature verification failed. Some features may be limited.', 'warning');
+                }
                 
                 // Load NFTs after successful connection
                 try {
@@ -1399,14 +1407,14 @@
                 }
             });
 
-            walletAdapter.on('disconnect', () => {
+            unifiedWallet.on('disconnect', () => {
                 currentWallet = null;
                 updateWalletUI();
                 showNotification('Wallet disconnected', 'info');
             });
 
-            walletAdapter.on('error', (error) => {
-                console.error('Wallet adapter error:', error);
+            unifiedWallet.on('error', (error) => {
+                console.error('Wallet error:', error);
                 showNotification(`Wallet error: ${error.message}`, 'error');
             });
         }
@@ -1710,10 +1718,8 @@
                 // Already connected - wallet button is just for display
                 return;
             } else {
-                // Show wallet selection modal
-                const modal = document.getElementById('walletModal');
-                modal.style.display = 'flex';
-                await populateWalletOptions();
+                // Show unified wallet modal
+                await unifiedWallet.showModal();
             }
         }
 
@@ -1801,7 +1807,7 @@
         async function disconnectWallet() {
             console.log('Disconnecting wallet...');
             try {
-                await walletAdapter.disconnect();
+                await unifiedWallet.disconnect();
             } catch (error) {
                 console.warn('Error disconnecting wallet:', error);
             }
