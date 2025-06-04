@@ -1533,7 +1533,22 @@
 
         // Initialize wallet system
         function initializeWalletAdapter() {
-            // Wallet list handled by SimpleWallet
+            // Initialize SimpleWallet
+            simpleWallet = new SimpleWallet();
+            console.log('SimpleWallet initialized successfully');
+            
+            // Set up wallet event listeners
+            simpleWallet.on('connect', (data) => {
+                console.log('Wallet connected:', data);
+                updateWalletUI();
+                loadUserNfts();
+            });
+            
+            simpleWallet.on('disconnect', () => {
+                console.log('Wallet disconnected');
+                updateWalletUI();
+            });
+            
             updateWalletUI(); // Ensure initial UI state
         }
 
@@ -1820,6 +1835,9 @@
                 addPinBtn.classList.add('enabled');
                 addPinBtn.style.opacity = '1';
                 addPinBtn.style.cursor = 'pointer';
+                
+                // Set disconnect handler
+                walletBtn.onclick = disconnectWallet;
             } else {
                 walletBtn.classList.remove('wallet-connected');
                 walletIcon.textContent = '🔗';
@@ -1831,6 +1849,13 @@
                 addPinBtn.classList.remove('enabled');
                 addPinBtn.style.opacity = '0.7';
                 addPinBtn.style.cursor = 'not-allowed';
+                
+                // Set connect handler to show SimpleWallet modal
+                walletBtn.onclick = () => {
+                    if (simpleWallet) {
+                        simpleWallet.showModal();
+                    }
+                };
             }
         }
 
