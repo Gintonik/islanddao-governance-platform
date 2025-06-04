@@ -948,7 +948,17 @@
 
         .nft-text-label {
             color: #FAFAFA !important;
-            background: rgba(0, 0, 0, 0.7) !important;
+        }
+
+        /* Cursor states for map interaction */
+        .map-crosshair, 
+        .map-crosshair * {
+            cursor: crosshair !important;
+        }
+
+        .map-crosshair .leaflet-container,
+        .map-crosshair .leaflet-container * {
+            cursor: crosshair !important;
         }
 
         [data-theme="light"] .nft-text-label {
@@ -2000,16 +2010,10 @@
                     isPickingLocation = false;
                     document.getElementById('addPinBtn').textContent = '+';
                     
-                    // Reset cursor to default using Leaflet's method
-                    if (map && map.getContainer) {
-                        const container = map.getContainer();
-                        container.style.cursor = '';
-                        
-                        // Reset cursor on all child elements
-                        const allElements = container.querySelectorAll('*');
-                        allElements.forEach(el => {
-                            el.style.cursor = '';
-                        });
+                    // Reset cursor by removing CSS class
+                    const mapContainer = document.getElementById('map');
+                    if (mapContainer) {
+                        mapContainer.classList.remove('map-crosshair');
                     }
                     
                     openPinForm();
@@ -3440,16 +3444,10 @@
             isPickingLocation = true;
             showNotification('Click on the map to place your pin', 'info');
             
-            // Change cursor using Leaflet's method
-            if (map && map.getContainer) {
-                const container = map.getContainer();
-                container.style.cursor = 'crosshair';
-                
-                // Also target all child elements that might override cursor
-                const allElements = container.querySelectorAll('*');
-                allElements.forEach(el => {
-                    el.style.cursor = 'crosshair !important';
-                });
+            // Add CSS class for crosshair cursor
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.classList.add('map-crosshair');
             }
         }
 
