@@ -1,0 +1,495 @@
+{
+  "timestamp": "2025-06-04T00:47:46.039Z",
+  "totalCitizens": 20,
+  "citizensWithPower": 14,
+  "totalGovernancePower": 23475318.989736818,
+  "totalLocked": 6461441.793564818,
+  "totalUnlocked": 17013877.196172,
+  "citizens": [
+    {
+      "address": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+      "total": 165657.83963228003,
+      "locked": 149560.04577228002,
+      "unlocked": 16097.79386,
+      "deposits": [
+        {
+          "amount": 78857.030444,
+          "multiplier": 1.56,
+          "power": 123016.96749264,
+          "lockupKind": 3,
+          "startTs": 1733465904,
+          "endTs": 1828073904,
+          "timeRemainingDays": 915,
+          "totalDurationDays": 1095,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 17014.793769,
+          "multiplier": 1.56,
+          "power": 26543.07827964,
+          "lockupKind": 3,
+          "startTs": 1734080635,
+          "endTs": 1828688635,
+          "timeRemainingDays": 922,
+          "totalDurationDays": 1095,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 16097.79386,
+          "multiplier": 1,
+          "power": 16097.79386,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+      "total": 536529.257549,
+      "locked": 0,
+      "unlocked": 536529.257549,
+      "deposits": [
+        {
+          "amount": 519659.577033,
+          "multiplier": 1,
+          "power": 519659.577033,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        },
+        {
+          "amount": 3500,
+          "multiplier": 1,
+          "power": 3500,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        },
+        {
+          "amount": 13369.680516,
+          "multiplier": 1,
+          "power": 13369.680516,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+      "total": 10392642.749205,
+      "locked": 0,
+      "unlocked": 10392642.749205,
+      "deposits": [
+        {
+          "amount": 28619.140733,
+          "multiplier": 1,
+          "power": 28619.140733,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        },
+        {
+          "amount": 10353647.013,
+          "multiplier": 1,
+          "power": 10353647.013,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        },
+        {
+          "amount": 10376.595472,
+          "multiplier": 1,
+          "power": 10376.595472,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "total": 12625.580931,
+      "locked": 0,
+      "unlocked": 12625.580931,
+      "deposits": [
+        {
+          "amount": 12625.580931,
+          "multiplier": 1,
+          "power": 12625.580931,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+      "total": 351474.0432821894,
+      "locked": 301474.0432821894,
+      "unlocked": 50000,
+      "deposits": [
+        {
+          "amount": 21500,
+          "multiplier": 1.6134433049847818,
+          "power": 34689.03105717281,
+          "lockupKind": 1,
+          "startTs": 1721919355,
+          "endTs": 1765119355,
+          "timeRemainingDays": 186,
+          "totalDurationDays": 500,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 49202.733486,
+          "multiplier": 1.6160320416666694,
+          "power": 79513.19385096157,
+          "lockupKind": 1,
+          "startTs": 1727257787,
+          "endTs": 1765187387,
+          "timeRemainingDays": 187,
+          "totalDurationDays": 439,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 116304.347827,
+          "multiplier": 1.6101875972222248,
+          "power": 187271.81837405503,
+          "lockupKind": 1,
+          "startTs": 1733238595,
+          "endTs": 1765033795,
+          "timeRemainingDays": 185,
+          "totalDurationDays": 368,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 50000,
+          "multiplier": 1,
+          "power": 50000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "total": 7441493.354213625,
+      "locked": 5441493.354213625,
+      "unlocked": 2000000,
+      "deposits": [
+        {
+          "amount": 1500000,
+          "multiplier": 1.0238357645484537,
+          "power": 1535753.6468226805,
+          "lockupKind": 3,
+          "startTs": 1718804359,
+          "endTs": 1750340359,
+          "timeRemainingDays": 15,
+          "totalDurationDays": 365,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 3682784.632186,
+          "multiplier": 1.0605398081811275,
+          "power": 3905739.7073909445,
+          "lockupKind": 3,
+          "startTs": 1747223321,
+          "endTs": 1752407321,
+          "timeRemainingDays": 39,
+          "totalDurationDays": 60,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 2000000,
+          "multiplier": 1,
+          "power": 2000000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+      "total": 126779.222404,
+      "locked": 0,
+      "unlocked": 126779.222404,
+      "deposits": [
+        {
+          "amount": 126779.222404,
+          "multiplier": 1,
+          "power": 126779.222404,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+      "total": 124693.845135,
+      "locked": 0,
+      "unlocked": 124693.845135,
+      "deposits": [
+        {
+          "amount": 124693.845135,
+          "multiplier": 1,
+          "power": 124693.845135,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+      "total": 4879,
+      "locked": 0,
+      "unlocked": 4879,
+      "deposits": [
+        {
+          "amount": 4879,
+          "multiplier": 1,
+          "power": 4879,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+      "total": 29484.464683,
+      "locked": 0,
+      "unlocked": 29484.464683,
+      "deposits": [
+        {
+          "amount": 29484.464683,
+          "multiplier": 1,
+          "power": 29484.464683,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+      "total": 200000,
+      "locked": 0,
+      "unlocked": 200000,
+      "deposits": [
+        {
+          "amount": 200000,
+          "multiplier": 1,
+          "power": 200000,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "total": 3362801.579045,
+      "locked": 0,
+      "unlocked": 3362801.579045,
+      "deposits": [
+        {
+          "amount": 3361730.150474,
+          "multiplier": 1,
+          "power": 3361730.150474,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        },
+        {
+          "amount": 1071.428571,
+          "multiplier": 1,
+          "power": 1071.428571,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    },
+    {
+      "address": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+      "total": 84576.51819496285,
+      "locked": 84576.51819496285,
+      "unlocked": 0,
+      "deposits": [
+        {
+          "amount": 10000,
+          "multiplier": 1.09145043933917,
+          "power": 10914.5043933917,
+          "lockupKind": 2,
+          "startTs": 1738742046,
+          "endTs": 1751882046,
+          "timeRemainingDays": 33,
+          "totalDurationDays": 152,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 37626.982836,
+          "multiplier": 1.0284010262477807,
+          "power": 38695.627763150034,
+          "lockupKind": 4,
+          "startTs": 1742212684,
+          "endTs": 1752580684,
+          "timeRemainingDays": 41,
+          "totalDurationDays": 120,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 25738.998886,
+          "multiplier": 1.1874751836250645,
+          "power": 30564.422428478185,
+          "lockupKind": 3,
+          "startTs": 1744003596,
+          "endTs": 1759555596,
+          "timeRemainingDays": 122,
+          "totalDurationDays": 180,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 3913,
+          "multiplier": 1.1249587554160336,
+          "power": 4401.96360994294,
+          "lockupKind": 3,
+          "startTs": 1748259028,
+          "endTs": 1756035028,
+          "timeRemainingDays": 81,
+          "totalDurationDays": 90,
+          "isLocked": true,
+          "source": "multiLockup"
+        }
+      ]
+    },
+    {
+      "address": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+      "total": 641681.5354617601,
+      "locked": 484337.8321017601,
+      "unlocked": 157343.70335999998,
+      "deposits": [
+        {
+          "amount": 30998.881087,
+          "multiplier": 1,
+          "power": 30998.881087,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 1720921219,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 19918,
+          "isLocked": false,
+          "source": "formalEntry"
+        },
+        {
+          "amount": 310472.969296,
+          "multiplier": 1.56,
+          "power": 484337.8321017601,
+          "lockupKind": 3,
+          "startTs": 1720921219,
+          "endTs": 1783993219,
+          "timeRemainingDays": 405,
+          "totalDurationDays": 730,
+          "isLocked": true,
+          "source": "multiLockup"
+        },
+        {
+          "amount": 126344.822273,
+          "multiplier": 1,
+          "power": 126344.822273,
+          "lockupKind": 0,
+          "startTs": 0,
+          "endTs": 0,
+          "timeRemainingDays": 0,
+          "totalDurationDays": 0,
+          "isLocked": false,
+          "source": "unlocked"
+        }
+      ]
+    }
+  ],
+  "calculationMethod": "Dynamic per-deposit lockup parsing with individual multipliers"
+}
