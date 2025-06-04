@@ -1546,11 +1546,9 @@
                 currentWallet = publicKey;
                 localStorage.setItem('lastConnectedWallet', walletKey);
                 
-                // Close modal first
-                console.log('Closing wallet modal...');
-                closeWalletModal();
+                console.log('Setting currentWallet to:', currentWallet);
                 
-                // Update UI
+                // Update UI immediately
                 console.log('Updating wallet UI...');
                 updateWalletUI();
                 showNotification('Wallet Connected', 'success');
@@ -1580,28 +1578,41 @@
         }
 
         function updateWalletUI() {
+            console.log('updateWalletUI called, currentWallet:', currentWallet);
             const walletBtn = document.getElementById('walletBtn');
-            if (!walletBtn) return;
+            const walletText = document.getElementById('walletText');
+            const walletIcon = document.getElementById('walletIcon');
             
-            // Remove existing event listeners
-            walletBtn.replaceWith(walletBtn.cloneNode(true));
-            const newWalletBtn = document.getElementById('walletBtn');
-            const walletText = newWalletBtn.querySelector('#walletText');
-            const walletIcon = newWalletBtn.querySelector('#walletIcon');
+            if (!walletBtn || !walletText || !walletIcon) {
+                console.log('Missing wallet UI elements');
+                return;
+            }
+            
+            // Remove existing event listeners by cloning
+            const newWalletBtn = walletBtn.cloneNode(true);
+            walletBtn.parentNode.replaceChild(newWalletBtn, walletBtn);
+            
+            // Get references to child elements in the new button
+            const newWalletText = newWalletBtn.querySelector('#walletText');
+            const newWalletIcon = newWalletBtn.querySelector('#walletIcon');
             
             if (currentWallet) {
                 // Show connected state - button becomes Disconnect
-                walletText.textContent = 'Disconnect';
-                walletIcon.textContent = '✅';
+                console.log('Setting connected state');
+                newWalletText.textContent = 'Disconnect';
+                newWalletIcon.textContent = '✅';
                 newWalletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
                 newWalletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
+                newWalletBtn.style.color = '#21E8A3';
                 newWalletBtn.addEventListener('click', disconnectWallet);
             } else {
                 // Show disconnected state
-                walletText.textContent = 'Connect Wallet';
-                walletIcon.textContent = '🔗';
+                console.log('Setting disconnected state');
+                newWalletText.textContent = 'Connect Wallet';
+                newWalletIcon.textContent = '🔗';
                 newWalletBtn.style.background = '';
                 newWalletBtn.style.borderColor = '';
+                newWalletBtn.style.color = '';
                 newWalletBtn.addEventListener('click', handleWalletButtonClick);
             }
         }
