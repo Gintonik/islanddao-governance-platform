@@ -886,7 +886,6 @@
             transition: all 0.3s ease;
             overflow: hidden;
             background: var(--panel-bg);
-            aspect-ratio: 1;
             display: flex;
             flex-direction: column;
         }
@@ -914,7 +913,7 @@
 
         .nft-image {
             width: 100%;
-            flex: 1;
+            height: 80px;
             object-fit: contain;
             object-position: center;
             display: block;
@@ -922,12 +921,13 @@
         }
 
         .nft-name {
-            padding: 0.5rem;
-            font-size: 0.8rem;
+            padding: 0.4rem;
+            font-size: 0.75rem;
             text-align: center;
             background: rgba(0, 0, 0, 0.8);
             color: #FAFAFA;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
         }
 
         [data-theme="light"] .nft-name {
