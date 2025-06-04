@@ -2294,7 +2294,7 @@
 
                 // Show appropriate message based on action
                 const actionMessage = result.action === 'created' ? 'Pin Created' : 'Pin Moved';
-                showNotification(`${actionMessage} successfully using ${verificationData.fallbackMethod} verification!`, 'success');
+                showNotification(`${actionMessage} successfully!`, 'success');
                 closePinForm();
                 loadCitizens(); // Reload the map
                 // Trigger refresh for all other users
