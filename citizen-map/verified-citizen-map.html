@@ -1471,13 +1471,18 @@
                 // Count total PERKS collected
                 let totalPerks = 0;
                 citizens.forEach(citizen => {
-                    if (citizen.nft_ids) {
+                    // Check multiple possible NFT data structures
+                    if (citizen.nfts && Array.isArray(citizen.nfts)) {
+                        totalPerks += citizen.nfts.length;
+                    } else if (citizen.nft_ids) {
                         try {
                             const nftIds = Array.isArray(citizen.nft_ids) ? citizen.nft_ids : JSON.parse(citizen.nft_ids);
                             totalPerks += nftIds.length;
                         } catch (e) {
                             // Handle parsing errors gracefully
                         }
+                    } else if (citizen.nftMetadata && typeof citizen.nftMetadata === 'object') {
+                        totalPerks += Object.keys(citizen.nftMetadata).length;
                     }
                 });
                 
