@@ -52,36 +52,38 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
 async function getLiveVSRAccountsForWallet(walletAddress) {
   try {
-    const walletPubkey = new PublicKey(walletAddress);
-    
-    // Find VSR accounts owned by this wallet using live blockchain query
-    const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
-      filters: [
-        {
-          memcmp: {
-            offset: 40, // authority field offset in Voter struct
-            bytes: walletPubkey.toBase58(),
-          },
-        },
-      ],
+    // Use the same approach as our working calculator - get ALL VSR accounts and filter
+    const allVSRAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+      filters: [{ dataSize: 2728 }]
     });
     
-    console.log(`Found ${accounts.length} live VSR accounts for ${walletAddress.slice(0, 8)}...`);
+    console.log(`Scanning ${allVSRAccounts.length} VSR accounts for ${walletAddress.slice(0, 8)}...`);
     
-    const accountData = [];
-    for (const { account, pubkey } of accounts) {
-      // Fetch fresh account data
-      const freshAccount = await connection.getAccountInfo(pubkey);
-      if (freshAccount) {
-        accountData.push({
-          pubkey: pubkey.toBase58(),
-          data: freshAccount.data,
-          slot: await connection.getSlot() // Current slot for freshness verification
-        });
+    const matchingAccounts = [];
+    
+    for (const account of allVSRAccounts) {
+      const data = account.account.data;
+      try {
+        // Use the same authority parsing as our working calculator (offset 8-40)
+        const authority = new PublicKey(data.slice(8, 40)).toBase58();
+        
+        if (authority === walletAddress) {
+          matchingAccounts.push({
+            pubkey: account.pubkey.toBase58(),
+            data: data,
+            slot: await connection.getSlot()
+          });
+          console.log(`  Found controlled account: ${account.pubkey.toBase58()}`);
+        }
+      } catch (error) {
+        // Skip invalid accounts
+        continue;
       }
     }
     
-    return accountData;
+    console.log(`Found ${matchingAccounts.length} controlled VSR accounts for ${walletAddress.slice(0, 8)}...`);
+    return matchingAccounts;
+    
   } catch (error) {
     console.error(`Error fetching live VSR accounts for ${walletAddress}: ${error.message}`);
     return [];
