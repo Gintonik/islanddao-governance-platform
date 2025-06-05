@@ -3,61 +3,59 @@
  * Find the correct position and values for deposit validity flags
  */
 
-import { Connection, PublicKey } from '@solana/web3.js';
+const { Connection, PublicKey } = require('@solana/web3.js');
 
-const connection = new Connection('https://mainnet.helius-rpc.com/?api-key=088dfd59-6d2e-4695-a42a-2e0c257c2d00');
+const connection = new Connection(process.env.HELIUS_RPC_URL);
+const VSR_PROGRAM_ID = new PublicKey("vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ");
 
 async function analyzeVSRStructure() {
-  const vsrAccount = '6yujo5tRQNZrh6upsm2MnAHv1LrLYVjKnDtLbHR4rwhr';
+  console.log('Analyzing VSR account structure to understand deposit validity flags...');
   
-  console.log(`\n🔍 Analyzing VSR account structure: ${vsrAccount}`);
+  // Get a few VSR accounts for analysis
+  const accounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    filters: [{ dataSize: 2728 }]
+  });
   
-  try {
-    const accountInfo = await connection.getAccountInfo(new PublicKey(vsrAccount));
-    const data = accountInfo.data;
+  console.log(`Found ${accounts.length} VSR accounts for analysis`);
+  
+  // Analyze first few accounts
+  for (let i = 0; i < Math.min(5, accounts.length); i++) {
+    const account = accounts[i];
+    const data = account.account.data;
     
-    console.log(`Account data length: ${data.length} bytes`);
+    console.log(`\nAccount ${i + 1}: ${account.pubkey.toBase58()}`);
+    console.log(`Data length: ${data.length} bytes`);
     
-    // Analyze the area around our known amount offsets
-    const offsets = [104, 112];
+    // Check authority
+    const authority = new PublicKey(data.slice(8, 40)).toBase58();
+    console.log(`Authority: ${authority}`);
     
-    for (const offset of offsets) {
-      const amount = Number(data.readBigUInt64LE(offset)) / 1e6;
+    // Analyze potential deposit entries
+    const HEADER_SIZE = 104;
+    const DEPOSIT_ENTRY_SIZE = 80;
+    const remainingBytes = data.length - HEADER_SIZE;
+    const maxEntries = Math.floor(remainingBytes / DEPOSIT_ENTRY_SIZE);
+    
+    console.log(`Max possible deposit entries: ${maxEntries}`);
+    
+    for (let j = 0; j < Math.min(3, maxEntries); j++) {
+      const entryOffset = HEADER_SIZE + (j * DEPOSIT_ENTRY_SIZE);
       
-      console.log(`\n=== OFFSET ${offset} ===`);
-      console.log(`Amount: ${amount.toLocaleString()} ISLAND`);
-      
-      // Check surrounding bytes in detail
-      const start = Math.max(0, offset - 20);
-      const end = Math.min(data.length, offset + 20);
-      
-      console.log(`\nHex dump [${start}-${end-1}]:`);
-      for (let i = start; i < end; i += 16) {
-        const hexRow = [];
-        const asciiRow = [];
+      if (entryOffset + DEPOSIT_ENTRY_SIZE <= data.length) {
+        const amount = Number(data.readBigUInt64LE(entryOffset)) / 1e6;
         
-        for (let j = 0; j < 16 && i + j < end; j++) {
-          const byte = data[i + j];
-          hexRow.push(byte.toString(16).padStart(2, '0'));
-          asciiRow.push(byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '.');
-        }
-        
-        console.log(`${(i).toString().padStart(4, '0')}: ${hexRow.join(' ')} | ${asciiRow.join('')}`);
-      }
-      
-      // Look for potential flag patterns
-      console.log(`\nPotential flag positions:`);
-      for (let flagPos = offset - 16; flagPos < offset; flagPos++) {
-        if (flagPos >= 0) {
-          const flagValue = data[flagPos];
-          console.log(`  Position ${flagPos}: ${flagValue} (0x${flagValue.toString(16).padStart(2, '0')})`);
+        if (amount > 0 && amount < 50_000_000) {
+          console.log(`  Entry ${j}: ${amount.toFixed(6)} ISLAND at offset ${entryOffset}`);
+          
+          // Analyze various flag positions
+          for (let flagOffset = 70; flagOffset < 80; flagOffset++) {
+            const flagValue = data[entryOffset + flagOffset];
+            console.log(`    Flag at +${flagOffset}: ${flagValue} (0x${flagValue.toString(16).padStart(2, '0')})`);
+          }
         }
       }
     }
-    
-  } catch (error) {
-    console.error('Error:', error);
   }
 }
 
-analyzeVSRStructure();
+analyzeVSRStructure().catch(console.error);
