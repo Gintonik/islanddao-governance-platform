@@ -1,6 +1,6 @@
 {
-  "generated_at": "2025-06-05T14:08:31.151Z",
-  "total_citizens": 21,
+  "generated_at": "2025-06-05T18:11:00.214Z",
+  "total_citizens": 24,
   "citizens": [
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
@@ -253,6 +253,42 @@
       "unlocked_governance_power": 0,
       "nft_count": 3,
       "last_updated": "2025-06-05T01:10:23.655Z"
+    },
+    {
+      "wallet": "CLcXVZpCwF9QH2aNjFhPSzyeUVifkP9W88WHwfe6sMww",
+      "nickname": "scientistjoe",
+      "native_governance_power": 1007398.406374,
+      "governance_power": 1007398.406374,
+      "delegated_governance_power": 0,
+      "total_governance_power": 1007398.406374,
+      "locked_governance_power": 0,
+      "unlocked_governance_power": 1007398.406374,
+      "nft_count": 0,
+      "last_updated": "2025-06-05T18:10:57.290Z"
+    },
+    {
+      "wallet": "6vJrtBwoDTWnNGmMsGQyptwagB9oEVntfpK7yTctZ3Sy",
+      "nickname": "Kegomaz",
+      "native_governance_power": 0,
+      "governance_power": 0,
+      "delegated_governance_power": 0,
+      "total_governance_power": 0,
+      "locked_governance_power": 0,
+      "unlocked_governance_power": 0,
+      "nft_count": 0,
+      "last_updated": "2025-06-05T18:10:58.981Z"
+    },
+    {
+      "wallet": "EXRBCP2MX6hRAt4oh61k5mhL6WhmUXPemfzNssUpM4S6",
+      "nickname": "Icoder",
+      "native_governance_power": 332768.500362,
+      "governance_power": 332768.500362,
+      "delegated_governance_power": 0,
+      "total_governance_power": 332768.500362,
+      "locked_governance_power": 0,
+      "unlocked_governance_power": 332768.500362,
+      "nft_count": 0,
+      "last_updated": "2025-06-05T18:11:00.214Z"
     }
   ],
   "note": "Corrected phantom deposits and inflated multipliers"

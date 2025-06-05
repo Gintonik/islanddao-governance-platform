@@ -196,6 +196,10 @@ async function saveCitizenPin(data) {
             ]);
             
             console.log(`✅ Governance power calculated: ${(governanceData.totalGovernancePower || 0).toLocaleString()} ISLAND`);
+            
+            // Add to governance data file for daily sync
+            await addToGovernanceDataFile(data.wallet, data.nickname, governanceData);
+            
           } finally {
             updateClient.release();
           }
@@ -204,6 +208,70 @@ async function saveCitizenPin(data) {
         console.error(`⚠️ Failed to calculate governance power for ${data.wallet}:`, govError.message);
       }
     }
+  }
+}
+
+/**
+ * Add new citizen to governance data file for daily sync
+ */
+async function addToGovernanceDataFile(wallet, nickname, governanceData) {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const governanceFilePath = path.join(__dirname, 'data/governance-power.json');
+    
+    // Read current governance data
+    let governanceFile;
+    try {
+      const fileContent = fs.readFileSync(governanceFilePath, 'utf8');
+      governanceFile = JSON.parse(fileContent);
+    } catch (error) {
+      console.log('Creating new governance data file');
+      governanceFile = {
+        generated_at: new Date().toISOString(),
+        total_citizens: 0,
+        citizens: []
+      };
+    }
+    
+    // Check if citizen already exists
+    const existingIndex = governanceFile.citizens.findIndex(c => c.wallet === wallet);
+    
+    const citizenData = {
+      wallet: wallet,
+      nickname: nickname || "Unknown",
+      native_governance_power: governanceData.nativeGovernancePower || 0,
+      governance_power: governanceData.totalGovernancePower || 0,
+      delegated_governance_power: governanceData.delegatedGovernancePower || 0,
+      total_governance_power: governanceData.totalGovernancePower || 0,
+      locked_governance_power: 0,
+      unlocked_governance_power: governanceData.nativeGovernancePower || 0,
+      nft_count: 0, // Will be updated by sync
+      last_updated: new Date().toISOString()
+    };
+    
+    if (existingIndex >= 0) {
+      // Update existing citizen
+      governanceFile.citizens[existingIndex] = citizenData;
+      console.log(`📝 Updated governance data for ${nickname || wallet}`);
+    } else {
+      // Add new citizen
+      governanceFile.citizens.push(citizenData);
+      governanceFile.total_citizens = governanceFile.citizens.length;
+      console.log(`📝 Added ${nickname || wallet} to governance tracking`);
+    }
+    
+    // Update metadata
+    governanceFile.generated_at = new Date().toISOString();
+    
+    // Write back to file
+    fs.writeFileSync(governanceFilePath, JSON.stringify(governanceFile, null, 2));
+    
+    console.log(`✅ Governance data file updated with ${governanceFile.total_citizens} citizens`);
+    
+  } catch (error) {
+    console.error('❌ Failed to update governance data file:', error.message);
   }
 }
 
