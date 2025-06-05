@@ -166,6 +166,44 @@ async function saveCitizenPin(data) {
   } catch (error) {
     console.error('Error in saveCitizenPin:', error);
     return { error: error.message };
+  } finally {
+    // For new citizens, immediately calculate governance power after pin placement
+    if (!isUpdate && citizenId) {
+      try {
+        console.log(`🔄 Calculating governance power for new citizen: ${data.wallet}`);
+        
+        // Calculate governance power from VSR blockchain
+        const response = await fetch(`http://localhost:3001/api/governance-power?wallet=${data.wallet}`);
+        const governanceData = await response.json();
+        
+        if (response.ok && governanceData.totalGovernancePower !== undefined) {
+          // Update citizen with governance power using new connection
+          const updateClient = await db.pool.connect();
+          try {
+            await updateClient.query(`
+              UPDATE citizens 
+              SET 
+                native_governance_power = $1,
+                delegated_governance_power = $2,
+                total_governance_power = $3,
+                updated_at = NOW()
+              WHERE id = $4
+            `, [
+              governanceData.nativeGovernancePower || 0,
+              governanceData.delegatedGovernancePower || 0,
+              governanceData.totalGovernancePower || 0,
+              citizenId
+            ]);
+            
+            console.log(`✅ Governance power calculated: ${(governanceData.totalGovernancePower || 0).toLocaleString()} ISLAND`);
+          } finally {
+            updateClient.release();
+          }
+        }
+      } catch (govError) {
+        console.error(`⚠️ Failed to calculate governance power for ${data.wallet}:`, govError.message);
+      }
+    }
   }
 }
 
