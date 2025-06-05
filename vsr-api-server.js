@@ -141,7 +141,7 @@ function parseVSRDeposits(data, currentTime) {
           let bestLockup = null;
           let lockupDetails = null;
 
-          // CONSERVATIVE: Strict lockup validation to prevent phantom metadata detection
+          // LOCKED: Proven lockup detection logic
           for (const meta of mapping.metadataOffsets) {
             if (meta.kind < data.length && meta.start + 8 <= data.length && meta.end + 8 <= data.length) {
               try {
@@ -149,19 +149,13 @@ function parseVSRDeposits(data, currentTime) {
                 const endTs = Number(data.readBigUInt64LE(meta.end));
                 const kind = data[meta.kind];
 
-                // STRICTER VALIDATION: Prevent phantom lockup metadata detection
-                const isValidTimeRange = startTs > 1577836800 && startTs < endTs && 
-                                       endTs > 1577836800 && endTs < 1893456000;
-                const isReasonableDuration = (endTs - startTs) >= 86400; // At least 1 day
-                const isNotExpiredTooLong = (currentTime - endTs) < (365 * 86400); // Not expired more than 1 year ago
-                
-                if (kind >= 1 && kind <= 4 && isValidTimeRange && isReasonableDuration && isNotExpiredTooLong) {
+                if (kind >= 1 && kind <= 4 && startTs > 1577836800 && startTs < endTs && 
+                    endTs > 1577836800 && endTs < 1893456000) {
                   
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   
-                  // ADDITIONAL CHECK: Only accept meaningful multipliers to prevent phantom data
-                  if (multiplier > bestMultiplier && multiplier <= 4.0) {
+                  if (multiplier > bestMultiplier) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
                     
@@ -289,13 +283,6 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
   console.log(`LOCKED: Scanning wallet: ${walletAddress.slice(0, 8)}...`);
   console.log(`LOCKED: Processing ${allVSRAccountsFromRPC.length} VSR accounts`);
   
-  // CRITICAL: Legend has withdrawn all tokens - skip all VSR processing
-  if (walletAddress === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG') {
-    console.log(`LEGEND PHANTOM FILTER: Skipping all VSR processing - all deposits are phantoms from withdrawn tokens`);
-    console.log(`LOCKED: Total native governance power: 0 ISLAND`);
-    return { totalPower: 0, deposits: [] };
-  }
-
   for (const account of allVSRAccountsFromRPC) {
     const data = account.account.data;
     try {
@@ -307,24 +294,7 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       console.log(`LOCKED: Found controlled account: ${account.pubkey.toBase58()}`);
       console.log(`LOCKED: Found ${deposits.length} valid deposits`);
       
-      // Apply general phantom filtering for large amounts at header offsets
-      const filteredDeposits = deposits.filter(deposit => {
-        if (deposit.amount > 1_000_000 && (deposit.offset === 112 || deposit.offset === 104)) {
-          console.log(`  FILTERED: ${deposit.amount.toFixed(0)} ISLAND likely phantom at header offset ${deposit.offset}`);
-          return false;
-        }
-        return true;
-      });
-      
-      for (const deposit of filteredDeposits) {
-        // CRITICAL: Takisoul multiplier override - force unlocked calculations
-        if (walletAddress === '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA') {
-          deposit.multiplier = 1.0;
-          deposit.power = deposit.amount * 1.0;
-          deposit.isLocked = false;
-          deposit.classification = 'unlocked_override';
-        }
-        
+      for (const deposit of deposits) {
         totalPower += deposit.power;
         allDeposits.push(deposit);
         if (deposit.isLocked) {
@@ -404,28 +374,6 @@ async function getCanonicalGovernancePower(walletAddress) {
   const walletPubkey = new PublicKey(walletAddress);
   
   console.log(`🏛️ Getting canonical governance power for: ${walletAddress}`);
-  
-  // CRITICAL: Legend has withdrawn all tokens - override phantom deposits
-  if (walletAddress === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG') {
-    console.log(`LEGEND PHANTOM OVERRIDE: All deposits are phantoms from withdrawn tokens`);
-    console.log(`📊 Final Result:`);
-    console.log(`  Native Power: 0`);
-    console.log(`  Total Power: 0`);
-    console.log(`  Source: phantom_filter_override`);
-    
-    return {
-      nativeGovernancePower: 0,
-      delegatedGovernancePower: 0,
-      totalPower: 0,
-      deposits: [],
-      source: 'phantom_filter_override'
-    };
-  }
-
-  // CRITICAL: Takisoul has phantom multipliers - force unlocked calculations
-  if (walletAddress === '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA') {
-    console.log(`TAKISOUL MULTIPLIER OVERRIDE: Forcing unlocked multipliers for accurate calculation`);
-  }
   
   try {
     // Set up Anchor context using the exact methodology requested
