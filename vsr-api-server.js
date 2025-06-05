@@ -287,7 +287,7 @@ function parseVSRDeposits(data, currentTime) {
             continue;
           }
           
-          if (rounded === 1000 || rounded === 11000) {
+          if (rounded === 1000 || rounded === 2000 || rounded === 11000) {
             shadowDeposits.push({
               amount,
               type: 'delegation_marker',
