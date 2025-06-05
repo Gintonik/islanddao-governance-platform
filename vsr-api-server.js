@@ -116,11 +116,7 @@ function parseVSRDeposits(data, currentTime) {
   for (const mapping of lockupMappings) {
     if (mapping.amountOffset + 8 <= data.length) {
       try {
-        // Canonical isUsed byte check - check after amount (at +16)
-        const IS_USED_OFFSET = mapping.amountOffset + 16;
-        if (IS_USED_OFFSET < data.length && data[IS_USED_OFFSET] !== 1) {
-          continue; // Skip inactive deposit
-        }
+
 
         const rawAmount = Number(data.readBigUInt64LE(mapping.amountOffset));
         const amount = rawAmount / 1e6;
@@ -217,11 +213,7 @@ function parseVSRDeposits(data, currentTime) {
   for (const offset of directOffsets) {
     if (offset + 8 <= data.length) {
       try {
-        // Canonical isUsed byte check - check after amount (at +16)
-        const IS_USED_OFFSET = offset + 16;
-        if (IS_USED_OFFSET < data.length && data[IS_USED_OFFSET] !== 1) {
-          continue; // Skip phantom/uninitialized
-        }
+
 
         const rawAmount = Number(data.readBigUInt64LE(offset));
         const amount = rawAmount / 1e6;
