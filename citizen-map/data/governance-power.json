@@ -1,30 +1,30 @@
 {
-  "generated_at": "2025-06-05T14:04:24.890Z",
+  "generated_at": "2025-06-05T14:08:31.151Z",
   "total_citizens": 21,
   "citizens": [
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
       "nickname": "Takisoul",
-      "native_governance_power": 12549254.973518,
-      "governance_power": 12549254.973518,
+      "native_governance_power": 7182784.632186,
+      "governance_power": 7182784.632186,
       "delegated_governance_power": 0,
-      "total_governance_power": 12549254.973518,
+      "total_governance_power": 7182784.632186,
       "locked_governance_power": 9075351.160371,
       "unlocked_governance_power": 0,
       "nft_count": 12,
-      "last_updated": "2025-06-05T01:10:27.822Z"
+      "last_updated": "2025-06-05T14:08:31.151Z"
     },
     {
       "wallet": "CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
       "nickname": "GintoniK",
-      "native_governance_power": 9005048.488599,
-      "governance_power": 9005048.488599,
+      "native_governance_power": 0,
+      "governance_power": 0,
       "delegated_governance_power": 0,
-      "total_governance_power": 9005048.488599,
+      "total_governance_power": 0,
       "locked_governance_power": 0,
       "unlocked_governance_power": 0,
       "nft_count": 19,
-      "last_updated": "2025-06-05T01:10:20.410Z"
+      "last_updated": "2025-06-05T14:08:31.151Z"
     },
     {
       "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
@@ -120,7 +120,7 @@
       "locked_governance_power": 0,
       "unlocked_governance_power": 3363730.150474,
       "nft_count": 5,
-      "last_updated": "2025-06-05T14:04:24.889Z"
+      "last_updated": "2025-06-05T14:08:31.150Z"
     },
     {
       "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
@@ -255,5 +255,5 @@
       "last_updated": "2025-06-05T01:10:23.655Z"
     }
   ],
-  "note": "Updated with phantom deposit corrections - legend now shows 0 ISLAND"
+  "note": "Corrected phantom deposits and inflated multipliers"
 }
