@@ -250,21 +250,50 @@ async function syncGovernanceData() {
       console.log(`Updated governance power for ${governanceData.citizens.length} citizens`);
     }
     
-    // Refresh NFT data for all citizens
-    const result = await pool.query('SELECT wallet FROM citizens');
+    // Refresh NFT data and governance power for all citizens
+    const result = await pool.query('SELECT wallet, nickname FROM citizens');
     const citizens = result.rows;
     
     for (const citizen of citizens) {
       try {
+        // Fetch NFT data
         const nfts = await fetchWalletNFTs(citizen.wallet);
         const nftIds = nfts.map(nft => nft.mint);
         
+        // Fetch governance power from VSR API
+        let governancePower = 0;
+        let delegatedPower = 0;
+        let totalPower = 0;
+        
+        try {
+          const govResponse = await fetch(`http://localhost:3001/api/governance-power?wallet=${citizen.wallet}`);
+          if (govResponse.ok) {
+            const govData = await govResponse.json();
+            governancePower = govData.nativeGovernancePower || 0;
+            delegatedPower = govData.delegatedGovernancePower || 0;
+            totalPower = govData.totalGovernancePower || 0;
+            console.log(`Updated governance power for ${citizen.nickname}: ${governancePower.toFixed(2)} ISLAND`);
+          }
+        } catch (govError) {
+          console.error(`Error fetching governance power for ${citizen.wallet}:`, govError);
+        }
+        
+        // Update database with both NFT and governance data
         await pool.query(
-          'UPDATE citizens SET nft_ids = $1, nft_metadata = $2, updated_at = NOW() WHERE wallet = $3',
-          [JSON.stringify(nftIds), JSON.stringify(nfts), citizen.wallet]
+          `UPDATE citizens SET 
+            nft_ids = $1, 
+            nft_metadata = $2, 
+            native_governance_power = $3,
+            governance_power = $3,
+            delegated_governance_power = $4,
+            total_governance_power = $5,
+            updated_at = NOW() 
+          WHERE wallet = $6`,
+          [JSON.stringify(nftIds), JSON.stringify(nfts), governancePower, delegatedPower, totalPower, citizen.wallet]
         );
+        
       } catch (error) {
-        console.error(`Error updating NFTs for ${citizen.wallet}:`, error);
+        console.error(`Error updating data for ${citizen.wallet}:`, error);
       }
     }
     
