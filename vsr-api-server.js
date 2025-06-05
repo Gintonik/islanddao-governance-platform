@@ -149,6 +149,36 @@ const WORKING_GOVERNANCE_DATA = {
 };
 
 /**
+ * Calculate real blockchain governance power
+ */
+async function calculateRealBlockchainPower(walletAddress) {
+  try {
+    console.log(`🔗 Fetching real blockchain data for: ${walletAddress}`);
+    
+    // Get all token accounts for this wallet
+    const tokenAccounts = await connection.getTokenAccountsByOwner(
+      new PublicKey(walletAddress),
+      { mint: new PublicKey("GfmdKWR1KrttDsQkJfwtXovZw9bUBHYkPAEwB6wZqQvJ") } // ISLAND token
+    );
+    
+    let totalBalance = 0;
+    
+    for (const account of tokenAccounts.value) {
+      const accountInfo = await connection.getTokenAccountBalance(account.pubkey);
+      const balance = parseFloat(accountInfo.value.amount) / Math.pow(10, accountInfo.value.decimals);
+      totalBalance += balance;
+    }
+    
+    console.log(`📊 Real blockchain ISLAND balance: ${totalBalance.toLocaleString()}`);
+    return Math.floor(totalBalance);
+    
+  } catch (error) {
+    console.error(`❌ Error fetching real blockchain data:`, error.message);
+    return 0;
+  }
+}
+
+/**
  * Get canonical governance power using working calculator results
  */
 async function getCanonicalGovernancePower(walletAddress) {
@@ -214,6 +244,31 @@ app.get('/api/governance-power/all', async (req, res) => {
   } catch (error) {
     console.error('Error getting all governance power:', error);
     res.status(500).json({ error: 'Failed to get governance power data' });
+  }
+});
+
+// API endpoint to test real blockchain data for specific wallets
+app.get('/api/test-blockchain', async (req, res) => {
+  try {
+    const { wallet } = req.query;
+    
+    if (!wallet) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+    
+    const realPower = await calculateRealBlockchainPower(wallet);
+    const verifiedData = WORKING_GOVERNANCE_DATA[wallet];
+    
+    res.json({
+      wallet,
+      realBlockchainPower: realPower,
+      verifiedData: verifiedData || { totalGovernancePower: 0 },
+      difference: realPower - (verifiedData?.totalGovernancePower || 0)
+    });
+    
+  } catch (error) {
+    console.error('Error testing blockchain data:', error);
+    res.status(500).json({ error: 'Failed to test blockchain data' });
   }
 });
 
