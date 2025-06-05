@@ -154,13 +154,8 @@ function parseVSRDeposits(data, currentTime) {
                   
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
-                  const isActive = endTs > currentTime;
                   
-                  // Universal metadata validation: prefer active lockups when multiple exist
-                  const shouldUpdate = multiplier > bestMultiplier || 
-                    (bestLockup && !isActive && bestLockup.endTs <= currentTime && isActive);
-                  
-                  if (shouldUpdate) {
+                  if (multiplier > bestMultiplier) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
                     
