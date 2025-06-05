@@ -155,7 +155,11 @@ function parseVSRDeposits(data, currentTime) {
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   
-                  if (multiplier > bestMultiplier) {
+                  // Conservative lockup selection: prioritize reasonable timeframes
+                  const remainingDays = Math.ceil((endTs - currentTime) / 86400);
+                  const isReasonableTimeframe = remainingDays <= 45; // Max ~6 weeks remaining
+                  
+                  if (multiplier > bestMultiplier && isReasonableTimeframe) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
                     
