@@ -155,23 +155,12 @@ function parseVSRDeposits(data, currentTime) {
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   
-                  // Canonical metadata validation: prioritize lower, more conservative multipliers
-                  // for complex VSR accounts with conflicting lockup metadata
-                  const isActive = endTs > currentTime;
-                  const duration = endTs - startTs;
-                  const remainingTime = Math.max(0, endTs - currentTime);
-                  
-                  // Conservative validation: prefer shorter-term, lower multiplier lockups
-                  // to prevent phantom lockup inflation
-                  const shouldUpdate = !bestLockup || 
-                    (isActive && (!bestLockup || bestLockup.endTs <= currentTime)) ||
-                    (isActive && bestLockup && isActive && duration < (bestLockup.endTs - bestLockup.startTs));
-                  
-                  if (shouldUpdate) {
+                  if (multiplier > bestMultiplier) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
                     
                     const lockupTypes = ['None', 'Cliff', 'Constant', 'Vesting', 'Monthly'];
+                    const isActive = endTs > currentTime;
                     const remaining = Math.max(endTs - currentTime, 0);
                     const duration = endTs - startTs;
                     
@@ -382,21 +371,9 @@ async function calculateDelegatedGovernancePower(walletPublicKey) {
  * Get canonical governance power using exact SDK methodology
  */
 async function getCanonicalGovernancePower(walletAddress) {
-  // Validate and clean wallet address
-  if (!walletAddress || typeof walletAddress !== 'string') {
-    throw new Error('Invalid wallet address format');
-  }
+  const walletPubkey = new PublicKey(walletAddress);
   
-  const cleanWalletAddress = walletAddress.trim();
-  
-  let walletPubkey;
-  try {
-    walletPubkey = new PublicKey(cleanWalletAddress);
-  } catch (error) {
-    throw new Error(`Invalid public key input: ${error.message}`);
-  }
-  
-  console.log(`🏛️ Getting canonical governance power for: ${cleanWalletAddress}`);
+  console.log(`🏛️ Getting canonical governance power for: ${walletAddress}`);
   
   try {
     // Set up Anchor context using the exact methodology requested
