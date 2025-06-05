@@ -1,0 +1,131 @@
+{
+  "timestamp": "2025-06-03T18:14:28.325Z",
+  "scannerVersion": "canonical-vsr-restored",
+  "validationStatus": "CURRENT_BLOCKCHAIN_STATE",
+  "methodology": {
+    "authorityMatching": "Direct authority + wallet reference + comprehensive alias resolution",
+    "lockupExtraction": "Byte search +0 to +160 from deposit offset",
+    "multiplierFormula": "min(5, 1 + min((endTs - now) / 31556952, 4))",
+    "deduplication": "[amount, multiplier] composite key",
+    "phantomFiltering": "1000 ISLAND deposits with no lockup and empty config"
+  },
+  "targetValidation": [
+    {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "name": "Takisoul",
+      "expectedPower": 8709019.78,
+      "actualPower": 7564244.692192314,
+      "difference": -1144775.0878076851,
+      "percentageError": 13.144706485069957,
+      "isMatch": false,
+      "controlledAccounts": 1,
+      "deposits": [
+        {
+          "amount": 690,
+          "lockupEndTs": 1750340359,
+          "multiplier": 1.0432834943628284,
+          "votingPower": 719.8656111103516,
+          "offset": 112,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": "2025-06-19"
+        },
+        {
+          "amount": 1500000,
+          "lockupEndTs": 1752407321,
+          "multiplier": 1.1087829126843443,
+          "votingPower": 1663174.3690265163,
+          "offset": 184,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": "2025-07-13"
+        },
+        {
+          "amount": 2000000,
+          "lockupEndTs": 1752407321,
+          "multiplier": 1.1087829126843443,
+          "votingPower": 2217565.8253686884,
+          "offset": 264,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": "2025-07-13"
+        },
+        {
+          "amount": 3682784.632186,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 3682784.632186,
+          "offset": 344,
+          "accountPubkey": "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
+          "lockupDate": null
+        }
+      ]
+    },
+    {
+      "wallet": "GJdRQcsyWZ4vDSxmbC5JrJQfCDdq7QfSMZH4zK8LRZue",
+      "name": "GJdRQcsy",
+      "expectedPower": 144708.98,
+      "actualPower": 99454.45016502234,
+      "difference": -45254.52983497767,
+      "percentageError": 31.27278613599354,
+      "isMatch": false,
+      "controlledAccounts": 1,
+      "deposits": [
+        {
+          "amount": 3913,
+          "lockupEndTs": 1752580684,
+          "multiplier": 1.1142764860180447,
+          "votingPower": 4360.163889788609,
+          "offset": 112,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-07-15"
+        },
+        {
+          "amount": 10000,
+          "lockupEndTs": 1759555596,
+          "multiplier": 1.335302648494066,
+          "votingPower": 13353.02648494066,
+          "offset": 184,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-10-04"
+        },
+        {
+          "amount": 37626.982836,
+          "lockupEndTs": 1759555596,
+          "multiplier": 1.335302648494066,
+          "votingPower": 50243.40983575157,
+          "offset": 264,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-10-04"
+        },
+        {
+          "amount": 25738.998886,
+          "lockupEndTs": 1756035028,
+          "multiplier": 1.2237402897466179,
+          "votingPower": 31497.849954541514,
+          "offset": 344,
+          "accountPubkey": "66YJyffJsfar6iC6evo3qAn9ie3AXQ5H3NYogyX7nTY4",
+          "lockupDate": "2025-08-24"
+        }
+      ]
+    },
+    {
+      "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+      "name": "Whale's Friend",
+      "expectedPower": 12625.58,
+      "actualPower": 12625.580931,
+      "difference": 0.0009310000004916219,
+      "percentageError": 0.000007373918667432482,
+      "isMatch": true,
+      "controlledAccounts": 2,
+      "deposits": [
+        {
+          "amount": 12625.580931,
+          "lockupEndTs": 0,
+          "multiplier": 1,
+          "votingPower": 12625.580931,
+          "offset": 104,
+          "accountPubkey": "AErp8UYUay7uBE9i6ULtSDgQP5d3W66n9RJH5QpUG3Uh",
+          "lockupDate": null
+        }
+      ]
+    }
+  ]
+}

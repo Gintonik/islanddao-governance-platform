@@ -1,18 +1,18 @@
 {
-  "generated_at": "2025-06-05T22:06:17.469Z",
+  "generated_at": "2025-06-05T18:11:00.214Z",
   "total_citizens": 24,
   "citizens": [
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
       "nickname": "Takisoul",
-      "native_governance_power": 8846759.2534511,
-      "governance_power": 8846759.2534511,
+      "native_governance_power": 7182784.632186,
+      "governance_power": 7182784.632186,
       "delegated_governance_power": 0,
-      "total_governance_power": 8846759.2534511,
-      "locked_governance_power": 6846759.2534511,
-      "unlocked_governance_power": 2000000,
+      "total_governance_power": 7182784.632186,
+      "locked_governance_power": 9075351.160371,
+      "unlocked_governance_power": 0,
       "nft_count": 12,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T14:08:31.151Z"
     },
     {
       "wallet": "CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
@@ -29,146 +29,146 @@
     {
       "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
       "nickname": "Moxie",
-      "native_governance_power": 536529.257549,
-      "governance_power": 536529.257549,
+      "native_governance_power": 962734.539054,
+      "governance_power": 962734.539054,
       "delegated_governance_power": 0,
-      "total_governance_power": 536529.257549,
+      "total_governance_power": 962734.539054,
       "locked_governance_power": 0,
       "unlocked_governance_power": 536529.257549,
       "nft_count": 4,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:28.100Z"
     },
     {
       "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
       "nickname": "nurtan",
-      "native_governance_power": 311809.9138382,
-      "governance_power": 311809.9138382,
+      "native_governance_power": 961647.118558,
+      "governance_power": 961647.118558,
       "delegated_governance_power": 0,
-      "total_governance_power": 311809.9138382,
-      "locked_governance_power": 261809.91383819998,
+      "total_governance_power": 961647.118558,
+      "locked_governance_power": 466147.152228,
       "unlocked_governance_power": 50000,
       "nft_count": 3,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:21.809Z"
     },
     {
       "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
       "nickname": "KO3",
-      "native_governance_power": 623053.1573040001,
-      "governance_power": 623053.1573040001,
+      "native_governance_power": 833742.438657,
+      "governance_power": 833742.438657,
       "delegated_governance_power": 0,
-      "total_governance_power": 623053.1573040001,
-      "locked_governance_power": 465709.45394400007,
-      "unlocked_governance_power": 157343.70335999998,
+      "total_governance_power": 833742.438657,
+      "locked_governance_power": 1223263.499026,
+      "unlocked_governance_power": 157343.70336,
       "nft_count": 6,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:29.905Z"
     },
     {
       "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
       "nickname": "Portor",
-      "native_governance_power": 126779.222404,
-      "governance_power": 126779.222404,
+      "native_governance_power": 222204.898022,
+      "governance_power": 222204.898022,
       "delegated_governance_power": 0,
-      "total_governance_power": 126779.222404,
+      "total_governance_power": 222204.898022,
       "locked_governance_power": 0,
       "unlocked_governance_power": 126779.222404,
       "nft_count": 2,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:30.534Z"
     },
     {
       "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
       "nickname": "Alex Perts",
-      "native_governance_power": 124693.845135,
-      "governance_power": 124693.845135,
+      "native_governance_power": 214943.855066,
+      "governance_power": 214943.855066,
       "delegated_governance_power": 0,
-      "total_governance_power": 124693.845135,
+      "total_governance_power": 214943.855066,
       "locked_governance_power": 0,
       "unlocked_governance_power": 124693.845135,
       "nft_count": 2,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:25.957Z"
     },
     {
       "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
       "nickname": "Yamparala Rahul",
-      "native_governance_power": 159905.53017950003,
-      "governance_power": 159905.53017950003,
+      "native_governance_power": 211428.471963,
+      "governance_power": 211428.471963,
       "delegated_governance_power": 0,
-      "total_governance_power": 159905.53017950003,
-      "locked_governance_power": 143807.73631950002,
+      "total_governance_power": 211428.471963,
+      "locked_governance_power": 377734.987399,
       "unlocked_governance_power": 16097.79386,
       "nft_count": 1,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:22.021Z"
     },
     {
       "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
       "nickname": "Anonymous Citizen",
-      "native_governance_power": 103326.62532470001,
-      "governance_power": 103326.62532470001,
+      "native_governance_power": 178431.119875,
+      "governance_power": 178431.119875,
       "delegated_governance_power": 0,
-      "total_governance_power": 103326.62532470001,
-      "locked_governance_power": 103326.62532470001,
+      "total_governance_power": 178431.119875,
+      "locked_governance_power": 144717.419919,
       "unlocked_governance_power": 0,
       "nft_count": 2,
-      "last_updated": "2025-06-05T22:06:17.468Z"
+      "last_updated": "2025-06-05T01:10:25.188Z"
     },
     {
       "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
       "nickname": "legend",
-      "native_governance_power": 3363730.150474,
-      "governance_power": 3363730.150474,
+      "native_governance_power": 0,
+      "governance_power": 0,
       "delegated_governance_power": 0,
-      "total_governance_power": 3363730.150474,
+      "total_governance_power": 0,
       "locked_governance_power": 0,
       "unlocked_governance_power": 3363730.150474,
       "nft_count": 5,
-      "last_updated": "2025-06-05T22:06:17.469Z"
+      "last_updated": "2025-06-05T14:08:31.150Z"
     },
     {
       "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
       "nickname": "SoCal",
-      "native_governance_power": 29484.464683,
-      "governance_power": 29484.464683,
+      "native_governance_power": 54566.720936,
+      "governance_power": 54566.720936,
       "delegated_governance_power": 0,
-      "total_governance_power": 29484.464683,
+      "total_governance_power": 54566.720936,
       "locked_governance_power": 0,
       "unlocked_governance_power": 29484.464683,
       "nft_count": 1,
-      "last_updated": "2025-06-05T22:06:17.469Z"
+      "last_updated": "2025-06-05T01:10:26.214Z"
     },
     {
       "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
       "nickname": "noclue",
-      "native_governance_power": 12625.580931,
-      "governance_power": 12625.580931,
+      "native_governance_power": 32546.310472,
+      "governance_power": 32546.310472,
       "delegated_governance_power": 0,
-      "total_governance_power": 12625.580931,
+      "total_governance_power": 32546.310472,
       "locked_governance_power": 0,
       "unlocked_governance_power": 12625.580931,
       "nft_count": 3,
-      "last_updated": "2025-06-05T22:06:17.469Z"
+      "last_updated": "2025-06-05T01:10:22.445Z"
     },
     {
       "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
       "nickname": "Reijo",
-      "native_governance_power": 4879,
-      "governance_power": 4879,
+      "native_governance_power": 32335.236059,
+      "governance_power": 32335.236059,
       "delegated_governance_power": 0,
-      "total_governance_power": 4879,
+      "total_governance_power": 32335.236059,
       "locked_governance_power": 0,
       "unlocked_governance_power": 4879,
       "nft_count": 1,
-      "last_updated": "2025-06-05T22:06:17.469Z"
+      "last_updated": "2025-06-05T01:10:23.208Z"
     },
     {
       "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
       "nickname": "DeanMachine",
-      "native_governance_power": 10393142.749205,
-      "governance_power": 10393142.749205,
+      "native_governance_power": 19434.171911,
+      "governance_power": 19434.171911,
       "delegated_governance_power": 0,
-      "total_governance_power": 10393142.749205,
+      "total_governance_power": 19434.171911,
       "locked_governance_power": 0,
       "unlocked_governance_power": 10393142.749205,
       "nft_count": 29,
-      "last_updated": "2025-06-05T22:06:17.469Z"
+      "last_updated": "2025-06-05T01:10:29.016Z"
     },
     {
       "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
@@ -233,14 +233,14 @@
     {
       "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
       "nickname": "Titanmaker",
-      "native_governance_power": 200000,
-      "governance_power": 200000,
+      "native_governance_power": 0,
+      "governance_power": 0,
       "delegated_governance_power": 0,
-      "total_governance_power": 200000,
+      "total_governance_power": 0,
       "locked_governance_power": 0,
       "unlocked_governance_power": 200000,
       "nft_count": 3,
-      "last_updated": "2025-06-05T22:06:17.469Z"
+      "last_updated": "2025-06-05T01:10:24.939Z"
     },
     {
       "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
@@ -291,5 +291,5 @@
       "last_updated": "2025-06-05T18:11:00.214Z"
     }
   ],
-  "note": "Restored from production-verified governance calculations"
+  "note": "Corrected phantom deposits and inflated multipliers"
 }
