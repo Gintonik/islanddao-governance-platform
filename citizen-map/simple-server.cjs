@@ -292,6 +292,18 @@ cron.schedule('0 0 * * *', syncGovernanceData, {
   timezone: 'UTC'
 });
 
+// Add manual sync endpoint for immediate NFT data population
+app.post('/api/sync-data', async (req, res) => {
+  try {
+    console.log('Manual sync triggered...');
+    await syncGovernanceData();
+    res.json({ success: true, message: 'Data sync completed successfully' });
+  } catch (error) {
+    console.error('Manual sync failed:', error);
+    res.status(500).json({ error: 'Sync failed', details: error.message });
+  }
+});
+
 // Add API endpoint for wallet NFTs
 app.get('/api/wallet-nfts', async (req, res) => {
   try {
