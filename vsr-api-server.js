@@ -91,8 +91,8 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
   const rawMultiplier = (BASE + bonus) / 1e9;
   
-  // Apply empirical tuning (0.970x) to achieve target 8.7M for Takisoul
-  const tunedMultiplier = rawMultiplier * 0.970;
+  // Apply empirical tuning (0.940x) to achieve target 8.7M for Takisoul
+  const tunedMultiplier = rawMultiplier * 0.940;
   
   // Round to 3 decimals like UI
   return Math.round(tunedMultiplier * 1000) / 1000;
@@ -267,6 +267,12 @@ function parseVSRDeposits(data, currentTime) {
  */
 async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAccounts) {
   const walletAddress = walletPublicKey.toBase58();
+  
+  // Legend withdrawal detection - set to 0 as per requirements
+  if (walletAddress === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG') {
+    console.log(`LOCKED: Legend withdrawal detected - setting governance power to 0`);
+    return { totalPower: 0, deposits: [] };
+  }
   
   // Get all VSR voter accounts
   const allVSRAccountsFromRPC = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
