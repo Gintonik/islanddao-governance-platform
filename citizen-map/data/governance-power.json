@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2025-06-05T22:39:29.349Z",
+  "lastUpdated": "2025-06-05T22:42:26.436Z",
   "totalCitizens": 24,
-  "citizensWithPower": 15,
+  "citizensWithPower": 14,
   "dataSource": "restored_working_calculator",
   "citizens": [
     {
@@ -239,11 +239,11 @@
       "nickname": "legend",
       "bio": null,
       "governance_power": "0.000000",
-      "native_governance_power": 2000,
+      "native_governance_power": 0,
       "delegated_governance_power": 0,
       "native_power": "0.000000",
       "delegated_power": "0.000000",
-      "total_governance_power": 2000,
+      "total_governance_power": 0,
       "locked_governance_power": 0,
       "unlocked_governance_power": 3363730.150474,
       "governance_last_updated": "2025-06-04T02:05:35.784Z",

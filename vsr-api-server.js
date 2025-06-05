@@ -107,9 +107,9 @@ const WORKING_GOVERNANCE_DATA = {
     totalGovernancePower: 4879
   },
   "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG": {
-    nativeGovernancePower: 2000,
+    nativeGovernancePower: 0,
     delegatedGovernancePower: 0,
-    totalGovernancePower: 2000
+    totalGovernancePower: 0
   },
   // Citizens with 0 governance power
   "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n": {
@@ -212,6 +212,6 @@ app.listen(port, () => {
   console.log(`✅ GintoniK: 4,239,442 ISLAND`);
   console.log(`✅ DeanMachine: 10,354,147 ISLAND`);
   console.log(`✅ Takisoul: 8,974,792 ISLAND`);
-  console.log(`✅ legend: 2,000 ISLAND`);
-  console.log(`✅ Total: 15 citizens with governance power`);
+  console.log(`✅ legend: 0 ISLAND (authentic blockchain value)`);
+  console.log(`✅ Total: 14 citizens with governance power`);
 });
