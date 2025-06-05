@@ -1892,36 +1892,40 @@
             });
         }
 
-        // Enhanced image loading for citizen pins
+        // Enhanced image loading for citizen pins - prioritizes database stored URLs
         function loadCitizenImage(citizen, markerId) {
-            const fallbackSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48dGV4dCB4PSIyMCIgeT0iMjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+QzwvdGV4dD48L3N2Zz4K';
-            
-            // Check cache first
+            // Check cache first for persistent image URLs
             if (imageCache.has(markerId)) {
                 return imageCache.get(markerId);
             }
             
-            // Build priority list of image URLs
-            const imageUrls = [];
-            
-            // 1. Database stored image_url (highest priority)
-            if (citizen.image_url) {
-                imageUrls.push(citizen.image_url);
+            // Priority 1: Database stored image_url (most reliable)
+            if (citizen.image_url && citizen.image_url.length > 10) {
+                return citizen.image_url;
             }
             
-            // 2. NFT metadata image
+            // Priority 2: NFT metadata image (fallback)
             const pfpNftId = citizen.pfp_nft || citizen.primary_nft;
             if (pfpNftId && citizen.nftMetadata && citizen.nftMetadata[pfpNftId] && citizen.nftMetadata[pfpNftId].image) {
-                imageUrls.push(citizen.nftMetadata[pfpNftId].image);
+                return citizen.nftMetadata[pfpNftId].image;
             }
             
-            // 3. Legacy pfpImageUrl
-            if (citizen.pfpImageUrl) {
-                imageUrls.push(citizen.pfpImageUrl);
+            // Priority 3: Legacy pfpImageUrl (legacy support)
+            if (citizen.pfpImageUrl && citizen.pfpImageUrl.length > 10) {
+                return citizen.pfpImageUrl;
             }
             
-            // Return first available URL or fallback
-            return imageUrls.length > 0 ? imageUrls[0] : fallbackSvg;
+            // Final fallback: Generate personalized SVG
+            const initial = citizen.nickname ? citizen.nickname.charAt(0).toUpperCase() : 'C';
+            const colors = ['#4facfe', '#00c9ff', '#fc466b', '#3f5efb', '#667eea', '#764ba2', '#f093fb', '#f5576c'];
+            const color = colors[citizen.nickname ? citizen.nickname.length % colors.length : 0];
+            
+            return `data:image/svg+xml;base64,${btoa(`
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="20" fill="${color}"/>
+                    <text x="20" y="26" text-anchor="middle" fill="white" font-size="14" font-family="sans-serif" font-weight="bold">${initial}</text>
+                </svg>
+            `)}`;
         }
 
         // Initialize application
