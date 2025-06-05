@@ -411,34 +411,22 @@ async function getCanonicalGovernancePower(walletAddress) {
       ]
     });
     
-    // For Takisoul specifically, also check known accounts to ensure we get all VSR accounts
-    if (walletPubkey.toBase58() === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
-      console.log(`🔍 SDK: Expanding search for Takisoul's additional VSR accounts...`);
+    // Enhanced search for wallets with multiple VSR accounts
+    try {
+      const additionalAccounts = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+        filters: [
+          { memcmp: { offset: 8, bytes: walletPubkey.toBase58() } }
+        ]
+      });
       
-      const knownAccounts = [
-        "GSrwtiSq6ePRtf2j8nWMksgMuGawHv8uf2suz1A5iRG",
-        "9dsYHH88bN2Nomgr12qPUgJLsaRwqkX2YYiZNq4kys5L", 
-        "C1vgxMvvBzXegFkvfW4Do7CmyPeCKsGJT7SpQevPaSS8"
-      ];
-      
-      // Add any missing known accounts
-      for (const accountAddress of knownAccounts) {
-        const exists = allVSRAccounts.find(acc => acc.pubkey.toBase58() === accountAddress);
+      for (const account of additionalAccounts) {
+        const exists = allVSRAccounts.find(acc => acc.pubkey.equals(account.pubkey));
         if (!exists) {
-          try {
-            const accountPubkey = new PublicKey(accountAddress);
-            const accountInfo = await connection.getAccountInfo(accountPubkey);
-            if (accountInfo) {
-              allVSRAccounts.push({
-                pubkey: accountPubkey,
-                account: accountInfo
-              });
-            }
-          } catch (error) {
-            console.log(`🔍 SDK: Could not fetch known account ${accountAddress}: ${error.message}`);
-          }
+          allVSRAccounts.push(account);
         }
       }
+    } catch (e) {
+      console.log(`🔍 SDK: Extended VSR account search failed: ${e.message}`);
     }
     
     console.log(`🔍 SDK: Found ${allVSRAccounts.length} VSR accounts for wallet`);
@@ -632,10 +620,8 @@ async function getVSRGovernancePower(walletPubkey) {
         // Parse authority from Voter struct (offset 40)
         const authority = new PublicKey(data.slice(40, 72));
         
-        // Debug for Takisoul specifically
-        if (walletPubkey.toBase58() === "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA") {
-          console.log(`Checking account ${pubkey.toBase58()}: authority=${authority.toBase58()}`);
-        }
+        // Debug account authority matching
+        console.log(`Checking account ${pubkey.toBase58()}: authority=${authority.toBase58()}`);
         
         if (authority.equals(walletPubkey)) {
           console.log(`Found Voter account at: ${pubkey.toBase58()}`);
