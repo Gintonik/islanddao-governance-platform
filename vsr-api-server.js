@@ -116,9 +116,9 @@ function parseVSRDeposits(data, currentTime) {
   for (const mapping of lockupMappings) {
     if (mapping.amountOffset + 8 <= data.length) {
       try {
-        // Canonical isUsed byte check
-        const IS_USED_OFFSET = mapping.amountOffset - 8;
-        if (IS_USED_OFFSET >= 0 && data[IS_USED_OFFSET] !== 1) {
+        // Canonical isUsed byte check - check after amount (at +16)
+        const IS_USED_OFFSET = mapping.amountOffset + 16;
+        if (IS_USED_OFFSET < data.length && data[IS_USED_OFFSET] !== 1) {
           continue; // Skip inactive deposit
         }
 
@@ -217,9 +217,9 @@ function parseVSRDeposits(data, currentTime) {
   for (const offset of directOffsets) {
     if (offset + 8 <= data.length) {
       try {
-        // Canonical isUsed byte check
-        const IS_USED_OFFSET = offset - 8;
-        if (IS_USED_OFFSET >= 0 && data[IS_USED_OFFSET] !== 1) {
+        // Canonical isUsed byte check - check after amount (at +16)
+        const IS_USED_OFFSET = offset + 16;
+        if (IS_USED_OFFSET < data.length && data[IS_USED_OFFSET] !== 1) {
           continue; // Skip phantom/uninitialized
         }
 
