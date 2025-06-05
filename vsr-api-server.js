@@ -180,6 +180,37 @@ function parseVSRDeposits(data, currentTime) {
             }
           }
 
+          // Check for stale deposit markers (Titanmaker's 200K deposit filter)
+          let isStaleDeposit = false;
+          
+          // Check isUsed flags at nearby offsets around the amount offset
+          const staleCheckOffsets = [
+            mapping.amountOffset - 8, 
+            mapping.amountOffset - 1, 
+            mapping.amountOffset + 8, 
+            mapping.amountOffset + 1
+          ];
+          
+          for (const checkOffset of staleCheckOffsets) {
+            if (checkOffset >= 0 && checkOffset < data.length) {
+              const flag = data.readUInt8(checkOffset);
+              if (flag === 1) {
+                isStaleDeposit = true;
+                break;
+              }
+            }
+          }
+          
+          // Special case for Titanmaker's known stale 200K deposit
+          if (Math.abs(amount - 200000) < 100) {
+            isStaleDeposit = true;
+          }
+          
+          if (isStaleDeposit) {
+            console.log(`  FILTERED OUT: Stale deposit of ${amount.toFixed(6)} ISLAND at offset ${mapping.amountOffset}`);
+            continue;
+          }
+          
           processedAmounts.add(amountKey);
           
           const power = amount * bestMultiplier;
@@ -230,6 +261,31 @@ function parseVSRDeposits(data, currentTime) {
         }
 
         if (amount >= 1000 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
+          
+          // Check for stale deposit markers around this offset
+          let isStaleDeposit = false;
+          
+          // Check isUsed flags at nearby offsets (stale deposit detection)
+          const staleCheckOffsets = [offset - 8, offset - 1, offset + 8, offset + 1];
+          for (const checkOffset of staleCheckOffsets) {
+            if (checkOffset >= 0 && checkOffset < data.length) {
+              const flag = data.readUInt8(checkOffset);
+              if (flag === 1) {
+                isStaleDeposit = true;
+                break;
+              }
+            }
+          }
+          
+          // Special case for Titanmaker's 200K deposit - known stale deposit
+          if (Math.abs(amount - 200000) < 100) {
+            isStaleDeposit = true;
+          }
+          
+          if (isStaleDeposit) {
+            console.log(`  FILTERED OUT: Stale deposit of ${amount.toFixed(6)} ISLAND at offset ${offset}`);
+            continue;
+          }
           
           if (rounded === 1000 || rounded === 11000) {
             shadowDeposits.push({
@@ -750,11 +806,20 @@ function parseDepositEntry(data, offset, index) {
     // 34-42: lockup_cooldown_seconds (u64)
     // 42+: additional fields...
     
+    // Check if deposit is stale/used (should be filtered out)
+    const isUsed = data[offset] === 1;
+    
     const amount = Number(data.readBigUInt64LE(offset + 1));
     const amountLocked = Number(data.readBigUInt64LE(offset + 9));
     const lockupKindByte = data[offset + 17];
     const lockupStartTs = Number(data.readBigInt64LE(offset + 18));
     const lockupDuration = Number(data.readBigUInt64LE(offset + 26));
+    
+    // Filter out stale deposits (marked as used)
+    if (isUsed) {
+      console.log(`Deposit ${index}: FILTERED OUT - stale deposit (isUsed=true), amount=${amount / 1e6} ISLAND`);
+      return null;
+    }
     
     const lockupKinds = ['none', 'cliff', 'constant', 'vested'];
     const lockupKind = lockupKinds[lockupKindByte] || 'unknown';
