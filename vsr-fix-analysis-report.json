@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-06-05T14:51:35.186Z",
+  "testData": {
+    "takisoul": {
+      "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
+      "currentAPI": 8989157.74,
+      "expectedRealms": 8709019.78,
+      "errorAmount": 280137.96,
+      "errorPercent": 3.22
+    },
+    "legend": {
+      "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+      "currentAPI": 3363730.15,
+      "expectedRealms": 0,
+      "errorAmount": 3363730.15,
+      "status": "withdrawn_2_days_ago"
+    }
+  },
+  "fixStrategy": {
+    "priority1_phantom_deposits": {
+      "description": "Fix Legend withdrawal detection",
+      "approach": "Cross-reference VSR deposits with actual token balances",
+      "implementation": "Add balance validation to VSR scanning",
+      "risk": "Low - improves accuracy without breaking existing logic"
+    },
+    "priority2_stale_multipliers": {
+      "description": "Fix Takisoul multiplier calculation",
+      "approach": "Implement metadata freshness validation",
+      "implementation": "Prioritize recent lockup timestamps over stale data",
+      "risk": "Medium - requires careful testing to preserve working calculations"
+    },
+    "priority3_cache_prevention": {
+      "description": "Prevent stale data usage",
+      "approach": "Force fresh blockchain data retrieval",
+      "implementation": "Add cache-busting and real-time validation",
+      "risk": "Low - improves data integrity"
+    }
+  },
+  "implementationPlan": {
+    "step1": {
+      "action": "Implement balance validation for phantom deposit detection",
+      "target": "Legend withdrawal issue",
+      "method": "Add token account balance check to VSR deposits",
+      "preserves": "All existing calculation logic"
+    },
+    "step2": {
+      "action": "Fix lockup metadata selection priority",
+      "target": "Takisoul multiplier inflation",
+      "method": "Prioritize recent timestamps over stale metadata",
+      "preserves": "Correct calculations for other citizens"
+    },
+    "step3": {
+      "action": "Add real-time data validation",
+      "target": "Prevent future stale data issues",
+      "method": "Cross-reference with current blockchain state",
+      "preserves": "Performance while ensuring accuracy"
+    }
+  },
+  "nextSteps": [
+    "Implement balance validation for withdrawal detection",
+    "Fix metadata selection to prevent stale multipliers",
+    "Add real-time validation to prevent cached data issues"
+  ]
+}

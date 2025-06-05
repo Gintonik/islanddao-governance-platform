@@ -8,7 +8,6 @@ import pkg from "pg";
 import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey, Keypair } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import fs from "fs";
 import { SplGovernance } from "./governance-sdk/dist/index.js";
 import { getTokenOwnerRecordAddress } from "@solana/spl-governance";
@@ -45,9 +44,6 @@ const ISLAND_GOVERNANCE_MINT = new PublicKey(
 const ISLAND_DAO_REGISTRAR = new PublicKey(
   "5sGLEKcJ35UGdbHtSWMtGbhLqRycQJSCaUAyEpnz6TA2",
 );
-const ISLAND_MINT = new PublicKey(
-  "Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a",
-);
 const connection = new Connection(process.env.HELIUS_RPC_URL);
 console.log("🚀 Helius RPC URL:", process.env.HELIUS_RPC_URL);
 
@@ -61,68 +57,6 @@ function createDummyWallet() {
     signTransaction: async () => { throw new Error('Dummy wallet cannot sign'); },
     signAllTransactions: async () => { throw new Error('Dummy wallet cannot sign'); }
   };
-}
-
-/**
- * Enhanced balance validation to detect phantom deposits
- */
-async function validateVSRDepositsWithBalance(deposits, walletPublicKey) {
-  try {
-    // Get actual ISLAND token balance for the wallet
-    const tokenAccounts = await connection.getTokenAccountsByOwner(walletPublicKey, {
-      mint: ISLAND_MINT
-    });
-    
-    let actualBalance = 0;
-    for (const account of tokenAccounts) {
-      const balance = await connection.getTokenAccountBalance(account.pubkey);
-      actualBalance += parseFloat(balance.value.uiAmount || 0);
-    }
-    
-    console.log(`BALANCE CHECK: Wallet has ${actualBalance.toLocaleString()} ISLAND tokens`);
-    
-    // If no balance but VSR deposits detected, mark as phantom
-    if (actualBalance === 0 && deposits.length > 0) {
-      console.log(`PHANTOM FILTER: VSR shows deposits but wallet has 0 ISLAND balance`);
-      return {
-        isPhantom: true,
-        actualBalance,
-        validDeposits: [],
-        reason: 'zero_balance_with_vsr_deposits'
-      };
-    }
-    
-    // Validate individual deposits against total balance
-    const totalVSRAmount = deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
-    
-    if (totalVSRAmount > actualBalance * 1.1) { // 10% tolerance for rounding
-      console.log(`PHANTOM FILTER: VSR amount ${totalVSRAmount.toLocaleString()} exceeds balance ${actualBalance.toLocaleString()}`);
-      
-      return {
-        isPhantom: true,
-        actualBalance,
-        validDeposits: [],
-        reason: 'vsr_exceeds_balance'
-      };
-    }
-    
-    return {
-      isPhantom: false,
-      actualBalance,
-      validDeposits: deposits,
-      reason: 'balance_validated'
-    };
-    
-  } catch (error) {
-    console.log(`Balance validation failed: ${error.message}`);
-    // If balance check fails, fall back to existing logic
-    return {
-      isPhantom: false,
-      actualBalance: null,
-      validDeposits: deposits,
-      reason: 'balance_check_failed'
-    };
-  }
 }
 
 /**
