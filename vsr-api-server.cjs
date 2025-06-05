@@ -4,8 +4,10 @@
  * Matches verified user reports without manual overrides
  */
 
-import { Connection, PublicKey } from '@solana/web3.js';
-import dotenv from 'dotenv';
+const { Connection, PublicKey } = require('@solana/web3.js');
+const dotenv = require('dotenv');
+const express = require('express');
+const cors = require('cors');
 
 dotenv.config();
 
@@ -283,4 +285,50 @@ async function main() {
   }
 }
 
-main();
+// Express server setup
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const PORT = 3001;
+
+// API endpoint for governance power calculation
+app.get('/api/governance-power', async (req, res) => {
+  try {
+    const { wallet } = req.query;
+    if (!wallet) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+
+    console.log(`🔍 Calculating governance power for: ${wallet}`);
+    
+    const allVSRAccounts = await getAllVSRAccounts();
+    const result = await calculateNativeGovernancePower(wallet, allVSRAccounts);
+    
+    res.json({
+      nativeGovernancePower: Math.round(result.nativePower),
+      totalGovernancePower: Math.round(result.nativePower),
+      wallet: wallet,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error calculating governance power:', error);
+    res.status(500).json({ error: 'Failed to calculate governance power' });
+  }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ VSR API Server running on port ${PORT}`);
+});
+
+// For testing purposes when run directly
+if (require.main === module) {
+  main().catch(console.error);
+}
