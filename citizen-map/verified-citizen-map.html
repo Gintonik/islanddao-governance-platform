@@ -1910,9 +1910,9 @@
             }
             
             // 2. NFT metadata image
-            const pfpNft = citizen.pfp_nft || citizen.primary_nft;
-            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft] && citizen.nftMetadata[pfpNft].image) {
-                imageUrls.push(citizen.nftMetadata[pfpNft].image);
+            const pfpNftId = citizen.pfp_nft || citizen.primary_nft;
+            if (pfpNftId && citizen.nftMetadata && citizen.nftMetadata[pfpNftId] && citizen.nftMetadata[pfpNftId].image) {
+                imageUrls.push(citizen.nftMetadata[pfpNftId].image);
             }
             
             // 3. Legacy pfpImageUrl
@@ -2821,17 +2821,6 @@
 
         // Create marker for single citizen
         function createSingleCitizenMarker(citizen) {
-            const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-            let imageUrl = 'https://via.placeholder.com/40';
-            
-            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                imageUrl = citizen.nftMetadata[pfpNft].image;
-            } else if (citizen.pfpImageUrl) {
-                imageUrl = citizen.pfpImageUrl;
-            } else if (citizen.image_url) {
-                imageUrl = citizen.image_url;
-            }
-
             // Create marker ID and get persistent image URL
             const markerId = `marker-${citizen.wallet}`;
             const persistentImageUrl = loadCitizenImage(citizen, markerId);
@@ -2842,9 +2831,13 @@
                 fallbackUrls.push(citizen.image_url);
             }
             
-            const pfpNft = citizen.pfp_nft || citizen.primary_nft;
-            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft] && citizen.nftMetadata[pfpNft].image) {
-                fallbackUrls.push(citizen.nftMetadata[pfpNft].image);
+            const citizenPfpNft = citizen.pfp_nft || citizen.primary_nft;
+            if (citizenPfpNft && citizen.nftMetadata && citizen.nftMetadata[citizenPfpNft] && citizen.nftMetadata[citizenPfpNft].image) {
+                fallbackUrls.push(citizen.nftMetadata[citizenPfpNft].image);
+            }
+            
+            if (citizen.pfpImageUrl && citizen.pfpImageUrl !== persistentImageUrl) {
+                fallbackUrls.push(citizen.pfpImageUrl);
             }
             
             const fallbackSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48dGV4dCB4PSIyMCIgeT0iMjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+QzwvdGV4dD48L3N2Zz4K';
