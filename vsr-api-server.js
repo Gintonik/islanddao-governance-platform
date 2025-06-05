@@ -208,28 +208,26 @@ function parseVSRDeposits(data, currentTime) {
     }
   }
 
-  // LOCKED: Direct unlocked deposit detection
-  const directOffsets = [104, 112];
+  // LOCKED: Enhanced unlocked deposit detection - scan more offsets
+  const directOffsets = [104, 112, 120, 128, 136, 144];
   for (const offset of directOffsets) {
     if (offset + 8 <= data.length) {
       try {
-
-
         const rawAmount = Number(data.readBigUInt64LE(offset));
         const amount = rawAmount / 1e6;
         const rounded = Math.round(amount);
         const amountKey = Math.round(amount * 1000);
 
-        // Skip offset 112 if it overlaps with offset 104 structure (phantom deposit filter)
+        // Enhanced phantom deposit filter - skip obvious delegation markers
         if (offset === 112 && data.length >= 112) {
           const offset104Amount = Number(data.readBigUInt64LE(104)) / 1e6;
           if (offset104Amount >= 1000) {
-            // 112 overlaps with 104's structure - skip this phantom deposit
             continue;
           }
         }
 
-        if (amount >= 1000 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
+        // Lower minimum threshold to catch more deposits, including smaller amounts
+        if (amount >= 50 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
           
           if (rounded === 1000 || rounded === 11000) {
             shadowDeposits.push({
