@@ -220,6 +220,15 @@ function parseVSRDeposits(data, currentTime) {
         const rounded = Math.round(amount);
         const amountKey = Math.round(amount * 1000);
 
+        // Skip offset 112 if it overlaps with offset 104 structure (phantom deposit filter)
+        if (offset === 112 && data.length >= 112) {
+          const offset104Amount = Number(data.readBigUInt64LE(104)) / 1e6;
+          if (offset104Amount >= 1000) {
+            // 112 overlaps with 104's structure - skip this phantom deposit
+            continue;
+          }
+        }
+
         if (amount >= 1000 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
           
           if (rounded === 1000 || rounded === 11000) {
