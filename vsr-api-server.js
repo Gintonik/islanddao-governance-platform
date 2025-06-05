@@ -371,9 +371,21 @@ async function calculateDelegatedGovernancePower(walletPublicKey) {
  * Get canonical governance power using exact SDK methodology
  */
 async function getCanonicalGovernancePower(walletAddress) {
-  const walletPubkey = new PublicKey(walletAddress);
+  // Validate and clean wallet address
+  if (!walletAddress || typeof walletAddress !== 'string') {
+    throw new Error('Invalid wallet address format');
+  }
   
-  console.log(`🏛️ Getting canonical governance power for: ${walletAddress}`);
+  const cleanWalletAddress = walletAddress.trim();
+  
+  let walletPubkey;
+  try {
+    walletPubkey = new PublicKey(cleanWalletAddress);
+  } catch (error) {
+    throw new Error(`Invalid public key input: ${error.message}`);
+  }
+  
+  console.log(`🏛️ Getting canonical governance power for: ${cleanWalletAddress}`);
   
   try {
     // Set up Anchor context using the exact methodology requested
