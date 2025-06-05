@@ -1813,6 +1813,30 @@
         // ===== APPLICATION INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', initializeApp);
         
+        // Handle image loading errors with cascading fallbacks
+        window.handleImageError = function(markerId, fallbackUrls, finalFallback) {
+            const img = document.getElementById(markerId);
+            if (!img) return;
+            
+            // Parse fallback URLs if they're a string
+            let urls = Array.isArray(fallbackUrls) ? fallbackUrls : JSON.parse(fallbackUrls || '[]');
+            
+            if (urls.length > 0) {
+                // Try next fallback URL
+                const nextUrl = urls.shift();
+                img.src = nextUrl;
+                
+                // Update the onerror to use remaining fallbacks
+                img.onerror = function() {
+                    window.handleImageError(markerId, urls, finalFallback);
+                };
+            } else {
+                // All fallbacks failed, use final SVG fallback
+                img.src = finalFallback;
+                img.onerror = null; // Prevent infinite loops
+            }
+        };
+
         // Initialize application
         async function initializeApp() {
             try {
@@ -2721,15 +2745,47 @@
                 imageUrl = citizen.image_url;
             }
 
-            const icon = L.divIcon({
-                html: `<img src="${imageUrl}" 
-                       style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover;" 
-                       onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K'"
-                       loading="lazy">`,
-                className: 'citizen-marker',
-                iconSize: [46, 46],
-                iconAnchor: [23, 23]
-            });
+            // Create robust image loading with multiple fallbacks
+            const createRobustImageIcon = (primaryUrl, citizenData) => {
+                const fallbackSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48dGV4dCB4PSIyMCIgeT0iMjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+QzwvdGV4dD48L3N2Zz4K';
+                
+                // Prepare fallback URLs in order of preference
+                const fallbackUrls = [];
+                
+                // Add database image_url if available
+                if (citizenData.image_url && citizenData.image_url !== primaryUrl) {
+                    fallbackUrls.push(citizenData.image_url);
+                }
+                
+                // Add NFT metadata image URLs
+                if (citizenData.nftMetadata) {
+                    const pfpNft = citizenData.pfp_nft || citizenData.primary_nft;
+                    if (pfpNft && citizenData.nftMetadata[pfpNft] && citizenData.nftMetadata[pfpNft].image) {
+                        fallbackUrls.push(citizenData.nftMetadata[pfpNft].image);
+                    }
+                }
+                
+                // Create unique ID for this marker
+                const markerId = `marker-${citizenData.wallet || Math.random()}`;
+                
+                const imageHtml = `
+                    <img id="${markerId}" 
+                         src="${primaryUrl}" 
+                         style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; display: block;" 
+                         onload="this.style.opacity='1'; this.style.transition='opacity 0.3s ease';"
+                         onerror="handleImageError('${markerId}', ${JSON.stringify(fallbackUrls).replace(/"/g, '&quot;')}, '${fallbackSvg}')"
+                         loading="eager">
+                `;
+                
+                return L.divIcon({
+                    html: imageHtml,
+                    className: 'citizen-marker',
+                    iconSize: [46, 46],
+                    iconAnchor: [23, 23]
+                });
+            };
+
+            const icon = createRobustImageIcon(imageUrl, citizen);
 
             const marker = L.marker([lat, lng], { icon }).addTo(map);
             marker.on('click', () => showCitizenPanel(citizen));
