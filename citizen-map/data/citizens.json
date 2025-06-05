@@ -23,73 +23,510 @@
     "locked_governance_power": 9075351.160370544,
     "unlocked_governance_power": 0,
     "governance_last_updated": "2025-06-04T02:05:35.761Z",
-    "updated_at": "2025-06-05T21:12:04.785Z",
+    "updated_at": "2025-06-05T23:25:52.298Z",
     "nft_ids": "[\"F4adNm4wf1ofKVVrnzytyusvLzjM1hfLuky4Jg6N9aon\",\"F42nGuN7yn4RXDUdUjYTchMN9tN9BX7dMK9gBg9MopX4\",\"DwYaYTYJ2Gw1ryGu1pdgNzb8scTr4ad5ep29XLj3H1YH\",\"99ReEYANA85izGH1mjb4rHrcaR3B4wU8N3yMrvWWW8fc\",\"8t3cj7wuz93gRMvfMVrGQAFbd2NeT8QPxcEAS9TDwo8F\",\"7Hb27MKKTzyvKmsgGcgJJYuaGJ2gCUwsyb665X7as6Ry\",\"6zqSHE2JZqyTXY9jnDtdUdcmcaw2e3voAhzobaWcCkfd\",\"6tXDPYr9uRx1y5q9TwVVtG7nSMM2peSydc5e7MouvZQ8\",\"6g2qx4eVhdD84mG8QztRQUhkWK3QAy38RR1VVWEKUGpA\",\"6RQVWkrSrTV9iuNnz7zgRjL6GufWQFBrZTMEodMqFqfw\",\"5c2NNHPuS9X2kj3NPopDzKsYXXptEjsRPZ7msFZzaWr3\",\"3bsqWRMASD9MNwq4a2RXq8gnuUnHvMgkTaHx18WpszqQ\"]",
     "nft_metadata": "[{\"mint\":\"F4adNm4wf1ofKVVrnzytyusvLzjM1hfLuky4Jg6N9aon\",\"name\":\"PERK #2942\",\"image\":\"https://uploader.irys.xyz/BXviSF2kiSGrS6QQ2L9bvWrDo4nA9d6uHTRgB6W7hZEz\",\"collection\":\"PERKS\"},{\"mint\":\"F42nGuN7yn4RXDUdUjYTchMN9tN9BX7dMK9gBg9MopX4\",\"name\":\"PERK #359\",\"image\":\"https://uploader.irys.xyz/F1fVk5wRyrxpfXjTkpXAxTLdXAPsyiFH8stMKCJTatNV\",\"collection\":\"PERKS\"},{\"mint\":\"DwYaYTYJ2Gw1ryGu1pdgNzb8scTr4ad5ep29XLj3H1YH\",\"name\":\"PERK #2738\",\"image\":\"https://uploader.irys.xyz/CiymeLxtb4W1mVTdrMMt1K5fwaqkh5zUDn8JtpoJXVRo\",\"collection\":\"PERKS\"},{\"mint\":\"99ReEYANA85izGH1mjb4rHrcaR3B4wU8N3yMrvWWW8fc\",\"name\":\"PERK #1319\",\"image\":\"https://uploader.irys.xyz/6bUEF7YeZP3zNgq3y1tqPgK7jGYB7ZMSZQvjkjoPyqq4\",\"collection\":\"PERKS\"},{\"mint\":\"8t3cj7wuz93gRMvfMVrGQAFbd2NeT8QPxcEAS9TDwo8F\",\"name\":\"PERK #1823\",\"image\":\"https://uploader.irys.xyz/FXew7usYRzrHjQisPhmwC4L8HoxfHptoS8i5VeCG6ob3\",\"collection\":\"PERKS\"},{\"mint\":\"7Hb27MKKTzyvKmsgGcgJJYuaGJ2gCUwsyb665X7as6Ry\",\"name\":\"PERK #2450\",\"image\":\"https://uploader.irys.xyz/3r7uVsi9KRGxLgAkAFezC5dhrMDsHHbkde5Rti75RRvK\",\"collection\":\"PERKS\"},{\"mint\":\"6zqSHE2JZqyTXY9jnDtdUdcmcaw2e3voAhzobaWcCkfd\",\"name\":\"PERK #3278\",\"image\":\"https://uploader.irys.xyz/ELtMHMzqWWqLi3zn1CQUu1m9oPhqwkq3V8W4q5biHCNT\",\"collection\":\"PERKS\"},{\"mint\":\"6tXDPYr9uRx1y5q9TwVVtG7nSMM2peSydc5e7MouvZQ8\",\"name\":\"PERK #2691\",\"image\":\"https://uploader.irys.xyz/TLvspSm6dhDYgX1gAqoxZLKesq3sRMm29NQGo79E6Tt\",\"collection\":\"PERKS\"},{\"mint\":\"6g2qx4eVhdD84mG8QztRQUhkWK3QAy38RR1VVWEKUGpA\",\"name\":\"PERK #2539\",\"image\":\"https://uploader.irys.xyz/DkRtUGYX4izCy1XK1bUEvyobexk83AqT8re7bWSRqJPN\",\"collection\":\"PERKS\"},{\"mint\":\"6RQVWkrSrTV9iuNnz7zgRjL6GufWQFBrZTMEodMqFqfw\",\"name\":\"PERK #2615\",\"image\":\"https://uploader.irys.xyz/E7NzY4yKG8hNvqro4qeM9gWpGRBQiLkN6k5gXDr321jQ\",\"collection\":\"PERKS\"},{\"mint\":\"5c2NNHPuS9X2kj3NPopDzKsYXXptEjsRPZ7msFZzaWr3\",\"name\":\"PERK #1765\",\"image\":\"https://uploader.irys.xyz/AQvxHAZKn8vKp332KzeFKiF5HzrrsJj5AJK3HJcP7HF6\",\"collection\":\"PERKS\"},{\"mint\":\"3bsqWRMASD9MNwq4a2RXq8gnuUnHvMgkTaHx18WpszqQ\",\"name\":\"PERK #1571\",\"image\":\"https://uploader.irys.xyz/5wCxevFyZjKmcmXdrsUXkWmtNQEjrhuLoELB8jocCbES\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 42,
+    "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
+    "lat": "38.776451965539245",
+    "lng": "-105.29296875",
+    "primary_nft": "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY",
+    "message": null,
+    "created_at": "2025-05-29T16:56:19.589Z",
+    "pfp_nft": "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY",
+    "image_url": "https://uploader.irys.xyz/8znCmJ7DMmthuBvYx7W6rNc6PHnw8LJv3VxtVyf5HLCn",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "KO3",
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 1349608,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 1349608,
+    "locked_governance_power": 1223263.49902624,
+    "unlocked_governance_power": 157343.70335999998,
+    "governance_last_updated": "2025-06-04T02:05:35.807Z",
+    "updated_at": "2025-06-05T23:25:49.909Z",
+    "nft_ids": "[\"JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo\",\"Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX\",\"9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q\",\"6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY\",\"5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk\",\"22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN\"]",
+    "nft_metadata": "[{\"mint\":\"JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo\",\"name\":\"PERK #3266\",\"image\":\"https://uploader.irys.xyz/HJ31Z8javis3Eg79GdKN1gxWQUtT48AnAh5WLykbhge9\",\"collection\":\"PERKS\"},{\"mint\":\"Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX\",\"name\":\"PERK #2249\",\"image\":\"https://uploader.irys.xyz/8CQK1n6LGnfvGDAf8oqh5CJoF2CVm5hcTHgkivxydS8S\",\"collection\":\"PERKS\"},{\"mint\":\"9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q\",\"name\":\"PERK #713\",\"image\":\"https://uploader.irys.xyz/DwZBfr7KBEPoKkHUcrU356k2ED5WDWNZ9TEMNiB8uSTS\",\"collection\":\"PERKS\"},{\"mint\":\"6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY\",\"name\":\"PERK #1259\",\"image\":\"https://uploader.irys.xyz/8znCmJ7DMmthuBvYx7W6rNc6PHnw8LJv3VxtVyf5HLCn\",\"collection\":\"PERKS\"},{\"mint\":\"5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk\",\"name\":\"PERK #828\",\"image\":\"https://uploader.irys.xyz/4MAPgPvtTLRfJWgt9aMuQVZXgtT8WuyxxhucdLq5yoHV\",\"collection\":\"PERKS\"},{\"mint\":\"22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN\",\"name\":\"PERK #2352\",\"image\":\"https://uploader.irys.xyz/5maTbiHJav1SvpAfSkFmbc8V7wQgdznugpx4btMhQUFj\",\"collection\":\"PERKS\"}]",
     "nfts": [
-      "F4adNm4wf1ofKVVrnzytyusvLzjM1hfLuky4Jg6N9aon",
-      "F42nGuN7yn4RXDUdUjYTchMN9tN9BX7dMK9gBg9MopX4",
-      "DwYaYTYJ2Gw1ryGu1pdgNzb8scTr4ad5ep29XLj3H1YH",
-      "99ReEYANA85izGH1mjb4rHrcaR3B4wU8N3yMrvWWW8fc",
-      "8t3cj7wuz93gRMvfMVrGQAFbd2NeT8QPxcEAS9TDwo8F",
-      "7Hb27MKKTzyvKmsgGcgJJYuaGJ2gCUwsyb665X7as6Ry",
-      "6zqSHE2JZqyTXY9jnDtdUdcmcaw2e3voAhzobaWcCkfd",
-      "6tXDPYr9uRx1y5q9TwVVtG7nSMM2peSydc5e7MouvZQ8",
-      "6g2qx4eVhdD84mG8QztRQUhkWK3QAy38RR1VVWEKUGpA",
-      "6RQVWkrSrTV9iuNnz7zgRjL6GufWQFBrZTMEodMqFqfw",
-      "5c2NNHPuS9X2kj3NPopDzKsYXXptEjsRPZ7msFZzaWr3",
-      "3bsqWRMASD9MNwq4a2RXq8gnuUnHvMgkTaHx18WpszqQ"
+      "JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo",
+      "Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX",
+      "9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q",
+      "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY",
+      "5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk",
+      "22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN"
     ],
     "nftMetadata": {
-      "F4adNm4wf1ofKVVrnzytyusvLzjM1hfLuky4Jg6N9aon": {
-        "name": "PERK #2942",
-        "image": "https://uploader.irys.xyz/BXviSF2kiSGrS6QQ2L9bvWrDo4nA9d6uHTRgB6W7hZEz"
+      "JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo": {
+        "name": "PERK #3266",
+        "image": "https://uploader.irys.xyz/HJ31Z8javis3Eg79GdKN1gxWQUtT48AnAh5WLykbhge9"
       },
-      "F42nGuN7yn4RXDUdUjYTchMN9tN9BX7dMK9gBg9MopX4": {
-        "name": "PERK #359",
-        "image": "https://uploader.irys.xyz/F1fVk5wRyrxpfXjTkpXAxTLdXAPsyiFH8stMKCJTatNV"
+      "Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX": {
+        "name": "PERK #2249",
+        "image": "https://uploader.irys.xyz/8CQK1n6LGnfvGDAf8oqh5CJoF2CVm5hcTHgkivxydS8S"
       },
-      "DwYaYTYJ2Gw1ryGu1pdgNzb8scTr4ad5ep29XLj3H1YH": {
-        "name": "PERK #2738",
-        "image": "https://uploader.irys.xyz/CiymeLxtb4W1mVTdrMMt1K5fwaqkh5zUDn8JtpoJXVRo"
+      "9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q": {
+        "name": "PERK #713",
+        "image": "https://uploader.irys.xyz/DwZBfr7KBEPoKkHUcrU356k2ED5WDWNZ9TEMNiB8uSTS"
       },
-      "99ReEYANA85izGH1mjb4rHrcaR3B4wU8N3yMrvWWW8fc": {
-        "name": "PERK #1319",
-        "image": "https://uploader.irys.xyz/6bUEF7YeZP3zNgq3y1tqPgK7jGYB7ZMSZQvjkjoPyqq4"
+      "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY": {
+        "name": "PERK #1259",
+        "image": "https://uploader.irys.xyz/8znCmJ7DMmthuBvYx7W6rNc6PHnw8LJv3VxtVyf5HLCn"
       },
-      "8t3cj7wuz93gRMvfMVrGQAFbd2NeT8QPxcEAS9TDwo8F": {
-        "name": "PERK #1823",
-        "image": "https://uploader.irys.xyz/FXew7usYRzrHjQisPhmwC4L8HoxfHptoS8i5VeCG6ob3"
+      "5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk": {
+        "name": "PERK #828",
+        "image": "https://uploader.irys.xyz/4MAPgPvtTLRfJWgt9aMuQVZXgtT8WuyxxhucdLq5yoHV"
       },
-      "7Hb27MKKTzyvKmsgGcgJJYuaGJ2gCUwsyb665X7as6Ry": {
-        "name": "PERK #2450",
-        "image": "https://uploader.irys.xyz/3r7uVsi9KRGxLgAkAFezC5dhrMDsHHbkde5Rti75RRvK"
-      },
-      "6zqSHE2JZqyTXY9jnDtdUdcmcaw2e3voAhzobaWcCkfd": {
-        "name": "PERK #3278",
-        "image": "https://uploader.irys.xyz/ELtMHMzqWWqLi3zn1CQUu1m9oPhqwkq3V8W4q5biHCNT"
-      },
-      "6tXDPYr9uRx1y5q9TwVVtG7nSMM2peSydc5e7MouvZQ8": {
-        "name": "PERK #2691",
-        "image": "https://uploader.irys.xyz/TLvspSm6dhDYgX1gAqoxZLKesq3sRMm29NQGo79E6Tt"
-      },
-      "6g2qx4eVhdD84mG8QztRQUhkWK3QAy38RR1VVWEKUGpA": {
-        "name": "PERK #2539",
-        "image": "https://uploader.irys.xyz/DkRtUGYX4izCy1XK1bUEvyobexk83AqT8re7bWSRqJPN"
-      },
-      "6RQVWkrSrTV9iuNnz7zgRjL6GufWQFBrZTMEodMqFqfw": {
-        "name": "PERK #2615",
-        "image": "https://uploader.irys.xyz/E7NzY4yKG8hNvqro4qeM9gWpGRBQiLkN6k5gXDr321jQ"
-      },
-      "5c2NNHPuS9X2kj3NPopDzKsYXXptEjsRPZ7msFZzaWr3": {
-        "name": "PERK #1765",
-        "image": "https://uploader.irys.xyz/AQvxHAZKn8vKp332KzeFKiF5HzrrsJj5AJK3HJcP7HF6"
-      },
-      "3bsqWRMASD9MNwq4a2RXq8gnuUnHvMgkTaHx18WpszqQ": {
-        "name": "PERK #1571",
-        "image": "https://uploader.irys.xyz/5wCxevFyZjKmcmXdrsUXkWmtNQEjrhuLoELB8jocCbES"
+      "22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN": {
+        "name": "PERK #2352",
+        "image": "https://uploader.irys.xyz/5maTbiHJav1SvpAfSkFmbc8V7wQgdznugpx4btMhQUFj"
       }
     }
+  },
+  {
+    "id": 47,
+    "wallet": "CLcXVZpCwF9QH2aNjFhPSzyeUVifkP9W88WHwfe6sMww",
+    "lat": "5.1259615832098975",
+    "lng": "7.031250000000001",
+    "primary_nft": "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun",
+    "message": null,
+    "created_at": "2025-06-05T03:38:38.084Z",
+    "pfp_nft": "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun",
+    "image_url": "https://uploader.irys.xyz/6syTLiPtoEm4ApQ1dMsvVRBfsEvcNf9V7Upd1zo2bJP5",
+    "twitter_handle": "scientist__joe",
+    "telegram_handle": "scientistjoe",
+    "discord_handle": "scientistjoe",
+    "nickname": "scientistjoe",
+    "bio": "",
+    "governance_power": "0.000000",
+    "native_governance_power": 1007398,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 1007398,
+    "locked_governance_power": "0.000000",
+    "unlocked_governance_power": "0.000000",
+    "governance_last_updated": null,
+    "updated_at": "2025-06-05T23:25:53.556Z",
+    "nft_ids": "[\"DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun\"]",
+    "nft_metadata": "[{\"mint\":\"DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun\",\"name\":\"PERK #1036\",\"image\":\"https://uploader.irys.xyz/6syTLiPtoEm4ApQ1dMsvVRBfsEvcNf9V7Upd1zo2bJP5\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun"
+    ],
+    "nftMetadata": {
+      "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun": {
+        "name": "PERK #1036",
+        "image": "https://uploader.irys.xyz/6syTLiPtoEm4ApQ1dMsvVRBfsEvcNf9V7Upd1zo2bJP5"
+      }
+    }
+  },
+  {
+    "id": 45,
+    "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
+    "lat": "32.988003790662",
+    "lng": "-117.26257324218751",
+    "primary_nft": "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx",
+    "message": null,
+    "created_at": "2025-06-02T13:35:12.256Z",
+    "pfp_nft": "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx",
+    "image_url": "https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "Moxie",
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 536529,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 536529,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 536529.257549,
+    "governance_last_updated": "2025-06-04T02:05:35.829Z",
+    "updated_at": "2025-06-05T23:25:50.858Z",
+    "nft_ids": "[\"HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD\",\"GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn\",\"AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx\",\"qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7\"]",
+    "nft_metadata": "[{\"mint\":\"HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD\",\"name\":\"PERK #2743\",\"image\":\"https://uploader.irys.xyz/F1R4ieBcjuhPZC8jX7GAcwfkrWU3LAeeTA2cVTScyCdJ\",\"collection\":\"PERKS\"},{\"mint\":\"GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn\",\"name\":\"PERK #523\",\"image\":\"https://uploader.irys.xyz/HKsH6gkiJgUCVawg1qxRihH8k54LY3FmGa8yo37JDRJa\",\"collection\":\"PERKS\"},{\"mint\":\"AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx\",\"name\":\"PERK #2689\",\"image\":\"https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL\",\"collection\":\"PERKS\"},{\"mint\":\"qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7\",\"name\":\"PERK #986\",\"image\":\"https://uploader.irys.xyz/7UZFP7G9bxPh667yeTPJoT6noD46UhKebTtAEoswF5eH\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD",
+      "GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn",
+      "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx",
+      "qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7"
+    ],
+    "nftMetadata": {
+      "HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD": {
+        "name": "PERK #2743",
+        "image": "https://uploader.irys.xyz/F1R4ieBcjuhPZC8jX7GAcwfkrWU3LAeeTA2cVTScyCdJ"
+      },
+      "GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn": {
+        "name": "PERK #523",
+        "image": "https://uploader.irys.xyz/HKsH6gkiJgUCVawg1qxRihH8k54LY3FmGa8yo37JDRJa"
+      },
+      "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx": {
+        "name": "PERK #2689",
+        "image": "https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL"
+      },
+      "qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7": {
+        "name": "PERK #986",
+        "image": "https://uploader.irys.xyz/7UZFP7G9bxPh667yeTPJoT6noD46UhKebTtAEoswF5eH"
+      }
+    }
+  },
+  {
+    "id": 35,
+    "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
+    "lat": "52.010827123313625",
+    "lng": "4.359512329101563",
+    "primary_nft": "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM",
+    "message": null,
+    "created_at": "2025-05-28T12:23:47.632Z",
+    "pfp_nft": "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM",
+    "image_url": "https://uploader.irys.xyz/Gqi1bYH3aWD3Abg593L8BFrWGpapaRWp1WsJPd2kZjro",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "nurtan",
+    "bio": "Logistics and data science background, exploring AI and building my bridge to Web3 as a Solana maxi.",
+    "governance_power": "0.000000",
+    "native_governance_power": 398681,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 398681,
+    "locked_governance_power": 466147.15222772094,
+    "unlocked_governance_power": 50000,
+    "governance_last_updated": "2025-06-04T02:05:35.852Z",
+    "updated_at": "2025-06-05T23:25:53.375Z",
+    "nft_ids": "[\"GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A\",\"BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz\",\"2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM\"]",
+    "nft_metadata": "[{\"mint\":\"GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A\",\"name\":\"PERK #3102\",\"image\":\"https://uploader.irys.xyz/9CR3Vvxc1VHk41DUNKZfcnPUDwH7tDrCDCU2PZMsy9a6\",\"collection\":\"PERKS\"},{\"mint\":\"BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz\",\"name\":\"PERK #858\",\"image\":\"https://uploader.irys.xyz/BbLpLb4yfFBbXES7ohpaE45jf51MCDwYWacmMC2Fdj58\",\"collection\":\"PERKS\"},{\"mint\":\"2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM\",\"name\":\"PERK #1255\",\"image\":\"https://uploader.irys.xyz/Gqi1bYH3aWD3Abg593L8BFrWGpapaRWp1WsJPd2kZjro\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A",
+      "BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz",
+      "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM"
+    ],
+    "nftMetadata": {
+      "GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A": {
+        "name": "PERK #3102",
+        "image": "https://uploader.irys.xyz/9CR3Vvxc1VHk41DUNKZfcnPUDwH7tDrCDCU2PZMsy9a6"
+      },
+      "BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz": {
+        "name": "PERK #858",
+        "image": "https://uploader.irys.xyz/BbLpLb4yfFBbXES7ohpaE45jf51MCDwYWacmMC2Fdj58"
+      },
+      "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM": {
+        "name": "PERK #1255",
+        "image": "https://uploader.irys.xyz/Gqi1bYH3aWD3Abg593L8BFrWGpapaRWp1WsJPd2kZjro"
+      }
+    }
+  },
+  {
+    "id": 32,
+    "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
+    "lat": "16.275323808198852",
+    "lng": "80.16723632812501",
+    "primary_nft": "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp",
+    "message": null,
+    "created_at": "2025-05-28T03:33:03.979Z",
+    "pfp_nft": "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp",
+    "image_url": "https://uploader.irys.xyz/Ewnm9HrxaShqMyxebGpPCQsTKQguBub9CGF717eh7yV7",
+    "twitter_handle": "yamparalarahul1",
+    "telegram_handle": "rahuluxdesigner",
+    "discord_handle": "yamparala",
+    "nickname": "Yamparala Rahul",
+    "bio": "UX Designer",
+    "governance_power": "0.000000",
+    "native_governance_power": 377734,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 377734,
+    "locked_governance_power": 377734.98739922,
+    "unlocked_governance_power": 16097.79386,
+    "governance_last_updated": "2025-06-04T02:05:35.874Z",
+    "updated_at": "2025-06-05T23:25:52.876Z",
+    "nft_ids": "[\"2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp\"]",
+    "nft_metadata": "[{\"mint\":\"2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp\",\"name\":\"PERK #3224\",\"image\":\"https://uploader.irys.xyz/Ewnm9HrxaShqMyxebGpPCQsTKQguBub9CGF717eh7yV7\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp"
+    ],
+    "nftMetadata": {
+      "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp": {
+        "name": "PERK #3224",
+        "image": "https://uploader.irys.xyz/Ewnm9HrxaShqMyxebGpPCQsTKQguBub9CGF717eh7yV7"
+      }
+    }
+  },
+  {
+    "id": 49,
+    "wallet": "EXRBCP2MX6hRAt4oh61k5mhL6WhmUXPemfzNssUpM4S6",
+    "lat": "16.34685965546115",
+    "lng": "-0.41009325832606974",
+    "primary_nft": null,
+    "message": null,
+    "created_at": "2025-06-05T15:50:00.164Z",
+    "pfp_nft": "C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw",
+    "image_url": "https://uploader.irys.xyz/FW2eQiqEXUGGhGQDhjXutxSKpCb8r3EVb7gXrLegP2j1",
+    "twitter_handle": "Ify_Ezeugwu",
+    "telegram_handle": "Ify01",
+    "discord_handle": "Icoder.dev",
+    "nickname": "Icoder",
+    "bio": "UXUI Researcher || DAO Stan",
+    "governance_power": "0.000000",
+    "native_governance_power": 332768,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 332768,
+    "locked_governance_power": "0.000000",
+    "unlocked_governance_power": "0.000000",
+    "governance_last_updated": null,
+    "updated_at": "2025-06-05T23:25:49.735Z",
+    "nft_ids": "[\"C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw\"]",
+    "nft_metadata": "[{\"mint\":\"C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw\",\"name\":\"PERK #2256\",\"image\":\"https://uploader.irys.xyz/FW2eQiqEXUGGhGQDhjXutxSKpCb8r3EVb7gXrLegP2j1\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw"
+    ],
+    "nftMetadata": {
+      "C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw": {
+        "name": "PERK #2256",
+        "image": "https://uploader.irys.xyz/FW2eQiqEXUGGhGQDhjXutxSKpCb8r3EVb7gXrLegP2j1"
+      }
+    }
+  },
+  {
+    "id": 43,
+    "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
+    "lat": "37.983092681195544",
+    "lng": "23.791677498618913",
+    "primary_nft": "9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM",
+    "message": null,
+    "created_at": "2025-05-30T08:07:12.571Z",
+    "pfp_nft": "9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM",
+    "image_url": "https://uploader.irys.xyz/ALJ7vTdMRSCrbbTCACQ3ALe7cb2fGuXPZhNVfFT5YJSM",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": null,
+    "bio": "What you wanna know?",
+    "governance_power": "0.000000",
+    "native_governance_power": 143635,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 143635,
+    "locked_governance_power": 144717.419919228,
+    "unlocked_governance_power": 0,
+    "governance_last_updated": "2025-06-04T02:05:35.925Z",
+    "updated_at": "2025-06-05T23:25:53.694Z",
+    "nft_ids": "[\"9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM\",\"3HjWfhCcYMdqp7xxoyGRs5Bvyafrks3y3LKwFn7TDoiQ\"]",
+    "nft_metadata": "[{\"mint\":\"9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM\",\"name\":\"PERK #827\",\"image\":\"https://uploader.irys.xyz/ALJ7vTdMRSCrbbTCACQ3ALe7cb2fGuXPZhNVfFT5YJSM\",\"collection\":\"PERKS\"},{\"mint\":\"3HjWfhCcYMdqp7xxoyGRs5Bvyafrks3y3LKwFn7TDoiQ\",\"name\":\"PERK #860\",\"image\":\"https://uploader.irys.xyz/E3zHQWHrcfGgtC5M3aYTKVTWSjz2nPNS4A1nbCqPXCgp\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 29,
+    "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
+    "lat": "40.57764222225964",
+    "lng": "23.028334438947798",
+    "primary_nft": "HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP",
+    "message": null,
+    "created_at": "2025-05-27T21:04:50.999Z",
+    "pfp_nft": "HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP",
+    "image_url": "https://uploader.irys.xyz/DUTmNC5oKeKZbV1g5CizPL2pdTN9YPG511d7owQGdGWw",
+    "twitter_handle": "@alex_perts",
+    "telegram_handle": "@alexperts",
+    "discord_handle": "alexperts.sol",
+    "nickname": "Alex Perts",
+    "bio": "call me ;)",
+    "governance_power": "0.000000",
+    "native_governance_power": 124693,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 124693,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 124693.845135,
+    "governance_last_updated": "2025-06-04T02:05:35.969Z",
+    "updated_at": "2025-06-05T23:25:48.359Z",
+    "nft_ids": "[\"HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP\",\"AXGJt9AaR4uzzX4mJemMJ5CK16vJXAEgSX9hGn3NoD9t\"]",
+    "nft_metadata": "[{\"mint\":\"HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP\",\"name\":\"PERK #2411\",\"image\":\"https://uploader.irys.xyz/DUTmNC5oKeKZbV1g5CizPL2pdTN9YPG511d7owQGdGWw\",\"collection\":\"PERKS\"},{\"mint\":\"AXGJt9AaR4uzzX4mJemMJ5CK16vJXAEgSX9hGn3NoD9t\",\"name\":\"PERK #816\",\"image\":\"https://uploader.irys.xyz/DxvreoKM7xRgr8ekVvA321wS4cXiEka8LP35dBWXBRLL\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 25,
+    "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
+    "lat": "33.97980872872457",
+    "lng": "-118.30078125000001",
+    "primary_nft": "6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8",
+    "message": null,
+    "created_at": "2025-05-27T18:33:33.238Z",
+    "pfp_nft": "6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8",
+    "image_url": "https://uploader.irys.xyz/4si96WPCEQ3rBenGtnvWXE7htrpkQJb3iBqiKgoCr7Pu",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "SoCal",
+    "bio": "iykyk",
+    "governance_power": "0.000000",
+    "native_governance_power": 29484,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 29484,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 29484.464683,
+    "governance_last_updated": "2025-06-04T02:05:35.991Z",
+    "updated_at": "2025-06-05T23:25:51.847Z",
+    "nft_ids": "[\"6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8\"]",
+    "nft_metadata": "[{\"mint\":\"6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8\",\"name\":\"PERK #3261\",\"image\":\"https://uploader.irys.xyz/4si96WPCEQ3rBenGtnvWXE7htrpkQJb3iBqiKgoCr7Pu\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 24,
+    "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
+    "lat": "38.00745753030866",
+    "lng": "23.822801113128666",
+    "primary_nft": "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ",
+    "message": null,
+    "created_at": "2025-05-27T18:12:38.576Z",
+    "pfp_nft": "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ",
+    "image_url": "https://uploader.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN",
+    "twitter_handle": "",
+    "telegram_handle": "",
+    "discord_handle": "",
+    "nickname": "Miao",
+    "bio": "I am Whale'sFriend burner. I test things. ",
+    "governance_power": "0.000000",
+    "native_governance_power": 12625,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 12625,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 12625.580931,
+    "governance_last_updated": "2025-06-04T02:05:36.031Z",
+    "updated_at": "2025-06-05T23:25:50.481Z",
+    "nft_ids": "[\"FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM\",\"EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C\",\"7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ\"]",
+    "nft_metadata": "[{\"mint\":\"FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM\",\"name\":\"PERK #2153\",\"image\":\"https://uploader.irys.xyz/2fEUCXNznsC2tJHd3imKBwcmsnutnWfh4Z8fbTWLh58G\",\"collection\":\"PERKS\"},{\"mint\":\"EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C\",\"name\":\"PERK #988\",\"image\":\"https://uploader.irys.xyz/4txcPkbjBT8EnuLQVPbZ3PoqWc4miN8tBJ2Hts5W4iW6\",\"collection\":\"PERKS\"},{\"mint\":\"7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ\",\"name\":\"PERK #2785\",\"image\":\"https://uploader.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM",
+      "EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C",
+      "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ"
+    ],
+    "nftMetadata": {
+      "FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM": {
+        "name": "PERK #2153",
+        "image": "https://uploader.irys.xyz/2fEUCXNznsC2tJHd3imKBwcmsnutnWfh4Z8fbTWLh58G"
+      },
+      "EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C": {
+        "name": "PERK #988",
+        "image": "https://uploader.irys.xyz/4txcPkbjBT8EnuLQVPbZ3PoqWc4miN8tBJ2Hts5W4iW6"
+      },
+      "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ": {
+        "name": "PERK #2785",
+        "image": "https://uploader.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN"
+      }
+    }
+  },
+  {
+    "id": 44,
+    "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
+    "lat": "43.774370337943324",
+    "lng": "-88.45642089843751",
+    "primary_nft": "Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2",
+    "message": null,
+    "created_at": "2025-05-31T14:51:02.374Z",
+    "pfp_nft": "Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2",
+    "image_url": "https://uploader.irys.xyz/E3bSCjRTPurYJzz3ryP3EwGomwWMpw9JCNUJx2uAo8eZ",
+    "twitter_handle": "@ReijoVakt",
+    "telegram_handle": "@Reijovakt",
+    "discord_handle": "reijovakt",
+    "nickname": "Reijo",
+    "bio": "40yr old crypto degen, father, engineer",
+    "governance_power": "0.000000",
+    "native_governance_power": 4879,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 4879,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 4879,
+    "governance_last_updated": "2025-06-04T02:05:36.053Z",
+    "updated_at": "2025-06-05T23:25:51.712Z",
+    "nft_ids": "[\"Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2\"]",
+    "nft_metadata": "[{\"mint\":\"Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2\",\"name\":\"PERK #1357\",\"image\":\"https://uploader.irys.xyz/E3bSCjRTPurYJzz3ryP3EwGomwWMpw9JCNUJx2uAo8eZ\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 27,
+    "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
+    "lat": "38.7519413494709",
+    "lng": "-9.168090820312502",
+    "primary_nft": "G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr",
+    "message": null,
+    "created_at": "2025-05-27T19:19:21.975Z",
+    "pfp_nft": "G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr",
+    "image_url": "https://uploader.irys.xyz/3JWxvTrrthiSCo3N3RcEzYQYTsQgPXciA2BtHg5pLdyX",
+    "twitter_handle": "@1xraccoon",
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "legend",
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 2000,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 2000,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 3363730.150474,
+    "governance_last_updated": "2025-06-04T02:05:35.784Z",
+    "updated_at": "2025-06-05T23:25:53.082Z",
+    "nft_ids": "[\"HywjfkGz1BY4bobzFnepxNkp8S3i6EJJ7Wz6X6tEcQyQ\",\"HnpUn8kCK5dCRHNs7iXtPNuTZsLkzzk7hQfdbHSMKACn\",\"G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr\",\"6jty5cJ4bpwwmyzrXLqRkUSZxMe9LttGTUhHdif5m9Fk\",\"pDeKwy15jCWW5MfXjX29YDzxrcBz1pdNHnxncfxvRCi\"]",
+    "nft_metadata": "[{\"mint\":\"HywjfkGz1BY4bobzFnepxNkp8S3i6EJJ7Wz6X6tEcQyQ\",\"name\":\"PERK #3329\",\"image\":\"https://uploader.irys.xyz/BgxeQVRQiLS94cy8AyNKUW2S9KNSVNBvgnfWRskzCXQV\",\"collection\":\"PERKS\"},{\"mint\":\"HnpUn8kCK5dCRHNs7iXtPNuTZsLkzzk7hQfdbHSMKACn\",\"name\":\"PERK #3209\",\"image\":\"https://uploader.irys.xyz/AFfVzjxw29L9KbXjt6R7mXYVPoAC8Ja7Gog9qLEjJfk4\",\"collection\":\"PERKS\"},{\"mint\":\"G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr\",\"name\":\"PERK #211\",\"image\":\"https://uploader.irys.xyz/3JWxvTrrthiSCo3N3RcEzYQYTsQgPXciA2BtHg5pLdyX\",\"collection\":\"PERKS\"},{\"mint\":\"6jty5cJ4bpwwmyzrXLqRkUSZxMe9LttGTUhHdif5m9Fk\",\"name\":\"PERK #2814\",\"image\":\"https://uploader.irys.xyz/8ngK4qzoe1MukSfrcaPiiHzjar21tYiPB2kG69k6Nsd4\",\"collection\":\"PERKS\"},{\"mint\":\"pDeKwy15jCWW5MfXjX29YDzxrcBz1pdNHnxncfxvRCi\",\"name\":\"PERK #361\",\"image\":\"https://uploader.irys.xyz/7gHTp7L365yvnFPhwFzFkDyjdzD8ANeExpfwjFFmzsSp\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 37,
+    "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
+    "lat": "37.98381751538968",
+    "lng": "23.792181015014652",
+    "primary_nft": "4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna",
+    "message": null,
+    "created_at": "2025-05-28T15:14:09.796Z",
+    "pfp_nft": "4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna",
+    "image_url": "https://uploader.irys.xyz/8KWZfJQbnAaBTzMLjfCzcRYctZGJHfLgBPzYveGaL79b",
+    "twitter_handle": "@_dean_machine",
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "DeanMachine",
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 10354147,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 10354147,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 10393142.749205,
+    "governance_last_updated": "2025-06-04T02:05:35.738Z",
+    "updated_at": "2025-06-05T23:25:48.986Z",
+    "nft_ids": "[\"H41VeiQwuawuRvfY2XABBkKN5KpPgDUVvjAEC2vDjf5p\",\"H1oaL3jcXGoAxetd28D4xUr6yxCwq7GoNyryJZdwE8KA\",\"FNQLSFDUpWjMSCr37vabVhSm9oGy982ZFXWs6gHPWS1A\",\"FJk6UBQHkjyhaDk9yvwXMf174fDv5AhcHVPfaocoTXba\",\"F2ufJVf7Fw7BZTc7qjGDLbwGKJAB8uncpJSFYwTDvKm8\",\"DhxjSgRDoiQLG6j1UXgZo5BzHBJ6jzNpdZCEvqr1W5N7\",\"CutM9cFva6EXjd1mSaQPHicaDqnh8MJkVwNAG7ygN7SH\",\"CUv3baZAJAUHoxGp2Pn2aSiikAUYSzruqJTXKgf8F7WR\",\"C4BuNtUYd6iQmStX5QMxaKGQBrLa6ksJ2FrhvrShb1YD\",\"Bs82N2evF1CZxThpT75c5w34qfbu6D5ybKCuk3deiwFf\",\"BeAJ9MbdNXC6aGNz8G8VbLRib63LwUHYwxtXuj2mHPHn\",\"BbekvCWaVwUyQSVWPEfGQhLA98fFzbf6gAvnUih7uiGR\",\"BETaKgPwERd5sQwcDMcrfbjLHg97qCNmpeodQkngdqGJ\",\"AZ2C8aoP89TksV9tXJMPVVVAKhuAcGr7V3Lgepc1Jz51\",\"ABayLW7hujNa3Djadc6ZZqwymkeMjSmH8y9hCRuYfCKE\",\"9tTy9yq1jKzKPpC254jzyUFiRis9NGDHxT3PMfa9fwrG\",\"7zYVJ53eTzBevrN44KsitfTBVDv9tjJ5FNgwKn1Df1UR\",\"72KkHExt8T9oJcip8SHK8U3RaoWFpzacjk3wPMcM4WyJ\",\"6EHq9Aw4WSxcv61zEsf618cYPXVk5EE96B2GdZNPnCzJ\",\"5mztXDbXViJvamxb1J2wrQZHiTKsMhCftRfAbmyfFD7G\",\"54HxeyLDSJ1U8seRCsrvUHV7bUwPgbEAMTBtQDJESZAo\",\"4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna\",\"4mxfjScC7czpqdwjCmyqatW8Emrrk5wErHEqpUo2kbVw\",\"4cm7QuFq3gmg2QBHkuPjc11wRZaM7VL9vPzXzaZg4kGp\",\"4FGrcXV41B5VMqZwnNb3jny4FbbbdiXCyFW3AxRAQNcm\",\"3hLsuWdS5h5pfCPqo44erJ6MeSx78VqbauPMNedvX9Ge\",\"3bbsTx9TVYdnEcLAz6pkdcmMHjxFipHr5cder6ebRtg1\",\"3axMdzXXEvEjNPy5W9vFV25FgFPvZRqaGejQ961EB2dB\",\"2F7gaog4ESQ38HE7AaMcKCoJsnGwQx5dDwT4gW6tX3sX\"]",
+    "nft_metadata": "[{\"mint\":\"H41VeiQwuawuRvfY2XABBkKN5KpPgDUVvjAEC2vDjf5p\",\"name\":\"PERK #1760\",\"image\":\"https://uploader.irys.xyz/GLpJKLohthmiCWNeG4Eh2qs6gffCMYsTaT57R6GEpa5B\",\"collection\":\"PERKS\"},{\"mint\":\"H1oaL3jcXGoAxetd28D4xUr6yxCwq7GoNyryJZdwE8KA\",\"name\":\"PERK #3126\",\"image\":\"https://uploader.irys.xyz/x6X4VRUbQvQ5xDkYMu2xcM4JupWRB688uC7zBaAmqQP\",\"collection\":\"PERKS\"},{\"mint\":\"FNQLSFDUpWjMSCr37vabVhSm9oGy982ZFXWs6gHPWS1A\",\"name\":\"PERK #1102\",\"image\":\"https://uploader.irys.xyz/3o3N65Du2bo5iDuBrMeXSQqxCW4Rs3GPQL6LpN2hdU2p\",\"collection\":\"PERKS\"},{\"mint\":\"FJk6UBQHkjyhaDk9yvwXMf174fDv5AhcHVPfaocoTXba\",\"name\":\"PERK #447\",\"image\":\"https://uploader.irys.xyz/4PCmShu3KTVUEbRaDQbxixYNApord9A4sNqM1NMYe8eL\",\"collection\":\"PERKS\"},{\"mint\":\"F2ufJVf7Fw7BZTc7qjGDLbwGKJAB8uncpJSFYwTDvKm8\",\"name\":\"PERK #3016\",\"image\":\"https://uploader.irys.xyz/29AMS8utt2XSJYqxyVixDPQXwYg1YSkS7bbv1gYeg9rT\",\"collection\":\"PERKS\"},{\"mint\":\"DhxjSgRDoiQLG6j1UXgZo5BzHBJ6jzNpdZCEvqr1W5N7\",\"name\":\"PERK #2258\",\"image\":\"https://uploader.irys.xyz/C8kMjKPFEgTKD5aPHULQ1xJpGEwQSsMdX3vDvFiJYZoZ\",\"collection\":\"PERKS\"},{\"mint\":\"CutM9cFva6EXjd1mSaQPHicaDqnh8MJkVwNAG7ygN7SH\",\"name\":\"PERK #901\",\"image\":\"https://uploader.irys.xyz/8qjwCL5na6XgZDev2ARw82KPA44jtEMzSsvCxQ9wa3z7\",\"collection\":\"PERKS\"},{\"mint\":\"CUv3baZAJAUHoxGp2Pn2aSiikAUYSzruqJTXKgf8F7WR\",\"name\":\"PERK #113\",\"image\":\"https://uploader.irys.xyz/Dg6vgbAzNXwF2jHt7HthVmDVHzPSvCUWSYz3PxsiVs7Q\",\"collection\":\"PERKS\"},{\"mint\":\"C4BuNtUYd6iQmStX5QMxaKGQBrLa6ksJ2FrhvrShb1YD\",\"name\":\"PERK #3132\",\"image\":\"https://uploader.irys.xyz/Dk5rykGUCvyPJ5Pj5rBvXKUzstJewyyBQnccKwFiFafY\",\"collection\":\"PERKS\"},{\"mint\":\"Bs82N2evF1CZxThpT75c5w34qfbu6D5ybKCuk3deiwFf\",\"name\":\"PERK #2287\",\"image\":\"https://uploader.irys.xyz/36hGqS2r9i6HVHDd6ZXsdPqmrWENsoB9Dh8G58pNyZgN\",\"collection\":\"PERKS\"},{\"mint\":\"BeAJ9MbdNXC6aGNz8G8VbLRib63LwUHYwxtXuj2mHPHn\",\"name\":\"PERK #2531\",\"image\":\"https://uploader.irys.xyz/3q7vKfmVXbRVnDoVLuzqQ2MFY287nQSuQe1ABZbHoKNB\",\"collection\":\"PERKS\"},{\"mint\":\"BbekvCWaVwUyQSVWPEfGQhLA98fFzbf6gAvnUih7uiGR\",\"name\":\"PERK #2784\",\"image\":\"https://uploader.irys.xyz/AH5htdTfo9Pju6zXqFPvaQFwUFLdZf7ivDNRqPjDCedK\",\"collection\":\"PERKS\"},{\"mint\":\"BETaKgPwERd5sQwcDMcrfbjLHg97qCNmpeodQkngdqGJ\",\"name\":\"PERK #2948\",\"image\":\"https://uploader.irys.xyz/DVfR8ECJeMfqiyLeccxHKWwXzMUT5TsA9PsKwQPJ2hYw\",\"collection\":\"PERKS\"},{\"mint\":\"AZ2C8aoP89TksV9tXJMPVVVAKhuAcGr7V3Lgepc1Jz51\",\"name\":\"PERK #1258\",\"image\":\"https://uploader.irys.xyz/4cXvVAApUMshFU6wCdiP5SML9G3M3isDYJ3QbfB3LSeN\",\"collection\":\"PERKS\"},{\"mint\":\"ABayLW7hujNa3Djadc6ZZqwymkeMjSmH8y9hCRuYfCKE\",\"name\":\"PERK #2923\",\"image\":\"https://uploader.irys.xyz/2kYsond1E7gmGYeMAUYvA5KHDmCAEoY6W9anPbxQAP2F\",\"collection\":\"PERKS\"},{\"mint\":\"9tTy9yq1jKzKPpC254jzyUFiRis9NGDHxT3PMfa9fwrG\",\"name\":\"PERK #2986\",\"image\":\"https://uploader.irys.xyz/4HEuJ71PnMZCtP2Kh1PKGKms5E1BLKLXCDYpDw6CN82t\",\"collection\":\"PERKS\"},{\"mint\":\"7zYVJ53eTzBevrN44KsitfTBVDv9tjJ5FNgwKn1Df1UR\",\"name\":\"PERK #318\",\"image\":\"https://uploader.irys.xyz/3gt9rQxm8JXaAcWSPe6wKNkN1kRGELaaEAGYKwAB5mJN\",\"collection\":\"PERKS\"},{\"mint\":\"72KkHExt8T9oJcip8SHK8U3RaoWFpzacjk3wPMcM4WyJ\",\"name\":\"PERK #2274\",\"image\":\"https://uploader.irys.xyz/9i7fLB7uRZmVGhvRkY9QSPVu89CYTZg2gNxsQAiJwfvo\",\"collection\":\"PERKS\"},{\"mint\":\"6EHq9Aw4WSxcv61zEsf618cYPXVk5EE96B2GdZNPnCzJ\",\"name\":\"PERK #197\",\"image\":\"https://uploader.irys.xyz/8Zm8pGdNtWBfy1cFQrKFgDowy9CGLfUjGAuybLeAcR4B\",\"collection\":\"PERKS\"},{\"mint\":\"5mztXDbXViJvamxb1J2wrQZHiTKsMhCftRfAbmyfFD7G\",\"name\":\"PERK #2897\",\"image\":\"https://uploader.irys.xyz/EQtWDccN3WTsAsgqBkYPWnCQ9C4snNvNwJofE4hBQ2c1\",\"collection\":\"PERKS\"},{\"mint\":\"54HxeyLDSJ1U8seRCsrvUHV7bUwPgbEAMTBtQDJESZAo\",\"name\":\"PERK #151\",\"image\":\"https://uploader.irys.xyz/3iRyL5LGR7XrbdYFP2SVoSxfZgUdRypgjDgpiFuZ19V5\",\"collection\":\"PERKS\"},{\"mint\":\"4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna\",\"name\":\"PERK #1028\",\"image\":\"https://uploader.irys.xyz/8KWZfJQbnAaBTzMLjfCzcRYctZGJHfLgBPzYveGaL79b\",\"collection\":\"PERKS\"},{\"mint\":\"4mxfjScC7czpqdwjCmyqatW8Emrrk5wErHEqpUo2kbVw\",\"name\":\"PERK #1488\",\"image\":\"https://uploader.irys.xyz/CvzpAvPRg8LdgCT9ALtDSJwZzRHhbW4fD6cLQ4BVx2qB\",\"collection\":\"PERKS\"},{\"mint\":\"4cm7QuFq3gmg2QBHkuPjc11wRZaM7VL9vPzXzaZg4kGp\",\"name\":\"PERK #1694\",\"image\":\"https://uploader.irys.xyz/2nziqb2AzirrnzWSsUuWDBFCm2rVGLRKZdMaj8TQZR8Q\",\"collection\":\"PERKS\"},{\"mint\":\"4FGrcXV41B5VMqZwnNb3jny4FbbbdiXCyFW3AxRAQNcm\",\"name\":\"PERK #719\",\"image\":\"https://uploader.irys.xyz/BZZhN9Bze6Jh2QgQXG5CfrYhw9mmXEpckBgxcppWUtiM\",\"collection\":\"PERKS\"},{\"mint\":\"3hLsuWdS5h5pfCPqo44erJ6MeSx78VqbauPMNedvX9Ge\",\"name\":\"PERK #2115\",\"image\":\"https://uploader.irys.xyz/24PMTn2gQicb627oXEnHnK1jZcjKcdtufJ1MYuyFXVjo\",\"collection\":\"PERKS\"},{\"mint\":\"3bbsTx9TVYdnEcLAz6pkdcmMHjxFipHr5cder6ebRtg1\",\"name\":\"PERK #2564\",\"image\":\"https://uploader.irys.xyz/AgoJ9FAx1DLnR5ByitFjiej38s8H2YpvGiJvsdmEp3Dw\",\"collection\":\"PERKS\"},{\"mint\":\"3axMdzXXEvEjNPy5W9vFV25FgFPvZRqaGejQ961EB2dB\",\"name\":\"PERK #3154\",\"image\":\"https://uploader.irys.xyz/8uGHKnx1khCQUp9o3R7VKdwXfsNPwi9hFfujZQitDNm1\",\"collection\":\"PERKS\"},{\"mint\":\"2F7gaog4ESQ38HE7AaMcKCoJsnGwQx5dDwT4gW6tX3sX\",\"name\":\"PERK #2933\",\"image\":\"https://uploader.irys.xyz/3dAJCUsjgcsU3TTi7XChg1EUvwBEWGYKZ6cCRmrqjan3\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
   },
   {
     "id": 46,
@@ -115,7 +552,7 @@
     "locked_governance_power": "0.000000",
     "unlocked_governance_power": "0.000000",
     "governance_last_updated": null,
-    "updated_at": "2025-06-05T11:13:03.995Z",
+    "updated_at": "2025-06-05T23:25:52.753Z",
     "nft_ids": "[\"J2MtwyrUk7gs15vowFC4NJmuGgFq6Fz2LDk3NLJ3pf2c\",\"GV4XffXQuvHJxDThdJJUgm9y5gmAcPZzgdcUXDXzE2zr\",\"F8N4t22GgcZ67YZYxCjwaYuczMyAWzvncWsbzbaKiJAt\",\"E73niSMEBuqy7Fz569QjXnF4AC11Lwuyi7w6muzCqu5X\",\"Di8gDLWveMmXPPDN9cQm6dck7KbDdtNWPZA2cTEm2V75\",\"DZ4XnaY5GfT1GnPaetx8ursP36LZRNpxhJBEbNqGuEVZ\",\"DFmuqcNKRSC773dUFWb9sm6TqNw94gwUbMRoDSF3L63Q\",\"Cn8JmuRSuXy9PMeP5o9QLf5xDDDR1bUShQRTMs8rrwhL\",\"BJ5GGqYxhW2n7soG924nHMp6275EYFC8Rx2xo7ya3yTJ\",\"ApkZk1Snj7P3avFwZV3v7WaHVh7eHc5JXS1D8nQky6Hd\",\"APwxunird467wVvU76Aax39bzPnr5yeHJ5MT6mJ63BZw\",\"AAeMuVx5T4346bECAD61KMAHvmQBtpqK6AmrwkuDugZ3\",\"9zVZu6eqrcLaaHUoM3ybMwdhig6oFCnKCGCEyyaBc2Si\",\"7zdFivohbHj8DJPQfodtwVVvRwqk11LSYCJK4FPgMyHn\",\"74yRd14JEsdjFZ9tXbmZMYpJEkJB7sBSQv28YKFC5BEU\",\"5Q5gTKTmwzthwHQYcKf2QuPu7kAtqVNxVkPLWn9W6zEu\",\"47StdaHsQdLkn5aTSB8ghoMepELpNczympk4TsSdTHuk\",\"3NGi4v2Vv6Sn12SiPdC6DkPh1cJnZ6tWfyZWz9ytoHdJ\",\"2hw2cC4PFMsFpJzjnQ2HQVinDtKNoCgeRhL36aKyqZhQ\"]",
     "nft_metadata": "[{\"mint\":\"J2MtwyrUk7gs15vowFC4NJmuGgFq6Fz2LDk3NLJ3pf2c\",\"name\":\"PERK #754\",\"image\":\"https://uploader.irys.xyz/8Yv8rvo8XDByxJKLqehyeRpnajB18PrDywEEoDviPuaf\",\"collection\":\"PERKS\"},{\"mint\":\"GV4XffXQuvHJxDThdJJUgm9y5gmAcPZzgdcUXDXzE2zr\",\"name\":\"PERK #1122\",\"image\":\"https://uploader.irys.xyz/9sMoZHPjYvPw4bmRM7NpouqYSUx9B9pX4ig4VqY8vkpH\",\"collection\":\"PERKS\"},{\"mint\":\"F8N4t22GgcZ67YZYxCjwaYuczMyAWzvncWsbzbaKiJAt\",\"name\":\"PERK #2435\",\"image\":\"https://uploader.irys.xyz/2KCoviu9kEfQpRM84T94xJr8uDWyJpcLKP2P6AptdijC\",\"collection\":\"PERKS\"},{\"mint\":\"E73niSMEBuqy7Fz569QjXnF4AC11Lwuyi7w6muzCqu5X\",\"name\":\"PERK #430\",\"image\":\"https://uploader.irys.xyz/3AM32MNNDQ3FLY8iiFm1tVvXCptVhzJWToKCdR9MCAmx\",\"collection\":\"PERKS\"},{\"mint\":\"Di8gDLWveMmXPPDN9cQm6dck7KbDdtNWPZA2cTEm2V75\",\"name\":\"PERK #749\",\"image\":\"https://uploader.irys.xyz/7ZXR3AbvpSSNAV6vRhiUBkndVpuT1qFtDrpN4uUBTe7N\",\"collection\":\"PERKS\"},{\"mint\":\"DZ4XnaY5GfT1GnPaetx8ursP36LZRNpxhJBEbNqGuEVZ\",\"name\":\"PERK #2395\",\"image\":\"https://uploader.irys.xyz/3wpo1mrgxU8oemHnP6koGM2GwJEthJecbWpy6oTMmus4\",\"collection\":\"PERKS\"},{\"mint\":\"DFmuqcNKRSC773dUFWb9sm6TqNw94gwUbMRoDSF3L63Q\",\"name\":\"PERK #2210\",\"image\":\"https://uploader.irys.xyz/D3EJjCNE4HT6MDPLoPKf7M7poZTBg9B32TgcLPup3SjT\",\"collection\":\"PERKS\"},{\"mint\":\"Cn8JmuRSuXy9PMeP5o9QLf5xDDDR1bUShQRTMs8rrwhL\",\"name\":\"PERK #398\",\"image\":\"https://uploader.irys.xyz/B2x1D5X5gLmfzQLey7WjR2EGaogMRFu6LNhtMSRGTyBu\",\"collection\":\"PERKS\"},{\"mint\":\"BJ5GGqYxhW2n7soG924nHMp6275EYFC8Rx2xo7ya3yTJ\",\"name\":\"PERK #1118\",\"image\":\"https://uploader.irys.xyz/9G3H3CpjkP6TYUSFwZzZ6qaxLpyHqDGneSg4ujwbXUG4\",\"collection\":\"PERKS\"},{\"mint\":\"ApkZk1Snj7P3avFwZV3v7WaHVh7eHc5JXS1D8nQky6Hd\",\"name\":\"PERK #397\",\"image\":\"https://uploader.irys.xyz/843Wtip5nUaYkZ9fQkpkhNrA7pBLsdgHAfttyLWr6xMK\",\"collection\":\"PERKS\"},{\"mint\":\"APwxunird467wVvU76Aax39bzPnr5yeHJ5MT6mJ63BZw\",\"name\":\"PERK #789\",\"image\":\"https://uploader.irys.xyz/52fYWiR1h7yJxL5bcjn4EFZyvFBGD6qwM677Wv5Xsz9C\",\"collection\":\"PERKS\"},{\"mint\":\"AAeMuVx5T4346bECAD61KMAHvmQBtpqK6AmrwkuDugZ3\",\"name\":\"PERK #3014\",\"image\":\"https://uploader.irys.xyz/BrCnbzJxf34J2c1R8HpK7uEHvixzKU4hYrcEcjRcPr4J\",\"collection\":\"PERKS\"},{\"mint\":\"9zVZu6eqrcLaaHUoM3ybMwdhig6oFCnKCGCEyyaBc2Si\",\"name\":\"PERK #2775\",\"image\":\"https://uploader.irys.xyz/5NggVaxZT2uAWFYddAqX5xCy3m4cKYsDTTjvTD5LEGf4\",\"collection\":\"PERKS\"},{\"mint\":\"7zdFivohbHj8DJPQfodtwVVvRwqk11LSYCJK4FPgMyHn\",\"name\":\"PERK #1041\",\"image\":\"https://uploader.irys.xyz/GqJh7sFmmPbbRk3of2k9KdhVgYCuHKkNG1Std8yh7Rvm\",\"collection\":\"PERKS\"},{\"mint\":\"74yRd14JEsdjFZ9tXbmZMYpJEkJB7sBSQv28YKFC5BEU\",\"name\":\"PERK #868\",\"image\":\"https://uploader.irys.xyz/NSLKKvatfzmk9edUJzswhXJZuSJVm1Ept72sZGga49H\",\"collection\":\"PERKS\"},{\"mint\":\"5Q5gTKTmwzthwHQYcKf2QuPu7kAtqVNxVkPLWn9W6zEu\",\"name\":\"PERK #2856\",\"image\":\"https://uploader.irys.xyz/9NzAxqihnnGC4fq5dvauLWBBtGfo84qsMgEMTNxAMt2n\",\"collection\":\"PERKS\"},{\"mint\":\"47StdaHsQdLkn5aTSB8ghoMepELpNczympk4TsSdTHuk\",\"name\":\"PERK #2944\",\"image\":\"https://uploader.irys.xyz/4ZF6Jiy3t94MtH1ZDfsDADEC8a7jLhnmG4M3GhxAymmp\",\"collection\":\"PERKS\"},{\"mint\":\"3NGi4v2Vv6Sn12SiPdC6DkPh1cJnZ6tWfyZWz9ytoHdJ\",\"name\":\"PERK #3322\",\"image\":\"https://uploader.irys.xyz/B2hr8gginqVcxATE3yVCfzp2B7n92nKNsZw727HoyhYN\",\"collection\":\"PERKS\"},{\"mint\":\"2hw2cC4PFMsFpJzjnQ2HQVinDtKNoCgeRhL36aKyqZhQ\",\"name\":\"PERK #2031\",\"image\":\"https://uploader.irys.xyz/2s8G9PFza1vqgw2ksCsizaocyw2Po4ZxywkDbCmAed85\",\"collection\":\"PERKS\"}]",
     "nfts": [
@@ -219,824 +656,34 @@
     }
   },
   {
-    "id": 27,
-    "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
-    "lat": "38.7519413494709",
-    "lng": "-9.168090820312502",
-    "primary_nft": "G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr",
+    "id": 30,
+    "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
+    "lat": "37.071768850329335",
+    "lng": "25.400991439819336",
+    "primary_nft": "D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX",
     "message": null,
-    "created_at": "2025-05-27T19:19:21.975Z",
-    "pfp_nft": "G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr",
-    "image_url": "https://uploader.irys.xyz/3JWxvTrrthiSCo3N3RcEzYQYTsQgPXciA2BtHg5pLdyX",
-    "twitter_handle": "@1xraccoon",
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "legend",
-    "bio": null,
+    "created_at": "2025-05-27T21:22:50.256Z",
+    "pfp_nft": "D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX",
+    "image_url": "https://uploader.irys.xyz/5kHD3V99f8W1Q3SBmV7ejGRJotAoeL2DETN3XbJ69MHN",
+    "twitter_handle": "@tttbymila",
+    "telegram_handle": "@tttbymila",
+    "discord_handle": "tttbymila",
+    "nickname": "Mila",
+    "bio": "Islandgirl.sol",
     "governance_power": "0.000000",
     "native_governance_power": 0,
     "delegated_governance_power": 0,
     "native_power": "0.000000",
     "delegated_power": "0.000000",
     "total_governance_power": 0,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 3363730.150474,
-    "governance_last_updated": "2025-06-04T02:05:35.784Z",
-    "updated_at": "2025-06-05T21:12:06.289Z",
-    "nft_ids": "[\"HywjfkGz1BY4bobzFnepxNkp8S3i6EJJ7Wz6X6tEcQyQ\",\"HnpUn8kCK5dCRHNs7iXtPNuTZsLkzzk7hQfdbHSMKACn\",\"G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr\",\"6jty5cJ4bpwwmyzrXLqRkUSZxMe9LttGTUhHdif5m9Fk\",\"pDeKwy15jCWW5MfXjX29YDzxrcBz1pdNHnxncfxvRCi\"]",
-    "nft_metadata": "[{\"mint\":\"HywjfkGz1BY4bobzFnepxNkp8S3i6EJJ7Wz6X6tEcQyQ\",\"name\":\"PERK #3329\",\"image\":\"https://uploader.irys.xyz/BgxeQVRQiLS94cy8AyNKUW2S9KNSVNBvgnfWRskzCXQV\",\"collection\":\"PERKS\"},{\"mint\":\"HnpUn8kCK5dCRHNs7iXtPNuTZsLkzzk7hQfdbHSMKACn\",\"name\":\"PERK #3209\",\"image\":\"https://uploader.irys.xyz/AFfVzjxw29L9KbXjt6R7mXYVPoAC8Ja7Gog9qLEjJfk4\",\"collection\":\"PERKS\"},{\"mint\":\"G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr\",\"name\":\"PERK #211\",\"image\":\"https://uploader.irys.xyz/3JWxvTrrthiSCo3N3RcEzYQYTsQgPXciA2BtHg5pLdyX\",\"collection\":\"PERKS\"},{\"mint\":\"6jty5cJ4bpwwmyzrXLqRkUSZxMe9LttGTUhHdif5m9Fk\",\"name\":\"PERK #2814\",\"image\":\"https://uploader.irys.xyz/8ngK4qzoe1MukSfrcaPiiHzjar21tYiPB2kG69k6Nsd4\",\"collection\":\"PERKS\"},{\"mint\":\"pDeKwy15jCWW5MfXjX29YDzxrcBz1pdNHnxncfxvRCi\",\"name\":\"PERK #361\",\"image\":\"https://uploader.irys.xyz/7gHTp7L365yvnFPhwFzFkDyjdzD8ANeExpfwjFFmzsSp\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "HywjfkGz1BY4bobzFnepxNkp8S3i6EJJ7Wz6X6tEcQyQ",
-      "HnpUn8kCK5dCRHNs7iXtPNuTZsLkzzk7hQfdbHSMKACn",
-      "G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr",
-      "6jty5cJ4bpwwmyzrXLqRkUSZxMe9LttGTUhHdif5m9Fk",
-      "pDeKwy15jCWW5MfXjX29YDzxrcBz1pdNHnxncfxvRCi"
-    ],
-    "nftMetadata": {
-      "HywjfkGz1BY4bobzFnepxNkp8S3i6EJJ7Wz6X6tEcQyQ": {
-        "name": "PERK #3329",
-        "image": "https://uploader.irys.xyz/BgxeQVRQiLS94cy8AyNKUW2S9KNSVNBvgnfWRskzCXQV"
-      },
-      "HnpUn8kCK5dCRHNs7iXtPNuTZsLkzzk7hQfdbHSMKACn": {
-        "name": "PERK #3209",
-        "image": "https://uploader.irys.xyz/AFfVzjxw29L9KbXjt6R7mXYVPoAC8Ja7Gog9qLEjJfk4"
-      },
-      "G2GxvmBZmLHeUJRAiR9ev2BLTdSrPzQrfvXwztH7QEgr": {
-        "name": "PERK #211",
-        "image": "https://uploader.irys.xyz/3JWxvTrrthiSCo3N3RcEzYQYTsQgPXciA2BtHg5pLdyX"
-      },
-      "6jty5cJ4bpwwmyzrXLqRkUSZxMe9LttGTUhHdif5m9Fk": {
-        "name": "PERK #2814",
-        "image": "https://uploader.irys.xyz/8ngK4qzoe1MukSfrcaPiiHzjar21tYiPB2kG69k6Nsd4"
-      },
-      "pDeKwy15jCWW5MfXjX29YDzxrcBz1pdNHnxncfxvRCi": {
-        "name": "PERK #361",
-        "image": "https://uploader.irys.xyz/7gHTp7L365yvnFPhwFzFkDyjdzD8ANeExpfwjFFmzsSp"
-      }
-    }
-  },
-  {
-    "id": 42,
-    "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
-    "lat": "38.776451965539245",
-    "lng": "-105.29296875",
-    "primary_nft": "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY",
-    "message": null,
-    "created_at": "2025-05-29T16:56:19.589Z",
-    "pfp_nft": "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY",
-    "image_url": "https://uploader.irys.xyz/8znCmJ7DMmthuBvYx7W6rNc6PHnw8LJv3VxtVyf5HLCn",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "KO3",
-    "bio": null,
-    "governance_power": "0.000000",
-    "native_governance_power": 1349608,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 1349608,
-    "locked_governance_power": 1223263.49902624,
-    "unlocked_governance_power": 157343.70335999998,
-    "governance_last_updated": "2025-06-04T02:05:35.807Z",
-    "updated_at": "2025-06-05T21:12:01.166Z",
-    "nft_ids": "[\"JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo\",\"Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX\",\"9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q\",\"6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY\",\"5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk\",\"22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN\"]",
-    "nft_metadata": "[{\"mint\":\"JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo\",\"name\":\"PERK #3266\",\"image\":\"https://uploader.irys.xyz/HJ31Z8javis3Eg79GdKN1gxWQUtT48AnAh5WLykbhge9\",\"collection\":\"PERKS\"},{\"mint\":\"Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX\",\"name\":\"PERK #2249\",\"image\":\"https://uploader.irys.xyz/8CQK1n6LGnfvGDAf8oqh5CJoF2CVm5hcTHgkivxydS8S\",\"collection\":\"PERKS\"},{\"mint\":\"9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q\",\"name\":\"PERK #713\",\"image\":\"https://uploader.irys.xyz/DwZBfr7KBEPoKkHUcrU356k2ED5WDWNZ9TEMNiB8uSTS\",\"collection\":\"PERKS\"},{\"mint\":\"6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY\",\"name\":\"PERK #1259\",\"image\":\"https://uploader.irys.xyz/8znCmJ7DMmthuBvYx7W6rNc6PHnw8LJv3VxtVyf5HLCn\",\"collection\":\"PERKS\"},{\"mint\":\"5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk\",\"name\":\"PERK #828\",\"image\":\"https://uploader.irys.xyz/4MAPgPvtTLRfJWgt9aMuQVZXgtT8WuyxxhucdLq5yoHV\",\"collection\":\"PERKS\"},{\"mint\":\"22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN\",\"name\":\"PERK #2352\",\"image\":\"https://uploader.irys.xyz/5maTbiHJav1SvpAfSkFmbc8V7wQgdznugpx4btMhQUFj\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo",
-      "Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX",
-      "9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q",
-      "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY",
-      "5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk",
-      "22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN"
-    ],
-    "nftMetadata": {
-      "JA5PrtPfBxqiGH687pr4zNbZ2yYwcSS7p5noqApyZdUo": {
-        "name": "PERK #3266",
-        "image": "https://uploader.irys.xyz/HJ31Z8javis3Eg79GdKN1gxWQUtT48AnAh5WLykbhge9"
-      },
-      "Fq2J5tpcgRqsLexHNjLcDgP1n7PeT9jbZTVRzgeH78UX": {
-        "name": "PERK #2249",
-        "image": "https://uploader.irys.xyz/8CQK1n6LGnfvGDAf8oqh5CJoF2CVm5hcTHgkivxydS8S"
-      },
-      "9fyW7T2w7wcDjhw9FEh3AJqn8JwifUujd6NpnjJiHY3Q": {
-        "name": "PERK #713",
-        "image": "https://uploader.irys.xyz/DwZBfr7KBEPoKkHUcrU356k2ED5WDWNZ9TEMNiB8uSTS"
-      },
-      "6g7iXLr71YiL2JVXh2WdDZYQz3gjRN1MH1bLbrtUWgvY": {
-        "name": "PERK #1259",
-        "image": "https://uploader.irys.xyz/8znCmJ7DMmthuBvYx7W6rNc6PHnw8LJv3VxtVyf5HLCn"
-      },
-      "5XyFhpKDyjggQfhnujK4FioQ2S9nTS59eVcsMLRsycbk": {
-        "name": "PERK #828",
-        "image": "https://uploader.irys.xyz/4MAPgPvtTLRfJWgt9aMuQVZXgtT8WuyxxhucdLq5yoHV"
-      },
-      "22LJNB3kc5sShRtBKVsdPtHfV9fhHHLSuYUcbeBhCrEN": {
-        "name": "PERK #2352",
-        "image": "https://uploader.irys.xyz/5maTbiHJav1SvpAfSkFmbc8V7wQgdznugpx4btMhQUFj"
-      }
-    }
-  },
-  {
-    "id": 47,
-    "wallet": "CLcXVZpCwF9QH2aNjFhPSzyeUVifkP9W88WHwfe6sMww",
-    "lat": "5.1259615832098975",
-    "lng": "7.031250000000001",
-    "primary_nft": "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun",
-    "message": null,
-    "created_at": "2025-06-05T03:38:38.084Z",
-    "pfp_nft": "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun",
-    "image_url": "https://uploader.irys.xyz/6syTLiPtoEm4ApQ1dMsvVRBfsEvcNf9V7Upd1zo2bJP5",
-    "twitter_handle": "scientist__joe",
-    "telegram_handle": "scientistjoe",
-    "discord_handle": "scientistjoe",
-    "nickname": "scientistjoe",
-    "bio": "",
-    "governance_power": "0.000000",
-    "native_governance_power": 1007398,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 1007398,
     "locked_governance_power": "0.000000",
     "unlocked_governance_power": "0.000000",
     "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:07.279Z",
-    "nft_ids": "[\"DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun\"]",
-    "nft_metadata": "[{\"mint\":\"DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun\",\"name\":\"PERK #1036\",\"image\":\"https://uploader.irys.xyz/6syTLiPtoEm4ApQ1dMsvVRBfsEvcNf9V7Upd1zo2bJP5\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun"
-    ],
-    "nftMetadata": {
-      "DeWWKq6Yrzuz51WD7EstWpyYxEnVwsANi3YjbY3ubkun": {
-        "name": "PERK #1036",
-        "image": "https://uploader.irys.xyz/6syTLiPtoEm4ApQ1dMsvVRBfsEvcNf9V7Upd1zo2bJP5"
-      }
-    }
-  },
-  {
-    "id": 45,
-    "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
-    "lat": "32.988003790662",
-    "lng": "-117.26257324218751",
-    "primary_nft": "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx",
-    "message": null,
-    "created_at": "2025-06-02T13:35:12.256Z",
-    "pfp_nft": "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx",
-    "image_url": "https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "Moxie",
-    "bio": null,
-    "governance_power": "0.000000",
-    "native_governance_power": 536529,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 536529,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 536529.257549,
-    "governance_last_updated": "2025-06-04T02:05:35.829Z",
-    "updated_at": "2025-06-05T21:12:03.416Z",
-    "nft_ids": "[\"HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD\",\"GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn\",\"AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx\",\"qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7\"]",
-    "nft_metadata": "[{\"mint\":\"HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD\",\"name\":\"PERK #2743\",\"image\":\"https://uploader.irys.xyz/F1R4ieBcjuhPZC8jX7GAcwfkrWU3LAeeTA2cVTScyCdJ\",\"collection\":\"PERKS\"},{\"mint\":\"GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn\",\"name\":\"PERK #523\",\"image\":\"https://uploader.irys.xyz/HKsH6gkiJgUCVawg1qxRihH8k54LY3FmGa8yo37JDRJa\",\"collection\":\"PERKS\"},{\"mint\":\"AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx\",\"name\":\"PERK #2689\",\"image\":\"https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL\",\"collection\":\"PERKS\"},{\"mint\":\"qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7\",\"name\":\"PERK #986\",\"image\":\"https://uploader.irys.xyz/7UZFP7G9bxPh667yeTPJoT6noD46UhKebTtAEoswF5eH\",\"collection\":\"PERKS\"}]",
+    "updated_at": "2025-06-05T23:25:50.557Z",
+    "nft_ids": "[\"D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX\"]",
+    "nft_metadata": "[{\"mint\":\"D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX\",\"name\":\"PERK #2373\",\"image\":\"https://uploader.irys.xyz/5kHD3V99f8W1Q3SBmV7ejGRJotAoeL2DETN3XbJ69MHN\",\"collection\":\"PERKS\"}]",
     "nfts": [],
     "nftMetadata": {}
-  },
-  {
-    "id": 35,
-    "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
-    "lat": "52.010827123313625",
-    "lng": "4.359512329101563",
-    "primary_nft": "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM",
-    "message": null,
-    "created_at": "2025-05-28T12:23:47.632Z",
-    "pfp_nft": "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM",
-    "image_url": "https://uploader.irys.xyz/Gqi1bYH3aWD3Abg593L8BFrWGpapaRWp1WsJPd2kZjro",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "nurtan",
-    "bio": "Logistics and data science background, exploring AI and building my bridge to Web3 as a Solana maxi.",
-    "governance_power": "0.000000",
-    "native_governance_power": 398681,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 398681,
-    "locked_governance_power": 466147.15222772094,
-    "unlocked_governance_power": 50000,
-    "governance_last_updated": "2025-06-04T02:05:35.852Z",
-    "updated_at": "2025-06-05T21:12:06.785Z",
-    "nft_ids": "[\"GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A\",\"BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz\",\"2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM\"]",
-    "nft_metadata": "[{\"mint\":\"GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A\",\"name\":\"PERK #3102\",\"image\":\"https://uploader.irys.xyz/9CR3Vvxc1VHk41DUNKZfcnPUDwH7tDrCDCU2PZMsy9a6\",\"collection\":\"PERKS\"},{\"mint\":\"BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz\",\"name\":\"PERK #858\",\"image\":\"https://uploader.irys.xyz/BbLpLb4yfFBbXES7ohpaE45jf51MCDwYWacmMC2Fdj58\",\"collection\":\"PERKS\"},{\"mint\":\"2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM\",\"name\":\"PERK #1255\",\"image\":\"https://uploader.irys.xyz/Gqi1bYH3aWD3Abg593L8BFrWGpapaRWp1WsJPd2kZjro\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A",
-      "BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz",
-      "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM"
-    ],
-    "nftMetadata": {
-      "GoAd3jWaMbg9BKLhXUt3D6dvPDrsnD4y5SiGkMS7cR6A": {
-        "name": "PERK #3102",
-        "image": "https://uploader.irys.xyz/9CR3Vvxc1VHk41DUNKZfcnPUDwH7tDrCDCU2PZMsy9a6"
-      },
-      "BJfPcmtVMkHTwbcqQB5uqehubKNr7DLHnAZmj3i5Jgiz": {
-        "name": "PERK #858",
-        "image": "https://uploader.irys.xyz/BbLpLb4yfFBbXES7ohpaE45jf51MCDwYWacmMC2Fdj58"
-      },
-      "2CixarYTXGsspG39JDxwZXWonuqNvkBdLuxEqbVuDqeM": {
-        "name": "PERK #1255",
-        "image": "https://uploader.irys.xyz/Gqi1bYH3aWD3Abg593L8BFrWGpapaRWp1WsJPd2kZjro"
-      }
-    }
-  },
-  {
-    "id": 32,
-    "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
-    "lat": "16.275323808198852",
-    "lng": "80.16723632812501",
-    "primary_nft": "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp",
-    "message": null,
-    "created_at": "2025-05-28T03:33:03.979Z",
-    "pfp_nft": "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp",
-    "image_url": "https://uploader.irys.xyz/Ewnm9HrxaShqMyxebGpPCQsTKQguBub9CGF717eh7yV7",
-    "twitter_handle": "yamparalarahul1",
-    "telegram_handle": "rahuluxdesigner",
-    "discord_handle": "yamparala",
-    "nickname": "Yamparala Rahul",
-    "bio": "UX Designer",
-    "governance_power": "0.000000",
-    "native_governance_power": 377734,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 377734,
-    "locked_governance_power": 377734.98739922,
-    "unlocked_governance_power": 16097.79386,
-    "governance_last_updated": "2025-06-04T02:05:35.874Z",
-    "updated_at": "2025-06-05T21:12:05.804Z",
-    "nft_ids": "[\"2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp\"]",
-    "nft_metadata": "[{\"mint\":\"2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp\",\"name\":\"PERK #3224\",\"image\":\"https://uploader.irys.xyz/Ewnm9HrxaShqMyxebGpPCQsTKQguBub9CGF717eh7yV7\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp"
-    ],
-    "nftMetadata": {
-      "2HGzCZTxZiMDTrqzbGwud2a7aUY9JKsyXXyJ6Nk5xpcp": {
-        "name": "PERK #3224",
-        "image": "https://uploader.irys.xyz/Ewnm9HrxaShqMyxebGpPCQsTKQguBub9CGF717eh7yV7"
-      }
-    }
-  },
-  {
-    "id": 40,
-    "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
-    "lat": "38.02456557631515",
-    "lng": "23.799819946289062",
-    "primary_nft": "DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29",
-    "message": null,
-    "created_at": "2025-05-28T15:49:58.506Z",
-    "pfp_nft": "DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29",
-    "image_url": "https://uploader.irys.xyz/6qpYU69VzWYkmFA384EAmTbD8h66uY5Gi96P5wtaXo9E",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "Titanmaker",
-    "bio": null,
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 200000,
-    "governance_last_updated": "2025-06-04T02:05:35.897Z",
-    "updated_at": "2025-06-05T21:12:05.286Z",
-    "nft_ids": "[\"HpGjsgdajjfNyqmxuwCjZA3MaurtXmNxqTfUf45KyWb9\",\"DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29\",\"5yqftFSs7UYUFp1FdJZ1TxvJgZjjFSiFXgbcze8xw9s2\"]",
-    "nft_metadata": "[{\"mint\":\"HpGjsgdajjfNyqmxuwCjZA3MaurtXmNxqTfUf45KyWb9\",\"name\":\"PERK #2820\",\"image\":\"https://uploader.irys.xyz/3ZeaPxtmbdAmqdn86APKEdRzXTXB4n8NFPKpWPP1RV1r\",\"collection\":\"PERKS\"},{\"mint\":\"DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29\",\"name\":\"PERK #1110\",\"image\":\"https://uploader.irys.xyz/6qpYU69VzWYkmFA384EAmTbD8h66uY5Gi96P5wtaXo9E\",\"collection\":\"PERKS\"},{\"mint\":\"5yqftFSs7UYUFp1FdJZ1TxvJgZjjFSiFXgbcze8xw9s2\",\"name\":\"PERK #2932\",\"image\":\"https://uploader.irys.xyz/75VaVzEgECNtuYosPUZR5bK5NKGXWhKzF4YVg3hNEika\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "HpGjsgdajjfNyqmxuwCjZA3MaurtXmNxqTfUf45KyWb9",
-      "DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29",
-      "5yqftFSs7UYUFp1FdJZ1TxvJgZjjFSiFXgbcze8xw9s2"
-    ],
-    "nftMetadata": {
-      "HpGjsgdajjfNyqmxuwCjZA3MaurtXmNxqTfUf45KyWb9": {
-        "name": "PERK #2820",
-        "image": "https://uploader.irys.xyz/3ZeaPxtmbdAmqdn86APKEdRzXTXB4n8NFPKpWPP1RV1r"
-      },
-      "DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29": {
-        "name": "PERK #1110",
-        "image": "https://uploader.irys.xyz/6qpYU69VzWYkmFA384EAmTbD8h66uY5Gi96P5wtaXo9E"
-      },
-      "5yqftFSs7UYUFp1FdJZ1TxvJgZjjFSiFXgbcze8xw9s2": {
-        "name": "PERK #2932",
-        "image": "https://uploader.irys.xyz/75VaVzEgECNtuYosPUZR5bK5NKGXWhKzF4YVg3hNEika"
-      }
-    }
-  },
-  {
-    "id": 43,
-    "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
-    "lat": "37.983092681195544",
-    "lng": "23.791677498618913",
-    "primary_nft": "9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM",
-    "message": null,
-    "created_at": "2025-05-30T08:07:12.571Z",
-    "pfp_nft": "9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM",
-    "image_url": "https://uploader.irys.xyz/ALJ7vTdMRSCrbbTCACQ3ALe7cb2fGuXPZhNVfFT5YJSM",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": null,
-    "bio": "What you wanna know?",
-    "governance_power": "0.000000",
-    "native_governance_power": 143635,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 143635,
-    "locked_governance_power": 144717.419919228,
-    "unlocked_governance_power": 0,
-    "governance_last_updated": "2025-06-04T02:05:35.925Z",
-    "updated_at": "2025-06-05T21:12:07.783Z",
-    "nft_ids": "[\"9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM\",\"3HjWfhCcYMdqp7xxoyGRs5Bvyafrks3y3LKwFn7TDoiQ\"]",
-    "nft_metadata": "[{\"mint\":\"9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM\",\"name\":\"PERK #827\",\"image\":\"https://uploader.irys.xyz/ALJ7vTdMRSCrbbTCACQ3ALe7cb2fGuXPZhNVfFT5YJSM\",\"collection\":\"PERKS\"},{\"mint\":\"3HjWfhCcYMdqp7xxoyGRs5Bvyafrks3y3LKwFn7TDoiQ\",\"name\":\"PERK #860\",\"image\":\"https://uploader.irys.xyz/E3zHQWHrcfGgtC5M3aYTKVTWSjz2nPNS4A1nbCqPXCgp\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM",
-      "3HjWfhCcYMdqp7xxoyGRs5Bvyafrks3y3LKwFn7TDoiQ"
-    ],
-    "nftMetadata": {
-      "9q7LwFzFNokXrNG4kioFHVpnR4pyHyv9BWnowtqXfEmM": {
-        "name": "PERK #827",
-        "image": "https://uploader.irys.xyz/ALJ7vTdMRSCrbbTCACQ3ALe7cb2fGuXPZhNVfFT5YJSM"
-      },
-      "3HjWfhCcYMdqp7xxoyGRs5Bvyafrks3y3LKwFn7TDoiQ": {
-        "name": "PERK #860",
-        "image": "https://uploader.irys.xyz/E3zHQWHrcfGgtC5M3aYTKVTWSjz2nPNS4A1nbCqPXCgp"
-      }
-    }
-  },
-  {
-    "id": 33,
-    "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
-    "lat": "52.482780222078226",
-    "lng": "-0.5273437500000001",
-    "primary_nft": "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am",
-    "message": null,
-    "created_at": "2025-05-28T06:05:33.705Z",
-    "pfp_nft": "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am",
-    "image_url": "https://uploader.irys.xyz/23pQgpLgyuQAKfz3UwddahyRvo894Meo9FmT3Trh756x",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": "portor_",
-    "nickname": "Portor",
-    "bio": null,
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 126779.222404,
-    "governance_last_updated": "2025-06-04T02:05:35.948Z",
-    "updated_at": "2025-06-05T21:12:03.714Z",
-    "nft_ids": "[\"CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB\",\"57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am\"]",
-    "nft_metadata": "[{\"mint\":\"CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB\",\"name\":\"PERK #675\",\"image\":\"https://uploader.irys.xyz/9ATQMgJ3TXNQ9QBVgFv8ZXxQVS6VNgyBKCVrpH7fdd51\",\"collection\":\"PERKS\"},{\"mint\":\"57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am\",\"name\":\"PERK #3304\",\"image\":\"https://uploader.irys.xyz/23pQgpLgyuQAKfz3UwddahyRvo894Meo9FmT3Trh756x\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "F991zRCVwZ5zZwEBpbp5qwFgwwJ2yxSADjBYfgogRgjt",
-      "CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB",
-      "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am"
-    ],
-    "nftMetadata": {
-      "F991zRCVwZ5zZwEBpbp5qwFgwwJ2yxSADjBYfgogRgjt": {
-        "name": "PERK #2537",
-        "image": "https://uploader.irys.xyz/7tAnhvgZJZS4fYXPXG5abK8cxbiwuyavbTRBqg3KnGRQ"
-      },
-      "CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB": {
-        "name": "PERK #675",
-        "image": "https://uploader.irys.xyz/9ATQMgJ3TXNQ9QBVgFv8ZXxQVS6VNgyBKCVrpH7fdd51"
-      },
-      "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am": {
-        "name": "PERK #3304",
-        "image": "https://uploader.irys.xyz/23pQgpLgyuQAKfz3UwddahyRvo894Meo9FmT3Trh756x"
-      }
-    }
-  },
-  {
-    "id": 29,
-    "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
-    "lat": "40.57764222225964",
-    "lng": "23.028334438947798",
-    "primary_nft": "HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP",
-    "message": null,
-    "created_at": "2025-05-27T21:04:50.999Z",
-    "pfp_nft": "HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP",
-    "image_url": "https://uploader.irys.xyz/DUTmNC5oKeKZbV1g5CizPL2pdTN9YPG511d7owQGdGWw",
-    "twitter_handle": "@alex_perts",
-    "telegram_handle": "@alexperts",
-    "discord_handle": "alexperts.sol",
-    "nickname": "Alex Perts",
-    "bio": "call me ;)",
-    "governance_power": "0.000000",
-    "native_governance_power": 124693,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 124693,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 124693.845135,
-    "governance_last_updated": "2025-06-04T02:05:35.969Z",
-    "updated_at": "2025-06-05T21:11:59.097Z",
-    "nft_ids": "[\"HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP\",\"AXGJt9AaR4uzzX4mJemMJ5CK16vJXAEgSX9hGn3NoD9t\"]",
-    "nft_metadata": "[{\"mint\":\"HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP\",\"name\":\"PERK #2411\",\"image\":\"https://uploader.irys.xyz/DUTmNC5oKeKZbV1g5CizPL2pdTN9YPG511d7owQGdGWw\",\"collection\":\"PERKS\"},{\"mint\":\"AXGJt9AaR4uzzX4mJemMJ5CK16vJXAEgSX9hGn3NoD9t\",\"name\":\"PERK #816\",\"image\":\"https://uploader.irys.xyz/DxvreoKM7xRgr8ekVvA321wS4cXiEka8LP35dBWXBRLL\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP",
-      "AXGJt9AaR4uzzX4mJemMJ5CK16vJXAEgSX9hGn3NoD9t"
-    ],
-    "nftMetadata": {
-      "HPKcuecno2vH4h7Frtth8oY3eVaWrWh9hSUVrnCF8BYP": {
-        "name": "PERK #2411",
-        "image": "https://uploader.irys.xyz/DUTmNC5oKeKZbV1g5CizPL2pdTN9YPG511d7owQGdGWw"
-      },
-      "AXGJt9AaR4uzzX4mJemMJ5CK16vJXAEgSX9hGn3NoD9t": {
-        "name": "PERK #816",
-        "image": "https://uploader.irys.xyz/DxvreoKM7xRgr8ekVvA321wS4cXiEka8LP35dBWXBRLL"
-      }
-    }
-  },
-  {
-    "id": 37,
-    "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
-    "lat": "37.98381751538968",
-    "lng": "23.792181015014652",
-    "primary_nft": "4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna",
-    "message": null,
-    "created_at": "2025-05-28T15:14:09.796Z",
-    "pfp_nft": "4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna",
-    "image_url": "https://uploader.irys.xyz/8KWZfJQbnAaBTzMLjfCzcRYctZGJHfLgBPzYveGaL79b",
-    "twitter_handle": "@_dean_machine",
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "DeanMachine",
-    "bio": null,
-    "governance_power": "0.000000",
-    "native_governance_power": 10354147,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 10354147,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 10393142.749205,
-    "governance_last_updated": "2025-06-04T02:05:35.738Z",
-    "updated_at": "2025-06-05T21:12:00.382Z",
-    "nft_ids": "[\"H41VeiQwuawuRvfY2XABBkKN5KpPgDUVvjAEC2vDjf5p\",\"H1oaL3jcXGoAxetd28D4xUr6yxCwq7GoNyryJZdwE8KA\",\"FNQLSFDUpWjMSCr37vabVhSm9oGy982ZFXWs6gHPWS1A\",\"FJk6UBQHkjyhaDk9yvwXMf174fDv5AhcHVPfaocoTXba\",\"F2ufJVf7Fw7BZTc7qjGDLbwGKJAB8uncpJSFYwTDvKm8\",\"DhxjSgRDoiQLG6j1UXgZo5BzHBJ6jzNpdZCEvqr1W5N7\",\"CutM9cFva6EXjd1mSaQPHicaDqnh8MJkVwNAG7ygN7SH\",\"CUv3baZAJAUHoxGp2Pn2aSiikAUYSzruqJTXKgf8F7WR\",\"C4BuNtUYd6iQmStX5QMxaKGQBrLa6ksJ2FrhvrShb1YD\",\"Bs82N2evF1CZxThpT75c5w34qfbu6D5ybKCuk3deiwFf\",\"BeAJ9MbdNXC6aGNz8G8VbLRib63LwUHYwxtXuj2mHPHn\",\"BbekvCWaVwUyQSVWPEfGQhLA98fFzbf6gAvnUih7uiGR\",\"BETaKgPwERd5sQwcDMcrfbjLHg97qCNmpeodQkngdqGJ\",\"AZ2C8aoP89TksV9tXJMPVVVAKhuAcGr7V3Lgepc1Jz51\",\"ABayLW7hujNa3Djadc6ZZqwymkeMjSmH8y9hCRuYfCKE\",\"9tTy9yq1jKzKPpC254jzyUFiRis9NGDHxT3PMfa9fwrG\",\"7zYVJ53eTzBevrN44KsitfTBVDv9tjJ5FNgwKn1Df1UR\",\"72KkHExt8T9oJcip8SHK8U3RaoWFpzacjk3wPMcM4WyJ\",\"6EHq9Aw4WSxcv61zEsf618cYPXVk5EE96B2GdZNPnCzJ\",\"5mztXDbXViJvamxb1J2wrQZHiTKsMhCftRfAbmyfFD7G\",\"54HxeyLDSJ1U8seRCsrvUHV7bUwPgbEAMTBtQDJESZAo\",\"4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna\",\"4mxfjScC7czpqdwjCmyqatW8Emrrk5wErHEqpUo2kbVw\",\"4cm7QuFq3gmg2QBHkuPjc11wRZaM7VL9vPzXzaZg4kGp\",\"4FGrcXV41B5VMqZwnNb3jny4FbbbdiXCyFW3AxRAQNcm\",\"3hLsuWdS5h5pfCPqo44erJ6MeSx78VqbauPMNedvX9Ge\",\"3bbsTx9TVYdnEcLAz6pkdcmMHjxFipHr5cder6ebRtg1\",\"3axMdzXXEvEjNPy5W9vFV25FgFPvZRqaGejQ961EB2dB\",\"2F7gaog4ESQ38HE7AaMcKCoJsnGwQx5dDwT4gW6tX3sX\"]",
-    "nft_metadata": "[{\"mint\":\"H41VeiQwuawuRvfY2XABBkKN5KpPgDUVvjAEC2vDjf5p\",\"name\":\"PERK #1760\",\"image\":\"https://uploader.irys.xyz/GLpJKLohthmiCWNeG4Eh2qs6gffCMYsTaT57R6GEpa5B\",\"collection\":\"PERKS\"},{\"mint\":\"H1oaL3jcXGoAxetd28D4xUr6yxCwq7GoNyryJZdwE8KA\",\"name\":\"PERK #3126\",\"image\":\"https://uploader.irys.xyz/x6X4VRUbQvQ5xDkYMu2xcM4JupWRB688uC7zBaAmqQP\",\"collection\":\"PERKS\"},{\"mint\":\"FNQLSFDUpWjMSCr37vabVhSm9oGy982ZFXWs6gHPWS1A\",\"name\":\"PERK #1102\",\"image\":\"https://uploader.irys.xyz/3o3N65Du2bo5iDuBrMeXSQqxCW4Rs3GPQL6LpN2hdU2p\",\"collection\":\"PERKS\"},{\"mint\":\"FJk6UBQHkjyhaDk9yvwXMf174fDv5AhcHVPfaocoTXba\",\"name\":\"PERK #447\",\"image\":\"https://uploader.irys.xyz/4PCmShu3KTVUEbRaDQbxixYNApord9A4sNqM1NMYe8eL\",\"collection\":\"PERKS\"},{\"mint\":\"F2ufJVf7Fw7BZTc7qjGDLbwGKJAB8uncpJSFYwTDvKm8\",\"name\":\"PERK #3016\",\"image\":\"https://uploader.irys.xyz/29AMS8utt2XSJYqxyVixDPQXwYg1YSkS7bbv1gYeg9rT\",\"collection\":\"PERKS\"},{\"mint\":\"DhxjSgRDoiQLG6j1UXgZo5BzHBJ6jzNpdZCEvqr1W5N7\",\"name\":\"PERK #2258\",\"image\":\"https://uploader.irys.xyz/C8kMjKPFEgTKD5aPHULQ1xJpGEwQSsMdX3vDvFiJYZoZ\",\"collection\":\"PERKS\"},{\"mint\":\"CutM9cFva6EXjd1mSaQPHicaDqnh8MJkVwNAG7ygN7SH\",\"name\":\"PERK #901\",\"image\":\"https://uploader.irys.xyz/8qjwCL5na6XgZDev2ARw82KPA44jtEMzSsvCxQ9wa3z7\",\"collection\":\"PERKS\"},{\"mint\":\"CUv3baZAJAUHoxGp2Pn2aSiikAUYSzruqJTXKgf8F7WR\",\"name\":\"PERK #113\",\"image\":\"https://uploader.irys.xyz/Dg6vgbAzNXwF2jHt7HthVmDVHzPSvCUWSYz3PxsiVs7Q\",\"collection\":\"PERKS\"},{\"mint\":\"C4BuNtUYd6iQmStX5QMxaKGQBrLa6ksJ2FrhvrShb1YD\",\"name\":\"PERK #3132\",\"image\":\"https://uploader.irys.xyz/Dk5rykGUCvyPJ5Pj5rBvXKUzstJewyyBQnccKwFiFafY\",\"collection\":\"PERKS\"},{\"mint\":\"Bs82N2evF1CZxThpT75c5w34qfbu6D5ybKCuk3deiwFf\",\"name\":\"PERK #2287\",\"image\":\"https://uploader.irys.xyz/36hGqS2r9i6HVHDd6ZXsdPqmrWENsoB9Dh8G58pNyZgN\",\"collection\":\"PERKS\"},{\"mint\":\"BeAJ9MbdNXC6aGNz8G8VbLRib63LwUHYwxtXuj2mHPHn\",\"name\":\"PERK #2531\",\"image\":\"https://uploader.irys.xyz/3q7vKfmVXbRVnDoVLuzqQ2MFY287nQSuQe1ABZbHoKNB\",\"collection\":\"PERKS\"},{\"mint\":\"BbekvCWaVwUyQSVWPEfGQhLA98fFzbf6gAvnUih7uiGR\",\"name\":\"PERK #2784\",\"image\":\"https://uploader.irys.xyz/AH5htdTfo9Pju6zXqFPvaQFwUFLdZf7ivDNRqPjDCedK\",\"collection\":\"PERKS\"},{\"mint\":\"BETaKgPwERd5sQwcDMcrfbjLHg97qCNmpeodQkngdqGJ\",\"name\":\"PERK #2948\",\"image\":\"https://uploader.irys.xyz/DVfR8ECJeMfqiyLeccxHKWwXzMUT5TsA9PsKwQPJ2hYw\",\"collection\":\"PERKS\"},{\"mint\":\"AZ2C8aoP89TksV9tXJMPVVVAKhuAcGr7V3Lgepc1Jz51\",\"name\":\"PERK #1258\",\"image\":\"https://uploader.irys.xyz/4cXvVAApUMshFU6wCdiP5SML9G3M3isDYJ3QbfB3LSeN\",\"collection\":\"PERKS\"},{\"mint\":\"ABayLW7hujNa3Djadc6ZZqwymkeMjSmH8y9hCRuYfCKE\",\"name\":\"PERK #2923\",\"image\":\"https://uploader.irys.xyz/2kYsond1E7gmGYeMAUYvA5KHDmCAEoY6W9anPbxQAP2F\",\"collection\":\"PERKS\"},{\"mint\":\"9tTy9yq1jKzKPpC254jzyUFiRis9NGDHxT3PMfa9fwrG\",\"name\":\"PERK #2986\",\"image\":\"https://uploader.irys.xyz/4HEuJ71PnMZCtP2Kh1PKGKms5E1BLKLXCDYpDw6CN82t\",\"collection\":\"PERKS\"},{\"mint\":\"7zYVJ53eTzBevrN44KsitfTBVDv9tjJ5FNgwKn1Df1UR\",\"name\":\"PERK #318\",\"image\":\"https://uploader.irys.xyz/3gt9rQxm8JXaAcWSPe6wKNkN1kRGELaaEAGYKwAB5mJN\",\"collection\":\"PERKS\"},{\"mint\":\"72KkHExt8T9oJcip8SHK8U3RaoWFpzacjk3wPMcM4WyJ\",\"name\":\"PERK #2274\",\"image\":\"https://uploader.irys.xyz/9i7fLB7uRZmVGhvRkY9QSPVu89CYTZg2gNxsQAiJwfvo\",\"collection\":\"PERKS\"},{\"mint\":\"6EHq9Aw4WSxcv61zEsf618cYPXVk5EE96B2GdZNPnCzJ\",\"name\":\"PERK #197\",\"image\":\"https://uploader.irys.xyz/8Zm8pGdNtWBfy1cFQrKFgDowy9CGLfUjGAuybLeAcR4B\",\"collection\":\"PERKS\"},{\"mint\":\"5mztXDbXViJvamxb1J2wrQZHiTKsMhCftRfAbmyfFD7G\",\"name\":\"PERK #2897\",\"image\":\"https://uploader.irys.xyz/EQtWDccN3WTsAsgqBkYPWnCQ9C4snNvNwJofE4hBQ2c1\",\"collection\":\"PERKS\"},{\"mint\":\"54HxeyLDSJ1U8seRCsrvUHV7bUwPgbEAMTBtQDJESZAo\",\"name\":\"PERK #151\",\"image\":\"https://uploader.irys.xyz/3iRyL5LGR7XrbdYFP2SVoSxfZgUdRypgjDgpiFuZ19V5\",\"collection\":\"PERKS\"},{\"mint\":\"4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna\",\"name\":\"PERK #1028\",\"image\":\"https://uploader.irys.xyz/8KWZfJQbnAaBTzMLjfCzcRYctZGJHfLgBPzYveGaL79b\",\"collection\":\"PERKS\"},{\"mint\":\"4mxfjScC7czpqdwjCmyqatW8Emrrk5wErHEqpUo2kbVw\",\"name\":\"PERK #1488\",\"image\":\"https://uploader.irys.xyz/CvzpAvPRg8LdgCT9ALtDSJwZzRHhbW4fD6cLQ4BVx2qB\",\"collection\":\"PERKS\"},{\"mint\":\"4cm7QuFq3gmg2QBHkuPjc11wRZaM7VL9vPzXzaZg4kGp\",\"name\":\"PERK #1694\",\"image\":\"https://uploader.irys.xyz/2nziqb2AzirrnzWSsUuWDBFCm2rVGLRKZdMaj8TQZR8Q\",\"collection\":\"PERKS\"},{\"mint\":\"4FGrcXV41B5VMqZwnNb3jny4FbbbdiXCyFW3AxRAQNcm\",\"name\":\"PERK #719\",\"image\":\"https://uploader.irys.xyz/BZZhN9Bze6Jh2QgQXG5CfrYhw9mmXEpckBgxcppWUtiM\",\"collection\":\"PERKS\"},{\"mint\":\"3hLsuWdS5h5pfCPqo44erJ6MeSx78VqbauPMNedvX9Ge\",\"name\":\"PERK #2115\",\"image\":\"https://uploader.irys.xyz/24PMTn2gQicb627oXEnHnK1jZcjKcdtufJ1MYuyFXVjo\",\"collection\":\"PERKS\"},{\"mint\":\"3bbsTx9TVYdnEcLAz6pkdcmMHjxFipHr5cder6ebRtg1\",\"name\":\"PERK #2564\",\"image\":\"https://uploader.irys.xyz/AgoJ9FAx1DLnR5ByitFjiej38s8H2YpvGiJvsdmEp3Dw\",\"collection\":\"PERKS\"},{\"mint\":\"3axMdzXXEvEjNPy5W9vFV25FgFPvZRqaGejQ961EB2dB\",\"name\":\"PERK #3154\",\"image\":\"https://uploader.irys.xyz/8uGHKnx1khCQUp9o3R7VKdwXfsNPwi9hFfujZQitDNm1\",\"collection\":\"PERKS\"},{\"mint\":\"2F7gaog4ESQ38HE7AaMcKCoJsnGwQx5dDwT4gW6tX3sX\",\"name\":\"PERK #2933\",\"image\":\"https://uploader.irys.xyz/3dAJCUsjgcsU3TTi7XChg1EUvwBEWGYKZ6cCRmrqjan3\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "H41VeiQwuawuRvfY2XABBkKN5KpPgDUVvjAEC2vDjf5p",
-      "H1oaL3jcXGoAxetd28D4xUr6yxCwq7GoNyryJZdwE8KA",
-      "FNQLSFDUpWjMSCr37vabVhSm9oGy982ZFXWs6gHPWS1A",
-      "FJk6UBQHkjyhaDk9yvwXMf174fDv5AhcHVPfaocoTXba",
-      "F2ufJVf7Fw7BZTc7qjGDLbwGKJAB8uncpJSFYwTDvKm8",
-      "DhxjSgRDoiQLG6j1UXgZo5BzHBJ6jzNpdZCEvqr1W5N7",
-      "CutM9cFva6EXjd1mSaQPHicaDqnh8MJkVwNAG7ygN7SH",
-      "CUv3baZAJAUHoxGp2Pn2aSiikAUYSzruqJTXKgf8F7WR",
-      "C4BuNtUYd6iQmStX5QMxaKGQBrLa6ksJ2FrhvrShb1YD",
-      "Bs82N2evF1CZxThpT75c5w34qfbu6D5ybKCuk3deiwFf",
-      "BeAJ9MbdNXC6aGNz8G8VbLRib63LwUHYwxtXuj2mHPHn",
-      "BbekvCWaVwUyQSVWPEfGQhLA98fFzbf6gAvnUih7uiGR",
-      "BETaKgPwERd5sQwcDMcrfbjLHg97qCNmpeodQkngdqGJ",
-      "AZ2C8aoP89TksV9tXJMPVVVAKhuAcGr7V3Lgepc1Jz51",
-      "ABayLW7hujNa3Djadc6ZZqwymkeMjSmH8y9hCRuYfCKE",
-      "9tTy9yq1jKzKPpC254jzyUFiRis9NGDHxT3PMfa9fwrG",
-      "7zYVJ53eTzBevrN44KsitfTBVDv9tjJ5FNgwKn1Df1UR",
-      "72KkHExt8T9oJcip8SHK8U3RaoWFpzacjk3wPMcM4WyJ",
-      "6EHq9Aw4WSxcv61zEsf618cYPXVk5EE96B2GdZNPnCzJ",
-      "5mztXDbXViJvamxb1J2wrQZHiTKsMhCftRfAbmyfFD7G",
-      "54HxeyLDSJ1U8seRCsrvUHV7bUwPgbEAMTBtQDJESZAo",
-      "4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna",
-      "4mxfjScC7czpqdwjCmyqatW8Emrrk5wErHEqpUo2kbVw",
-      "4cm7QuFq3gmg2QBHkuPjc11wRZaM7VL9vPzXzaZg4kGp",
-      "4FGrcXV41B5VMqZwnNb3jny4FbbbdiXCyFW3AxRAQNcm",
-      "3hLsuWdS5h5pfCPqo44erJ6MeSx78VqbauPMNedvX9Ge",
-      "3bbsTx9TVYdnEcLAz6pkdcmMHjxFipHr5cder6ebRtg1",
-      "3axMdzXXEvEjNPy5W9vFV25FgFPvZRqaGejQ961EB2dB",
-      "2F7gaog4ESQ38HE7AaMcKCoJsnGwQx5dDwT4gW6tX3sX"
-    ],
-    "nftMetadata": {
-      "H41VeiQwuawuRvfY2XABBkKN5KpPgDUVvjAEC2vDjf5p": {
-        "name": "PERK #1760",
-        "image": "https://uploader.irys.xyz/GLpJKLohthmiCWNeG4Eh2qs6gffCMYsTaT57R6GEpa5B"
-      },
-      "H1oaL3jcXGoAxetd28D4xUr6yxCwq7GoNyryJZdwE8KA": {
-        "name": "PERK #3126",
-        "image": "https://uploader.irys.xyz/x6X4VRUbQvQ5xDkYMu2xcM4JupWRB688uC7zBaAmqQP"
-      },
-      "FNQLSFDUpWjMSCr37vabVhSm9oGy982ZFXWs6gHPWS1A": {
-        "name": "PERK #1102",
-        "image": "https://uploader.irys.xyz/3o3N65Du2bo5iDuBrMeXSQqxCW4Rs3GPQL6LpN2hdU2p"
-      },
-      "FJk6UBQHkjyhaDk9yvwXMf174fDv5AhcHVPfaocoTXba": {
-        "name": "PERK #447",
-        "image": "https://uploader.irys.xyz/4PCmShu3KTVUEbRaDQbxixYNApord9A4sNqM1NMYe8eL"
-      },
-      "F2ufJVf7Fw7BZTc7qjGDLbwGKJAB8uncpJSFYwTDvKm8": {
-        "name": "PERK #3016",
-        "image": "https://uploader.irys.xyz/29AMS8utt2XSJYqxyVixDPQXwYg1YSkS7bbv1gYeg9rT"
-      },
-      "DhxjSgRDoiQLG6j1UXgZo5BzHBJ6jzNpdZCEvqr1W5N7": {
-        "name": "PERK #2258",
-        "image": "https://uploader.irys.xyz/C8kMjKPFEgTKD5aPHULQ1xJpGEwQSsMdX3vDvFiJYZoZ"
-      },
-      "CutM9cFva6EXjd1mSaQPHicaDqnh8MJkVwNAG7ygN7SH": {
-        "name": "PERK #901",
-        "image": "https://uploader.irys.xyz/8qjwCL5na6XgZDev2ARw82KPA44jtEMzSsvCxQ9wa3z7"
-      },
-      "CUv3baZAJAUHoxGp2Pn2aSiikAUYSzruqJTXKgf8F7WR": {
-        "name": "PERK #113",
-        "image": "https://uploader.irys.xyz/Dg6vgbAzNXwF2jHt7HthVmDVHzPSvCUWSYz3PxsiVs7Q"
-      },
-      "C4BuNtUYd6iQmStX5QMxaKGQBrLa6ksJ2FrhvrShb1YD": {
-        "name": "PERK #3132",
-        "image": "https://uploader.irys.xyz/Dk5rykGUCvyPJ5Pj5rBvXKUzstJewyyBQnccKwFiFafY"
-      },
-      "Bs82N2evF1CZxThpT75c5w34qfbu6D5ybKCuk3deiwFf": {
-        "name": "PERK #2287",
-        "image": "https://uploader.irys.xyz/36hGqS2r9i6HVHDd6ZXsdPqmrWENsoB9Dh8G58pNyZgN"
-      },
-      "BeAJ9MbdNXC6aGNz8G8VbLRib63LwUHYwxtXuj2mHPHn": {
-        "name": "PERK #2531",
-        "image": "https://uploader.irys.xyz/3q7vKfmVXbRVnDoVLuzqQ2MFY287nQSuQe1ABZbHoKNB"
-      },
-      "BbekvCWaVwUyQSVWPEfGQhLA98fFzbf6gAvnUih7uiGR": {
-        "name": "PERK #2784",
-        "image": "https://uploader.irys.xyz/AH5htdTfo9Pju6zXqFPvaQFwUFLdZf7ivDNRqPjDCedK"
-      },
-      "BETaKgPwERd5sQwcDMcrfbjLHg97qCNmpeodQkngdqGJ": {
-        "name": "PERK #2948",
-        "image": "https://uploader.irys.xyz/DVfR8ECJeMfqiyLeccxHKWwXzMUT5TsA9PsKwQPJ2hYw"
-      },
-      "AZ2C8aoP89TksV9tXJMPVVVAKhuAcGr7V3Lgepc1Jz51": {
-        "name": "PERK #1258",
-        "image": "https://uploader.irys.xyz/4cXvVAApUMshFU6wCdiP5SML9G3M3isDYJ3QbfB3LSeN"
-      },
-      "ABayLW7hujNa3Djadc6ZZqwymkeMjSmH8y9hCRuYfCKE": {
-        "name": "PERK #2923",
-        "image": "https://uploader.irys.xyz/2kYsond1E7gmGYeMAUYvA5KHDmCAEoY6W9anPbxQAP2F"
-      },
-      "9tTy9yq1jKzKPpC254jzyUFiRis9NGDHxT3PMfa9fwrG": {
-        "name": "PERK #2986",
-        "image": "https://uploader.irys.xyz/4HEuJ71PnMZCtP2Kh1PKGKms5E1BLKLXCDYpDw6CN82t"
-      },
-      "7zYVJ53eTzBevrN44KsitfTBVDv9tjJ5FNgwKn1Df1UR": {
-        "name": "PERK #318",
-        "image": "https://uploader.irys.xyz/3gt9rQxm8JXaAcWSPe6wKNkN1kRGELaaEAGYKwAB5mJN"
-      },
-      "72KkHExt8T9oJcip8SHK8U3RaoWFpzacjk3wPMcM4WyJ": {
-        "name": "PERK #2274",
-        "image": "https://uploader.irys.xyz/9i7fLB7uRZmVGhvRkY9QSPVu89CYTZg2gNxsQAiJwfvo"
-      },
-      "6EHq9Aw4WSxcv61zEsf618cYPXVk5EE96B2GdZNPnCzJ": {
-        "name": "PERK #197",
-        "image": "https://uploader.irys.xyz/8Zm8pGdNtWBfy1cFQrKFgDowy9CGLfUjGAuybLeAcR4B"
-      },
-      "5mztXDbXViJvamxb1J2wrQZHiTKsMhCftRfAbmyfFD7G": {
-        "name": "PERK #2897",
-        "image": "https://uploader.irys.xyz/EQtWDccN3WTsAsgqBkYPWnCQ9C4snNvNwJofE4hBQ2c1"
-      },
-      "54HxeyLDSJ1U8seRCsrvUHV7bUwPgbEAMTBtQDJESZAo": {
-        "name": "PERK #151",
-        "image": "https://uploader.irys.xyz/3iRyL5LGR7XrbdYFP2SVoSxfZgUdRypgjDgpiFuZ19V5"
-      },
-      "4phej54sDdKaRVV221MQVYhhz6LpCskeP1KCAawi2tna": {
-        "name": "PERK #1028",
-        "image": "https://uploader.irys.xyz/8KWZfJQbnAaBTzMLjfCzcRYctZGJHfLgBPzYveGaL79b"
-      },
-      "4mxfjScC7czpqdwjCmyqatW8Emrrk5wErHEqpUo2kbVw": {
-        "name": "PERK #1488",
-        "image": "https://uploader.irys.xyz/CvzpAvPRg8LdgCT9ALtDSJwZzRHhbW4fD6cLQ4BVx2qB"
-      },
-      "4cm7QuFq3gmg2QBHkuPjc11wRZaM7VL9vPzXzaZg4kGp": {
-        "name": "PERK #1694",
-        "image": "https://uploader.irys.xyz/2nziqb2AzirrnzWSsUuWDBFCm2rVGLRKZdMaj8TQZR8Q"
-      },
-      "4FGrcXV41B5VMqZwnNb3jny4FbbbdiXCyFW3AxRAQNcm": {
-        "name": "PERK #719",
-        "image": "https://uploader.irys.xyz/BZZhN9Bze6Jh2QgQXG5CfrYhw9mmXEpckBgxcppWUtiM"
-      },
-      "3hLsuWdS5h5pfCPqo44erJ6MeSx78VqbauPMNedvX9Ge": {
-        "name": "PERK #2115",
-        "image": "https://uploader.irys.xyz/24PMTn2gQicb627oXEnHnK1jZcjKcdtufJ1MYuyFXVjo"
-      },
-      "3bbsTx9TVYdnEcLAz6pkdcmMHjxFipHr5cder6ebRtg1": {
-        "name": "PERK #2564",
-        "image": "https://uploader.irys.xyz/AgoJ9FAx1DLnR5ByitFjiej38s8H2YpvGiJvsdmEp3Dw"
-      },
-      "3axMdzXXEvEjNPy5W9vFV25FgFPvZRqaGejQ961EB2dB": {
-        "name": "PERK #3154",
-        "image": "https://uploader.irys.xyz/8uGHKnx1khCQUp9o3R7VKdwXfsNPwi9hFfujZQitDNm1"
-      },
-      "2F7gaog4ESQ38HE7AaMcKCoJsnGwQx5dDwT4gW6tX3sX": {
-        "name": "PERK #2933",
-        "image": "https://uploader.irys.xyz/3dAJCUsjgcsU3TTi7XChg1EUvwBEWGYKZ6cCRmrqjan3"
-      }
-    }
-  },
-  {
-    "id": 25,
-    "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
-    "lat": "33.97980872872457",
-    "lng": "-118.30078125000001",
-    "primary_nft": "6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8",
-    "message": null,
-    "created_at": "2025-05-27T18:33:33.238Z",
-    "pfp_nft": "6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8",
-    "image_url": "https://uploader.irys.xyz/4si96WPCEQ3rBenGtnvWXE7htrpkQJb3iBqiKgoCr7Pu",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": "SoCal",
-    "bio": "iykyk",
-    "governance_power": "0.000000",
-    "native_governance_power": 29484,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 29484,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 29484.464683,
-    "governance_last_updated": "2025-06-04T02:05:35.991Z",
-    "updated_at": "2025-06-05T21:12:04.285Z",
-    "nft_ids": "[\"6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8\"]",
-    "nft_metadata": "[{\"mint\":\"6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8\",\"name\":\"PERK #3261\",\"image\":\"https://uploader.irys.xyz/4si96WPCEQ3rBenGtnvWXE7htrpkQJb3iBqiKgoCr7Pu\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8"
-    ],
-    "nftMetadata": {
-      "6TgATDMKNg89PEA3XDRg3d2XQi7dm4rLskUokKhKztW8": {
-        "name": "PERK #3261",
-        "image": "https://uploader.irys.xyz/4si96WPCEQ3rBenGtnvWXE7htrpkQJb3iBqiKgoCr7Pu"
-      }
-    }
-  },
-  {
-    "id": 24,
-    "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
-    "lat": "38.00745753030866",
-    "lng": "23.822801113128666",
-    "primary_nft": "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ",
-    "message": null,
-    "created_at": "2025-05-27T18:12:38.576Z",
-    "pfp_nft": "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ",
-    "image_url": "https://uploader.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN",
-    "twitter_handle": "",
-    "telegram_handle": "",
-    "discord_handle": "",
-    "nickname": "Miao",
-    "bio": "I am Whale'sFriend burner. I test things. ",
-    "governance_power": "0.000000",
-    "native_governance_power": 12625,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 12625,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 12625.580931,
-    "governance_last_updated": "2025-06-04T02:05:36.031Z",
-    "updated_at": "2025-06-05T11:13:01.600Z",
-    "nft_ids": "[\"FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM\",\"EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C\",\"7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ\"]",
-    "nft_metadata": "[{\"mint\":\"FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM\",\"name\":\"PERK #2153\",\"image\":\"https://uploader.irys.xyz/2fEUCXNznsC2tJHd3imKBwcmsnutnWfh4Z8fbTWLh58G\",\"collection\":\"PERKS\"},{\"mint\":\"EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C\",\"name\":\"PERK #988\",\"image\":\"https://uploader.irys.xyz/4txcPkbjBT8EnuLQVPbZ3PoqWc4miN8tBJ2Hts5W4iW6\",\"collection\":\"PERKS\"},{\"mint\":\"7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ\",\"name\":\"PERK #2785\",\"image\":\"https://uploader.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM",
-      "EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C",
-      "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ"
-    ],
-    "nftMetadata": {
-      "FujPedtecYXt77zE2SQzShbFgEM6uSzxh3WEpMk4aqUM": {
-        "name": "PERK #2153",
-        "image": "https://uploader.irys.xyz/2fEUCXNznsC2tJHd3imKBwcmsnutnWfh4Z8fbTWLh58G"
-      },
-      "EuJdWR2zVUGTyReXbsuvNK4taXnZopBCRWMgx5Qs9m1C": {
-        "name": "PERK #988",
-        "image": "https://uploader.irys.xyz/4txcPkbjBT8EnuLQVPbZ3PoqWc4miN8tBJ2Hts5W4iW6"
-      },
-      "7gBwY1swxB7NhhshFWsELq96M6zDvEKc9ktpEFE2ZBuQ": {
-        "name": "PERK #2785",
-        "image": "https://uploader.irys.xyz/EqDRfNAKVFHJfuk3zscH9LgYHpEJ4PcDT2gogg6FQ5RN"
-      }
-    }
-  },
-  {
-    "id": 44,
-    "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
-    "lat": "43.774370337943324",
-    "lng": "-88.45642089843751",
-    "primary_nft": "Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2",
-    "message": null,
-    "created_at": "2025-05-31T14:51:02.374Z",
-    "pfp_nft": "Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2",
-    "image_url": "https://uploader.irys.xyz/E3bSCjRTPurYJzz3ryP3EwGomwWMpw9JCNUJx2uAo8eZ",
-    "twitter_handle": "@ReijoVakt",
-    "telegram_handle": "@Reijovakt",
-    "discord_handle": "reijovakt",
-    "nickname": "Reijo",
-    "bio": "40yr old crypto degen, father, engineer",
-    "governance_power": "0.000000",
-    "native_governance_power": 4879,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 4879,
-    "locked_governance_power": 0,
-    "unlocked_governance_power": 4879,
-    "governance_last_updated": "2025-06-04T02:05:36.053Z",
-    "updated_at": "2025-06-05T21:12:03.994Z",
-    "nft_ids": "[\"Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2\"]",
-    "nft_metadata": "[{\"mint\":\"Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2\",\"name\":\"PERK #1357\",\"image\":\"https://uploader.irys.xyz/E3bSCjRTPurYJzz3ryP3EwGomwWMpw9JCNUJx2uAo8eZ\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2"
-    ],
-    "nftMetadata": {
-      "Cgp1iA7E7519HzKKCP6k2n5u1LrGvT7GVRPAPLDwb6P2": {
-        "name": "PERK #1357",
-        "image": "https://uploader.irys.xyz/E3bSCjRTPurYJzz3ryP3EwGomwWMpw9JCNUJx2uAo8eZ"
-      }
-    }
-  },
-  {
-    "id": 38,
-    "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
-    "lat": "51.49036206277271",
-    "lng": "-0.11672973632812501",
-    "primary_nft": "53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F",
-    "message": null,
-    "created_at": "2025-05-28T15:24:25.661Z",
-    "pfp_nft": "53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F",
-    "image_url": "https://uploader.irys.xyz/E7YUB1wVhWyhJacUWP582BZWQf3pfgmUQxRgdFFNyfC6",
-    "twitter_handle": "https://x.com/kxrnel",
-    "telegram_handle": "KxrnelK",
-    "discord_handle": ".kxrnel",
-    "nickname": "Kornel",
-    "bio": "Stake your SOL ",
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": "0.000000",
-    "unlocked_governance_power": "0.000000",
-    "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:01.881Z",
-    "nft_ids": "[\"53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F\"]",
-    "nft_metadata": "[{\"mint\":\"53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F\",\"name\":\"PERK #1263\",\"image\":\"https://uploader.irys.xyz/E7YUB1wVhWyhJacUWP582BZWQf3pfgmUQxRgdFFNyfC6\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F"
-    ],
-    "nftMetadata": {
-      "53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F": {
-        "name": "PERK #1263",
-        "image": "https://uploader.irys.xyz/E7YUB1wVhWyhJacUWP582BZWQf3pfgmUQxRgdFFNyfC6"
-      }
-    }
-  },
-  {
-    "id": 49,
-    "wallet": "EXRBCP2MX6hRAt4oh61k5mhL6WhmUXPemfzNssUpM4S6",
-    "lat": "16.34685965546115",
-    "lng": "-0.41009325832606974",
-    "primary_nft": null,
-    "message": null,
-    "created_at": "2025-06-05T15:50:00.164Z",
-    "pfp_nft": "C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw",
-    "image_url": "https://uploader.irys.xyz/FW2eQiqEXUGGhGQDhjXutxSKpCb8r3EVb7gXrLegP2j1",
-    "twitter_handle": "Ify_Ezeugwu",
-    "telegram_handle": "Ify01",
-    "discord_handle": "Icoder.dev",
-    "nickname": "Icoder",
-    "bio": "UXUI Researcher || DAO Stan",
-    "governance_power": "0.000000",
-    "native_governance_power": 332768,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 332768,
-    "locked_governance_power": "0.000000",
-    "unlocked_governance_power": "0.000000",
-    "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:47:07.914Z",
-    "nft_ids": "[\"C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw\"]",
-    "nft_metadata": "[{\"mint\":\"C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw\",\"name\":\"PERK #2256\",\"image\":\"https://uploader.irys.xyz/FW2eQiqEXUGGhGQDhjXutxSKpCb8r3EVb7gXrLegP2j1\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw"
-    ],
-    "nftMetadata": {
-      "C7o4bZR6HhPeMALRescU9QUZmN3TJEiQb68mdjy7fQbw": {
-        "name": "PERK #2256",
-        "image": "https://uploader.irys.xyz/FW2eQiqEXUGGhGQDhjXutxSKpCb8r3EVb7gXrLegP2j1"
-      }
-    }
   },
   {
     "id": 36,
@@ -1062,7 +709,7 @@
     "locked_governance_power": "0.000000",
     "unlocked_governance_power": "0.000000",
     "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:03.136Z",
+    "updated_at": "2025-06-05T23:25:50.714Z",
     "nft_ids": "[\"FFx2KWhU8zHyzuaQkYREtjCt8sbTyiz7TXDvn6iKUWTz\"]",
     "nft_metadata": "[{\"mint\":\"FFx2KWhU8zHyzuaQkYREtjCt8sbTyiz7TXDvn6iKUWTz\",\"name\":\"PERK #2138\",\"image\":\"https://uploader.irys.xyz/49TRNjteHh5iqntpRK8yV4ZYjPfHA6ku8ReGCSiiS2JA\",\"collection\":\"PERKS\"}]",
     "nfts": [
@@ -1072,189 +719,6 @@
       "FFx2KWhU8zHyzuaQkYREtjCt8sbTyiz7TXDvn6iKUWTz": {
         "name": "PERK #2138",
         "image": "https://uploader.irys.xyz/49TRNjteHh5iqntpRK8yV4ZYjPfHA6ku8ReGCSiiS2JA"
-      }
-    }
-  },
-  {
-    "id": 30,
-    "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
-    "lat": "37.071768850329335",
-    "lng": "25.400991439819336",
-    "primary_nft": "D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX",
-    "message": null,
-    "created_at": "2025-05-27T21:22:50.256Z",
-    "pfp_nft": "D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX",
-    "image_url": "https://uploader.irys.xyz/5kHD3V99f8W1Q3SBmV7ejGRJotAoeL2DETN3XbJ69MHN",
-    "twitter_handle": "@tttbymila",
-    "telegram_handle": "@tttbymila",
-    "discord_handle": "tttbymila",
-    "nickname": "Mila",
-    "bio": "Islandgirl.sol",
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": "0.000000",
-    "unlocked_governance_power": "0.000000",
-    "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:02.605Z",
-    "nft_ids": "[\"D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX\"]",
-    "nft_metadata": "[{\"mint\":\"D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX\",\"name\":\"PERK #2373\",\"image\":\"https://uploader.irys.xyz/5kHD3V99f8W1Q3SBmV7ejGRJotAoeL2DETN3XbJ69MHN\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX"
-    ],
-    "nftMetadata": {
-      "D23gitLm8qU4pUW6pvcTw8PS7wBmkQZfwzPYWF54BQyX": {
-        "name": "PERK #2373",
-        "image": "https://uploader.irys.xyz/5kHD3V99f8W1Q3SBmV7ejGRJotAoeL2DETN3XbJ69MHN"
-      }
-    }
-  },
-  {
-    "id": 28,
-    "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
-    "lat": "36.474909678311214",
-    "lng": "269.24303980399867",
-    "primary_nft": "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV",
-    "message": null,
-    "created_at": "2025-05-27T19:28:51.354Z",
-    "pfp_nft": "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV",
-    "image_url": "https://uploader.irys.xyz/DPZZA6xi15TrYWi6D6A5w6rUr3tn2V7a9LUrT1W274mU",
-    "twitter_handle": null,
-    "telegram_handle": null,
-    "discord_handle": null,
-    "nickname": null,
-    "bio": null,
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": "0.000000",
-    "unlocked_governance_power": "0.000000",
-    "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:08.074Z",
-    "nft_ids": "[\"JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy\",\"EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV\",\"46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa\"]",
-    "nft_metadata": "[{\"mint\":\"JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy\",\"name\":\"PERK #730\",\"image\":\"https://uploader.irys.xyz/ADo2KjwVhqx5EdzSPoNmtmqjsx8AWSP1Umsc7teXBHuS\",\"collection\":\"PERKS\"},{\"mint\":\"EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV\",\"name\":\"PERK #2987\",\"image\":\"https://uploader.irys.xyz/DPZZA6xi15TrYWi6D6A5w6rUr3tn2V7a9LUrT1W274mU\",\"collection\":\"PERKS\"},{\"mint\":\"46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa\",\"name\":\"PERK #315\",\"image\":\"https://uploader.irys.xyz/DwK3DZkHTFBPi8JVr9LKGEhWLgtBz8DFmq82EmKhzVVB\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy",
-      "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV",
-      "46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa"
-    ],
-    "nftMetadata": {
-      "JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy": {
-        "name": "PERK #730",
-        "image": "https://uploader.irys.xyz/ADo2KjwVhqx5EdzSPoNmtmqjsx8AWSP1Umsc7teXBHuS"
-      },
-      "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV": {
-        "name": "PERK #2987",
-        "image": "https://uploader.irys.xyz/DPZZA6xi15TrYWi6D6A5w6rUr3tn2V7a9LUrT1W274mU"
-      },
-      "46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa": {
-        "name": "PERK #315",
-        "image": "https://uploader.irys.xyz/DwK3DZkHTFBPi8JVr9LKGEhWLgtBz8DFmq82EmKhzVVB"
-      }
-    }
-  },
-  {
-    "id": 34,
-    "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
-    "lat": "52.090370922392054",
-    "lng": "5.1218605041503915",
-    "primary_nft": "2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6",
-    "message": null,
-    "created_at": "2025-05-28T11:29:34.450Z",
-    "pfp_nft": "2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6",
-    "image_url": "https://uploader.irys.xyz/Fx6mGFT2eQHHrXXc1s1NFbLNadJFY4tfSQ38vojm4H3F",
-    "twitter_handle": "@ronaldtreur",
-    "telegram_handle": null,
-    "discord_handle": "funcracker",
-    "nickname": "Funcracker",
-    "bio": "Co-founder Aephia Industries (a Star Atlas DAC/Guild) & Co-founder ALF NFT collection",
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": "0.000000",
-    "unlocked_governance_power": "0.000000",
-    "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:00.662Z",
-    "nft_ids": "[\"J8SSiCoLfovPQAe5qgzQ3KS3djHUhbNmB9uZEHG2arMs\",\"GQXa46iYAtHDC6qXE84npjkMnifMSfdfrt4eVMi9iVsR\",\"EiQVGZ8zcaC1ykgxtipgqoaruDqTnpiYhufgSRFRjoEM\",\"CdX5hxHux4pYNoq28uqvNZAGpStaGPzJqL5Sipo1LPCy\",\"6tqiTq418vndMcHt3UvyAULkDxascB96CNpFADeywwPF\",\"2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6\"]",
-    "nft_metadata": "[{\"mint\":\"J8SSiCoLfovPQAe5qgzQ3KS3djHUhbNmB9uZEHG2arMs\",\"name\":\"PERK #3257\",\"image\":\"https://uploader.irys.xyz/Emm4annrrS9VzExnagwHQybGZg1T9KkQNUm1o1SgNB1b\",\"collection\":\"PERKS\"},{\"mint\":\"GQXa46iYAtHDC6qXE84npjkMnifMSfdfrt4eVMi9iVsR\",\"name\":\"PERK #2943\",\"image\":\"https://uploader.irys.xyz/GsaAZkzvky2yWaCCHRcmQAceabxaKtgrUUHNBQ2qMkMt\",\"collection\":\"PERKS\"},{\"mint\":\"EiQVGZ8zcaC1ykgxtipgqoaruDqTnpiYhufgSRFRjoEM\",\"name\":\"PERK #2152\",\"image\":\"https://uploader.irys.xyz/5R5odRoQzNTQkFvep3hk7hfXRr7CfkkmP9RD87EH5ZG5\",\"collection\":\"PERKS\"},{\"mint\":\"CdX5hxHux4pYNoq28uqvNZAGpStaGPzJqL5Sipo1LPCy\",\"name\":\"PERK #2794\",\"image\":\"https://uploader.irys.xyz/9CQiCD8w1m4zYvTLWYjQBeDWbiUGggjtWy2DxyKztc6y\",\"collection\":\"PERKS\"},{\"mint\":\"6tqiTq418vndMcHt3UvyAULkDxascB96CNpFADeywwPF\",\"name\":\"PERK #1732\",\"image\":\"https://uploader.irys.xyz/CquTN2ZDVfb6rNR4KwDr4HRdmDLwxBqAxz5jHLhKW63J\",\"collection\":\"PERKS\"},{\"mint\":\"2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6\",\"name\":\"PERK #1713\",\"image\":\"https://uploader.irys.xyz/Fx6mGFT2eQHHrXXc1s1NFbLNadJFY4tfSQ38vojm4H3F\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "J8SSiCoLfovPQAe5qgzQ3KS3djHUhbNmB9uZEHG2arMs",
-      "GQXa46iYAtHDC6qXE84npjkMnifMSfdfrt4eVMi9iVsR",
-      "EiQVGZ8zcaC1ykgxtipgqoaruDqTnpiYhufgSRFRjoEM",
-      "CdX5hxHux4pYNoq28uqvNZAGpStaGPzJqL5Sipo1LPCy",
-      "6tqiTq418vndMcHt3UvyAULkDxascB96CNpFADeywwPF",
-      "2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6"
-    ],
-    "nftMetadata": {
-      "J8SSiCoLfovPQAe5qgzQ3KS3djHUhbNmB9uZEHG2arMs": {
-        "name": "PERK #3257",
-        "image": "https://uploader.irys.xyz/Emm4annrrS9VzExnagwHQybGZg1T9KkQNUm1o1SgNB1b"
-      },
-      "GQXa46iYAtHDC6qXE84npjkMnifMSfdfrt4eVMi9iVsR": {
-        "name": "PERK #2943",
-        "image": "https://uploader.irys.xyz/GsaAZkzvky2yWaCCHRcmQAceabxaKtgrUUHNBQ2qMkMt"
-      },
-      "EiQVGZ8zcaC1ykgxtipgqoaruDqTnpiYhufgSRFRjoEM": {
-        "name": "PERK #2152",
-        "image": "https://uploader.irys.xyz/5R5odRoQzNTQkFvep3hk7hfXRr7CfkkmP9RD87EH5ZG5"
-      },
-      "CdX5hxHux4pYNoq28uqvNZAGpStaGPzJqL5Sipo1LPCy": {
-        "name": "PERK #2794",
-        "image": "https://uploader.irys.xyz/9CQiCD8w1m4zYvTLWYjQBeDWbiUGggjtWy2DxyKztc6y"
-      },
-      "6tqiTq418vndMcHt3UvyAULkDxascB96CNpFADeywwPF": {
-        "name": "PERK #1732",
-        "image": "https://uploader.irys.xyz/CquTN2ZDVfb6rNR4KwDr4HRdmDLwxBqAxz5jHLhKW63J"
-      },
-      "2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6": {
-        "name": "PERK #1713",
-        "image": "https://uploader.irys.xyz/Fx6mGFT2eQHHrXXc1s1NFbLNadJFY4tfSQ38vojm4H3F"
-      }
-    }
-  },
-  {
-    "id": 48,
-    "wallet": "6vJrtBwoDTWnNGmMsGQyptwagB9oEVntfpK7yTctZ3Sy",
-    "lat": "31.213975956122024",
-    "lng": "121.46484375000001",
-    "primary_nft": "91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j",
-    "message": null,
-    "created_at": "2025-06-05T04:12:28.600Z",
-    "pfp_nft": "91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j",
-    "image_url": "https://uploader.irys.xyz/3K2MFKbdS9rGB8c6Y97L1kUYNsTkMr86vrvQWSKEjpW8",
-    "twitter_handle": "",
-    "telegram_handle": "",
-    "discord_handle": "",
-    "nickname": "Kegomaz",
-    "bio": "",
-    "governance_power": "0.000000",
-    "native_governance_power": 0,
-    "delegated_governance_power": 0,
-    "native_power": "0.000000",
-    "delegated_power": "0.000000",
-    "total_governance_power": 0,
-    "locked_governance_power": "0.000000",
-    "unlocked_governance_power": "0.000000",
-    "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:12:01.484Z",
-    "nft_ids": "[\"91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j\"]",
-    "nft_metadata": "[{\"mint\":\"91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j\",\"name\":\"PERK #2355\",\"image\":\"https://uploader.irys.xyz/3K2MFKbdS9rGB8c6Y97L1kUYNsTkMr86vrvQWSKEjpW8\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j"
-    ],
-    "nftMetadata": {
-      "91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j": {
-        "name": "PERK #2355",
-        "image": "https://uploader.irys.xyz/3K2MFKbdS9rGB8c6Y97L1kUYNsTkMr86vrvQWSKEjpW8"
       }
     }
   },
@@ -1282,9 +746,223 @@
     "locked_governance_power": "0.000000",
     "unlocked_governance_power": "0.000000",
     "governance_last_updated": null,
-    "updated_at": "2025-06-05T21:11:59.857Z",
+    "updated_at": "2025-06-05T23:25:48.502Z",
     "nft_ids": "[\"AEKhYCrsPSsM9secZJiFjZXX7pcuEkT5JrgqFh7nX2sV\"]",
     "nft_metadata": "[{\"mint\":\"AEKhYCrsPSsM9secZJiFjZXX7pcuEkT5JrgqFh7nX2sV\",\"name\":\"PERK #1471\",\"image\":\"https://uploader.irys.xyz/HZh1VzirfohGt3Wq67Ud7XGCtnYtX3jgRmpWSPdVSrYj\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 28,
+    "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
+    "lat": "36.474909678311214",
+    "lng": "269.24303980399867",
+    "primary_nft": "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV",
+    "message": null,
+    "created_at": "2025-05-27T19:28:51.354Z",
+    "pfp_nft": "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV",
+    "image_url": "https://uploader.irys.xyz/DPZZA6xi15TrYWi6D6A5w6rUr3tn2V7a9LUrT1W274mU",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": null,
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 0,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 0,
+    "locked_governance_power": "0.000000",
+    "unlocked_governance_power": "0.000000",
+    "governance_last_updated": null,
+    "updated_at": "2025-06-05T23:25:53.924Z",
+    "nft_ids": "[\"JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy\",\"EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV\",\"46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa\"]",
+    "nft_metadata": "[{\"mint\":\"JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy\",\"name\":\"PERK #730\",\"image\":\"https://uploader.irys.xyz/ADo2KjwVhqx5EdzSPoNmtmqjsx8AWSP1Umsc7teXBHuS\",\"collection\":\"PERKS\"},{\"mint\":\"EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV\",\"name\":\"PERK #2987\",\"image\":\"https://uploader.irys.xyz/DPZZA6xi15TrYWi6D6A5w6rUr3tn2V7a9LUrT1W274mU\",\"collection\":\"PERKS\"},{\"mint\":\"46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa\",\"name\":\"PERK #315\",\"image\":\"https://uploader.irys.xyz/DwK3DZkHTFBPi8JVr9LKGEhWLgtBz8DFmq82EmKhzVVB\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy",
+      "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV",
+      "46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa"
+    ],
+    "nftMetadata": {
+      "JDfGF8Yzn31Nr7NXCiTmWB5NGf1KpSEiT1fnSN3wvaXy": {
+        "name": "PERK #730",
+        "image": "https://uploader.irys.xyz/ADo2KjwVhqx5EdzSPoNmtmqjsx8AWSP1Umsc7teXBHuS"
+      },
+      "EAa3wySCXLJs5HX85tDEbxzt4StHqjXztue8qgkTFQhV": {
+        "name": "PERK #2987",
+        "image": "https://uploader.irys.xyz/DPZZA6xi15TrYWi6D6A5w6rUr3tn2V7a9LUrT1W274mU"
+      },
+      "46RtZfGpmZM1gsCUPUmTPoQ8YneDRpENP5P5KjQbigVa": {
+        "name": "PERK #315",
+        "image": "https://uploader.irys.xyz/DwK3DZkHTFBPi8JVr9LKGEhWLgtBz8DFmq82EmKhzVVB"
+      }
+    }
+  },
+  {
+    "id": 48,
+    "wallet": "6vJrtBwoDTWnNGmMsGQyptwagB9oEVntfpK7yTctZ3Sy",
+    "lat": "31.213975956122024",
+    "lng": "121.46484375000001",
+    "primary_nft": "91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j",
+    "message": null,
+    "created_at": "2025-06-05T04:12:28.600Z",
+    "pfp_nft": "91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j",
+    "image_url": "https://uploader.irys.xyz/3K2MFKbdS9rGB8c6Y97L1kUYNsTkMr86vrvQWSKEjpW8",
+    "twitter_handle": "",
+    "telegram_handle": "",
+    "discord_handle": "",
+    "nickname": "Kegomaz",
+    "bio": "",
+    "governance_power": "0.000000",
+    "native_governance_power": 0,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 0,
+    "locked_governance_power": "0.000000",
+    "unlocked_governance_power": "0.000000",
+    "governance_last_updated": null,
+    "updated_at": "2025-06-05T23:25:50.080Z",
+    "nft_ids": "[\"91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j\"]",
+    "nft_metadata": "[{\"mint\":\"91qkruWzSLUAN6CSe7ZpQX83zY1GDcKYMLbq5zGX628j\",\"name\":\"PERK #2355\",\"image\":\"https://uploader.irys.xyz/3K2MFKbdS9rGB8c6Y97L1kUYNsTkMr86vrvQWSKEjpW8\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 33,
+    "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
+    "lat": "52.482780222078226",
+    "lng": "-0.5273437500000001",
+    "primary_nft": "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am",
+    "message": null,
+    "created_at": "2025-05-28T06:05:33.705Z",
+    "pfp_nft": "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am",
+    "image_url": "https://uploader.irys.xyz/23pQgpLgyuQAKfz3UwddahyRvo894Meo9FmT3Trh756x",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": "portor_",
+    "nickname": "Portor",
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 0,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 0,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 126779.222404,
+    "governance_last_updated": "2025-06-04T02:05:35.948Z",
+    "updated_at": "2025-06-05T23:25:51.311Z",
+    "nft_ids": "[\"F991zRCVwZ5zZwEBpbp5qwFgwwJ2yxSADjBYfgogRgjt\",\"CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB\",\"57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am\"]",
+    "nft_metadata": "[{\"mint\":\"F991zRCVwZ5zZwEBpbp5qwFgwwJ2yxSADjBYfgogRgjt\",\"name\":\"PERK #2537\",\"image\":\"https://uploader.irys.xyz/7tAnhvgZJZS4fYXPXG5abK8cxbiwuyavbTRBqg3KnGRQ\",\"collection\":\"PERKS\"},{\"mint\":\"CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB\",\"name\":\"PERK #675\",\"image\":\"https://uploader.irys.xyz/9ATQMgJ3TXNQ9QBVgFv8ZXxQVS6VNgyBKCVrpH7fdd51\",\"collection\":\"PERKS\"},{\"mint\":\"57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am\",\"name\":\"PERK #3304\",\"image\":\"https://uploader.irys.xyz/23pQgpLgyuQAKfz3UwddahyRvo894Meo9FmT3Trh756x\",\"collection\":\"PERKS\"}]",
+    "nfts": [
+      "F991zRCVwZ5zZwEBpbp5qwFgwwJ2yxSADjBYfgogRgjt",
+      "CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB",
+      "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am"
+    ],
+    "nftMetadata": {
+      "F991zRCVwZ5zZwEBpbp5qwFgwwJ2yxSADjBYfgogRgjt": {
+        "name": "PERK #2537",
+        "image": "https://uploader.irys.xyz/7tAnhvgZJZS4fYXPXG5abK8cxbiwuyavbTRBqg3KnGRQ"
+      },
+      "CgSY9BFtxmeLj4wAgSvae3a4GFSoYRX26PcrsbRmn3mB": {
+        "name": "PERK #675",
+        "image": "https://uploader.irys.xyz/9ATQMgJ3TXNQ9QBVgFv8ZXxQVS6VNgyBKCVrpH7fdd51"
+      },
+      "57zStmL9kWgFfbAyUoWkZuyoM7uBYjTUxugz3GysG4Am": {
+        "name": "PERK #3304",
+        "image": "https://uploader.irys.xyz/23pQgpLgyuQAKfz3UwddahyRvo894Meo9FmT3Trh756x"
+      }
+    }
+  },
+  {
+    "id": 34,
+    "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
+    "lat": "52.090370922392054",
+    "lng": "5.1218605041503915",
+    "primary_nft": "2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6",
+    "message": null,
+    "created_at": "2025-05-28T11:29:34.450Z",
+    "pfp_nft": "2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6",
+    "image_url": "https://uploader.irys.xyz/Fx6mGFT2eQHHrXXc1s1NFbLNadJFY4tfSQ38vojm4H3F",
+    "twitter_handle": "@ronaldtreur",
+    "telegram_handle": null,
+    "discord_handle": "funcracker",
+    "nickname": "Funcracker",
+    "bio": "Co-founder Aephia Industries (a Star Atlas DAC/Guild) & Co-founder ALF NFT collection",
+    "governance_power": "0.000000",
+    "native_governance_power": 0,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 0,
+    "locked_governance_power": "0.000000",
+    "unlocked_governance_power": "0.000000",
+    "governance_last_updated": null,
+    "updated_at": "2025-06-05T23:25:49.258Z",
+    "nft_ids": "[\"J8SSiCoLfovPQAe5qgzQ3KS3djHUhbNmB9uZEHG2arMs\",\"GQXa46iYAtHDC6qXE84npjkMnifMSfdfrt4eVMi9iVsR\",\"EiQVGZ8zcaC1ykgxtipgqoaruDqTnpiYhufgSRFRjoEM\",\"CdX5hxHux4pYNoq28uqvNZAGpStaGPzJqL5Sipo1LPCy\",\"6tqiTq418vndMcHt3UvyAULkDxascB96CNpFADeywwPF\",\"2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6\"]",
+    "nft_metadata": "[{\"mint\":\"J8SSiCoLfovPQAe5qgzQ3KS3djHUhbNmB9uZEHG2arMs\",\"name\":\"PERK #3257\",\"image\":\"https://uploader.irys.xyz/Emm4annrrS9VzExnagwHQybGZg1T9KkQNUm1o1SgNB1b\",\"collection\":\"PERKS\"},{\"mint\":\"GQXa46iYAtHDC6qXE84npjkMnifMSfdfrt4eVMi9iVsR\",\"name\":\"PERK #2943\",\"image\":\"https://uploader.irys.xyz/GsaAZkzvky2yWaCCHRcmQAceabxaKtgrUUHNBQ2qMkMt\",\"collection\":\"PERKS\"},{\"mint\":\"EiQVGZ8zcaC1ykgxtipgqoaruDqTnpiYhufgSRFRjoEM\",\"name\":\"PERK #2152\",\"image\":\"https://uploader.irys.xyz/5R5odRoQzNTQkFvep3hk7hfXRr7CfkkmP9RD87EH5ZG5\",\"collection\":\"PERKS\"},{\"mint\":\"CdX5hxHux4pYNoq28uqvNZAGpStaGPzJqL5Sipo1LPCy\",\"name\":\"PERK #2794\",\"image\":\"https://uploader.irys.xyz/9CQiCD8w1m4zYvTLWYjQBeDWbiUGggjtWy2DxyKztc6y\",\"collection\":\"PERKS\"},{\"mint\":\"6tqiTq418vndMcHt3UvyAULkDxascB96CNpFADeywwPF\",\"name\":\"PERK #1732\",\"image\":\"https://uploader.irys.xyz/CquTN2ZDVfb6rNR4KwDr4HRdmDLwxBqAxz5jHLhKW63J\",\"collection\":\"PERKS\"},{\"mint\":\"2NvC6MUe9YS8LGNhYhkftB8ok8YkvFRtuSbzUL3FPaE6\",\"name\":\"PERK #1713\",\"image\":\"https://uploader.irys.xyz/Fx6mGFT2eQHHrXXc1s1NFbLNadJFY4tfSQ38vojm4H3F\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 40,
+    "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
+    "lat": "38.02456557631515",
+    "lng": "23.799819946289062",
+    "primary_nft": "DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29",
+    "message": null,
+    "created_at": "2025-05-28T15:49:58.506Z",
+    "pfp_nft": "DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29",
+    "image_url": "https://uploader.irys.xyz/6qpYU69VzWYkmFA384EAmTbD8h66uY5Gi96P5wtaXo9E",
+    "twitter_handle": null,
+    "telegram_handle": null,
+    "discord_handle": null,
+    "nickname": "Titanmaker",
+    "bio": null,
+    "governance_power": "0.000000",
+    "native_governance_power": 0,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 0,
+    "locked_governance_power": 0,
+    "unlocked_governance_power": 200000,
+    "governance_last_updated": "2025-06-04T02:05:35.897Z",
+    "updated_at": "2025-06-05T23:25:52.438Z",
+    "nft_ids": "[\"HpGjsgdajjfNyqmxuwCjZA3MaurtXmNxqTfUf45KyWb9\",\"DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29\",\"5yqftFSs7UYUFp1FdJZ1TxvJgZjjFSiFXgbcze8xw9s2\"]",
+    "nft_metadata": "[{\"mint\":\"HpGjsgdajjfNyqmxuwCjZA3MaurtXmNxqTfUf45KyWb9\",\"name\":\"PERK #2820\",\"image\":\"https://uploader.irys.xyz/3ZeaPxtmbdAmqdn86APKEdRzXTXB4n8NFPKpWPP1RV1r\",\"collection\":\"PERKS\"},{\"mint\":\"DwsULojqJpjvWsFp2PmF8tn3P8AFf9iyUvPmvwab2e29\",\"name\":\"PERK #1110\",\"image\":\"https://uploader.irys.xyz/6qpYU69VzWYkmFA384EAmTbD8h66uY5Gi96P5wtaXo9E\",\"collection\":\"PERKS\"},{\"mint\":\"5yqftFSs7UYUFp1FdJZ1TxvJgZjjFSiFXgbcze8xw9s2\",\"name\":\"PERK #2932\",\"image\":\"https://uploader.irys.xyz/75VaVzEgECNtuYosPUZR5bK5NKGXWhKzF4YVg3hNEika\",\"collection\":\"PERKS\"}]",
+    "nfts": [],
+    "nftMetadata": {}
+  },
+  {
+    "id": 38,
+    "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
+    "lat": "51.49036206277271",
+    "lng": "-0.11672973632812501",
+    "primary_nft": "53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F",
+    "message": null,
+    "created_at": "2025-05-28T15:24:25.661Z",
+    "pfp_nft": "53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F",
+    "image_url": "https://uploader.irys.xyz/E7YUB1wVhWyhJacUWP582BZWQf3pfgmUQxRgdFFNyfC6",
+    "twitter_handle": "https://x.com/kxrnel",
+    "telegram_handle": "KxrnelK",
+    "discord_handle": ".kxrnel",
+    "nickname": "Kornel",
+    "bio": "Stake your SOL ",
+    "governance_power": "0.000000",
+    "native_governance_power": 0,
+    "delegated_governance_power": 0,
+    "native_power": "0.000000",
+    "delegated_power": "0.000000",
+    "total_governance_power": 0,
+    "locked_governance_power": "0.000000",
+    "unlocked_governance_power": "0.000000",
+    "governance_last_updated": null,
+    "updated_at": "2025-06-05T23:25:50.234Z",
+    "nft_ids": "[\"53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F\"]",
+    "nft_metadata": "[{\"mint\":\"53UHnJzyenmHdQBZ9LquksFiawWURVxSnnysg1TcZR6F\",\"name\":\"PERK #1263\",\"image\":\"https://uploader.irys.xyz/E7YUB1wVhWyhJacUWP582BZWQf3pfgmUQxRgdFFNyfC6\",\"collection\":\"PERKS\"}]",
     "nfts": [],
     "nftMetadata": {}
   }
