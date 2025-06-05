@@ -154,19 +154,24 @@ function parseVSRDeposits(data, currentTime) {
                   
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
-                  const isActive = endTs > currentTime;
                   
-                  // Universal metadata validation: prefer active lockups with higher multipliers
-                  // If current best is expired and we find an active lockup, prefer the active one
-                  const shouldUpdate = multiplier > bestMultiplier || 
-                    (bestLockup && bestLockup.endTs <= currentTime && isActive);
+                  // Canonical metadata validation: prioritize lower, more conservative multipliers
+                  // for complex VSR accounts with conflicting lockup metadata
+                  const isActive = endTs > currentTime;
+                  const duration = endTs - startTs;
+                  const remainingTime = Math.max(0, endTs - currentTime);
+                  
+                  // Conservative validation: prefer shorter-term, lower multiplier lockups
+                  // to prevent phantom lockup inflation
+                  const shouldUpdate = !bestLockup || 
+                    (isActive && (!bestLockup || bestLockup.endTs <= currentTime)) ||
+                    (isActive && bestLockup && isActive && duration < (bestLockup.endTs - bestLockup.startTs));
                   
                   if (shouldUpdate) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
                     
                     const lockupTypes = ['None', 'Cliff', 'Constant', 'Vesting', 'Monthly'];
-                    const isActive = endTs > currentTime;
                     const remaining = Math.max(endTs - currentTime, 0);
                     const duration = endTs - startTs;
                     
