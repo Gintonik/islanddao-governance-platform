@@ -1813,10 +1813,21 @@
         // ===== APPLICATION INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', initializeApp);
         
-        // Handle image loading errors with cascading fallbacks
+        // Persistent image cache to prevent pins from reverting to blue state
+        const imageCache = new Map();
+        const loadingImages = new Set();
+
+        // Handle image loading with persistent caching
         window.handleImageError = function(markerId, fallbackUrls, finalFallback) {
             const img = document.getElementById(markerId);
             if (!img) return;
+            
+            // Check if we already have a cached working image for this citizen
+            const cachedUrl = imageCache.get(markerId);
+            if (cachedUrl && img.src !== cachedUrl) {
+                img.src = cachedUrl;
+                return;
+            }
             
             // Parse fallback URLs if they're a string
             let urls = Array.isArray(fallbackUrls) ? fallbackUrls : JSON.parse(fallbackUrls || '[]');
@@ -1824,18 +1835,94 @@
             if (urls.length > 0) {
                 // Try next fallback URL
                 const nextUrl = urls.shift();
-                img.src = nextUrl;
                 
-                // Update the onerror to use remaining fallbacks
-                img.onerror = function() {
-                    window.handleImageError(markerId, urls, finalFallback);
-                };
+                // Test if image loads before setting it
+                testImageLoad(nextUrl).then(success => {
+                    if (success && img && img.id === markerId) {
+                        img.src = nextUrl;
+                        imageCache.set(markerId, nextUrl); // Cache successful URL
+                        img.onerror = null; // Clear error handler
+                    } else if (img && img.id === markerId) {
+                        // Try next fallback
+                        window.handleImageError(markerId, urls, finalFallback);
+                    }
+                });
             } else {
                 // All fallbacks failed, use final SVG fallback
                 img.src = finalFallback;
-                img.onerror = null; // Prevent infinite loops
+                img.onerror = null;
             }
         };
+
+        // Test if image URL loads successfully
+        function testImageLoad(url) {
+            return new Promise((resolve) => {
+                if (loadingImages.has(url)) {
+                    // Already testing this URL
+                    setTimeout(() => resolve(false), 100);
+                    return;
+                }
+                
+                loadingImages.add(url);
+                const testImg = new Image();
+                
+                const cleanup = () => {
+                    loadingImages.delete(url);
+                    testImg.onload = null;
+                    testImg.onerror = null;
+                };
+                
+                testImg.onload = () => {
+                    cleanup();
+                    resolve(true);
+                };
+                
+                testImg.onerror = () => {
+                    cleanup();
+                    resolve(false);
+                };
+                
+                // Set timeout for slow-loading images
+                setTimeout(() => {
+                    cleanup();
+                    resolve(false);
+                }, 5000);
+                
+                testImg.src = url;
+            });
+        }
+
+        // Enhanced image loading for citizen pins
+        function loadCitizenImage(citizen, markerId) {
+            const fallbackSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48dGV4dCB4PSIyMCIgeT0iMjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+QzwvdGV4dD48L3N2Zz4K';
+            
+            // Check cache first
+            if (imageCache.has(markerId)) {
+                return imageCache.get(markerId);
+            }
+            
+            // Build priority list of image URLs
+            const imageUrls = [];
+            
+            // 1. Database stored image_url (highest priority)
+            if (citizen.image_url) {
+                imageUrls.push(citizen.image_url);
+            }
+            
+            // 2. NFT metadata image
+            const pfpNft = citizen.pfp_nft || citizen.primary_nft;
+            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft] && citizen.nftMetadata[pfpNft].image) {
+                imageUrls.push(citizen.nftMetadata[pfpNft].image);
+            }
+            
+            // 3. Legacy pfpImageUrl
+            if (citizen.pfpImageUrl) {
+                imageUrls.push(citizen.pfpImageUrl);
+            }
+            
+            // Return first available URL or fallback
+            return imageUrls.length > 0 ? imageUrls[0] : fallbackSvg;
+        }
 
         // Initialize application
         async function initializeApp() {
@@ -2745,47 +2832,38 @@
                 imageUrl = citizen.image_url;
             }
 
-            // Create robust image loading with multiple fallbacks
-            const createRobustImageIcon = (primaryUrl, citizenData) => {
-                const fallbackSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48dGV4dCB4PSIyMCIgeT0iMjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+QzwvdGV4dD48L3N2Zz4K';
-                
-                // Prepare fallback URLs in order of preference
-                const fallbackUrls = [];
-                
-                // Add database image_url if available
-                if (citizenData.image_url && citizenData.image_url !== primaryUrl) {
-                    fallbackUrls.push(citizenData.image_url);
-                }
-                
-                // Add NFT metadata image URLs
-                if (citizenData.nftMetadata) {
-                    const pfpNft = citizenData.pfp_nft || citizenData.primary_nft;
-                    if (pfpNft && citizenData.nftMetadata[pfpNft] && citizenData.nftMetadata[pfpNft].image) {
-                        fallbackUrls.push(citizenData.nftMetadata[pfpNft].image);
-                    }
-                }
-                
-                // Create unique ID for this marker
-                const markerId = `marker-${citizenData.wallet || Math.random()}`;
-                
-                const imageHtml = `
-                    <img id="${markerId}" 
-                         src="${primaryUrl}" 
-                         style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; display: block;" 
-                         onload="this.style.opacity='1'; this.style.transition='opacity 0.3s ease';"
-                         onerror="handleImageError('${markerId}', ${JSON.stringify(fallbackUrls).replace(/"/g, '&quot;')}, '${fallbackSvg}')"
-                         loading="eager">
-                `;
-                
-                return L.divIcon({
-                    html: imageHtml,
-                    className: 'citizen-marker',
-                    iconSize: [46, 46],
-                    iconAnchor: [23, 23]
-                });
-            };
-
-            const icon = createRobustImageIcon(imageUrl, citizen);
+            // Create marker ID and get persistent image URL
+            const markerId = `marker-${citizen.wallet}`;
+            const persistentImageUrl = loadCitizenImage(citizen, markerId);
+            
+            // Prepare fallback URLs for error handling
+            const fallbackUrls = [];
+            if (citizen.image_url && citizen.image_url !== persistentImageUrl) {
+                fallbackUrls.push(citizen.image_url);
+            }
+            
+            const pfpNft = citizen.pfp_nft || citizen.primary_nft;
+            if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft] && citizen.nftMetadata[pfpNft].image) {
+                fallbackUrls.push(citizen.nftMetadata[pfpNft].image);
+            }
+            
+            const fallbackSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48dGV4dCB4PSIyMCIgeT0iMjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE0IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+QzwvdGV4dD48L3N2Zz4K';
+            
+            const imageHtml = `
+                <img id="${markerId}" 
+                     src="${persistentImageUrl}" 
+                     style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #4facfe; object-fit: cover; display: block; opacity: 0;" 
+                     onload="this.style.opacity='1'; this.style.transition='opacity 0.3s ease'; imageCache.set('${markerId}', this.src);"
+                     onerror="handleImageError('${markerId}', ${JSON.stringify(fallbackUrls).replace(/"/g, '&quot;')}, '${fallbackSvg}')"
+                     loading="eager">
+            `;
+            
+            const icon = L.divIcon({
+                html: imageHtml,
+                className: 'citizen-marker',
+                iconSize: [46, 46],
+                iconAnchor: [23, 23]
+            });
 
             const marker = L.marker([lat, lng], { icon }).addTo(map);
             marker.on('click', () => showCitizenPanel(citizen));
