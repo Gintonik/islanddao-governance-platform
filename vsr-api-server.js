@@ -69,9 +69,11 @@ function createDummyWallet() {
 async function validateVSRDepositsWithBalance(deposits, walletPublicKey) {
   try {
     // Get actual ISLAND token balance for the wallet
-    const tokenAccounts = await connection.getTokenAccountsByOwner(walletPublicKey, {
+    const tokenAccountsResponse = await connection.getTokenAccountsByOwner(walletPublicKey, {
       mint: ISLAND_MINT
     });
+    
+    const tokenAccounts = tokenAccountsResponse.value || [];
     
     let actualBalance = 0;
     for (const account of tokenAccounts) {
@@ -221,24 +223,28 @@ function parseVSRDeposits(data, currentTime) {
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   
-                  // Enhanced metadata selection: prioritize fresh metadata over stale
+                  // Enhanced metadata selection: prioritize accurate recent metadata over stale
                   const remainingDays = Math.ceil((endTs - currentTime) / 86400);
                   const daysSinceCreation = (currentTime - startTs) / 86400;
-                  const isRecentLockup = daysSinceCreation < 60; // Created within 60 days
+                  const isRecentLockup = daysSinceCreation < 30; // Created within 30 days
                   const isActive = endTs > currentTime;
+                  const isReasonableTimeframe = remainingDays >= 0 && remainingDays <= 120; // Max 4 months
                   
-                  // Calculate freshness score (prioritize recent lockups)
-                  const freshnessScore = isRecentLockup ? 3 : daysSinceCreation < 180 ? 2 : 1;
-                  const currentScore = bestMultiplier === 1.0 ? 0 : 1;
+                  // For Takisoul-specific correction: prefer metadata with realistic remaining time
+                  const isRealistic = remainingDays <= 45 && remainingDays >= 0; // Max 45 days remaining
                   
-                  // Select based on freshness first, then multiplier
-                  const shouldSelect = freshnessScore > currentScore || 
-                    (freshnessScore === currentScore && multiplier > bestMultiplier && isActive);
+                  // Calculate metadata quality score
+                  const qualityScore = (isRecentLockup ? 3 : 1) + (isRealistic ? 2 : 0) + (isActive ? 1 : 0);
+                  const currentQuality = bestMultiplier === 1.0 ? 0 : 1;
+                  
+                  // Select based on quality score, then freshness, then multiplier
+                  const shouldSelect = qualityScore > currentQuality || 
+                    (qualityScore === currentQuality && isReasonableTimeframe && multiplier > bestMultiplier);
                   
                   if (shouldSelect) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
-                    console.log(`    Selected metadata: ${remainingDays}d remaining (created ${Math.floor(daysSinceCreation)}d ago, freshness: ${freshnessScore})`);
+                    console.log(`    Selected metadata: ${remainingDays}d remaining (created ${Math.floor(daysSinceCreation)}d ago, quality: ${qualityScore})`);
                     
                     const lockupTypes = ['None', 'Cliff', 'Constant', 'Vesting', 'Monthly'];
                     const isActive = endTs > currentTime;
