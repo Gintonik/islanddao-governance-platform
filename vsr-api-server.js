@@ -229,20 +229,7 @@ function parseVSRDeposits(data, currentTime) {
           }
         }
 
-        // Stricter validation to eliminate phantom deposits
         if (amount >= 1000 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
-          
-          // Enhanced phantom deposit detection for small amounts
-          if (amount < 5000 && (offset === 184 || offset === 264 || offset === 344)) {
-            shadowDeposits.push({
-              amount,
-              type: 'phantom_small_deposit',
-              offset,
-              note: `${amount.toFixed(0)} ISLAND likely phantom deposit`
-            });
-            processedAmounts.add(amountKey);
-            continue;
-          }
           
           if (rounded === 1000 || rounded === 11000) {
             shadowDeposits.push({
