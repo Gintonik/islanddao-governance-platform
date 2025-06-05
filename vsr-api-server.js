@@ -131,10 +131,7 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
             multiplier = entry.lockup.multiplier ? entry.lockup.multiplier.toNumber() / 1e9 : 1.0;
           }
           
-          if (multiplier <= 1.0) {
-            console.log(`[Deposit ${i}] Skipped - unlocked (multiplier: ${multiplier})`);
-            continue;
-          }
+          // Include all deposits, both locked and unlocked
           
           const depositKey = `${entry.lockup.startTs.toNumber()}-${amount.toFixed(6)}`;
           if (processedDepositKeys.has(depositKey)) {
@@ -206,8 +203,8 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
                 }
               }
               
-              // Only include deposits with multipliers > 1.0 (locked deposits)
-              if (multiplierFound && bestMultiplier > 1.0) {
+              // Include all deposits (both locked and unlocked)
+              if (bestMultiplier >= 1.0) {
                 const depositKey = `${offset}-${tokens.toFixed(6)}`;
                 if (!processedDepositKeys.has(depositKey)) {
                   processedDepositKeys.add(depositKey);
