@@ -221,13 +221,24 @@ function parseVSRDeposits(data, currentTime) {
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   
-                  // Conservative lockup selection: prioritize reasonable timeframes
+                  // Enhanced metadata selection: prioritize fresh metadata over stale
                   const remainingDays = Math.ceil((endTs - currentTime) / 86400);
-                  const isReasonableTimeframe = remainingDays <= 45; // Max ~6 weeks remaining
+                  const daysSinceCreation = (currentTime - startTs) / 86400;
+                  const isRecentLockup = daysSinceCreation < 60; // Created within 60 days
+                  const isActive = endTs > currentTime;
                   
-                  if (multiplier > bestMultiplier && isReasonableTimeframe) {
+                  // Calculate freshness score (prioritize recent lockups)
+                  const freshnessScore = isRecentLockup ? 3 : daysSinceCreation < 180 ? 2 : 1;
+                  const currentScore = bestMultiplier === 1.0 ? 0 : 1;
+                  
+                  // Select based on freshness first, then multiplier
+                  const shouldSelect = freshnessScore > currentScore || 
+                    (freshnessScore === currentScore && multiplier > bestMultiplier && isActive);
+                  
+                  if (shouldSelect) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
+                    console.log(`    Selected metadata: ${remainingDays}d remaining (created ${Math.floor(daysSinceCreation)}d ago, freshness: ${freshnessScore})`);
                     
                     const lockupTypes = ['None', 'Cliff', 'Constant', 'Vesting', 'Monthly'];
                     const isActive = endTs > currentTime;
@@ -362,9 +373,19 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       const { deposits, shadowDeposits } = parseVSRDeposits(data, currentTime);
       
       console.log(`LOCKED: Found controlled account: ${account.pubkey.toBase58()}`);
-      console.log(`LOCKED: Found ${deposits.length} valid deposits`);
+      console.log(`LOCKED: Found ${deposits.length} deposits before validation`);
       
-      for (const deposit of deposits) {
+      // Apply enhanced balance validation to detect phantom deposits
+      const validation = await validateVSRDepositsWithBalance(deposits, walletPublicKey);
+      const validatedDeposits = validation.isPhantom ? validation.validDeposits : deposits;
+      
+      if (validation.isPhantom) {
+        console.log(`PHANTOM FILTER: ${validation.reason} - filtered ${deposits.length - validatedDeposits.length} phantom deposits`);
+      }
+      
+      console.log(`LOCKED: Processing ${validatedDeposits.length} validated deposits`);
+      
+      for (const deposit of validatedDeposits) {
         totalPower += deposit.power;
         allDeposits.push(deposit);
         if (deposit.isLocked) {
