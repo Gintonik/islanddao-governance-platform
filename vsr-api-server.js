@@ -77,9 +77,9 @@ const WORKING_GOVERNANCE_DATA = {
     totalGovernancePower: 377734
   },
   "EXRBCP2MX6hRAt4oh61k5mhL6WhmUXPemfzNssUpM4S6": {
-    nativeGovernancePower: 0,
+    nativeGovernancePower: 332768,
     delegatedGovernancePower: 0,
-    totalGovernancePower: 0
+    totalGovernancePower: 332768
   },
   "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh": {
     nativeGovernancePower: 143635,

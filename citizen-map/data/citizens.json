@@ -401,30 +401,8 @@
     "updated_at": "2025-06-05T21:12:03.416Z",
     "nft_ids": "[\"HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD\",\"GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn\",\"AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx\",\"qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7\"]",
     "nft_metadata": "[{\"mint\":\"HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD\",\"name\":\"PERK #2743\",\"image\":\"https://uploader.irys.xyz/F1R4ieBcjuhPZC8jX7GAcwfkrWU3LAeeTA2cVTScyCdJ\",\"collection\":\"PERKS\"},{\"mint\":\"GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn\",\"name\":\"PERK #523\",\"image\":\"https://uploader.irys.xyz/HKsH6gkiJgUCVawg1qxRihH8k54LY3FmGa8yo37JDRJa\",\"collection\":\"PERKS\"},{\"mint\":\"AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx\",\"name\":\"PERK #2689\",\"image\":\"https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL\",\"collection\":\"PERKS\"},{\"mint\":\"qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7\",\"name\":\"PERK #986\",\"image\":\"https://uploader.irys.xyz/7UZFP7G9bxPh667yeTPJoT6noD46UhKebTtAEoswF5eH\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD",
-      "GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn",
-      "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx",
-      "qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7"
-    ],
-    "nftMetadata": {
-      "HYhsg2HyFrTUuoEKGEJwgxy43Stnaa33BavZ1Ajc9EhD": {
-        "name": "PERK #2743",
-        "image": "https://uploader.irys.xyz/F1R4ieBcjuhPZC8jX7GAcwfkrWU3LAeeTA2cVTScyCdJ"
-      },
-      "GowupmMUf6Ytxzk7b6RG7XXeAe7DcsFyofsYZZUSxZMn": {
-        "name": "PERK #523",
-        "image": "https://uploader.irys.xyz/HKsH6gkiJgUCVawg1qxRihH8k54LY3FmGa8yo37JDRJa"
-      },
-      "AjwK2CMphbKwzgAANzG2CcZ68pSssxi824hcReFHiMQx": {
-        "name": "PERK #2689",
-        "image": "https://uploader.irys.xyz/6UV87jADCgiooEceLyzonHSsAs3vqKc7fVaPRRGGo2kL"
-      },
-      "qasDN8RRMzSkswFwy6vpBeT2NwVFNUdZnNqrdXPagf7": {
-        "name": "PERK #986",
-        "image": "https://uploader.irys.xyz/7UZFP7G9bxPh667yeTPJoT6noD46UhKebTtAEoswF5eH"
-      }
-    }
+    "nfts": [],
+    "nftMetadata": {}
   },
   {
     "id": 35,
@@ -1307,14 +1285,7 @@
     "updated_at": "2025-06-05T21:11:59.857Z",
     "nft_ids": "[\"AEKhYCrsPSsM9secZJiFjZXX7pcuEkT5JrgqFh7nX2sV\"]",
     "nft_metadata": "[{\"mint\":\"AEKhYCrsPSsM9secZJiFjZXX7pcuEkT5JrgqFh7nX2sV\",\"name\":\"PERK #1471\",\"image\":\"https://uploader.irys.xyz/HZh1VzirfohGt3Wq67Ud7XGCtnYtX3jgRmpWSPdVSrYj\",\"collection\":\"PERKS\"}]",
-    "nfts": [
-      "AEKhYCrsPSsM9secZJiFjZXX7pcuEkT5JrgqFh7nX2sV"
-    ],
-    "nftMetadata": {
-      "AEKhYCrsPSsM9secZJiFjZXX7pcuEkT5JrgqFh7nX2sV": {
-        "name": "PERK #1471",
-        "image": "https://uploader.irys.xyz/HZh1VzirfohGt3Wq67Ud7XGCtnYtX3jgRmpWSPdVSrYj"
-      }
-    }
+    "nfts": [],
+    "nftMetadata": {}
   }
 ]
