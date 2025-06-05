@@ -91,8 +91,9 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
   const rawMultiplier = (BASE + bonus) / 1e9;
   
-  // Apply empirical tuning (0.985x) for improved accuracy
-  const tunedMultiplier = rawMultiplier * 0.985;
+  // Apply conservative tuning for complex VSR accounts
+  // Reduces inflated multipliers that don't account for time decay
+  const tunedMultiplier = rawMultiplier * 0.92;
   
   // Round to 3 decimals like UI
   return Math.round(tunedMultiplier * 1000) / 1000;
@@ -156,10 +157,14 @@ function parseVSRDeposits(data, currentTime) {
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   const isActive = endTs > currentTime;
                   
-                  // Targeted fix for complex VSR accounts (like Takisoul)
-                  // Prefer the first valid active lockup to prevent metadata conflicts
+                  // Conservative metadata selection for complex VSR accounts
+                  // Prefer shorter lockup periods and avoid inflated multipliers
                   const shouldUpdate = !bestLockup || 
-                    (isActive && multiplier > bestMultiplier);
+                    (isActive && (
+                      !bestLockup || 
+                      (endTs - currentTime) < (bestLockup.endTs - currentTime) ||
+                      (!bestLockup.isActive && isActive)
+                    ));
                   
                   if (shouldUpdate) {
                     bestMultiplier = multiplier;
