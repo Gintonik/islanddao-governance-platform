@@ -18,7 +18,7 @@ args = "Citizen Map Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "VSR API Server"
+args = "VSR API Server Fixed"
 
 [[workflows.workflow]]
 name = "Database Sync"
@@ -39,12 +39,12 @@ args = "cd citizen-map && node simple-server.cjs"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "VSR API Server"
+name = "VSR API Server Fixed"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node vsr-api-server.js"
+args = "node vsr-api-server-fixed.cjs"
 waitForPort = 3001
 
 [deployment]

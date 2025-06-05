@@ -98,11 +98,94 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
   return Math.round(tunedMultiplier * 1000) / 1000;
 }
 
-// LOCKED: Proven deposit parsing logic
+// VSR deposit parsing with proper is_used flag validation
 function parseVSRDeposits(data, currentTime) {
   const deposits = [];
   const shadowDeposits = [];
   const processedAmounts = new Set();
+  
+  // Use structured VSR deposit entry validation instead of raw offset scanning
+  // VSR Voter account: 104-byte header + deposit entries (80 bytes each)
+  const HEADER_SIZE = 104;
+  const DEPOSIT_ENTRY_SIZE = 80;
+  
+  if (data.length < HEADER_SIZE + DEPOSIT_ENTRY_SIZE) {
+    return { deposits, shadowDeposits };
+  }
+  
+  // Process each deposit entry using proper structure validation
+  const remainingBytes = data.length - HEADER_SIZE;
+  const maxEntries = Math.floor(remainingBytes / DEPOSIT_ENTRY_SIZE);
+  
+  for (let i = 0; i < maxEntries && i < 32; i++) {
+    const entryOffset = HEADER_SIZE + (i * DEPOSIT_ENTRY_SIZE);
+    
+    if (entryOffset + DEPOSIT_ENTRY_SIZE <= data.length) {
+      try {
+        // Parse VSR DepositEntry structure
+        const amount = Number(data.readBigUInt64LE(entryOffset)) / 1e6;
+        const lockupStart = Number(data.readBigInt64LE(entryOffset + 16));
+        const lockupEnd = Number(data.readBigInt64LE(entryOffset + 24));
+        const lockupKind = data[entryOffset + 32];
+        const isUsed = data[entryOffset + 72] !== 0; // CRITICAL: Deposit validity flag
+        
+        // Skip withdrawn deposits using is_used flag
+        if (!isUsed || amount <= 0 || amount > 50_000_000) {
+          if (amount > 0) {
+            shadowDeposits.push({
+              amount,
+              type: 'withdrawn_deposit',
+              offset: entryOffset,
+              note: `${amount.toFixed(0)} ISLAND withdrawn (is_used=false)`
+            });
+          }
+          continue;
+        }
+        
+        const amountKey = Math.round(amount * 1000);
+        if (processedAmounts.has(amountKey)) continue;
+        processedAmounts.add(amountKey);
+        
+        // Process valid deposit with lockup calculation
+        if (lockupKind > 0 && lockupStart > 1577836800 && lockupEnd > lockupStart && lockupEnd < 1893456000) {
+          const lockup = { kind: lockupKind, startTs: lockupStart, endTs: lockupEnd };
+          const multiplier = calculateVSRMultiplier(lockup, currentTime);
+          const isLocked = lockupEnd > currentTime;
+          
+          deposits.push({
+            amount,
+            multiplier,
+            power: amount * multiplier,
+            isLocked,
+            classification: isLocked ? 'active_lockup' : 'expired_lockup',
+            lockupDetails: {
+              type: ['None', 'Cliff', 'Constant', 'Vesting', 'Monthly'][lockupKind] || `Unknown(${lockupKind})`,
+              isActive: isLocked,
+              startDate: new Date(lockupStart * 1000).toISOString().split('T')[0],
+              endDate: new Date(lockupEnd * 1000).toISOString().split('T')[0]
+            },
+            offset: entryOffset
+          });
+        } else {
+          // Valid unlocked deposit
+          deposits.push({
+            amount,
+            multiplier: 1.0,
+            power: amount,
+            isLocked: false,
+            classification: 'unlocked',
+            lockupDetails: null,
+            offset: entryOffset
+          });
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+  
+  return { deposits, shadowDeposits };
+}
   
   // LOCKED: Working offset patterns - DO NOT MODIFY
   const lockupMappings = [

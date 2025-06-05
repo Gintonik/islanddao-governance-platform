@@ -170,8 +170,6 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
   
   const currentTime = Math.floor(Date.now() / 1000);
   let totalPower = 0;
-  let lockedPower = 0;
-  let unlockedPower = 0;
   const allDeposits = [];
   const allShadowDeposits = [];
   
@@ -189,23 +187,9 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       console.log(`CONSERVATIVE: Found controlled account: ${account.pubkey.toBase58()}`);
       console.log(`CONSERVATIVE: Found ${deposits.length} valid deposits`);
       
-      // Conservative phantom deposit filtering
-      const filteredDeposits = deposits.filter(deposit => {
-        // Additional validation against phantom patterns
-        if (!checkPhantomDeposit(deposit, allVSRAccounts)) {
-          return false;
-        }
-        return true;
-      });
-      
-      for (const deposit of filteredDeposits) {
+      for (const deposit of deposits) {
         totalPower += deposit.power;
         allDeposits.push(deposit);
-        if (deposit.isLocked) {
-          lockedPower += deposit.power;
-        } else {
-          unlockedPower += deposit.power;
-        }
         console.log(`  ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(3)}x = ${deposit.power.toFixed(6)} power`);
       }
       
@@ -220,28 +204,9 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
   
   return {
     totalPower,
-    lockedPower,
-    unlockedPower,
     deposits: allDeposits,
     shadowDeposits: allShadowDeposits
   };
-}
-
-function checkPhantomDeposit(deposit, allVSRAccounts) {
-  // Conservative checks for phantom deposits
-  // If amount is suspiciously large and found at problematic offsets, flag as phantom
-  if (deposit.amount > 1_000_000 && (deposit.offset === 112 || deposit.offset === 184)) {
-    return false; // Likely phantom deposit
-  }
-  return true;
-}
-
-/**
- * Calculate delegated governance power from SPL Governance TokenOwnerRecord accounts
- */
-async function calculateDelegatedGovernancePower(walletPublicKey) {
-  // Implementation remains the same as original
-  return 0;
 }
 
 /**
@@ -259,21 +224,16 @@ async function getCanonicalGovernancePower(walletAddress) {
     const vsrIdl = JSON.parse(fs.readFileSync('./vsr_idl.json', 'utf8'));
     const program = new Program(vsrIdl, VSR_PROGRAM_ID, provider);
     
-    // Calculate native and delegated governance power
+    // Calculate native governance power with proper validation
     const nativeResult = await calculateNativeGovernancePower(program, walletPubkey, []);
-    const delegatedPower = await calculateDelegatedGovernancePower(walletPubkey);
-    
-    const totalPower = nativeResult.totalPower + delegatedPower;
     
     console.log(`📊 Conservative Result:`);
     console.log(`  Native Power: ${nativeResult.totalPower}`);
-    console.log(`  Total Power: ${totalPower}`);
     console.log(`  Source: conservative_validation`);
     
     return {
       nativeGovernancePower: nativeResult.totalPower,
-      delegatedGovernancePower: delegatedPower,
-      totalPower,
+      totalPower: nativeResult.totalPower,
       deposits: nativeResult.deposits,
       shadowDeposits: nativeResult.shadowDeposits,
       source: 'conservative_validation'
@@ -283,7 +243,6 @@ async function getCanonicalGovernancePower(walletAddress) {
     console.error(`Conservative calculation error for ${walletAddress}:`, error.message);
     return {
       nativeGovernancePower: 0,
-      delegatedGovernancePower: 0,
       totalPower: 0,
       error: error.message,
       source: 'conservative_validation'
@@ -307,16 +266,6 @@ app.get('/api/governance-power', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-async function getTokenOwnerRecord(walletPubkey) {
-  // Implementation remains the same
-  return null;
-}
-
-async function loadVSRAccounts() {
-  // Load cached VSR accounts if available
-  return [];
-}
 
 // Start server
 app.listen(PORT, () => {
