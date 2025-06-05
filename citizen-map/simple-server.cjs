@@ -230,30 +230,60 @@ app.get('/api/nfts', async (req, res) => {
   }
 });
 
-// Governance data sync function
+// Authentic governance data sync using locked VSR calculator
 async function syncGovernanceData() {
   try {
-    console.log('Starting daily governance data sync at 12:00 UTC...');
+    console.log('Starting daily authentic governance sync...');
     
-    // Update governance power from JSON data
-    if (governanceData && governanceData.citizens) {
-      for (const citizen of governanceData.citizens) {
-        try {
-          await pool.query(
-            'UPDATE citizens SET native_governance_power = $1, governance_power = $1, updated_at = NOW() WHERE wallet = $2',
-            [citizen.native_governance_power, citizen.wallet]
-          );
-        } catch (error) {
-          console.error(`Error updating governance power for ${citizen.wallet}:`, error);
-        }
-      }
-      console.log(`Updated governance power for ${governanceData.citizens.length} citizens`);
-    }
-    
-    // Refresh NFT data for all citizens (governance power stays locked from JSON)
-    const result = await pool.query('SELECT wallet FROM citizens');
+    // Get all citizens from database
+    const result = await pool.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
     const citizens = result.rows;
     
+    console.log(`Syncing authentic governance power for ${citizens.length} citizens...`);
+    
+    let updated = 0;
+    let failed = 0;
+    
+    // Calculate authentic governance power for each citizen
+    for (const citizen of citizens) {
+      try {
+        console.log(`Calculating governance power for ${citizen.nickname} (${citizen.wallet.slice(0, 8)}...)`);
+        
+        // Get authentic governance power from locked VSR calculator
+        const response = await fetch(`http://localhost:3001/api/governance-power?wallet=${citizen.wallet}`);
+        const governanceData = await response.json();
+        
+        if (response.ok && governanceData.totalGovernancePower !== undefined) {
+          // Update database with authentic blockchain data
+          await pool.query(`
+            UPDATE citizens 
+            SET 
+              native_governance_power = $1,
+              governance_power = $2,
+              total_governance_power = $3,
+              updated_at = NOW()
+            WHERE wallet = $4
+          `, [
+            governanceData.nativeGovernancePower || 0,
+            governanceData.delegatedGovernancePower || 0,
+            governanceData.totalGovernancePower || 0,
+            citizen.wallet
+          ]);
+          
+          updated++;
+          console.log(`✅ ${citizen.nickname}: ${(governanceData.totalGovernancePower || 0).toLocaleString()} ISLAND`);
+        } else {
+          throw new Error(`API returned: ${JSON.stringify(governanceData)}`);
+        }
+        
+      } catch (error) {
+        failed++;
+        console.error(`❌ Failed to update ${citizen.nickname}: ${error.message}`);
+      }
+    }
+    
+    // Refresh NFT data for all citizens
+    console.log('Refreshing NFT data...');
     for (const citizen of citizens) {
       try {
         const nfts = await fetchWalletNFTs(citizen.wallet);
@@ -268,20 +298,7 @@ async function syncGovernanceData() {
       }
     }
     
-    // Generate governance data export JSON file
-    try {
-      const exportResponse = await fetch('http://localhost:5000/api/governance-export');
-      if (exportResponse.ok) {
-        const exportData = await exportResponse.json();
-        const fs = require('fs');
-        fs.writeFileSync('./data/governance-power.json', JSON.stringify(exportData, null, 2));
-        console.log(`Governance data exported to JSON file with ${exportData.citizens.length} citizens`);
-      }
-    } catch (error) {
-      console.error('Error generating governance export:', error);
-    }
-    
-    console.log('Daily governance and NFT data sync completed successfully');
+    console.log(`Daily sync completed: ${updated} updated, ${failed} failed`);
   } catch (error) {
     console.error('Error during daily sync:', error);
   }
@@ -519,33 +536,41 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         console.error(`Error fetching NFTs for ${wallet_address}:`, error);
       }
       
-      // Calculate governance power for new citizen
-      let governancePower = 0;
+      // Calculate authentic governance power for new citizen using locked VSR calculator
+      let nativeGovernancePower = 0;
+      let delegatedGovernancePower = 0;
+      let totalGovernancePower = 0;
+      
       try {
-        const vsrResponse = await fetch(`http://localhost:3001/governance-power/${wallet_address}`);
+        console.log(`Calculating authentic governance power for new citizen ${wallet_address}...`);
+        const vsrResponse = await fetch(`http://localhost:3001/api/governance-power?wallet=${wallet_address}`);
         if (vsrResponse.ok) {
           const vsrData = await vsrResponse.json();
-          governancePower = vsrData.totalGovernancePower || 0;
-          console.log(`Calculated governance power for ${wallet_address}: ${governancePower}`);
+          nativeGovernancePower = vsrData.nativeGovernancePower || 0;
+          delegatedGovernancePower = vsrData.delegatedGovernancePower || 0;
+          totalGovernancePower = vsrData.totalGovernancePower || 0;
+          console.log(`✅ New citizen ${wallet_address}: ${totalGovernancePower.toLocaleString()} ISLAND total governance power`);
+        } else {
+          console.error(`VSR API returned error for ${wallet_address}:`, await vsrResponse.text());
         }
       } catch (error) {
         console.error(`Error calculating governance power for ${wallet_address}:`, error);
       }
       
-      // Insert new citizen with complete data
+      // Insert new citizen with complete authentic data
       const result = await pool.query(`
         INSERT INTO citizens (
           wallet, lat, lng, nickname, bio, 
           twitter_handle, telegram_handle, discord_handle,
           primary_nft, pfp_nft, image_url, nft_ids, nft_metadata,
-          native_governance_power, governance_power
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          native_governance_power, governance_power, total_governance_power
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING *
       `, [wallet_address, lat, lng, nickname, bio, twitter_handle, telegram_handle, discord_handle, 
           primary_nft, pfp_nft, image_url, JSON.stringify(nftIds), JSON.stringify(nftData), 
-          governancePower, governancePower]);
+          nativeGovernancePower, delegatedGovernancePower, totalGovernancePower]);
       
-      console.log(`New citizen ${wallet_address} added with ${nftData.length} NFTs and ${governancePower} governance power`);
+      console.log(`New citizen ${wallet_address} added with ${nftData.length} NFTs and ${totalGovernancePower.toLocaleString()} ISLAND governance power`);
       res.json({ success: true, citizen: result.rows[0], action: 'created' });
     }
 
