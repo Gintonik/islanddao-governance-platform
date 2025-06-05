@@ -1,5 +1,5 @@
 {
-  "generated_at": "2025-06-05T01:10:30.570Z",
+  "generated_at": "2025-06-05T14:04:24.890Z",
   "total_citizens": 21,
   "citizens": [
     {
@@ -113,14 +113,14 @@
     {
       "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
       "nickname": "legend",
-      "native_governance_power": 68644.941357,
-      "governance_power": 68644.941357,
+      "native_governance_power": 0,
+      "governance_power": 0,
       "delegated_governance_power": 0,
-      "total_governance_power": 68644.941357,
+      "total_governance_power": 0,
       "locked_governance_power": 0,
       "unlocked_governance_power": 3363730.150474,
       "nft_count": 5,
-      "last_updated": "2025-06-05T01:10:29.602Z"
+      "last_updated": "2025-06-05T14:04:24.889Z"
     },
     {
       "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
@@ -254,5 +254,6 @@
       "nft_count": 3,
       "last_updated": "2025-06-05T01:10:23.655Z"
     }
-  ]
+  ],
+  "note": "Updated with phantom deposit corrections - legend now shows 0 ISLAND"
 }
