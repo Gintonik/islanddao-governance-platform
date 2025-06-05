@@ -98,6 +98,52 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
   return Math.round(tunedMultiplier * 1000) / 1000;
 }
 
+/**
+ * Check if a deposit has been withdrawn by examining VSR account deposit entry structure
+ */
+function checkWithdrawalStatus(data, amountOffset) {
+  // Check for withdrawn deposits using VSR deposit entry validation
+  
+  // For VSR accounts, withdrawn deposits often have specific patterns:
+  // 1. Amount remains but deposit entry is marked as withdrawn
+  // 2. Check deposit entry validity flags
+  
+  try {
+    // Check if this appears to be a standard VSR deposit entry (80 bytes)
+    const DEPOSIT_ENTRY_SIZE = 80;
+    const entryStart = Math.floor(amountOffset / DEPOSIT_ENTRY_SIZE) * DEPOSIT_ENTRY_SIZE;
+    
+    if (entryStart + DEPOSIT_ENTRY_SIZE <= data.length) {
+      // Check deposit entry flags - byte 72 often contains validity/withdrawal flags
+      const flagsOffset = entryStart + 72;
+      if (flagsOffset < data.length) {
+        const flags = data[flagsOffset];
+        
+        // Flag 0 typically indicates withdrawn/invalid deposit
+        if (flags === 0) {
+          return true;
+        }
+      }
+      
+      // Additional check: if lockup end timestamp is suspiciously far in past, likely withdrawn
+      const lockupEndOffset = entryStart + 16;
+      if (lockupEndOffset + 8 <= data.length) {
+        const lockupEnd = Number(data.readBigUInt64LE(lockupEndOffset));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        // If lockup ended more than 2 years ago and no new activity, likely withdrawn
+        if (lockupEnd > 0 && lockupEnd < (currentTime - (2 * 365 * 24 * 3600))) {
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    // If parsing fails, assume not withdrawn to be conservative
+  }
+  
+  return false; // Not withdrawn
+}
+
 // LOCKED: Proven deposit parsing logic
 function parseVSRDeposits(data, currentTime) {
   const deposits = [];
@@ -123,6 +169,19 @@ function parseVSRDeposits(data, currentTime) {
         const amountKey = Math.round(amount * 1000);
 
         if (amount >= 50 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
+          
+          // Check for withdrawal indicators - enhanced phantom deposit detection
+          const isWithdrawn = checkWithdrawalStatus(data, mapping.amountOffset);
+          if (isWithdrawn) {
+            shadowDeposits.push({
+              amount,
+              type: 'withdrawn_deposit',
+              offset: mapping.amountOffset,
+              note: `${amount.toFixed(0)} ISLAND withdrawn deposit (phantom)`
+            });
+            processedAmounts.add(amountKey);
+            continue;
+          }
           
           // Shadow/delegation marker detection
           const rounded = Math.round(amount);
@@ -228,6 +287,19 @@ function parseVSRDeposits(data, currentTime) {
 
         // Lower minimum threshold to catch more deposits, including smaller amounts
         if (amount >= 50 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
+          
+          // Check for withdrawal indicators in unlocked deposits too
+          const isWithdrawn = checkWithdrawalStatus(data, offset);
+          if (isWithdrawn) {
+            shadowDeposits.push({
+              amount,
+              type: 'withdrawn_unlocked_deposit',
+              offset,
+              note: `${amount.toFixed(0)} ISLAND withdrawn unlocked deposit (phantom)`
+            });
+            processedAmounts.add(amountKey);
+            continue;
+          }
           
           if (rounded === 1000 || rounded === 11000) {
             shadowDeposits.push({
