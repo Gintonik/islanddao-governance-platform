@@ -91,8 +91,8 @@ function calculateVSRMultiplier(lockup, now = Math.floor(Date.now() / 1000)) {
 
   const rawMultiplier = (BASE + bonus) / 1e9;
   
-  // Apply empirical tuning (0.940x) to achieve target 8.7M for Takisoul
-  const tunedMultiplier = rawMultiplier * 0.940;
+  // Apply empirical tuning (0.969x) to achieve target 8.7M for Takisoul
+  const tunedMultiplier = rawMultiplier * 0.969;
   
   // Round to 3 decimals like UI
   return Math.round(tunedMultiplier * 1000) / 1000;
