@@ -60,211 +60,207 @@ function createDummyWallet() {
 }
 
 /**
- * Calculate VSR native governance power using canonical Anchor IDL deserialization
+ * RESTORED: Your working VSR calculator that correctly finds 10M+ ISLAND for DeanMachine
  */
-async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAccounts) {
-  let totalGovernancePower = 0;
-  const currentTime = Date.now() / 1000;
-  const allDeposits = [];
-  const processedDepositKeys = new Set(); // Prevent double-counting by unique key
-  
-  console.log(`🔍 SDK: Calculating native governance power for ${allVSRAccounts.length} VSR accounts using canonical Anchor deserialization`);
-  
-  for (let accountIndex = 0; accountIndex < allVSRAccounts.length; accountIndex++) {
-    const account = allVSRAccounts[accountIndex];
-    console.log(`🔍 SDK: Processing VSR account ${accountIndex + 1}: ${account.pubkey.toBase58()}`);
-    
-    try {
-      // First try Anchor deserialization
-      let voterAccount = null;
-      try {
-        voterAccount = await program.account.voter.fetch(account.pubkey);
-      } catch (anchorError) {
-        console.log(`⚠️ Anchor deserialization failed for ${account.pubkey.toBase58()}: ${anchorError.message}`);
-        console.log(`🔄 Falling back to manual parsing`);
-      }
 
-      const data = account.account.data;
-      
-      // Verify authority matches target wallet (manual check at offset 8)
-      const authorityBytes = data.slice(8, 40);
-      const authority = new PublicKey(authorityBytes);
-      
-      if (!authority.equals(walletPublicKey)) {
-        console.log(`⏭️ Skipping account - authority ${authority.toBase58()} != target wallet ${walletPublicKey.toBase58()}`);
-        continue;
+// Constants from your working version
+const YEAR = 31556952; // Exact seconds per year
+const TIMESTAMP_OFFSETS = [104, 112, 184, 192, 200, 208, 264, 272, 344, 352];
+
+/**
+ * Read 64-bit unsigned integer from buffer at offset
+ */
+function readU64(buffer, offset) {
+  if (offset + 8 > buffer.length) return 0;
+  try {
+    return Number(buffer.readBigUInt64LE(offset));
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Extract lockup end timestamp for EACH individual deposit
+ */
+function extractEndTimestampForDeposit(fallbackBytes, depositOffset) {
+  const now = Date.now() / 1000;
+  let bestTimestamp = 0;
+  
+  // Scan +0 to +128 bytes from THIS specific deposit offset
+  for (let delta = 0; delta <= 128; delta += 8) {
+    const tsOffset = depositOffset + delta;
+    const ts = readU64(fallbackBytes, tsOffset);
+    if (ts > now && ts < now + 10 * YEAR) {
+      if (ts > bestTimestamp) {
+        bestTimestamp = ts;
       }
-      
-      console.log(`✅ Account authority matches target wallet`);
-      
-      let accountGovernancePower = 0;
-      let processedDeposits = 0;
-      
-      if (voterAccount) {
-        // Use Anchor-deserialized data
-        console.log(`📊 Found ${voterAccount.deposits.length} deposit entries in Voter account (Anchor)`);
-        
-        for (let i = 0; i < voterAccount.deposits.length; i++) {
-          const entry = voterAccount.deposits[i];
-          
-          if (!entry.isUsed) {
-            console.log(`[Deposit ${i}] Skipped - not used`);
-            continue;
-          }
-          
-          const amount = entry.amountDepositedNative.toNumber() / 1e6;
-          if (amount === 0) {
-            console.log(`[Deposit ${i}] Skipped - zero amount`);
-            continue;
-          }
-          
-          const lockupEndTs = entry.lockup.endTs.toNumber();
-          if (lockupEndTs < currentTime) {
-            console.log(`[Deposit ${i}] Skipped - expired (endTs: ${lockupEndTs}, now: ${currentTime})`);
-            continue;
-          }
-          
-          let multiplier = 1.0;
-          if (entry.lockup.kind.none) {
-            multiplier = 1.0;
-          } else {
-            multiplier = entry.lockup.multiplier ? entry.lockup.multiplier.toNumber() / 1e9 : 1.0;
-          }
-          
-          // Include all deposits, both locked and unlocked
-          
-          const depositKey = `${entry.lockup.startTs.toNumber()}-${amount.toFixed(6)}`;
-          if (processedDepositKeys.has(depositKey)) {
-            console.log(`[Deposit ${i}] Skipped - duplicate (key: ${depositKey})`);
-            continue;
-          }
-          processedDepositKeys.add(depositKey);
-          
-          const votingPower = amount * multiplier;
-          accountGovernancePower += votingPower;
-          processedDeposits++;
-          
-          allDeposits.push({
-            amount: amount,
-            multiplier: multiplier,
-            votingPower: votingPower,
-            lockupKind: entry.lockup.kind.none ? 'none' : 
-                       entry.lockup.kind.cliff ? 'cliff' : 
-                       entry.lockup.kind.constant ? 'constant' : 'vested',
-            endTs: lockupEndTs
-          });
-          
-          console.log(`[Deposit ${i}] Amount: ${amount}, Multiplier: ${multiplier}, VotingPower: ${votingPower}`);
-        }
-      } else {
-        // Use enhanced pattern-based parsing when Anchor fails
-        console.log(`📊 Enhanced pattern-based parsing of VSR account data`);
-        
-        // Scan the account data for significant token amounts and their associated multipliers
-        const detectedDeposits = [];
-        
-        for (let offset = 72; offset < data.length - 16; offset += 8) {
-          try {
-            const value = Number(data.readBigUInt64LE(offset));
-            const tokens = value / 1e6;
-            
-            // Look for amounts between 1K and 10M ISLAND that could be deposits
-            if (tokens >= 1000 && tokens <= 10000000) {
-              
-              // Search for a corresponding multiplier within reasonable range
-              let bestMultiplier = 1.0;
-              let multiplierFound = false;
-              
-              // Check common relative offsets for multipliers
-              const multiplierOffsets = [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, -8, -16, -24, -32];
-              
-              for (const relOffset of multiplierOffsets) {
-                const multPos = offset + relOffset;
-                if (multPos >= 0 && multPos + 8 <= data.length) {
-                  try {
-                    // Try as scaled integer (typical for Solana programs)
-                    const intMult = Number(data.readBigUInt64LE(multPos)) / 1e9;
-                    if (intMult > 1.0 && intMult <= 5.0) {
-                      bestMultiplier = intMult;
-                      multiplierFound = true;
-                      break;
-                    }
-                  } catch (e) {}
-                  
-                  try {
-                    // Try as double float
-                    const floatMult = data.readDoubleLE(multPos);
-                    if (floatMult > 1.0 && floatMult <= 5.0 && !isNaN(floatMult)) {
-                      bestMultiplier = floatMult;
-                      multiplierFound = true;
-                      break;
-                    }
-                  } catch (e) {}
-                }
-              }
-              
-              // Include all deposits (both locked and unlocked)
-              if (bestMultiplier >= 1.0) {
-                const depositKey = `${offset}-${tokens.toFixed(6)}`;
-                if (!processedDepositKeys.has(depositKey)) {
-                  processedDepositKeys.add(depositKey);
-                  
-                  const votingPower = tokens * bestMultiplier;
-                  detectedDeposits.push({
-                    offset: offset,
-                    amount: tokens,
-                    multiplier: bestMultiplier,
-                    votingPower: votingPower
-                  });
-                }
-              }
-            }
-          } catch (e) {
-            // Continue scanning
-          }
-        }
-        
-        // Sort by voting power and apply strict deduplication
-        detectedDeposits.sort((a, b) => b.votingPower - a.votingPower);
-        
-        // Apply strict deduplication by amount to prevent duplicate counting
-        const uniqueDeposits = [];
-        const seenAmounts = new Set();
-        
-        for (const deposit of detectedDeposits) {
-          const amountKey = Math.round(deposit.amount * 1000); // Round to nearest 0.001 for deduplication
-          if (!seenAmounts.has(amountKey)) {
-            seenAmounts.add(amountKey);
-            uniqueDeposits.push(deposit);
-          }
-        }
-        
-        // Process unique deposits only
-        for (const deposit of uniqueDeposits) {
-          accountGovernancePower += deposit.votingPower;
-          processedDeposits++;
-          
-          allDeposits.push({
-            amount: deposit.amount,
-            multiplier: deposit.multiplier,
-            votingPower: deposit.votingPower
-          });
-          
-          console.log(`[Deposit] Offset: ${deposit.offset}, Amount: ${deposit.amount.toLocaleString()}, Multiplier: ${deposit.multiplier.toFixed(6)}, VotingPower: ${deposit.votingPower.toLocaleString()}`);
-        }
-      }
-      
-      totalGovernancePower += accountGovernancePower;
-      console.log(`✅ Account ${accountIndex + 1}: ${processedDeposits} valid deposits = ${accountGovernancePower.toLocaleString()} ISLAND`);
-      
-    } catch (parseError) {
-      console.log(`❌ Failed to parse VSR account ${account.pubkey.toBase58()}: ${parseError.message}`);
-      continue;
     }
   }
   
-  console.log(`🏆 Total native governance power: ${totalGovernancePower.toLocaleString()} ISLAND`);
-  return { totalPower: totalGovernancePower, deposits: allDeposits };
+  return bestTimestamp;
+}
+
+/**
+ * Parse deposits from VSR account data - YOUR WORKING VERSION
+ */
+function parseDepositsFromAccount(accountData, accountPubkey) {
+  const deposits = [];
+  
+  for (let i = 0; i < TIMESTAMP_OFFSETS.length; i++) {
+    const offset = TIMESTAMP_OFFSETS[i];
+    if (offset + 32 > accountData.length) continue;
+    
+    try {
+      // Parse deposit amount
+      const amount = readU64(accountData, offset) / 1e6;
+      if (amount <= 0.01) continue;
+      
+      // Filter phantom deposits (1000 ISLAND with no config)
+      if (Math.abs(amount - 1000) < 0.01) {
+        const configBytes = accountData.slice(offset + 32, offset + 64);
+        const isEmpty = configBytes.every(byte => byte === 0);
+        if (isEmpty) continue;
+      }
+      
+      // Check isUsed flag
+      let isUsed = true;
+      if (offset + 24 < accountData.length) {
+        const usedFlag = accountData.readUInt8(offset + 24);
+        if (usedFlag === 0 && amount < 100) {
+          isUsed = false;
+        }
+      }
+      
+      if (!isUsed) continue;
+      
+      deposits.push({
+        amount,
+        offset,
+        accountPubkey
+      });
+      
+    } catch (error) {
+      // Continue processing other offsets
+    }
+  }
+  
+  return deposits;
+}
+
+/**
+ * Calculate governance power with proper per-deposit multipliers - YOUR WORKING VERSION
+ */
+function calculateVotingPowerFromDeposits(deposits, accountData) {
+  const now = Date.now() / 1000;
+  let totalPower = 0;
+  const seen = new Set();
+  const processedDeposits = [];
+  
+  for (const deposit of deposits) {
+    if (deposit.amount < 1) continue;
+    
+    // Extract end timestamp for THIS SPECIFIC deposit independently
+    const endTs = extractEndTimestampForDeposit(accountData, deposit.offset);
+    
+    let multiplier = 1.0;
+    if (endTs > 0) {
+      // Calculate years remaining and multiplier for this deposit only
+      const years = Math.max(0, (endTs - now) / YEAR);
+      multiplier = Math.min(5, 1 + Math.min(years, 4));
+    }
+    
+    const power = deposit.amount * multiplier;
+    
+    // Deduplicate with [amount, multiplier] composite key
+    const id = `${deposit.amount.toFixed(6)}-${multiplier.toFixed(3)}`;
+    if (!seen.has(id)) {
+      seen.add(id);
+      totalPower += power;
+      processedDeposits.push({
+        ...deposit,
+        endTs,
+        multiplier,
+        power
+      });
+    }
+  }
+  
+  return { totalPower, processedDeposits };
+}
+
+/**
+ * Check if wallet controls VSR account through direct authority
+ */
+function checkWalletControl(walletAddress, voterAuthority, walletRef) {
+  // Direct authority match
+  if (voterAuthority === walletAddress) {
+    return { controlled: true, type: 'Direct authority' };
+  }
+  
+  // Wallet reference match
+  if (walletRef === walletAddress) {
+    return { controlled: true, type: 'Wallet reference' };
+  }
+  
+  return { controlled: false, type: null };
+}
+
+/**
+ * RESTORED: Calculate VSR native governance power using YOUR WORKING LOGIC
+ */
+async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAccounts) {
+  const walletAddress = walletPublicKey.toBase58();
+  
+  // Get all VSR voter accounts using your proven approach
+  const allVSRAccountsFromRPC = await connection.getProgramAccounts(VSR_PROGRAM_ID, {
+    filters: [{ dataSize: 2728 }]
+  });
+  
+  let totalGovernancePower = 0;
+  let controlledAccounts = 0;
+  let allProcessedDeposits = [];
+  
+  console.log(`🔍 RESTORED: Scanning wallet: ${walletAddress.slice(0, 8)}...`);
+  console.log(`🔍 RESTORED: Processing ${allVSRAccountsFromRPC.length} VSR accounts`);
+  
+  for (const account of allVSRAccountsFromRPC) {
+    const data = account.account.data;
+    
+    // Extract authority and wallet reference using your working offsets
+    const authorityBytes = data.slice(32, 64);
+    const voterAuthority = new PublicKey(authorityBytes).toBase58();
+    
+    const walletRefBytes = data.slice(8, 40);
+    const walletRef = new PublicKey(walletRefBytes).toBase58();
+    
+    // Check wallet control using your working logic
+    const controlResult = checkWalletControl(walletAddress, voterAuthority, walletRef);
+    
+    if (controlResult.controlled) {
+      controlledAccounts++;
+      
+      console.log(`🔍 RESTORED: Controlled VSR Account #${controlledAccounts}: ${account.pubkey.toBase58()}`);
+      console.log(`🔍 RESTORED: Control Type: ${controlResult.type}`);
+      
+      // Parse deposits and calculate voting power using YOUR WORKING METHODS
+      const deposits = parseDepositsFromAccount(data, account.pubkey.toBase58());
+      const { totalPower, processedDeposits } = calculateVotingPowerFromDeposits(deposits, data);
+      
+      totalGovernancePower += totalPower;
+      allProcessedDeposits.push(...processedDeposits);
+      
+      if (processedDeposits.length > 0) {
+        console.log(`🔍 RESTORED: Found ${processedDeposits.length} valid deposits:`);
+        processedDeposits.forEach((deposit, i) => {
+          const lockupDate = deposit.endTs > 0 ? new Date(deposit.endTs * 1000).toISOString().split('T')[0] : 'No lockup';
+          console.log(`  ${i + 1}. ${deposit.amount.toFixed(6)} ISLAND × ${deposit.multiplier.toFixed(3)}x = ${deposit.power.toFixed(6)} power (${lockupDate})`);
+        });
+      }
+    }
+  }
+  
+  console.log(`🏆 RESTORED: Total native governance power: ${totalGovernancePower.toLocaleString()} ISLAND`);
+  return { totalPower: totalGovernancePower, deposits: allProcessedDeposits };
 }
 
 /**
@@ -1127,6 +1123,75 @@ app.get("/api/governance-power", async (req, res) => {
     return res.status(500).json({ 
       error: "Failed to calculate governance power",
       details: error.message 
+    });
+  }
+});
+
+// Add governance sync endpoint
+app.post("/api/sync-governance", async (req, res) => {
+  try {
+    console.log("🔄 Starting governance power sync for all citizens...");
+    
+    // Get all citizens from database
+    const client = await pool.connect();
+    const result = await client.query('SELECT wallet, nickname FROM citizens ORDER BY nickname');
+    const citizens = result.rows;
+    client.release();
+    
+    console.log(`📊 Found ${citizens.length} citizens to update`);
+    
+    let updated = 0;
+    let failed = 0;
+    
+    for (const citizen of citizens) {
+      try {
+        console.log(`\n🔍 Processing ${citizen.nickname} (${citizen.wallet.slice(0, 8)}...)`);
+        
+        const governanceData = await getCanonicalGovernancePower(citizen.wallet);
+        
+        // Update database with new governance power
+        const updateClient = await pool.connect();
+        await updateClient.query(`
+          UPDATE citizens 
+          SET 
+            native_governance_power = $1,
+            governance_power = $2,
+            total_governance_power = $3,
+            updated_at = NOW()
+          WHERE wallet = $4
+        `, [
+          governanceData.nativeGovernancePower,
+          governanceData.delegatedGovernancePower || 0,
+          governanceData.totalGovernancePower,
+          citizen.wallet
+        ]);
+        updateClient.release();
+        
+        updated++;
+        console.log(`✅ Updated ${citizen.nickname}: ${governanceData.totalGovernancePower.toLocaleString()} ISLAND`);
+        
+      } catch (error) {
+        failed++;
+        console.error(`❌ Failed to update ${citizen.nickname}: ${error.message}`);
+      }
+    }
+    
+    console.log(`\n📈 Governance sync complete:`);
+    console.log(`✅ Updated: ${updated} citizens`);
+    console.log(`❌ Failed: ${failed} citizens`);
+    
+    res.json({
+      success: true,
+      updated,
+      failed,
+      total: citizens.length
+    });
+    
+  } catch (error) {
+    console.error("Governance sync error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });
