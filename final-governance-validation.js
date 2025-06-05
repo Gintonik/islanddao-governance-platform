@@ -50,8 +50,8 @@ async function validateAllGovernancePower() {
     } catch (error) {
       console.log(`  ⚠️  Error: ${error.message}`);
       resultsWithoutPower.push({
-        username: citizen.username,
-        walletAddress: citizen.walletAddress,
+        username: citizen.nickname,
+        walletAddress: citizen.wallet,
         error: error.message
       });
     }
