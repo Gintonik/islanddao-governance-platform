@@ -1,0 +1,41 @@
+=== COMPREHENSIVE GOVERNANCE POWER TABLE ===
+
+Processing 24 citizens...
+
+........................
+
+=== FINAL GOVERNANCE POWER TABLE ===
+
+| Rank | Citizen Name        | Total ISLAND Power | Native Power    | Delegated Power | NFTs | Wallet Address (First 8) |
+|------|---------------------|-------------------|-----------------|-----------------|------|---------------------------|
+|  1   | DeanMachine         |        10,354,147 |      10,354,147 |               0 |   29 | 3PKhzE9w              |
+|  2   | Takisoul            |         8,974,792 |       8,974,792 |               0 |    0 | 7pPJt2xo              |
+|  3   | Whale's Friend      |         4,239,442 |       4,239,442 |               0 |   19 | CinHb6Xt              |
+|  4   | KO3                 |         1,349,608 |       1,349,608 |               0 |    6 | kruHL3zJ              |
+|  5   | scientistjoe        |         1,007,398 |       1,007,398 |               0 |    1 | CLcXVZpC              |
+|  6   | Moxie               |           536,529 |         536,529 |               0 |    4 | 37TGrYNu              |
+|  7   | nurtan              |           398,681 |         398,681 |               0 |    0 | 6aJo6zRi              |
+|  8   | Yamparala Rahul     |           377,734 |         377,734 |               0 |    1 | 2qYMBZwJ              |
+|  9   | Icoder              |           332,768 |         332,768 |               0 |    1 | EXRBCP2M              |
+| 10   | Unknown             |           143,635 |         143,635 |               0 |    2 | GJdRQcsy              |
+| 11   | Alex Perts          |           124,693 |         124,693 |               0 |    2 | 9WW4oiMy              |
+| 12   | SoCal               |            29,484 |          29,484 |               0 |    0 | BPmVp1b4              |
+| 13   | Miao                |            12,625 |          12,625 |               0 |    3 | 4pT6ESaM              |
+| 14   | Reijo               |             4,879 |           4,879 |               0 |    1 | ADjG92YT              |
+| 15   | legend              |             2,000 |           2,000 |               0 |    5 | Fywb7YDC              |
+| 16   | Titanmaker          |                 0 |               0 |               0 |    3 | Fgv1zrwB              |
+| 17   | Portor              |                 0 |               0 |               0 |    0 | 9RSpFWGn              |
+| 18   | Kornel              |                 0 |               0 |               0 |    1 | DraTvYwq              |
+| 19   | Moviendome          |                 0 |               0 |               0 |    1 | EViz4YGr              |
+| 20   | Mila                |                 0 |               0 |               0 |    1 | B93csAjD              |
+| 21   | Unknown             |                 0 |               0 |               0 |    0 | 2NZ9hwrG              |
+| 22   | Funcracker          |                 0 |               0 |               0 |    6 | 3s6VUe21              |
+| 23   | Kegomaz             |                 0 |               0 |               0 |    1 | 6vJrtBwo              |
+| 24   | Canfly              |                 0 |               0 |               0 |    1 | CdCAQnq1              |
+
+=== SUMMARY STATISTICS ===
+Total Citizens: 24
+Citizens with Governance Power: 15
+Total Native Governance Power: 27,888,415 ISLAND
+Total Delegated Governance Power: 0 ISLAND
+Total Governance Power: 27,888,415 ISLAND
