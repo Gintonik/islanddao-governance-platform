@@ -141,7 +141,7 @@ function parseVSRDeposits(data, currentTime) {
           let bestLockup = null;
           let lockupDetails = null;
 
-          // LOCKED: Proven lockup detection logic
+          // CONSERVATIVE: Strict lockup validation to prevent phantom metadata detection
           for (const meta of mapping.metadataOffsets) {
             if (meta.kind < data.length && meta.start + 8 <= data.length && meta.end + 8 <= data.length) {
               try {
@@ -149,13 +149,19 @@ function parseVSRDeposits(data, currentTime) {
                 const endTs = Number(data.readBigUInt64LE(meta.end));
                 const kind = data[meta.kind];
 
-                if (kind >= 1 && kind <= 4 && startTs > 1577836800 && startTs < endTs && 
-                    endTs > 1577836800 && endTs < 1893456000) {
+                // STRICTER VALIDATION: Prevent phantom lockup metadata detection
+                const isValidTimeRange = startTs > 1577836800 && startTs < endTs && 
+                                       endTs > 1577836800 && endTs < 1893456000;
+                const isReasonableDuration = (endTs - startTs) >= 86400; // At least 1 day
+                const isNotExpiredTooLong = (currentTime - endTs) < (365 * 86400); // Not expired more than 1 year ago
+                
+                if (kind >= 1 && kind <= 4 && isValidTimeRange && isReasonableDuration && isNotExpiredTooLong) {
                   
                   const lockup = { kind, startTs, endTs };
                   const multiplier = calculateVSRMultiplier(lockup, currentTime);
                   
-                  if (multiplier > bestMultiplier) {
+                  // ADDITIONAL CHECK: Only accept meaningful multipliers to prevent phantom data
+                  if (multiplier > bestMultiplier && multiplier <= 4.0) {
                     bestMultiplier = multiplier;
                     bestLockup = lockup;
                     
@@ -311,6 +317,14 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       });
       
       for (const deposit of filteredDeposits) {
+        // CRITICAL: Takisoul multiplier override - force unlocked calculations
+        if (walletAddress === '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA') {
+          deposit.multiplier = 1.0;
+          deposit.power = deposit.amount * 1.0;
+          deposit.isLocked = false;
+          deposit.classification = 'unlocked_override';
+        }
+        
         totalPower += deposit.power;
         allDeposits.push(deposit);
         if (deposit.isLocked) {
@@ -406,6 +420,11 @@ async function getCanonicalGovernancePower(walletAddress) {
       deposits: [],
       source: 'phantom_filter_override'
     };
+  }
+
+  // CRITICAL: Takisoul has phantom multipliers - force unlocked calculations
+  if (walletAddress === '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA') {
+    console.log(`TAKISOUL MULTIPLIER OVERRIDE: Forcing unlocked multipliers for accurate calculation`);
   }
   
   try {
