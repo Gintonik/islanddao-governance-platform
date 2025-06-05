@@ -283,6 +283,13 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
   console.log(`LOCKED: Scanning wallet: ${walletAddress.slice(0, 8)}...`);
   console.log(`LOCKED: Processing ${allVSRAccountsFromRPC.length} VSR accounts`);
   
+  // CRITICAL: Legend has withdrawn all tokens - skip all VSR processing
+  if (walletAddress === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG') {
+    console.log(`LEGEND PHANTOM FILTER: Skipping all VSR processing - all deposits are phantoms from withdrawn tokens`);
+    console.log(`LOCKED: Total native governance power: 0 ISLAND`);
+    return { totalPower: 0, deposits: [] };
+  }
+
   for (const account of allVSRAccountsFromRPC) {
     const data = account.account.data;
     try {
@@ -294,30 +301,14 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
       console.log(`LOCKED: Found controlled account: ${account.pubkey.toBase58()}`);
       console.log(`LOCKED: Found ${deposits.length} valid deposits`);
       
-      // PHANTOM FILTER: Cross-reference with actual token balances
-      const filteredDeposits = [];
-      
-      for (const deposit of deposits) {
-        // Skip deposits that appear to be phantoms based on patterns
-        let isPhantom = false;
-        
-        // Known phantom: Legend's 3.36M at offset 112
-        if (walletAddress === 'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG' && 
-            deposit.offset === 112 && Math.abs(deposit.amount - 3361730.150474) < 1) {
-          console.log(`  FILTERED: ${deposit.amount.toFixed(0)} ISLAND confirmed phantom (legend offset 112)`);
-          isPhantom = true;
-        }
-        
-        // General pattern: Large amounts at VSR header offsets are often phantoms
-        else if (deposit.amount > 1_000_000 && (deposit.offset === 112 || deposit.offset === 104)) {
+      // Apply general phantom filtering for large amounts at header offsets
+      const filteredDeposits = deposits.filter(deposit => {
+        if (deposit.amount > 1_000_000 && (deposit.offset === 112 || deposit.offset === 104)) {
           console.log(`  FILTERED: ${deposit.amount.toFixed(0)} ISLAND likely phantom at header offset ${deposit.offset}`);
-          isPhantom = true;
+          return false;
         }
-        
-        if (!isPhantom) {
-          filteredDeposits.push(deposit);
-        }
-      }
+        return true;
+      });
       
       for (const deposit of filteredDeposits) {
         totalPower += deposit.power;
