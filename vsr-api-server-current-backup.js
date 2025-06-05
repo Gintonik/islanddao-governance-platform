@@ -1,7 +1,6 @@
 /**
- * VSR Governance Power API Server - Production Version
+ * VSR Governance Power API Server
  * Real-time governance power + Citizen Map compatibility
- * Uses proven calculation methodology from production data
  */
 
 import express from "express";
