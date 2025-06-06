@@ -793,18 +793,21 @@
         allNfts = [];
         
         citizens.forEach(citizen => {
-          if (citizen.nfts && Array.isArray(citizen.nfts)) {
-            citizen.nfts.forEach(nft => {
-              allNfts.push({
-                id: nft.mint || nft.id,
-                name: nft.name,
-                content: {
-                  metadata: { name: nft.name },
-                  links: { image: nft.image }
-                },
-                owner_wallet: citizen.wallet,
-                owner_nickname: citizen.nickname || 'Unknown Citizen'
-              });
+          if (citizen.nfts && Array.isArray(citizen.nfts) && citizen.nftMetadata) {
+            citizen.nfts.forEach(nftMint => {
+              const nftMeta = citizen.nftMetadata[nftMint];
+              if (nftMeta) {
+                allNfts.push({
+                  id: nftMint,
+                  name: nftMeta.name,
+                  content: {
+                    metadata: { name: nftMeta.name },
+                    links: { image: nftMeta.image }
+                  },
+                  owner_wallet: citizen.wallet,
+                  owner_nickname: citizen.nickname || 'Unknown Citizen'
+                });
+              }
             });
           }
         });
