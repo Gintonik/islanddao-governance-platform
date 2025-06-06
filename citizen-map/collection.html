@@ -778,49 +778,33 @@
       });
     });
     
-    // Fetch initial batch of NFTs with robust error handling
+    // Simplified NFT fetching for production reliability
     async function fetchInitialNfts() {
-      console.log('Starting NFT fetch...');
       setLoading(true);
       
       try {
-        console.log('Fetching from:', API_URL);
-        const response = await fetch(API_URL);
-        console.log('Response status:', response.status);
+        const response = await fetch('/api/nfts');
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch NFTs: ${response.status}`);
+          throw new Error(`HTTP ${response.status}`);
         }
         
         allNfts = await response.json();
-        console.log('NFTs received:', allNfts.length);
         
-        if (!allNfts || allNfts.length === 0) {
-          showMessage('No NFTs found in database.', false);
-          return;
+        if (allNfts && allNfts.length > 0) {
+          displayedNfts = allNfts.slice(0, PER_PAGE);
+          renderNfts(displayedNfts);
+          
+          if (allNfts.length <= PER_PAGE) {
+            loadAllButton.style.display = 'none';
+          }
+        } else {
+          nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">No NFTs available</div>';
         }
-        
-        // Display first batch
-        displayedNfts = allNfts.slice(0, PER_PAGE);
-        console.log('Rendering', displayedNfts.length, 'NFTs');
-        renderNfts(displayedNfts);
-        
-        if (allNfts.length <= PER_PAGE) {
-          loadAllButton.style.display = 'none';
-        }
-        
-        showMessage(`Loaded ${allNfts.length} NFTs successfully`, false);
-        setTimeout(clearMessage, 3000); // Clear success message after 3 seconds
         
       } catch (error) {
-        console.error('Error fetching NFTs:', error);
-        showMessage(`Error loading NFTs: ${error.message}`, true);
-        
-        // Retry mechanism
-        setTimeout(() => {
-          console.log('Retrying NFT fetch...');
-          fetchInitialNfts();
-        }, 2000);
+        console.error('NFT fetch error:', error);
+        nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">Error loading NFTs. Please refresh the page.</div>';
       } finally {
         setLoading(false);
       }
@@ -902,52 +886,24 @@
       }
     }
     
-    // Render NFTs to the grid with enhanced debugging and validation
+    // Simplified NFT rendering for production reliability
     function renderNfts(nfts) {
-      console.log('renderNfts called with', nfts.length, 'NFTs');
-      console.log('nftGrid element:', nftGrid, 'exists:', !!nftGrid);
+      if (!nftGrid || !nfts) return;
       
-      if (!nftGrid) {
-        console.error('NFT grid element not found!');
-        return;
-      }
-      
-      // Clear any message
       clearMessage();
-      
-      // Always clear the grid for fresh render
       nftGrid.innerHTML = '';
-      console.log('Cleared NFT grid');
       
-      if (!nfts || nfts.length === 0) {
-        console.log('No NFTs to render');
-        nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">No NFTs found</div>';
-        return;
-      }
-      
-      // Create and append NFT cards
-      nfts.forEach((nft, index) => {
-        console.log(`Rendering NFT ${index + 1}:`, nft.name || nft.id);
-        
+      nfts.forEach((nft) => {
         const card = document.createElement('div');
         card.className = 'nft-card';
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'all 0.3s ease';
         
-        const imageUrl = nft.content?.links?.image || nft.imageUrl || 'https://via.placeholder.com/300x300/1a1a1a/21e8a3?text=' + encodeURIComponent(nft.name || 'NFT');
+        const imageUrl = nft.content?.links?.image || 'https://via.placeholder.com/300?text=NFT';
         const nftName = nft.content?.metadata?.name || nft.name || 'Unknown NFT';
         const ownerName = nft.owner_nickname || 'Unknown Citizen';
         const walletAddr = formatAddress(nft.owner_wallet);
         
         card.innerHTML = `
-          <img 
-            src="${imageUrl}" 
-            alt="${nftName}" 
-            class="nft-image"
-            onerror="this.src='https://via.placeholder.com/300x300/1a1a1a/21e8a3?text=${encodeURIComponent(nftName)}';"
-            onload="this.parentElement.style.opacity='1'; this.parentElement.style.transform='translateY(0)';"
-          >
+          <img src="${imageUrl}" alt="${nftName}" class="nft-image" onerror="this.src='https://via.placeholder.com/300?text=NFT';">
           <div class="nft-info">
             <div class="nft-name">${nftName}</div>
             <div class="nft-owner">${ownerName}</div>
@@ -956,21 +912,7 @@
         `;
         
         nftGrid.appendChild(card);
-        
-        // Force animation even if image fails to load
-        setTimeout(() => {
-          card.style.opacity = '1';
-          card.style.transform = 'translateY(0)';
-        }, index * 50 + 100);
       });
-      
-      console.log('Added', nfts.length, 'NFT cards to grid');
-      console.log('Final grid children count:', nftGrid.children.length);
-      
-      // Force layout recalculation
-      nftGrid.style.display = 'none';
-      nftGrid.offsetHeight; // Trigger reflow
-      nftGrid.style.display = 'grid';
     }
     
     // Format wallet/NFT address for display
