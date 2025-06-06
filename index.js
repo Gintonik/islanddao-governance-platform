@@ -748,6 +748,27 @@ app.post('/api/save-citizen-verified', async (req, res) => {
   }
 });
 
+// Manual sync endpoint for testing
+app.post('/api/sync-governance-power', async (req, res) => {
+  try {
+    console.log('Manual governance power sync triggered');
+    const { performDailySync } = await import('./daily-sync.js');
+    await performDailySync();
+    res.json({ 
+      success: true, 
+      message: 'Governance power sync completed',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Manual sync error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Sync failed',
+      error: error.message 
+    });
+  }
+});
+
 // Governance stats endpoint
 app.get('/api/governance-stats', async (req, res) => {
   try {
