@@ -2,18 +2,6 @@
 
 ## CRITICAL: DO NOT MODIFY vsr-api-server.js
 
-**File:** `vsr-api-server.js`
-**Status:** PRODUCTION LOCKED - VERIFIED AUTHENTIC DATA
-**Last Verified:** 2025-06-05
-
-This calculator contains verified governance power values from blockchain validation:
-- 14 citizens with authentic governance power
-- GintoniK: 4,239,442 ISLAND
-- DeanMachine: 10,354,147 ISLAND  
-- Takisoul: 8,974,792 ISLAND
-- Icoder: 332,768 ISLAND
-- Legend: 0 ISLAND (authentic value)
-
 ## INTEGRATION POINTS SECURED:
 
 ✅ **Daily Sync Process:** `citizen-map/simple-server.cjs` line 253
