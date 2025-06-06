@@ -34,26 +34,20 @@ try {
 app.use(express.static(path.join(__dirname, 'citizen-map')));
 app.use(express.json());
 
-// Comprehensive route handling with fallback protection
+// Serve particle effects landing page as main route
 app.get('/', (req, res) => {
   try {
-    const mainPath = path.join(__dirname, 'citizen-map', 'verified-citizen-map.html');
-    const fallbackPath = path.join(__dirname, 'citizen-map', 'index.html');
+    const landingPath = path.join(__dirname, 'citizen-map', 'index.html');
     
-    console.log('Serving landing page from:', mainPath);
+    console.log('Serving landing page from:', landingPath);
     
-    res.sendFile(mainPath, (err) => {
+    res.sendFile(landingPath, (err) => {
       if (err) {
-        console.error('Main landing page error, trying fallback:', err);
-        res.sendFile(fallbackPath, (fallbackErr) => {
-          if (fallbackErr) {
-            console.error('Fallback landing page error:', fallbackErr);
-            res.status(500).json({ 
-              error: 'Server startup error',
-              message: 'Landing page files not found',
-              timestamp: new Date().toISOString()
-            });
-          }
+        console.error('Landing page error:', err);
+        res.status(500).json({ 
+          error: 'Landing page not found',
+          message: 'Unable to serve landing page',
+          timestamp: new Date().toISOString()
         });
       }
     });
