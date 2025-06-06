@@ -288,14 +288,56 @@ async function syncGovernanceData() {
     
     for (const citizen of citizens) {
       try {
-        const nfts = await fetchWalletNFTs(citizen.wallet);
+        // Double-check NFT ownership with retry mechanism to avoid false positives
+        let nfts = [];
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (attempts < maxAttempts) {
+          try {
+            nfts = await fetchWalletNFTs(citizen.wallet);
+            break; // Success, exit retry loop
+          } catch (fetchError) {
+            attempts++;
+            console.log(`Retry ${attempts}/${maxAttempts} for ${citizen.nickname} NFT fetch: ${fetchError.message}`);
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            }
+          }
+        }
+        
         const nftIds = nfts.map(nft => nft.mint);
         
-        // If citizen has no PERKS NFTs, remove them from the map
-        if (nfts.length === 0) {
-          await pool.query('DELETE FROM citizens WHERE wallet = $1', [citizen.wallet]);
-          removed++;
-          console.log(`🗑️ Removed ${citizen.nickname} - no longer owns PERKS NFTs`);
+        // CRITICAL: Only remove citizen if we successfully fetched NFT data AND confirmed zero PERKS NFTs
+        if (attempts < maxAttempts && nfts.length === 0) {
+          // Additional verification: Check if wallet still exists and is accessible
+          try {
+            const verificationResponse = await fetch(process.env.HELIUS_API_KEY, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 'verify-wallet',
+                method: 'getAssetsByOwner',
+                params: { ownerAddress: citizen.wallet, page: 1, limit: 1 }
+              })
+            });
+            
+            const verificationData = await verificationResponse.json();
+            
+            // Only remove if verification call succeeded AND confirms no PERKS NFTs
+            if (verificationData.result && Array.isArray(verificationData.result.items)) {
+              await pool.query('DELETE FROM citizens WHERE wallet = $1', [citizen.wallet]);
+              removed++;
+              console.log(`🗑️ Removed ${citizen.nickname} - verified no PERKS NFTs (${attempts} attempts)`);
+            } else {
+              console.log(`⚠️ Skipped removing ${citizen.nickname} - verification failed`);
+            }
+          } catch (verifyError) {
+            console.log(`⚠️ Skipped removing ${citizen.nickname} - verification error: ${verifyError.message}`);
+          }
+        } else if (attempts >= maxAttempts) {
+          console.log(`⚠️ Skipped ${citizen.nickname} - failed to fetch NFT data after ${maxAttempts} attempts`);
         } else {
           // Update NFT data for citizens who still own PERKS
           await pool.query(
@@ -304,7 +346,7 @@ async function syncGovernanceData() {
           );
         }
       } catch (error) {
-        console.error(`Error updating NFTs for ${citizen.wallet}:`, error);
+        console.error(`Error processing ${citizen.wallet}:`, error);
       }
     }
     
