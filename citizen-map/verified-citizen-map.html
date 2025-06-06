@@ -2417,23 +2417,33 @@
                 submitBtn.textContent = 'Creating Pin...';
                 
                 // Step 2: Prepare citizen data
-                const selectedNft = walletNfts.find(nft => nft.mint === selectedPfp);
+                // Ensure we have a primary NFT selected (fallback to first NFT if none selected)
+                const fallbackPrimary = selectedPrimary || selectedPfp || walletNfts[0]?.mint || walletNfts[0]?.id;
+                const fallbackPfp = selectedPfp || selectedPrimary || walletNfts[0]?.mint || walletNfts[0]?.id;
+                
+                const selectedNft = walletNfts.find(nft => (nft.mint === fallbackPfp) || (nft.id === fallbackPfp));
                 console.log('Selected NFT:', selectedNft);
-                console.log('Selected PFP:', selectedPfp);
+                console.log('Selected PFP:', fallbackPfp);
+                console.log('Selected Primary:', fallbackPrimary);
                 console.log('Wallet NFTs:', walletNfts);
+                
+                if (!fallbackPrimary || !walletNfts || walletNfts.length === 0) {
+                    showNotification('No PERKS NFTs found in your wallet. You need to own PERKS NFTs to place a pin.', 'error');
+                    return;
+                }
                 
                 const citizenData = {
                     lat: selectedLocation.lat,
                     lng: selectedLocation.lng,
-                    primary_nft: selectedPrimary,
-                    pfp_nft: selectedPfp,
+                    primary_nft: fallbackPrimary,
+                    pfp_nft: fallbackPfp,
                     image_url: selectedNft?.image,
                     nickname: document.getElementById('nickname').value,
                     bio: document.getElementById('bio').value,
                     twitter_handle: document.getElementById('twitter').value,
                     telegram_handle: document.getElementById('telegram').value,
                     discord_handle: document.getElementById('discord').value,
-                    nfts: [selectedPrimary]
+                    nfts: [fallbackPrimary]
                 };
                 
                 console.log('Citizen data prepared:', citizenData);

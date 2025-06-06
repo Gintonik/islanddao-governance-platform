@@ -467,11 +467,18 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     // Use wallet_address from request but store in wallet field
     const walletAddress = wallet_address;
 
-    // Basic validation
-    if (!walletAddress || !lat || !lng || !primary_nft) {
+    // Basic validation with detailed error messages
+    const missingFields = [];
+    if (!walletAddress) missingFields.push('wallet_address');
+    if (!lat) missingFields.push('lat');
+    if (!lng) missingFields.push('lng');
+    if (!primary_nft) missingFields.push('primary_nft');
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields, 'Request body:', req.body);
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
 
