@@ -130,11 +130,11 @@
             ctx.fillStyle = 'white';
             ctx.save();
             
-            const logoHeight = isMobile ? 120 : 200;
+            const logoHeight = isMobile ? 180 : 320;
             const awsLogoWidth = logoHeight * (283 / 140);
             const totalWidth = awsLogoWidth;
             
-            ctx.translate(canvas.width / 2 - totalWidth / 2, canvas.height / 2 - logoHeight / 2);
+            ctx.translate(canvas.width / 2 - totalWidth / 2, (canvas.height * 0.35) - logoHeight / 2);
 
             // Draw AWS logo
             ctx.save();
