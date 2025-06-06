@@ -472,7 +472,6 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     if (!walletAddress) missingFields.push('wallet_address');
     if (!lat) missingFields.push('lat');
     if (!lng) missingFields.push('lng');
-    if (!primary_nft) missingFields.push('primary_nft');
     
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields, 'Request body:', req.body);
@@ -521,6 +520,10 @@ app.post('/api/save-citizen-verified', async (req, res) => {
 
     // Fetch complete NFT collection for citizen
     let nftMetadata = null;
+    let actualPrimaryNft = primary_nft;
+    let actualPfpNft = pfp_nft;
+    let actualImageUrl = profileImageUrl;
+    
     try {
       const nftResponse = await fetch(`${req.protocol}://${req.get('host')}/api/wallet-nfts?wallet=${walletAddress}`);
       const nftData = await nftResponse.json();
@@ -533,11 +536,36 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         }));
         nftMetadata = JSON.stringify(formattedNfts);
         console.log(`Stored ${formattedNfts.length} NFTs for citizen ${walletAddress}`);
+        
+        // Auto-select primary NFT if none provided (mobile wallet fallback)
+        if (!actualPrimaryNft && formattedNfts.length > 0) {
+          actualPrimaryNft = formattedNfts[0].mint;
+          console.log(`Auto-selected primary NFT: ${actualPrimaryNft}`);
+        }
+        
+        // Auto-select PFP NFT if none provided
+        if (!actualPfpNft && formattedNfts.length > 0) {
+          actualPfpNft = formattedNfts[0].mint;
+        }
+        
+        // Auto-select image URL if none provided
+        if (!actualImageUrl && formattedNfts.length > 0) {
+          actualImageUrl = formattedNfts[0].image;
+        }
+      } else {
+        // No PERKS NFTs found - this user cannot place a pin
+        return res.status(400).json({
+          success: false,
+          message: 'No PERKS NFTs found in wallet. You must own PERKS NFTs to place a pin.'
+        });
       }
     } catch (error) {
       console.error('Error fetching NFT collection for citizen:', error);
       // Fallback to provided NFTs if any
       nftMetadata = nfts ? JSON.stringify(nfts) : null;
+      if (!actualPrimaryNft && nfts && nfts.length > 0) {
+        actualPrimaryNft = nfts[0].mint;
+      }
     }
 
     if (existingResult.rows.length > 0) {
@@ -551,8 +579,8 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           total_governance_power = $13, nft_metadata = $14,
           governance_last_updated = NOW(), updated_at = NOW()
         WHERE wallet = $15
-      `, [lat, lng, primary_nft, pfp_nft, nickname, bio, 
-          twitter_handle, telegram_handle, discord_handle, profileImageUrl,
+      `, [lat, lng, actualPrimaryNft, actualPfpNft, nickname, bio, 
+          twitter_handle, telegram_handle, discord_handle, actualImageUrl,
           nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata, walletAddress]);
     } else {
       // Insert new citizen
@@ -561,10 +589,10 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           wallet, lat, lng, primary_nft, pfp_nft, nickname,
           bio, twitter_handle, telegram_handle, discord_handle, image_url,
           native_governance_power, delegated_governance_power, total_governance_power, nft_metadata,
-          governance_last_updated, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW(), NOW())
-      `, [walletAddress, lat, lng, primary_nft, pfp_nft, nickname,
-          bio, twitter_handle, telegram_handle, discord_handle, profileImageUrl,
+          created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+      `, [walletAddress, lat, lng, actualPrimaryNft, actualPfpNft, nickname,
+          bio, twitter_handle, telegram_handle, discord_handle, actualImageUrl,
           nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata]);
     }
 
