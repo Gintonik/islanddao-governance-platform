@@ -31,6 +31,9 @@ try {
   process.exit(1);
 }
 
+// Serve static files from citizen-map directory
+app.use('/citizen-map', express.static(path.join(__dirname, 'citizen-map')));
+// Also serve citizen-map files at root for backward compatibility
 app.use(express.static(path.join(__dirname, 'citizen-map')));
 app.use(express.json());
 
