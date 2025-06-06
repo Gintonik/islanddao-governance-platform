@@ -11,17 +11,57 @@ const cron = require('node-cron');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+// Database connection with error handling
+let pool;
+try {
+  if (!process.env.DATABASE_URL) {
+    console.error('DATABASE_URL environment variable not set');
+    process.exit(1);
+  }
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+  console.log('Database pool created successfully');
+} catch (error) {
+  console.error('Database connection failed:', error);
+  process.exit(1);
+}
 
 app.use(express.static(path.join(__dirname, 'citizen-map')));
 app.use(express.json());
 
-// Comprehensive route handling
+// Comprehensive route handling with fallback protection
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'));
+  try {
+    const mainPath = path.join(__dirname, 'citizen-map', 'verified-citizen-map.html');
+    const fallbackPath = path.join(__dirname, 'citizen-map', 'index.html');
+    
+    console.log('Serving landing page from:', mainPath);
+    
+    res.sendFile(mainPath, (err) => {
+      if (err) {
+        console.error('Main landing page error, trying fallback:', err);
+        res.sendFile(fallbackPath, (fallbackErr) => {
+          if (fallbackErr) {
+            console.error('Fallback landing page error:', fallbackErr);
+            res.status(500).json({ 
+              error: 'Server startup error',
+              message: 'Landing page files not found',
+              timestamp: new Date().toISOString()
+            });
+          }
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Landing page route error:', error);
+    res.status(500).json({ 
+      error: 'Critical server error',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Collection page routes
