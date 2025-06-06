@@ -166,6 +166,44 @@ app.get('/api/nfts', async (req, res) => {
   }
 });
 
+// Governance stats endpoint
+app.get('/api/governance-stats', async (req, res) => {
+  try {
+    const citizensResult = await pool.query('SELECT COUNT(*) as count FROM citizens WHERE wallet IS NOT NULL');
+    const nftsResult = await pool.query('SELECT COUNT(*) as count FROM citizens WHERE nft_metadata IS NOT NULL');
+    
+    const totalCitizens = parseInt(citizensResult.rows[0].count) || 0;
+    
+    // Count total NFTs from metadata
+    let totalPerks = 0;
+    const nftDataResult = await pool.query('SELECT nft_metadata FROM citizens WHERE nft_metadata IS NOT NULL');
+    
+    nftDataResult.rows.forEach(row => {
+      try {
+        const nftData = JSON.parse(row.nft_metadata);
+        if (Array.isArray(nftData)) {
+          totalPerks += nftData.length;
+        }
+      } catch (error) {
+        console.error('Error parsing NFT metadata for stats:', error);
+      }
+    });
+
+    res.json({
+      totalCitizens,
+      totalPerks,
+      lastUpdate: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Governance stats error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch governance stats',
+      totalCitizens: 0,
+      totalPerks: 0
+    });
+  }
+});
+
 // Comprehensive health check
 app.get('/health', async (req, res) => {
   try {
