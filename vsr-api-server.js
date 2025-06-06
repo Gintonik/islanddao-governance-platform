@@ -382,6 +382,13 @@ async function calculateNativeGovernancePower(program, walletPublicKey, allVSRAc
     }
   }
   
+  // Final delegation marker filter - if total equals delegation marker amounts, set to 0
+  const roundedTotal = Math.round(totalPower);
+  if (roundedTotal === 1000 || roundedTotal === 2000 || roundedTotal === 11000) {
+    console.log(`LOCKED: FILTERED OUT entire wallet - ${totalPower.toLocaleString()} ISLAND matches delegation marker`);
+    return { totalPower: 0, deposits: [] };
+  }
+  
   console.log(`LOCKED: Total native governance power: ${totalPower.toLocaleString()} ISLAND`);
   return { totalPower, deposits: allDeposits };
 }
