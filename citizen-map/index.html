@@ -123,7 +123,7 @@
         <div class="buttons">
             <a href="/verified-citizen-map" class="btn btn-primary">View Citizen Map</a>
             <a href="/collection" class="btn">Browse Collection</a>
-            <a href="https://magiceden.io/marketplace/island_dao_perks" target="_blank" class="btn btn-secondary">BUY a "PERK"</a>
+            <a href="https://magiceden.io/marketplace/island_dao_perks" target="_blank" class="btn btn-secondary">Buy a PERK</a>
         </div>
     </div>
     
@@ -223,13 +223,15 @@
                 const y = Math.floor(Math.random() * canvas.height);
 
                 if (data[(y * canvas.width + x) * 4 + 3] > 128) {
+                    // Bright color gradient: yellows and greens
+                    const colors = ['#FFD700', '#FFFF00', '#ADFF2F', '#32CD32', '#00FF00', '#7FFF00', '#FFED4E', '#84CC16', '#FDE047', '#A3E635'];
                     return {
                         x: x,
                         y: y,
                         baseX: x,
                         baseY: y,
                         size: Math.random() * 1 + 0.5,
-                        color: 'white', 
+                        color: colors[Math.floor(Math.random() * colors.length)], 
                         scatteredColor: '#4CAF50',
                         life: Math.random() * 100 + 50
                     };
