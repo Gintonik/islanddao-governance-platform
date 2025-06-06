@@ -734,8 +734,6 @@
     // Global wallet variables (matching citizen map)
     let currentWallet = null;
     let walletNfts = [];
-    let simpleWallet = null;
-    let walletVerifier = null;
     
     // Wallet modal functions
     function showWalletModal() {
@@ -843,68 +841,19 @@
     
     async function disconnectWallet() {
       try {
-        if (simpleWallet && simpleWallet.isConnected()) {
-          await simpleWallet.disconnect();
-        }
-        
         currentWallet = null;
         walletNfts = [];
         updateWalletUI();
+        clearNftGrid();
         console.log('Wallet disconnected');
-        
       } catch (error) {
-        console.error('Disconnect failed:', error);
-        // Force disconnect even if provider fails
-        currentWallet = null;
-        walletNfts = [];
-        updateWalletUI();
+        console.error('Error disconnecting wallet:', error);
       }
     }
     
-    // Initialize wallet system (matching citizen map)
+    // Initialize wallet system
     function initializeWalletAdapter() {
-      // Initialize SimpleWallet
-      simpleWallet = new SimpleWallet();
-      console.log('SimpleWallet initialized successfully');
-      
-      // Set up wallet event listeners
-      simpleWallet.on('connect', (data) => {
-        console.log('Wallet connected:', data);
-        currentWallet = data;
-        updateWalletUI();
-        loadUserNfts();
-      });
-      
-      simpleWallet.on('disconnect', () => {
-        console.log('Wallet disconnected');
-        currentWallet = null;
-        walletNfts = [];
-        updateWalletUI();
-      });
-      
-      updateWalletUI(); // Ensure initial UI state
-      
-      // Auto-connect if wallet was previously connected
-      const autoConnect = async () => {
-        if (simpleWallet.isConnected()) {
-          const publicKey = simpleWallet.getPublicKey();
-          if (publicKey) {
-            currentWallet = publicKey.toString();
-            console.log('Auto-reconnected wallet:', currentWallet);
-            updateWalletUI();
-            await loadUserNfts();
-          }
-        }
-      };
-      
-      // Check for auto-connect after a brief delay
-      setTimeout(autoConnect, 100);
-      
-      // Initialize wallet verifier
-      walletVerifier = new WalletVerifier({
-        apiBaseUrl: window.location.origin,
-        debug: false
-      });
+      updateWalletUI();
     }
     
     async function loadUserNfts() {
