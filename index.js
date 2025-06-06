@@ -239,6 +239,78 @@ app.get('/api/wallet-nfts', async (req, res) => {
   }
 });
 
+// Update citizen NFT collection endpoint
+app.post('/api/update-citizen-nfts', async (req, res) => {
+  try {
+    const { wallet, forceRefresh } = req.body;
+    
+    if (!wallet) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+
+    console.log(`Updating NFT collection for wallet: ${wallet}`);
+
+    // Fetch current NFTs for this wallet
+    const heliusUrl = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
+    const response = await fetch(heliusUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'helius-nft-api',
+        method: 'searchAssets',
+        params: {
+          ownerAddress: wallet,
+          grouping: ['collection', '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8'],
+          page: 1,
+          limit: 1000
+        }
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.result && data.result.items) {
+      // Format NFTs for database storage
+      const formattedNfts = data.result.items.map(nft => {
+        let imageUrl = nft.content?.links?.image || nft.content?.files?.[0]?.uri || '';
+        if (imageUrl.includes('gateway.irys.xyz')) {
+          imageUrl = imageUrl.replace('gateway.irys.xyz', 'uploader.irys.xyz');
+        }
+        
+        return {
+          mint: nft.id,
+          name: nft.content?.metadata?.name || 'PERKS NFT',
+          image: imageUrl
+        };
+      });
+
+      // Update database with complete NFT collection
+      const updateQuery = `
+        UPDATE citizens 
+        SET nft_metadata = $1, updated_at = NOW()
+        WHERE wallet = $2
+      `;
+      
+      await pool.query(updateQuery, [JSON.stringify(formattedNfts), wallet]);
+      
+      console.log(`Updated ${formattedNfts.length} NFTs for wallet ${wallet}`);
+      
+      res.json({ 
+        success: true, 
+        nftCount: formattedNfts.length,
+        message: `Updated ${formattedNfts.length} NFTs for citizen`
+      });
+    } else {
+      res.json({ success: true, nftCount: 0, message: 'No PERKS NFTs found' });
+    }
+    
+  } catch (error) {
+    console.error('Update citizen NFTs error:', error);
+    res.status(500).json({ error: 'Failed to update citizen NFTs' });
+  }
+});
+
 // Username availability check endpoint
 app.get('/api/check-username', async (req, res) => {
   try {
