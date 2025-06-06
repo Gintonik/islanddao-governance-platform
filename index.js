@@ -239,6 +239,52 @@ app.get('/api/wallet-nfts', async (req, res) => {
   }
 });
 
+// Get all NFTs from all citizens for collection tab
+app.get('/api/all-citizen-nfts', async (req, res) => {
+  try {
+    const query = `
+      SELECT wallet, nickname, nft_metadata 
+      FROM citizens 
+      WHERE nft_metadata IS NOT NULL AND nft_metadata != ''
+    `;
+    
+    const result = await pool.query(query);
+    
+    let allNfts = [];
+    let totalCitizens = 0;
+    
+    for (const citizen of result.rows) {
+      try {
+        const nftData = JSON.parse(citizen.nft_metadata);
+        if (Array.isArray(nftData)) {
+          // Add citizen info to each NFT
+          const citizenNfts = nftData.map(nft => ({
+            ...nft,
+            ownerWallet: citizen.wallet,
+            ownerNickname: citizen.nickname
+          }));
+          allNfts = allNfts.concat(citizenNfts);
+          totalCitizens++;
+        }
+      } catch (error) {
+        console.error(`Error parsing NFT metadata for citizen ${citizen.wallet}:`, error);
+      }
+    }
+    
+    console.log(`Aggregated ${allNfts.length} NFTs from ${totalCitizens} citizens`);
+    
+    res.json({
+      nfts: allNfts,
+      totalNfts: allNfts.length,
+      totalCitizens: totalCitizens
+    });
+    
+  } catch (error) {
+    console.error('All citizen NFTs API error:', error);
+    res.status(500).json({ error: 'Failed to fetch citizen NFTs' });
+  }
+});
+
 // Update citizen NFT collection endpoint
 app.post('/api/update-citizen-nfts', async (req, res) => {
   try {
@@ -466,8 +512,26 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       console.log('Governance power calculation skipped:', error.message);
     }
 
-    // Store NFT metadata for citizen
-    const nftMetadata = nfts ? JSON.stringify(nfts) : null;
+    // Fetch complete NFT collection for citizen
+    let nftMetadata = null;
+    try {
+      const nftResponse = await fetch(`${req.protocol}://${req.get('host')}/api/wallet-nfts?wallet=${walletAddress}`);
+      const nftData = await nftResponse.json();
+      if (nftData.nfts && nftData.nfts.length > 0) {
+        // Format NFTs for database storage
+        const formattedNfts = nftData.nfts.map(nft => ({
+          mint: nft.mint,
+          name: nft.name,
+          image: nft.image
+        }));
+        nftMetadata = JSON.stringify(formattedNfts);
+        console.log(`Stored ${formattedNfts.length} NFTs for citizen ${walletAddress}`);
+      }
+    } catch (error) {
+      console.error('Error fetching NFT collection for citizen:', error);
+      // Fallback to provided NFTs if any
+      nftMetadata = nfts ? JSON.stringify(nfts) : null;
+    }
 
     if (existingResult.rows.length > 0) {
       // Update existing citizen
