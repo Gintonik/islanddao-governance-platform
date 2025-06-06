@@ -2009,36 +2009,20 @@
         // Load and update live stats
         async function loadGovernanceStats() {
             try {
-                const response = await fetch('/api/citizens');
+                const response = await fetch('/api/governance-stats');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const citizens = await response.json();
+                const stats = await response.json();
                 
-                // Count citizen pins
-                const citizenPins = citizens.length;
+                // Validate response structure
+                if (!stats || typeof stats !== 'object') {
+                    throw new Error('Invalid stats response');
+                }
                 
-                // Count total PERKS collected
-                let totalPerks = 0;
-                citizens.forEach(citizen => {
-                    // Check multiple possible NFT data structures
-                    if (citizen.nfts && Array.isArray(citizen.nfts)) {
-                        totalPerks += citizen.nfts.length;
-                    } else if (citizen.nft_ids) {
-                        try {
-                            const nftIds = Array.isArray(citizen.nft_ids) ? citizen.nft_ids : JSON.parse(citizen.nft_ids);
-                            totalPerks += nftIds.length;
-                        } catch (e) {
-                            // Handle parsing errors gracefully
-                        }
-                    } else if (citizen.nftMetadata && typeof citizen.nftMetadata === 'object') {
-                        totalPerks += Object.keys(citizen.nftMetadata).length;
-                    }
-                });
-                
-                // Update display
-                document.getElementById('citizenPins').textContent = citizenPins;
-                document.getElementById('perksCollected').textContent = totalPerks;
+                // Update display with real governance stats
+                document.getElementById('citizenPins').textContent = stats.totalCitizens || '0';
+                document.getElementById('perksCollected').textContent = Math.round(stats.totalGovernancePower || 0).toLocaleString();
                 
                 // Update daily sync countdown
                 updateDailySyncCountdown();
