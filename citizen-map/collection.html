@@ -691,6 +691,42 @@
                   </div>
                   <span id="backpack-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
               </button>
+              
+              <!-- Coinbase -->
+              <button onclick="connectSpecificWallet('coinbase')" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  width: 100%;
+                  padding: 16px;
+                  background: #2a2a2a;
+                  border: 1px solid #444;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                  font-family: inherit;
+                  color: white;
+                  font-size: 16px;
+              " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                      <div style="
+                          width: 40px;
+                          height: 40px;
+                          border-radius: 8px;
+                          background: #0052FF;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          color: white;
+                          font-weight: bold;
+                          font-size: 18px;
+                      ">CB</div>
+                      <div style="text-align: left;">
+                          <div style="font-weight: 600; margin-bottom: 4px;">Coinbase Wallet</div>
+                      </div>
+                  </div>
+                  <span id="coinbase-status" style="color: #888; font-size: 14px;">Not installed</span>
+              </button>
           </div>
       </div>
   </div>
@@ -750,7 +786,7 @@
       }
     }
     
-    // Wallet connection functions from citizen map
+    // Wallet connection functions from citizen map (exact copy)
     window.connectSpecificWallet = async function(walletType) {
       const walletConfigs = {
         phantom: {
@@ -767,35 +803,37 @@
           name: 'Backpack',
           provider: () => window.backpack,
           detect: () => window.backpack?.isBackpack
+        },
+        coinbase: {
+          name: 'Coinbase Wallet',
+          provider: () => window.coinbaseSolana,
+          detect: () => window.coinbaseSolana
         }
       };
 
-      const config = walletConfigs[walletType];
-      if (!config) {
-        console.error('Unknown wallet type:', walletType);
-        return;
-      }
-
-      if (!config.detect()) {
-        alert(`Please install ${config.name} wallet extension`);
-        return;
-      }
+      const wallet = walletConfigs[walletType];
+      if (!wallet) return;
 
       try {
-        const provider = config.provider();
-        const response = await provider.connect();
-        const publicKey = response.publicKey.toString();
+        closeWalletModal();
+        
+        const provider = wallet.provider();
+        if (!provider) {
+          alert(`${wallet.name} not detected. Please install the extension.`);
+          return;
+        }
+
+        await provider.connect();
+        const publicKey = provider.publicKey.toString();
         
         currentWallet = publicKey;
+        console.log('Wallet connected:', publicKey);
         updateWalletUI();
-        closeWalletModal();
         loadUserNfts();
         
-        console.log(`${config.name} connected:`, publicKey);
-        
       } catch (error) {
-        console.error(`${config.name} connection failed:`, error);
-        alert(`Failed to connect to ${config.name}. Please try again.`);
+        console.error('Wallet connection failed:', error);
+        alert(`Failed to connect: ${error.message}`);
       }
     };
     
