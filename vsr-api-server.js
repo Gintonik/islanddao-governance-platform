@@ -180,7 +180,7 @@ function parseVSRDeposits(data, currentTime) {
             }
           }
 
-          // Check for stale deposit markers (Titanmaker's 200K deposit filter)
+          // Check for stale deposit markers using blockchain flags
           let isStaleDeposit = false;
           
           // Check isUsed flags at nearby offsets around the amount offset
@@ -201,10 +201,7 @@ function parseVSRDeposits(data, currentTime) {
             }
           }
           
-          // Special case for Titanmaker's known stale 200K deposit
-          if (Math.abs(amount - 200000) < 100) {
-            isStaleDeposit = true;
-          }
+
           
           if (isStaleDeposit) {
             console.log(`  FILTERED OUT: Stale deposit of ${amount.toFixed(6)} ISLAND at offset ${mapping.amountOffset}`);
@@ -291,10 +288,7 @@ function parseVSRDeposits(data, currentTime) {
             }
           }
           
-          // Special case for Titanmaker's 200K deposit - known stale deposit
-          if (Math.abs(amount - 200000) < 100) {
-            isStaleDeposit = true;
-          }
+
           
           if (isStaleDeposit) {
             console.log(`  FILTERED OUT: Stale deposit of ${amount.toFixed(6)} ISLAND at offset ${offset}`);
