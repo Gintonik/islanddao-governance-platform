@@ -26,7 +26,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 75vh;
+            height: 100vh;
             touch-action: none;
         }
         
@@ -145,7 +145,7 @@
 
         const updateCanvasSize = () => {
             canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight * 0.75;
+            canvas.height = window.innerHeight;
             isMobile = window.innerWidth < 768;
         };
 
@@ -159,7 +159,7 @@
             const awsLogoWidth = logoHeight * (283 / 140); // Maintain aspect ratio from your files
             const totalWidth = awsLogoWidth;
             
-            ctx.translate(canvas.width / 2 - totalWidth / 2, canvas.height / 2 - logoHeight / 2);
+            ctx.translate(canvas.width / 2 - totalWidth / 2, (canvas.height * 0.375) - logoHeight / 2);
 
             // Draw IslandDAO logo using AWS path structure
             ctx.save();
