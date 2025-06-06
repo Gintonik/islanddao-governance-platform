@@ -166,6 +166,37 @@ app.get('/api/nfts', async (req, res) => {
   }
 });
 
+// Wallet NFTs endpoint
+app.get('/api/wallet-nfts/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    
+    const result = await pool.query(
+      'SELECT nft_metadata FROM citizens WHERE wallet = $1 AND nft_metadata IS NOT NULL',
+      [walletAddress]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.json([]);
+    }
+    
+    const nftData = JSON.parse(result.rows[0].nft_metadata || '[]');
+    const nfts = nftData.map(nft => ({
+      id: nft.mint,
+      name: nft.name,
+      content: {
+        metadata: { name: nft.name },
+        links: { image: nft.image }
+      }
+    }));
+    
+    res.json(nfts);
+  } catch (error) {
+    console.error('Wallet NFTs API error:', error);
+    res.status(500).json({ error: 'Failed to fetch wallet NFTs' });
+  }
+});
+
 // Governance stats endpoint
 app.get('/api/governance-stats', async (req, res) => {
   try {

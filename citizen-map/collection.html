@@ -728,12 +728,57 @@
         </div>
     </div>
   
-  <!-- Include the working wallet system we built together -->
-  <script src="./simple-wallet.js"></script>
-  <script src="./verifyWallet.js"></script>
-  
   <script>
-    // Use the existing wallet system with correct modal functions
+    // Exact working wallet functions from verified citizen map
+    window.connectSpecificWallet = async function(walletType) {
+        const walletConfigs = {
+            phantom: {
+                name: 'Phantom',
+                provider: () => window.phantom?.solana,
+                detect: () => window.phantom?.solana?.isPhantom
+            },
+            solflare: {
+                name: 'Solflare',
+                provider: () => window.solflare,
+                detect: () => window.solflare?.isSolflare
+            },
+            backpack: {
+                name: 'Backpack',
+                provider: () => window.backpack,
+                detect: () => window.backpack?.isBackpack
+            },
+            coinbase: {
+                name: 'Coinbase Wallet',
+                provider: () => window.coinbaseSolana,
+                detect: () => window.coinbaseSolana
+            }
+        };
+
+        const wallet = walletConfigs[walletType];
+        if (!wallet) return;
+
+        try {
+            closeWalletModal();
+            
+            const provider = wallet.provider();
+            if (!provider) {
+                alert(`${wallet.name} not detected. Please install the extension.`);
+                return;
+            }
+
+            await provider.connect();
+            const publicKey = provider.publicKey.toString();
+            
+            console.log('Wallet connected:', publicKey);
+            document.getElementById('connectWalletBtn').textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
+            alert(`Connected to ${wallet.name}`);
+            
+        } catch (error) {
+            console.error('Wallet connection failed:', error);
+            alert(`Failed to connect: ${error.message}`);
+        }
+    };
+
     function closeWalletModal() {
         const modal = document.getElementById('walletModal');
         if (modal) {
@@ -742,9 +787,6 @@
     }
     
     window.closeWalletModal = closeWalletModal;
-    
-    // Use existing connectSpecificWallet from the working system
-    // (Already defined in simple-wallet.js)
     
     // Constants and variables
     const API_URL = '/api/citizens';
