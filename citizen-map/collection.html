@@ -606,7 +606,7 @@
   
   <script>
     // Constants and variables
-    const API_URL = '/api/nfts';
+    const API_URL = '/api/citizens';
     const WALLET_API_URL = '/api/wallet-nfts';
     const PER_PAGE = 16;
     
@@ -778,45 +778,36 @@
       });
     });
     
-    // Robust NFT fetching with fallback to citizens API
+    // Direct NFT fetching from citizens API
     async function fetchInitialNfts() {
       setLoading(true);
       
       try {
-        // Try primary NFT endpoint
-        let response = await fetch('/api/nfts');
+        const response = await fetch(API_URL);
         
-        if (response.ok) {
-          allNfts = await response.json();
-        } else {
-          // Fallback to citizens endpoint
-          console.log('Falling back to citizens API');
-          response = await fetch('/api/citizens');
-          
-          if (!response.ok) {
-            throw new Error('Both APIs failed');
-          }
-          
-          const citizens = await response.json();
-          allNfts = [];
-          
-          citizens.forEach(citizen => {
-            if (citizen.nfts && Array.isArray(citizen.nfts)) {
-              citizen.nfts.forEach(nft => {
-                allNfts.push({
-                  id: nft.mint || nft.id,
-                  name: nft.name,
-                  content: {
-                    metadata: { name: nft.name },
-                    links: { image: nft.image }
-                  },
-                  owner_wallet: citizen.wallet,
-                  owner_nickname: citizen.nickname || 'Unknown Citizen'
-                });
-              });
-            }
-          });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch citizens: ${response.status}`);
         }
+        
+        const citizens = await response.json();
+        allNfts = [];
+        
+        citizens.forEach(citizen => {
+          if (citizen.nfts && Array.isArray(citizen.nfts)) {
+            citizen.nfts.forEach(nft => {
+              allNfts.push({
+                id: nft.mint || nft.id,
+                name: nft.name,
+                content: {
+                  metadata: { name: nft.name },
+                  links: { image: nft.image }
+                },
+                owner_wallet: citizen.wallet,
+                owner_nickname: citizen.nickname || 'Unknown Citizen'
+              });
+            });
+          }
+        });
         
         if (allNfts && allNfts.length > 0) {
           displayedNfts = allNfts.slice(0, PER_PAGE);
@@ -826,12 +817,12 @@
             loadAllButton.style.display = 'none';
           }
         } else {
-          nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">No NFTs available</div>';
+          nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">No NFTs found</div>';
         }
         
       } catch (error) {
-        console.error('All NFT fetch methods failed:', error);
-        nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">Unable to load NFTs. Please refresh the page.</div>';
+        console.error('NFT fetch error:', error);
+        nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">Error loading NFTs. Please refresh.</div>';
       } finally {
         setLoading(false);
       }
