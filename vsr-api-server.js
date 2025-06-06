@@ -1401,6 +1401,69 @@ app.post("/api/sync-governance", async (req, res) => {
   }
 });
 
+// Add dedicated export endpoint
+app.post("/api/export-governance-json", async (req, res) => {
+  try {
+    console.log(`\n💾 Exporting governance data to JSON file...`);
+    
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT 
+        wallet, 
+        nickname,
+        native_governance_power,
+        delegated_governance_power,
+        total_governance_power,
+        updated_at
+      FROM citizens 
+      WHERE native_governance_power > 0 OR delegated_governance_power > 0
+      ORDER BY total_governance_power DESC
+    `);
+    client.release();
+    
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const exportData = {
+      summary: {
+        totalCitizens: result.rows.length,
+        totalNativeGovernancePower: result.rows.reduce((sum, row) => sum + parseFloat(row.native_governance_power || 0), 0),
+        totalDelegatedGovernancePower: result.rows.reduce((sum, row) => sum + parseFloat(row.delegated_governance_power || 0), 0),
+        calculatedAt: new Date().toISOString(),
+        version: "2.0.0"
+      },
+      citizens: result.rows.map(row => ({
+        wallet: row.wallet,
+        nickname: row.nickname,
+        nativeGovernancePower: parseFloat(row.native_governance_power || 0),
+        delegatedGovernancePower: parseFloat(row.delegated_governance_power || 0),
+        totalGovernancePower: parseFloat(row.total_governance_power || 0),
+        updatedAt: row.updated_at
+      }))
+    };
+    
+    const filePath = path.join(__dirname, 'data', 'native-governance-power.json');
+    fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2));
+    
+    console.log(`✅ Exported ${result.rows.length} citizens to ${filePath}`);
+    console.log(`📊 Total governance power: ${exportData.summary.totalNativeGovernancePower.toLocaleString()} ISLAND`);
+    
+    res.json({
+      success: true,
+      exported: result.rows.length,
+      totalGovernancePower: exportData.summary.totalNativeGovernancePower,
+      filePath: filePath
+    });
+    
+  } catch (error) {
+    console.error(`❌ Failed to export JSON: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 app.listen(port, () => {
   console.log(`✅ VSR API Server running on port ${port}`);
 });
