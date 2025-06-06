@@ -8,19 +8,6 @@ packages = ["jq", "solana-cli", "unzip"]
 runButton = "Project"
 
 [[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Citizen Map Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "VSR API Server"
-
-[[workflows.workflow]]
 name = "Database Sync"
 author = 39093361
 mode = "sequential"
@@ -30,22 +17,22 @@ task = "shell.exec"
 args = "node db-sync.js"
 
 [[workflows.workflow]]
-name = "Citizen Map Server"
+name = "Project"
+mode = "parallel"
 author = "agent"
 
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd citizen-map && node simple-server.cjs"
-waitForPort = 5000
+task = "workflow.run"
+args = "Production Server"
 
 [[workflows.workflow]]
-name = "VSR API Server"
+name = "Production Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node vsr-api-server.js"
-waitForPort = 3001
+args = "node index.js"
+waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "npm install node-fetch && node index.js"]

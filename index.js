@@ -1,12 +1,15 @@
 /**
- * Production Entry Point - ES Module format
- * Ensures reliable deployment for both citizen map and collection pages
+ * PERKS Map Production Server
+ * Single clean entry point for deployment
  */
 
-const express = require('express');
-const path = require('path');
-const { Pool } = require('pg');
-const cron = require('node-cron');
+import express from 'express';
+import path from 'path';
+import { Pool } from 'pg';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -200,5 +203,3 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`🌐 Available at: http://0.0.0.0:${port}`);
   console.log(`📊 Health check: http://0.0.0.0:${port}/health`);
 });
-
-module.exports = app;
