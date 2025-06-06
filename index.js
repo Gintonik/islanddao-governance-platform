@@ -377,9 +377,12 @@ app.post('/api/save-citizen-verified', async (req, res) => {
 
   } catch (error) {
     console.error('Save citizen error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Request body:', req.body);
     res.status(500).json({
       success: false,
-      message: 'Failed to save citizen data'
+      message: 'Failed to save citizen data',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -452,6 +455,23 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
+});
+
+// Global error handler for Express
+app.use((error, req, res, next) => {
+  console.error('Global Express error:', error);
+  console.error('Request URL:', req.url);
+  console.error('Request method:', req.method);
+  console.error('Error stack:', error.stack);
+  
+  if (!res.headersSent) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      timestamp: new Date().toISOString(),
+      url: req.url
+    });
+  }
 });
 
 app.listen(port, '0.0.0.0', () => {
