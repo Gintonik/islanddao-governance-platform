@@ -1,6 +1,6 @@
 # IslandDAO Governance Intelligence Platform
 
-A sophisticated Solana blockchain governance platform that provides real-time VSR (Voter Stake Registry) power calculations and interactive citizen mapping for decentralized autonomous organizations.
+An advanced Solana blockchain platform engineered for real-time VSR (Voter Stake Registry) governance power analysis and geographic visualization of DAO participation. Features production-grade blockchain data processing, comprehensive NFT collection tracking, and enterprise-level wallet integration supporting 15+ Solana wallet providers.
 
 ## 🏗️ Architecture Overview
 
