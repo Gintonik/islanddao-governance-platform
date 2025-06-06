@@ -443,28 +443,31 @@ app.get('/api/check-username', async (req, res) => {
   }
 });
 
-// Add API endpoint for governance stats
+// Add API endpoint for PERKS collection stats
 app.get('/api/governance-stats', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
         COUNT(*) as total_citizens,
-        COUNT(CASE WHEN native_governance_power > 0 THEN 1 END) as active_citizens,
-        COALESCE(SUM(native_governance_power), 0) as total_governance_power,
-        COALESCE(AVG(CASE WHEN native_governance_power > 0 THEN native_governance_power END), 0) as avg_power_active
+        SUM(
+          CASE 
+            WHEN nft_ids IS NOT NULL AND nft_ids != '[]' THEN 
+              array_length(string_to_array(trim(both '[]' from nft_ids), ','), 1)
+            ELSE 0 
+          END
+        ) as total_perks
       FROM citizens
+      WHERE nft_ids IS NOT NULL AND nft_ids != '[]'
     `);
     
     const stats = result.rows[0];
     res.json({
-      totalCitizens: parseInt(stats.total_citizens),
-      activeCitizens: parseInt(stats.active_citizens),
-      totalGovernancePower: parseFloat(stats.total_governance_power),
-      avgPowerActive: parseFloat(stats.avg_power_active)
+      totalCitizens: parseInt(stats.total_citizens) || 0,
+      totalPerks: parseInt(stats.total_perks) || 0
     });
   } catch (error) {
-    console.error('Error fetching governance stats:', error);
-    res.status(500).json({ error: 'Failed to fetch governance stats' });
+    console.error('Error fetching PERKS stats:', error);
+    res.status(500).json({ error: 'Failed to fetch PERKS stats' });
   }
 });
 

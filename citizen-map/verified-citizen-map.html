@@ -2020,9 +2020,9 @@
                     throw new Error('Invalid stats response');
                 }
                 
-                // Update display with real governance stats
+                // Update display with PERKS collection stats
                 document.getElementById('citizenPins').textContent = stats.totalCitizens || '0';
-                document.getElementById('perksCollected').textContent = Math.round(stats.totalGovernancePower || 0).toLocaleString();
+                document.getElementById('perksCollected').textContent = stats.totalPerks || '0';
                 
                 // Update daily sync countdown
                 updateDailySyncCountdown();
