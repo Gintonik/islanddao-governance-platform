@@ -575,36 +575,230 @@
   </div>
 
   <!-- Wallet Connection Modal -->
-  <div id="walletModal" class="wallet-modal">
-    <div class="wallet-modal-content">
-      <h3>Connect Your Wallet</h3>
-      <div class="wallet-options">
-        <div class="wallet-option" data-wallet="phantom">
-          <img src="/citizen-map/phantom-logo.png" alt="Phantom" class="wallet-logo">
-          <div class="wallet-info">
-            <h4>Phantom</h4>
-            <p>Connect using Phantom wallet</p>
-          </div>
+  <div id="walletModal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+    ">
+        <div style="
+            background: #1a1a1a;
+            border-radius: 16px;
+            width: 400px;
+            max-width: 90vw;
+            padding: 24px;
+            border: 1px solid #333;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        ">
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+                border-bottom: 1px solid #333;
+                padding-bottom: 16px;
+            ">
+                <h2 style="
+                    margin: 0;
+                    color: white;
+                    font-size: 20px;
+                    font-weight: 600;
+                ">Connect Wallet</h2>
+                <button onclick="closeWalletModal()" style="
+                    background: none;
+                    border: none;
+                    color: #888;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 4px;
+                    border-radius: 4px;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.color='white'; this.style.background='#333'" onmouseout="this.style.color='#888'; this.style.background='none'">×</button>
+            </div>
+            
+            <div id="wallet-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Phantom -->
+                <button onclick="connectSpecificWallet('phantom')" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding: 16px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-family: inherit;
+                    color: white;
+                    font-size: 16px;
+                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <img src="./phantom-icon.jpeg" alt="Phantom" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
+                        <div style="text-align: left;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Phantom</div>
+                        </div>
+                    </div>
+                    <span id="phantom-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
+                </button>
+                
+                <!-- Solflare -->
+                <button onclick="connectSpecificWallet('solflare')" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding: 16px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-family: inherit;
+                    color: white;
+                    font-size: 16px;
+                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <img src="./Solflare_id5j73wBTF_0.png" alt="Solflare" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
+                        <div style="text-align: left;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Solflare</div>
+                        </div>
+                    </div>
+                    <span id="solflare-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
+                </button>
+                
+                <!-- Backpack -->
+                <button onclick="connectSpecificWallet('backpack')" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding: 16px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-family: inherit;
+                    color: white;
+                    font-size: 16px;
+                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <img src="./Standalone_Icon_Red.png" alt="Backpack" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
+                        <div style="text-align: left;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Backpack</div>
+                        </div>
+                    </div>
+                    <span id="backpack-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
+                </button>
+                
+                <!-- Coinbase -->
+                <button onclick="connectSpecificWallet('coinbase')" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding: 16px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-family: inherit;
+                    color: white;
+                    font-size: 16px;
+                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 8px;
+                            background: #0052FF;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-weight: bold;
+                            font-size: 18px;
+                        ">CB</div>
+                        <div style="text-align: left;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Coinbase Wallet</div>
+                        </div>
+                    </div>
+                    <span id="coinbase-status" style="color: #888; font-size: 14px;">Not installed</span>
+                </button>
+            </div>
         </div>
-        <div class="wallet-option" data-wallet="solflare">
-          <img src="/citizen-map/solflare-logo.png" alt="Solflare" class="wallet-logo">
-          <div class="wallet-info">
-            <h4>Solflare</h4>
-            <p>Connect using Solflare wallet</p>
-          </div>
-        </div>
-        <div class="wallet-option" data-wallet="backpack">
-          <img src="/citizen-map/backpack-logo.png" alt="Backpack" class="wallet-logo">
-          <div class="wallet-info">
-            <h4>Backpack</h4>
-            <p>Connect using Backpack wallet</p>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
   
   <script>
+    // Wallet connection functions
+    window.connectSpecificWallet = async function(walletType) {
+        const walletConfigs = {
+            phantom: {
+                name: 'Phantom',
+                provider: () => window.phantom?.solana,
+                detect: () => window.phantom?.solana?.isPhantom
+            },
+            solflare: {
+                name: 'Solflare',
+                provider: () => window.solflare,
+                detect: () => window.solflare?.isSolflare
+            },
+            backpack: {
+                name: 'Backpack',
+                provider: () => window.backpack,
+                detect: () => window.backpack?.isBackpack
+            },
+            coinbase: {
+                name: 'Coinbase Wallet',
+                provider: () => window.coinbaseSolana,
+                detect: () => window.coinbaseSolana
+            }
+        };
+
+        const wallet = walletConfigs[walletType];
+        if (!wallet) return;
+
+        try {
+            closeWalletModal();
+            
+            const provider = wallet.provider();
+            if (!provider) {
+                alert(`${wallet.name} not detected. Please install the extension.`);
+                return;
+            }
+
+            await provider.connect();
+            const publicKey = provider.publicKey.toString();
+            
+            console.log('Wallet connected:', publicKey);
+            document.getElementById('connectWalletBtn').textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
+            alert(`Connected to ${wallet.name}`);
+            
+        } catch (error) {
+            console.error('Wallet connection failed:', error);
+            alert(`Failed to connect: ${error.message}`);
+        }
+    };
+
+    function closeWalletModal() {
+        const modal = document.getElementById('walletModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    
+    window.closeWalletModal = closeWalletModal;
+    
     // Constants and variables
     const API_URL = '/api/citizens';
     const WALLET_API_URL = '/api/wallet-nfts';
