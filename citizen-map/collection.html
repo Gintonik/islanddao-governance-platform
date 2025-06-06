@@ -516,6 +516,34 @@
       background: rgba(255, 255, 255, 0.95);
       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
+
+    .notification {
+      position: fixed;
+      top: 160px;
+      right: 20px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: var(--shadow-soft);
+      z-index: 2000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      border-left: 4px solid var(--accent-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      border-left-color: #56ab2f;
+    }
+
+    .notification.error {
+      border-left-color: #ff6b6b;
+    }
   </style>
 </head>
 <body>
@@ -730,8 +758,9 @@
           </div>
       </div>
   </div>
-  
 
+  <!-- Notification -->
+  <div id="notification" class="notification"></div>
   
   <script>
     // Constants and variables
@@ -819,7 +848,7 @@
         
         const provider = wallet.provider();
         if (!provider) {
-          alert(`${wallet.name} not detected. Please install the extension.`);
+          showNotification(`${wallet.name} not detected. Please install the extension.`, 'error');
           return;
         }
 
@@ -830,10 +859,11 @@
         console.log('Wallet connected:', publicKey);
         updateWalletUI();
         loadUserNfts();
+        showNotification(`Connected to ${wallet.name}`, 'success');
         
       } catch (error) {
         console.error('Wallet connection failed:', error);
-        alert(`Failed to connect: ${error.message}`);
+        showNotification(`Failed to connect: ${error.message}`, 'error');
       }
     };
     
@@ -879,16 +909,79 @@
     
     async function disconnectWallet() {
       try {
+        const lastWallet = localStorage.getItem('lastConnectedWallet');
+        if (lastWallet) {
+          const walletConfigs = {
+            phantom: {
+              name: 'Phantom',
+              provider: () => window.phantom?.solana,
+              detect: () => window.phantom?.solana?.isPhantom
+            },
+            solflare: {
+              name: 'Solflare',
+              provider: () => window.solflare,
+              detect: () => window.solflare?.isSolflare
+            },
+            backpack: {
+              name: 'Backpack',
+              provider: () => window.backpack,
+              detect: () => window.backpack?.isBackpack
+            },
+            coinbase: {
+              name: 'Coinbase Wallet',
+              provider: () => window.coinbaseSolana,
+              detect: () => window.coinbaseSolana
+            }
+          };
+          const wallet = walletConfigs[lastWallet];
+          const provider = wallet.provider();
+          if (provider && provider.disconnect) {
+            await provider.disconnect();
+          }
+        }
+        
         currentWallet = null;
         walletNfts = [];
+        localStorage.removeItem('lastConnectedWallet');
         updateWalletUI();
         clearNftGrid();
+        showNotification('Wallet disconnected', 'info');
         console.log('Wallet disconnected');
+        
       } catch (error) {
-        console.error('Error disconnecting wallet:', error);
+        console.error('Disconnect failed:', error);
+        // Force disconnect even if provider fails
+        currentWallet = null;
+        walletNfts = [];
+        localStorage.removeItem('lastConnectedWallet');
+        updateWalletUI();
+        clearNftGrid();
+        showNotification('Wallet disconnected', 'info');
       }
     }
     
+    // Show notification system (exact copy from citizen map)
+    let notificationTimeout;
+    
+    function showNotification(message, type = 'info') {
+      const notification = document.getElementById('notification');
+      
+      // Clear any existing timeout
+      if (notificationTimeout) {
+        clearTimeout(notificationTimeout);
+      }
+      
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add('show');
+
+      // Set new timeout with longer duration
+      notificationTimeout = setTimeout(() => {
+        notification.classList.remove('show');
+        notificationTimeout = null;
+      }, 6000);
+    }
+
     // Initialize wallet system
     function initializeWalletAdapter() {
       updateWalletUI();
