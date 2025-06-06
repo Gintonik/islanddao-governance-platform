@@ -59,10 +59,10 @@ The governance power calculation follows Solana's VSR specification:
 
 **Multiplier Formula:**
 ```javascript
-// Simplified representation - actual implementation uses saturation curves
+// VSR multiplier calculation follows Solana's specification
 const basePower = depositAmount;
-const timeBonus = calculateLockupBonus(startTime, endTime, currentTime);
-const governancePower = basePower * (1 + timeBonus);
+const timeBonus = calculateLockupBonus(lockupType, duration, timeRemaining);
+const governancePower = basePower * multiplier;
 ```
 
 ### Database Schema
@@ -114,7 +114,7 @@ cp .env.example .env
 **Required Environment Variables:**
 ```env
 DATABASE_URL=postgresql://username:password@localhost:5432/database
-HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=your-key
+HELIUS_API_KEY=your_helius_api_key
 PORT=3001
 ```
 
