@@ -140,23 +140,12 @@ app.get('/api/citizens', async (req, res) => {
         };
       });
       
-      // Apply governance data from JSON
-      let enhancedCitizen = {
+      // Use live database governance power values
+      return {
         ...citizen,
         nfts: nftIds,
         nftMetadata: nftMetadata
       };
-      
-      if (governanceData.citizens) {
-        const govCitizen = governanceData.citizens.find(gc => gc.wallet === citizen.wallet);
-        if (govCitizen) {
-          enhancedCitizen.native_governance_power = govCitizen.totalPower;
-          enhancedCitizen.locked_governance_power = govCitizen.lockedPower;
-          enhancedCitizen.unlocked_governance_power = govCitizen.unlockedPower;
-        }
-      }
-      
-      return enhancedCitizen;
     }));
     
     res.json(citizensWithNfts);
