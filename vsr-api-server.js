@@ -124,9 +124,9 @@ function parseVSRDeposits(data, currentTime) {
 
         if (amount >= 50 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
           
-          // Shadow/delegation marker detection - only filter obvious phantom deposits
+          // Shadow/delegation marker detection
           const roundedValue = Math.round(amount);
-          if (roundedValue === 11000) {
+          if (roundedValue === 1000 || roundedValue === 2000 || roundedValue === 11000) {
             shadowDeposits.push({
               amount,
               type: 'delegation_marker',
@@ -295,7 +295,7 @@ function parseVSRDeposits(data, currentTime) {
             continue;
           }
           
-          if (rounded === 11000) {
+          if (rounded === 1000 || rounded === 2000 || rounded === 11000) {
             shadowDeposits.push({
               amount,
               type: 'delegation_marker',
