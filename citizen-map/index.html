@@ -130,29 +130,53 @@
         function createTextImage() {
             if (!ctx || !canvas) return 0;
 
-            ctx.fillStyle = 'white';
-            ctx.save();
+            const logoImage = new Image();
+            logoImage.crossOrigin = "anonymous";
             
-            const logoHeight = isMobile ? 180 : 320;
-            const islandLogoWidth = logoHeight * (590 / 450);
-            const totalWidth = islandLogoWidth;
-            
-            ctx.translate(canvas.width / 2 - totalWidth / 2, (canvas.height * 0.35) - logoHeight / 2);
+            return new Promise((resolve) => {
+                logoImage.onload = () => {
+                    ctx.fillStyle = 'white';
+                    ctx.save();
+                    
+                    const logoHeight = isMobile ? 180 : 320;
+                    const aspectRatio = logoImage.width / logoImage.height;
+                    const logoWidth = logoHeight * aspectRatio;
+                    
+                    const x = (canvas.width - logoWidth) / 2;
+                    const y = (canvas.height * 0.35) - logoHeight / 2;
+                    
+                    // Draw the image in white
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
+                    
+                    ctx.restore();
 
-            // Draw IslandDAO logo
-            ctx.save();
-            const islandScale = logoHeight / 450;
-            ctx.scale(islandScale, islandScale);
-            const path = new Path2D(SIMPLE_ISLAND_LOGO);
-            ctx.fill(path);
-            ctx.restore();
+                    textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.restore();
-
-            textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            return islandScale;
+                    const scale = logoHeight / logoImage.height;
+                    resolve(scale);
+                };
+                
+                logoImage.onerror = () => {
+                    // Fallback to text if image fails
+                    ctx.fillStyle = 'white';
+                    ctx.font = `${isMobile ? 60 : 100}px Arial Black`;
+                    ctx.textAlign = 'center';
+                    const text = 'ISLAND DAO';
+                    const x = canvas.width / 2;
+                    const y = canvas.height * 0.35;
+                    ctx.fillText(text, x, y);
+                    
+                    textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    resolve(1);
+                };
+                
+                // Use the uploaded logo
+                logoImage.src = '/IslandDAO_WORD_WHITE.png';
+            });
         }
 
         function createParticle(scale) {
@@ -248,13 +272,17 @@
 
         updateCanvasSize();
 
-        const scale = createTextImage();
-        createInitialParticles(scale);
-        animate(scale);
+        async function initialize() {
+            const scale = await createTextImage();
+            createInitialParticles(scale);
+            animate(scale);
+        }
 
-        const handleResize = () => {
+        initialize();
+
+        const handleResize = async () => {
             updateCanvasSize();
-            const newScale = createTextImage();
+            const newScale = await createTextImage();
             particles = [];
             createInitialParticles(newScale);
         };
