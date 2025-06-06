@@ -663,8 +663,10 @@
     function updateWalletUI() {
       console.log('updateWalletUI called, currentWallet:', currentWallet);
       const walletBtn = document.getElementById('walletBtn');
+      const walletText = document.getElementById('walletText');
+      const walletIcon = document.getElementById('walletIcon');
       
-      if (!walletBtn) {
+      if (!walletBtn || !walletText || !walletIcon) {
         console.log('Missing wallet UI elements');
         return;
       }
@@ -673,10 +675,15 @@
       const newWalletBtn = walletBtn.cloneNode(true);
       walletBtn.parentNode.replaceChild(newWalletBtn, walletBtn);
       
+      // Get references to child elements in the new button
+      const newWalletText = newWalletBtn.querySelector('#walletText');
+      const newWalletIcon = newWalletBtn.querySelector('#walletIcon');
+      
       if (currentWallet) {
-        // Show connected state
+        // Show connected state - button becomes Disconnect
         console.log('Setting connected state');
-        newWalletBtn.textContent = 'Disconnect';
+        newWalletText.textContent = 'Disconnect';
+        newWalletIcon.textContent = '✅';
         newWalletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
         newWalletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
         newWalletBtn.style.color = '#21E8A3';
@@ -684,7 +691,8 @@
       } else {
         // Show disconnected state
         console.log('Setting disconnected state');
-        newWalletBtn.textContent = 'Connect Wallet';
+        newWalletText.textContent = 'Connect Wallet';
+        newWalletIcon.textContent = '🔗';
         newWalletBtn.style.background = '';
         newWalletBtn.style.borderColor = '';
         newWalletBtn.style.color = '';
