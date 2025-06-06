@@ -208,16 +208,24 @@ app.get('/api/wallet-nfts', async (req, res) => {
       console.log(`Found ${perksNfts.length} PERKS NFTs for wallet ${walletAddress}`);
 
       // Format NFTs for frontend consumption (matching expected structure)
-      const formattedNfts = perksNfts.map(nft => ({
-        mint: nft.id,
-        id: nft.id,
-        name: nft.content?.metadata?.name || 'PERKS NFT',
-        image: nft.content?.links?.image || nft.content?.files?.[0]?.uri || '',
-        content: {
-          metadata: { name: nft.content?.metadata?.name || 'PERKS NFT' },
-          links: { image: nft.content?.links?.image || nft.content?.files?.[0]?.uri || '' }
+      const formattedNfts = perksNfts.map(nft => {
+        // Fix Irys gateway URLs for reliable image loading
+        let imageUrl = nft.content?.links?.image || nft.content?.files?.[0]?.uri || '';
+        if (imageUrl.includes('gateway.irys.xyz')) {
+          imageUrl = imageUrl.replace('gateway.irys.xyz', 'uploader.irys.xyz');
         }
-      }));
+        
+        return {
+          mint: nft.id,
+          id: nft.id,
+          name: nft.content?.metadata?.name || 'PERKS NFT',
+          image: imageUrl,
+          content: {
+            metadata: { name: nft.content?.metadata?.name || 'PERKS NFT' },
+            links: { image: imageUrl }
+          }
+        };
+      });
 
       return res.json({ nfts: formattedNfts });
     }
