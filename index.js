@@ -160,31 +160,68 @@ app.get('/api/nfts', async (req, res) => {
   }
 });
 
-// Wallet NFTs endpoint
+// Wallet NFTs endpoint - Real-time PERKS NFT validation
 app.get('/api/wallet-nfts', async (req, res) => {
   try {
     const { wallet: walletAddress } = req.query;
     
-    const result = await pool.query(
-      'SELECT nft_metadata FROM citizens WHERE wallet = $1 AND nft_metadata IS NOT NULL',
-      [walletAddress]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.json([]);
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address required' });
     }
     
-    const nftData = JSON.parse(result.rows[0].nft_metadata || '[]');
-    const nfts = nftData.map(nft => ({
-      id: nft.mint,
-      name: nft.name,
-      content: {
-        metadata: { name: nft.name },
-        links: { image: nft.image }
-      }
-    }));
+    console.log(`Fetching PERKS NFTs for wallet: ${walletAddress}`);
     
-    res.json(nfts);
+    // Fetch NFTs directly from blockchain via Helius API
+    const response = await fetch(process.env.HELIUS_API_KEY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'get-assets',
+        method: 'getAssetsByOwner',
+        params: {
+          ownerAddress: walletAddress,
+          page: 1,
+          limit: 1000
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Helius API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.result && data.result.items) {
+      // Filter for PERKS collection NFTs only
+      const perksNfts = data.result.items.filter(nft => {
+        return nft.grouping && nft.grouping.some(group => 
+          group.group_key === 'collection' && 
+          group.group_value === '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8'
+        );
+      });
+
+      console.log(`Found ${perksNfts.length} PERKS NFTs for wallet ${walletAddress}`);
+
+      // Format NFTs for frontend consumption (matching expected structure)
+      const formattedNfts = perksNfts.map(nft => ({
+        mint: nft.id,
+        id: nft.id,
+        name: nft.content?.metadata?.name || 'PERKS NFT',
+        image: nft.content?.links?.image || nft.content?.files?.[0]?.uri || '',
+        content: {
+          metadata: { name: nft.content?.metadata?.name || 'PERKS NFT' },
+          links: { image: nft.content?.links?.image || nft.content?.files?.[0]?.uri || '' }
+        }
+      }));
+
+      return res.json({ nfts: formattedNfts });
+    }
+
+    console.log(`No PERKS NFTs found for wallet ${walletAddress}`);
+    return res.json({ nfts: [] });
+    
   } catch (error) {
     console.error('Wallet NFTs API error:', error);
     res.status(500).json({ error: 'Failed to fetch wallet NFTs' });
