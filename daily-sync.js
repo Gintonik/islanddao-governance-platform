@@ -184,16 +184,19 @@ async function performDailySync() {
         const walletShort = citizen.wallet.slice(0, 8);
         console.log(`🔍 Checking ${citizen.nickname || walletShort}...`);
         
-        // Check NFT ownership
-        const nftCount = await checkNFTOwnership(citizen.wallet);
+        // Check NFT ownership and get NFT data
+        const nftResponse = await fetch(`http://localhost:5000/api/wallet-nfts?wallet=${citizen.wallet}`);
+        const nftData = await nftResponse.json();
         
-        if (nftCount === -1) {
+        if (!nftData || !nftData.nfts) {
           // API error - skip this citizen to be safe
           console.log(`  ⚠️ API error - keeping citizen ${citizen.nickname || walletShort}`);
           validCitizens.push(citizen);
           errors++;
           continue;
         }
+        
+        const nftCount = nftData.nfts.length;
         
         if (nftCount === 0) {
           // No PERKS NFTs - remove citizen
@@ -209,15 +212,27 @@ async function performDailySync() {
         const governance = await getGovernancePower(citizen.wallet);
         console.log(`  📈 ${citizen.nickname || walletShort}: ${governance.total.toLocaleString()} ISLAND (${nftCount} NFTs)`);
         
-        // Update governance power in database
+        // Prepare NFT metadata for storage
+        const nftMetadataArray = nftData.nfts.map(nft => ({
+          mint: nft.id || nft.mint,
+          name: nft.name || 'PERKS NFT',
+          image: nft.image || nft.content?.links?.image || ''
+        }));
+        
+        const nftMetadataJson = JSON.stringify(nftMetadataArray);
+        const nftIdsJson = JSON.stringify(nftMetadataArray.map(nft => nft.mint));
+        
+        // Update governance power and NFT metadata in database
         await client.query(`
           UPDATE citizens SET 
             native_governance_power = $1,
             delegated_governance_power = $2,
             total_governance_power = $3,
+            nft_metadata = $4,
+            nft_ids = $5,
             governance_last_updated = NOW()
-          WHERE wallet = $4
-        `, [governance.native, governance.delegated, governance.total, citizen.wallet]);
+          WHERE wallet = $6
+        `, [governance.native, governance.delegated, governance.total, nftMetadataJson, nftIdsJson, citizen.wallet]);
         
         // Add to valid citizens for JSON export
         validCitizens.push({
