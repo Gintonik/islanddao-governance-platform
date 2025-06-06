@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import { PublicKey } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import bs58 from 'bs58';
+import { startDailySync } from './daily-sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -838,4 +839,7 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`✅ Production server running on port ${port}`);
   console.log(`🌐 Available at: http://0.0.0.0:${port}`);
   console.log(`📊 Health check: http://0.0.0.0:${port}/health`);
+  
+  // Start daily sync scheduler
+  startDailySync();
 });
