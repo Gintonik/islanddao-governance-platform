@@ -1625,7 +1625,7 @@
         let selectedPfp = null;
         let selectedPrimary = null;
         let isPickingLocation = false;
-        let citizenMarkers = [];
+        let citizenMarkers = new Map(); // Map wallet addresses to their markers
         let simpleWallet = null;
         let solanaConnection = null;
 
@@ -2448,7 +2448,10 @@
                 
                 console.log('Citizen data prepared:', citizenData);
                 
-                // Step 3: Submit verified citizen data
+                // Step 3: Remove old marker before submitting new pin location
+                removeCitizenMarker(verificationData.walletAddress);
+                
+                // Step 4: Submit verified citizen data
                 const result = await walletVerifier.submitVerifiedCitizen(verificationData, citizenData);
                 console.log('Pin creation successful:', result);
 
@@ -2456,7 +2459,7 @@
                 const actionMessage = result.action === 'created' ? 'Pin Created' : 'Pin Moved';
                 showNotification(`${actionMessage} successfully!`, 'success');
                 closePinForm();
-                loadCitizens(); // Reload the map
+                loadCitizens(); // Reload the map with updated positions
                 // Trigger refresh for all other users
                 broadcastUpdate();
 
@@ -2563,6 +2566,16 @@
             }
         }
 
+        // Remove specific citizen marker when they move their pin
+        function removeCitizenMarker(walletAddress) {
+            if (citizenMarkers.has(walletAddress)) {
+                const marker = citizenMarkers.get(walletAddress);
+                map.removeLayer(marker);
+                citizenMarkers.delete(walletAddress);
+                console.log(`Removed old marker for citizen: ${walletAddress}`);
+            }
+        }
+
         // Load and display citizens
         async function loadCitizens() {
             try {
@@ -2572,12 +2585,11 @@
                 }
                 const citizens = await response.json();
 
-                // Clear existing markers
-                map.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        map.removeLayer(layer);
-                    }
+                // Clear existing markers and tracking
+                citizenMarkers.forEach((marker, wallet) => {
+                    map.removeLayer(marker);
                 });
+                citizenMarkers.clear();
 
                 // Smart anti-overlap positioning system
                 const processedCitizens = [];
@@ -2810,6 +2822,11 @@
             marker.on('click', () => {
                 showCitizenPanel(citizens[0]); // For now, show first citizen's panel
             });
+            
+            // Track markers for all citizens in this group
+            citizens.forEach(citizen => {
+                citizenMarkers.set(citizen.wallet, marker);
+            });
         }
 
         // Simple function to show multiple citizen panel (placeholder)
@@ -2859,6 +2876,9 @@
 
             const marker = L.marker([lat, lng], { icon }).addTo(map);
             marker.on('click', () => showCitizenPanel(citizen));
+            
+            // Track this marker by wallet address for proper removal when pin moves
+            citizenMarkers.set(citizen.wallet, marker);
         }
 
         // Create cluster marker with simple side-by-side layout
