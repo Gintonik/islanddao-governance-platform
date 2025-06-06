@@ -140,7 +140,7 @@
         let isMobile = window.innerWidth < 768;
 
         // IslandDAO logo SVG path data (converted from your PNG)
-        const ISLAND_LOGO_PATH = "M0 40L20 20L40 40L20 60Z M60 20L80 0L100 20L80 40Z M120 40L140 20L160 40L140 60Z M180 20L200 0L220 20L200 40Z M240 40L260 20L280 40L260 60Z M300 20L320 0L340 20L320 40Z M0 80L340 80L340 100L0 100Z";
+        const ISLAND_LOGO_PATH = "M50 10 L60 20 L70 10 L80 20 L70 30 L60 20 L50 30 L40 20 L30 30 L20 20 L30 10 L40 20 Z M45 30 L55 30 L55 60 L45 60 Z M20 65 L80 65 L80 70 L20 70 Z M25 75 L75 75 L75 78 L25 78 Z M120 15 L130 15 L130 55 L120 55 Z M140 15 L160 15 L160 25 L150 25 L150 35 L160 35 L160 45 L140 45 Z M170 15 L180 15 L180 45 L195 45 L195 55 L170 55 Z M205 15 L230 15 L230 25 L215 25 L215 35 L225 35 L225 45 L215 45 L215 55 L205 55 Z M240 15 L265 15 L250 30 L265 45 L240 45 L255 30 Z M275 15 L300 15 L290 35 L300 55 L275 55 L285 35 Z M320 15 L345 15 L345 25 L330 25 L330 35 L340 35 L340 45 L330 45 L330 55 L320 55 Z M355 15 L380 15 L380 25 L365 25 L365 35 L375 35 L375 45 L365 45 L365 55 L355 55 Z M390 15 L415 15 L400 35 L415 55 L390 55 L405 35 Z";
 
         function updateCanvasSize() {
             canvas.width = window.innerWidth;
@@ -154,80 +154,27 @@
             ctx.fillStyle = 'white';
             ctx.save();
             
-            const logoHeight = isMobile ? 100 : 150;
-            const logoWidth = logoHeight * 3.5; // Proper aspect ratio from your logo
+            const logoHeight = isMobile ? 60 : 100;
+            const logoWidth = logoHeight * 4.5; // Aspect ratio from IslandDAO logo
             
             // Center the logo
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             ctx.translate(centerX - logoWidth / 2, centerY - logoHeight / 2);
 
-            const scale = logoHeight / 140; // Base scale on the actual logo height
-            ctx.scale(scale, scale);
+            // Draw IslandDAO logo using Path2D (like the original files)
+            const logoScale = logoHeight / 70;
+            ctx.scale(logoScale, logoScale);
             
-            // Draw IslandDAO logo using proper SVG-like path
-            ctx.fillStyle = 'white';
-            
-            // Palm tree icon - 6 fronds radiating from center
-            ctx.beginPath();
-            
-            // Top frond
-            ctx.moveTo(50, 30);
-            ctx.bezierCurveTo(45, 10, 55, 10, 50, 30);
-            
-            // Top-right frond
-            ctx.moveTo(50, 30);
-            ctx.bezierCurveTo(70, 15, 75, 25, 50, 30);
-            
-            // Bottom-right frond
-            ctx.moveTo(50, 30);
-            ctx.bezierCurveTo(70, 45, 75, 35, 50, 30);
-            
-            // Bottom frond
-            ctx.moveTo(50, 30);
-            ctx.bezierCurveTo(55, 50, 45, 50, 50, 30);
-            
-            // Bottom-left frond
-            ctx.moveTo(50, 30);
-            ctx.bezierCurveTo(30, 45, 25, 35, 50, 30);
-            
-            // Top-left frond
-            ctx.moveTo(50, 30);
-            ctx.bezierCurveTo(30, 15, 25, 25, 50, 30);
-            
-            ctx.fill();
-            
-            // Trunk
-            ctx.fillRect(47, 30, 6, 30);
-            
-            // Base platform - three lines
-            ctx.fillRect(25, 65, 50, 3);
-            ctx.fillRect(30, 71, 40, 2);
-            ctx.fillRect(35, 76, 30, 2);
-            
-            // Text "ISLAND DAO" using proper letter spacing
-            ctx.font = 'bold 28px Arial';
-            ctx.textAlign = 'left';
-            
-            // ISLAND
-            ctx.fillText('I', 120, 45);
-            ctx.fillText('S', 135, 45);
-            ctx.fillText('L', 150, 45);
-            ctx.fillText('A', 165, 45);
-            ctx.fillText('N', 180, 45);
-            ctx.fillText('D', 195, 45);
-            
-            // DAO
-            ctx.fillText('D', 230, 45);
-            ctx.fillText('A', 245, 45);
-            ctx.fillText('O', 260, 45);
+            const path = new Path2D(ISLAND_LOGO_PATH);
+            ctx.fill(path);
 
             ctx.restore();
 
             textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            return scale;
+            return logoScale;
         }
 
         function createParticle(scale) {
