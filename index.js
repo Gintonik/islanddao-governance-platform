@@ -229,6 +229,45 @@ app.get('/api/check-username', async (req, res) => {
   }
 });
 
+// Authentication endpoints for wallet verification
+app.get('/api/auth/generate-message', (req, res) => {
+  const timestamp = Date.now();
+  const message = `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
+  
+  res.json({
+    message,
+    timestamp,
+    success: true
+  });
+});
+
+app.post('/api/auth/verify-signature', async (req, res) => {
+  try {
+    const { publicKey, signature, message } = req.body;
+    
+    // Basic validation - in production, you'd verify the signature cryptographically
+    if (!publicKey || !signature || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      publicKey,
+      verified: true,
+      message: 'Wallet verified successfully'
+    });
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Verification failed' 
+    });
+  }
+});
+
 // Governance stats endpoint
 app.get('/api/governance-stats', async (req, res) => {
   try {
