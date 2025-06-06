@@ -30,7 +30,7 @@
         
         .content {
             position: absolute;
-            bottom: 120px;
+            top: 60%;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -39,7 +39,7 @@
         
         .subtitle {
             font-size: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             opacity: 0.8;
             color: #cccccc;
         }
@@ -138,12 +138,12 @@
                     ctx.fillStyle = 'white';
                     ctx.save();
                     
-                    const logoHeight = isMobile ? 180 : 320;
+                    const logoHeight = isMobile ? 280 : 450;
                     const aspectRatio = logoImage.width / logoImage.height;
                     const logoWidth = logoHeight * aspectRatio;
                     
                     const x = (canvas.width - logoWidth) / 2;
-                    const y = (canvas.height * 0.35) - logoHeight / 2;
+                    const y = (canvas.height * 0.25) - logoHeight / 2;
                     
                     // Draw the image in white
                     ctx.globalCompositeOperation = 'source-over';
