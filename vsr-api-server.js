@@ -1421,8 +1421,12 @@ app.post("/api/export-governance-json", async (req, res) => {
     `);
     client.release();
     
-    const fs = await import('fs');
-    const path = await import('path');
+    const { writeFileSync } = await import('fs');
+    const { join, dirname } = await import('path');
+    const { fileURLToPath } = await import('url');
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
     
     const exportData = {
       summary: {
@@ -1442,8 +1446,8 @@ app.post("/api/export-governance-json", async (req, res) => {
       }))
     };
     
-    const filePath = path.join(__dirname, 'data', 'native-governance-power.json');
-    fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2));
+    const filePath = join(__dirname, 'data', 'native-governance-power.json');
+    writeFileSync(filePath, JSON.stringify(exportData, null, 2));
     
     console.log(`✅ Exported ${result.rows.length} citizens to ${filePath}`);
     console.log(`📊 Total governance power: ${exportData.summary.totalNativeGovernancePower.toLocaleString()} ISLAND`);
