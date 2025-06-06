@@ -1015,8 +1015,10 @@
         
         if (walletNfts.length === 0) {
           console.log('No PERKS NFTs found in this wallet');
+          showNotification('No PERKS NFTs found in this wallet', 'info');
         } else {
           console.log(`Found ${walletNfts.length} PERKS NFT${walletNfts.length > 1 ? 's' : ''}`);
+          showNotification(`Found ${walletNfts.length} PERKS NFT${walletNfts.length > 1 ? 's' : ''}`, 'success');
         }
         
       } catch (error) {
