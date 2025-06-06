@@ -30,7 +30,7 @@
         
         .content {
             position: absolute;
-            top: 80%;
+            top: 85%;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -38,8 +38,8 @@
         }
         
         .subtitle {
-            font-size: 1rem;
-            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
             opacity: 0.8;
             color: #cccccc;
         }
@@ -138,9 +138,9 @@
                     ctx.fillStyle = 'white';
                     ctx.save();
                     
-                    // Make logo fill most of the screen
-                    const maxWidth = canvas.width * 0.9;
-                    const maxHeight = canvas.height * 0.7;
+                    // Make logo fill almost entire screen
+                    const maxWidth = canvas.width * 0.95;
+                    const maxHeight = canvas.height * 0.85;
                     const aspectRatio = logoImage.width / logoImage.height;
                     
                     let logoWidth, logoHeight;
@@ -155,7 +155,7 @@
                     }
                     
                     const x = (canvas.width - logoWidth) / 2;
-                    const y = (canvas.height * 0.45) - logoHeight / 2;
+                    const y = (canvas.height * 0.4) - logoHeight / 2;
                     
                     // Draw the image in white
                     ctx.globalCompositeOperation = 'source-over';
