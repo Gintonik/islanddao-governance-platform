@@ -728,9 +728,20 @@
         </div>
     </div>
   
+  <!-- Include the working wallet system -->
+  <script src="./simple-wallet.js"></script>
+  <script src="./verifyWallet.js"></script>
+  
   <script>
-    // Exact working wallet functions from verified citizen map
+    // Initialize the working wallet system
+    let simpleWallet;
+    
+    // Use the working wallet system with the exact same function names
     window.connectSpecificWallet = async function(walletType) {
+        if (!simpleWallet) {
+            simpleWallet = new SimpleWallet();
+        }
+        
         const walletConfigs = {
             phantom: {
                 name: 'Phantom',
@@ -769,6 +780,12 @@
             await provider.connect();
             const publicKey = provider.publicKey.toString();
             
+            // Update SimpleWallet state
+            if (simpleWallet) {
+                simpleWallet.connectedWallet = walletType;
+                simpleWallet.publicKey = publicKey;
+            }
+            
             console.log('Wallet connected:', publicKey);
             document.getElementById('connectWalletBtn').textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
             loadUserNfts();
@@ -780,20 +797,18 @@
         }
     };
 
-    // NFT loading function from verified citizen map
+    // Use the exact working NFT loading function
     async function loadUserNfts() {
-        const walletBtn = document.getElementById('connectWalletBtn');
-        const publicKey = walletBtn?.textContent;
-        
-        if (!publicKey || publicKey === 'Connect Wallet') {
+        if (!simpleWallet || !simpleWallet.isConnected()) {
             console.log('No wallet connected, skipping NFT loading');
             return;
         }
 
         try {
-            console.log('Loading NFTs for wallet:', publicKey);
+            const walletAddress = simpleWallet.getPublicKey();
+            console.log('Loading NFTs for wallet:', walletAddress);
             
-            const response = await fetch(`/api/wallet-nfts?wallet=${publicKey}`);
+            const response = await fetch(`/api/wallet-nfts?wallet=${walletAddress}`);
             console.log('NFT API response status:', response.status);
             
             if (!response.ok) {
