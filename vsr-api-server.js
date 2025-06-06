@@ -9,7 +9,7 @@ import cors from "cors";
 import { config } from "dotenv";
 import { Connection, PublicKey, Keypair } from "@solana/web3.js";
 import fs from "fs";
-import { SplGovernance } from "./governance-sdk/dist/index.js";
+// Removed governance-sdk dependency - using direct Solana calls
 import { getTokenOwnerRecordAddress } from "@solana/spl-governance";
 import { Program, AnchorProvider, Wallet } from "@coral-xyz/anchor";
 
