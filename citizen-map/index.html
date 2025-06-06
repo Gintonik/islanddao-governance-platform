@@ -13,30 +13,42 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: black;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow: hidden;
             color: white;
         }
         
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        
         .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             text-align: center;
-            max-width: 600px;
             padding: 2rem;
         }
         
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
+        .content {
+            margin-bottom: 4rem;
         }
         
-        p {
+        .subtitle {
             font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+            margin-bottom: 3rem;
+            opacity: 0.8;
+            color: #gray-400;
         }
         
         .buttons {
@@ -57,35 +69,252 @@
             font-weight: 600;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
         
         .btn-primary {
             background: #4CAF50;
+            border: 1px solid #4CAF50;
         }
         
         .btn-primary:hover {
             background: #45a049;
+            border: 1px solid #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
+    <canvas id="particleCanvas"></canvas>
+    
     <div class="container">
-        <h1>PERKS Map</h1>
-        <p>Explore the IslandDAO citizen registry and NFT collection</p>
-        
-        <div class="buttons">
-            <a href="/verified-citizen-map" class="btn btn-primary">View Citizen Map</a>
-            <a href="/collection" class="btn">Browse Collection</a>
+        <div class="content">
+            <p class="subtitle">Explore the IslandDAO citizen registry and NFT collection</p>
+            
+            <div class="buttons">
+                <a href="/verified-citizen-map" class="btn btn-primary">View Citizen Map</a>
+                <a href="/collection" class="btn">Browse Collection</a>
+            </div>
         </div>
     </div>
     
     <script>
-        // Users can now choose their destination manually
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let textImageData = null;
+        let mousePosition = { x: 0, y: 0 };
+        let isTouching = false;
+        let isMobile = window.innerWidth < 768;
+
+        // IslandDAO logo SVG path data (converted from your PNG)
+        const ISLAND_LOGO_PATH = "M0 40L20 20L40 40L20 60Z M60 20L80 0L100 20L80 40Z M120 40L140 20L160 40L140 60Z M180 20L200 0L220 20L200 40Z M240 40L260 20L280 40L260 60Z M300 20L320 0L340 20L320 40Z M0 80L340 80L340 100L0 100Z";
+
+        function updateCanvasSize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            isMobile = window.innerWidth < 768;
+        }
+
+        function createTextImage() {
+            if (!ctx || !canvas) return 0;
+
+            ctx.fillStyle = 'white';
+            ctx.save();
+            
+            const logoHeight = isMobile ? 80 : 120;
+            const logoWidth = logoHeight * 2.5; // Approximate aspect ratio from your logo
+            
+            // Center the logo
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            ctx.translate(centerX - logoWidth / 2, centerY - logoHeight / 2);
+
+            // Draw IslandDAO logo using a simplified path representation
+            const scale = logoHeight / 100;
+            ctx.scale(scale, scale);
+            
+            // Palm tree icon (simplified)
+            ctx.beginPath();
+            // Palm fronds
+            ctx.moveTo(50, 30);
+            ctx.bezierCurveTo(20, 10, 10, 20, 30, 40);
+            ctx.bezierCurveTo(10, 30, 20, 50, 40, 35);
+            ctx.bezierCurveTo(30, 60, 50, 55, 50, 40);
+            ctx.bezierCurveTo(70, 55, 90, 60, 80, 35);
+            ctx.bezierCurveTo(100, 50, 110, 30, 90, 40);
+            ctx.bezierCurveTo(110, 20, 100, 10, 70, 30);
+            ctx.lineTo(50, 30);
+            ctx.fill();
+            
+            // Trunk
+            ctx.fillRect(47, 40, 6, 35);
+            
+            // Base lines
+            ctx.fillRect(20, 80, 60, 4);
+            ctx.fillRect(25, 88, 50, 2);
+            
+            // Text "ISLAND DAO" (simplified block letters)
+            ctx.font = '20px Arial Black';
+            ctx.textAlign = 'center';
+            ctx.fillText('ISLAND DAO', 150, 50);
+
+            ctx.restore();
+
+            textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            return scale;
+        }
+
+        function createParticle(scale) {
+            if (!ctx || !canvas || !textImageData) return null;
+
+            const data = textImageData.data;
+
+            for (let attempt = 0; attempt < 100; attempt++) {
+                const x = Math.floor(Math.random() * canvas.width);
+                const y = Math.floor(Math.random() * canvas.height);
+
+                if (data[(y * canvas.width + x) * 4 + 3] > 128) {
+                    return {
+                        x: x,
+                        y: y,
+                        baseX: x,
+                        baseY: y,
+                        size: Math.random() * 1 + 0.5,
+                        color: 'white',
+                        scatteredColor: '#4CAF50', // IslandDAO green
+                        life: Math.random() * 100 + 50
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        function createInitialParticles(scale) {
+            const baseParticleCount = 5000;
+            const particleCount = Math.floor(baseParticleCount * Math.sqrt((canvas.width * canvas.height) / (1920 * 1080)));
+            for (let i = 0; i < particleCount; i++) {
+                const particle = createParticle(scale);
+                if (particle) particles.push(particle);
+            }
+        }
+
+        function animate(scale) {
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const { x: mouseX, y: mouseY } = mousePosition;
+            const maxDistance = 200;
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                const dx = mouseX - p.x;
+                const dy = mouseY - p.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < maxDistance && (isTouching || !('ontouchstart' in window))) {
+                    const force = (maxDistance - distance) / maxDistance;
+                    const angle = Math.atan2(dy, dx);
+                    const moveX = Math.cos(angle) * force * 50;
+                    const moveY = Math.sin(angle) * force * 50;
+                    p.x = p.baseX - moveX;
+                    p.y = p.baseY - moveY;
+                    
+                    ctx.fillStyle = p.scatteredColor;
+                } else {
+                    p.x += (p.baseX - p.x) * 0.1;
+                    p.y += (p.baseY - p.y) * 0.1;
+                    ctx.fillStyle = 'white';
+                }
+
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                p.life--;
+                if (p.life <= 0) {
+                    const newParticle = createParticle(scale);
+                    if (newParticle) {
+                        particles[i] = newParticle;
+                    } else {
+                        particles.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+
+            const baseParticleCount = 5000;
+            const targetParticleCount = Math.floor(baseParticleCount * Math.sqrt((canvas.width * canvas.height) / (1920 * 1080)));
+            while (particles.length < targetParticleCount) {
+                const newParticle = createParticle(scale);
+                if (newParticle) particles.push(newParticle);
+            }
+
+            requestAnimationFrame(() => animate(scale));
+        }
+
+        function initialize() {
+            updateCanvasSize();
+            const scale = createTextImage();
+            createInitialParticles(scale);
+            animate(scale);
+        }
+
+        // Event listeners
+        window.addEventListener('resize', () => {
+            updateCanvasSize();
+            const newScale = createTextImage();
+            particles = [];
+            createInitialParticles(newScale);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                e.preventDefault();
+                mousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchstart', () => {
+            isTouching = true;
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isTouching = false;
+            mousePosition = { x: 0, y: 0 };
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            if (!('ontouchstart' in window)) {
+                mousePosition = { x: 0, y: 0 };
+            }
+        });
+
+        // Initialize the animation
+        initialize();
     </script>
 </body>
 </html>
