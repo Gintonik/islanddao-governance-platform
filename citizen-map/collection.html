@@ -341,28 +341,40 @@
     
     .nft-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
       margin-bottom: 40px;
       width: 100%;
       min-height: 200px;
     }
 
+    @media (max-width: 1600px) {
+      .nft-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
     @media (max-width: 1200px) {
+      .nft-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .nft-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
       .nft-grid {
         grid-template-columns: repeat(3, 1fr);
       }
     }
 
-    @media (max-width: 800px) {
-      .nft-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
     @media (max-width: 500px) {
       .nft-grid {
-        grid-template-columns: repeat(1, 1fr);
+        grid-template-columns: repeat(2, 1fr);
       }
     }
     
