@@ -250,20 +250,25 @@ app.post('/api/update-citizen-nfts', async (req, res) => {
 
     console.log(`Updating NFT collection for wallet: ${wallet}`);
 
-    // Fetch current NFTs for this wallet
+    // Fetch current NFTs for this wallet using same method as wallet-nfts endpoint
     const heliusUrl = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
     const response = await fetch(heliusUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
-        id: 'helius-nft-api',
-        method: 'searchAssets',
+        id: 'get-assets-by-owner',
+        method: 'getAssetsByOwner',
         params: {
           ownerAddress: wallet,
-          grouping: ['collection', '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8'],
           page: 1,
-          limit: 1000
+          limit: 1000,
+          displayOptions: {
+            showFungible: false,
+            showNativeBalance: false,
+            showInscriptions: false,
+            showZeroBalance: false
+          }
         }
       })
     });
@@ -271,8 +276,18 @@ app.post('/api/update-citizen-nfts', async (req, res) => {
     const data = await response.json();
     
     if (data.result && data.result.items) {
+      // Filter for PERKS collection NFTs only
+      const perksNfts = data.result.items.filter(nft => {
+        return nft.grouping && nft.grouping.some(group => 
+          group.group_key === 'collection' && 
+          group.group_value === '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8'
+        );
+      });
+
+      console.log(`Found ${perksNfts.length} PERKS NFTs for wallet ${wallet}`);
+
       // Format NFTs for database storage
-      const formattedNfts = data.result.items.map(nft => {
+      const formattedNfts = perksNfts.map(nft => {
         let imageUrl = nft.content?.links?.image || nft.content?.files?.[0]?.uri || '';
         if (imageUrl.includes('gateway.irys.xyz')) {
           imageUrl = imageUrl.replace('gateway.irys.xyz', 'uploader.irys.xyz');
