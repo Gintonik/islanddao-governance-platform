@@ -907,6 +907,11 @@
       }
     }
     
+    function handleWalletButtonClick() {
+        // Not connected, show wallet modal
+        showWalletModal();
+    }
+    
     async function disconnectWallet() {
       try {
         const lastWallet = localStorage.getItem('lastConnectedWallet');
@@ -1188,6 +1193,11 @@
         card.id = `nft-${nft.id}`;
         card.className = 'nft-card';
         
+        // Handle both collection NFTs (with owner info) and wallet NFTs (without owner info)
+        const isWalletNft = !nft.owner_wallet && currentWallet;
+        const ownerDisplay = isWalletNft ? 'Your Wallet' : (nft.owner_nickname || 'Unknown Citizen');
+        const walletDisplay = isWalletNft ? formatAddress(currentWallet) : formatAddress(nft.owner_wallet);
+        
         card.innerHTML = `
           <img 
             src="${nft.content?.links?.image || nft.imageUrl || 'https://via.placeholder.com/300?text=NFT'}" 
@@ -1197,8 +1207,8 @@
           >
           <div class="nft-info">
             <div class="nft-name">${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}</div>
-            <div class="nft-owner">${nft.owner_nickname || 'Unknown Citizen'}</div>
-            <div class="nft-wallet">${formatAddress(nft.owner_wallet)}</div>
+            <div class="nft-owner">${ownerDisplay}</div>
+            <div class="nft-wallet">${walletDisplay}</div>
           </div>
         `;
         
