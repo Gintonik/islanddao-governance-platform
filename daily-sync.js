@@ -38,7 +38,18 @@ async function checkNFTOwnership(walletAddress) {
   try {
     const response = await fetch(`http://localhost:5000/api/wallet-nfts?wallet=${walletAddress}`);
     const nftData = await response.json();
-    return Array.isArray(nftData) ? nftData.length : 0;
+    
+    // Fix: Check the correct structure - API returns {nfts: [...]}
+    if (nftData && nftData.nfts && Array.isArray(nftData.nfts)) {
+      return nftData.nfts.length;
+    }
+    
+    // Fallback: if direct array
+    if (Array.isArray(nftData)) {
+      return nftData.length;
+    }
+    
+    return 0;
   } catch (error) {
     console.error(`NFT check failed for ${walletAddress}:`, error.message);
     return -1; // Error state - don't remove on API failure
