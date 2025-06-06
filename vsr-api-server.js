@@ -1238,6 +1238,28 @@ async function loadVSRAccounts() {
   return accounts;
 }
 
+// Route for citizen map compatibility
+app.get("/governance-power/:wallet", async (req, res) => {
+  const wallet = req.params.wallet;
+  if (!wallet) {
+    return res.status(400).json({ error: "Missing wallet parameter" });
+  }
+
+  try {
+    console.log(`\n🏛️ === Canonical Governance Power Calculation ===`);
+    console.log(`Wallet: ${wallet}`);
+    
+    const result = await getCanonicalGovernancePower(wallet);
+    res.json(result);
+  } catch (error) {
+    console.error(`Governance power calculation error: ${error.message}`);
+    res.status(500).json({ 
+      error: "Failed to calculate governance power",
+      details: error.message 
+    });
+  }
+});
+
 app.get("/api/governance-power", async (req, res) => {
   const wallet = req.query.wallet;
   if (!wallet) {
