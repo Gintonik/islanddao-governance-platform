@@ -30,7 +30,7 @@ app.get('/collection', (req, res) => {
 // Function to fetch single NFT metadata using Helius API
 async function fetchNFTMetadata(nftAddress) {
   try {
-    const heliusUrl = process.env.HELIUS_API_KEY;
+    const heliusUrl = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
     
     const response = await fetch(heliusUrl, {
       method: 'POST',
@@ -63,7 +63,7 @@ async function fetchNFTMetadata(nftAddress) {
 // Function to fetch NFTs for a wallet using Helius API
 async function fetchWalletNFTs(walletAddress) {
   try {
-    const heliusUrl = process.env.HELIUS_API_KEY;
+    const heliusUrl = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
     
     const response = await fetch(heliusUrl, {
       method: 'POST',
