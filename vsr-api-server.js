@@ -125,13 +125,13 @@ function parseVSRDeposits(data, currentTime) {
         if (amount >= 50 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
           
           // Shadow/delegation marker detection
-          const rounded = Math.round(amount);
-          if (rounded === 1000 || rounded === 11000) {
+          const roundedValue = Math.round(amount);
+          if (roundedValue === 1000 || roundedValue === 2000 || roundedValue === 11000) {
             shadowDeposits.push({
               amount,
               type: 'delegation_marker',
               offset: mapping.amountOffset,
-              note: `${rounded} ISLAND delegation/shadow marker`
+              note: `${roundedValue} ISLAND delegation/shadow marker`
             });
             processedAmounts.add(amountKey);
             continue;
@@ -208,6 +208,20 @@ function parseVSRDeposits(data, currentTime) {
           
           if (isStaleDeposit) {
             console.log(`  FILTERED OUT: Stale deposit of ${amount.toFixed(6)} ISLAND at offset ${mapping.amountOffset}`);
+            continue;
+          }
+          
+          // Filter delegation shadow markers (1000, 2000, 11000 ISLAND)
+          const delegationRounded = Math.round(amount);
+          if (delegationRounded === 1000 || delegationRounded === 2000 || delegationRounded === 11000) {
+            shadowDeposits.push({
+              amount,
+              type: 'delegation_marker',
+              offset: mapping.amountOffset,
+              note: `${delegationRounded} ISLAND delegation/shadow marker`
+            });
+            console.log(`  FILTERED OUT: Delegation shadow of ${amount.toFixed(6)} ISLAND at offset ${mapping.amountOffset}`);
+            processedAmounts.add(amountKey);
             continue;
           }
           
