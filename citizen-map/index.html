@@ -30,7 +30,7 @@
         
         .content {
             position: absolute;
-            bottom: 200px;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -115,8 +115,11 @@
         let particles = [];
         let textImageData = null;
 
-        // AWS Logo Path from your uploaded files
-        const AWS_LOGO_PATH = "M86 66l2 9c0 3 1 5 3 8v2l-1 3-7 4-2 1-3-1-4-5-3-6c-8 9-18 14-29 14-9 0-16-3-20-8-5-4-8-11-8-19s3-15 9-20c6-6 14-8 25-8a79 79 0 0 1 22 3v-7c0-8-2-13-5-16-3-4-8-5-16-5l-11 1a80 80 0 0 0-14 5h-2c-1 0-2-1-2-3v-5l1-3c0-1 1-2 3-2l12-5 16-2c12 0 20 3 26 8 5 6 8 14 8 25v32zM46 82l10-2c4-1 7-4 10-7l3-6 1-9v-4a84 84 0 0 0-19-2c-6 0-11 1-15 4-3 2-4 6-4 11s1 8 3 11c3 2 6 4 11 4zm80 10-4-1-2-3-23-78-1-4 2-2h10l4 1 2 4 17 66 15-66 2-4 4-1h8l4 1 2 4 16 67 17-67 2-4 4-1h9c2 0 3 1 3 2v2l-1 2-24 78-2 4-4 1h-9l-4-1-1-4-16-65-15 64-2 4-4 1h-9zm129 3a66 66 0 0 1-27-6l-3-3-1-2v-5c0-2 1-3 2-3h2l3 1a54 54 0 0 0 23 5c6 0 11-2 14-4 4-2 5-5 5-9l-2-7-10-5-15-5c-7-2-13-6-16-10a24 24 0 0 1 5-34l10-5a44 44 0 0 1 20-2 110 110 0 0 1 12 3l4 2 3 2 1 4v4c0 3-1 4-2 4l-4-2c-6-2-12-3-19-3-6 0-11 0-14 2s-4 5-4 9c0 3 1 5 3 7s5 4 11 6l14 4c7 3 12 6 15 10s5 9 5 14l-3 12-7 8c-3 3-7 5-11 6l-14 2z M274 144A220 220 0 0 1 4 124c-4-3-1-6 2-4a300 300 0 0 0 263 16c5-2 10 4 5 8z M287 128c-4-5-28-3-38-1-4 0-4-3-1-5 19-13 50-9 53-5 4 5-1 36-18 51-3 2-6 1-5-2 5-10 13-33 9-38z";
+        // IslandDAO Logo Path created from your white logo
+        const ISLAND_LOGO_PATH = "M150 40C170 20 200 20 220 40C240 60 270 60 290 40C310 20 340 20 360 40C380 60 370 90 350 110C330 130 300 130 280 110C260 90 230 90 210 110C190 130 160 130 140 110C120 90 130 60 150 40Z M200 110L200 180C190 190 210 190 200 180Z M160 190L240 190L240 200L160 200Z M170 210L230 210L230 220L170 220Z M180 230L220 230L220 240L180 240Z M80 280L120 280L120 340L100 340L100 300L90 300L90 320L100 320L100 330L120 330L120 350L80 350Z M140 280L180 280L180 290L150 290L150 300L170 300L170 310L150 310L150 320L180 320L180 330L140 330Z M200 280L220 280L220 330L240 330L240 340L200 340Z M260 280L290 280L290 290L270 290L270 300L285 300L285 310L270 310L270 320L290 320L290 330L260 330Z M310 280L340 280L310 305L340 330L320 330L330 305L320 280Z M360 280L390 280L375 305L390 330L360 330L375 305Z M420 280L440 280L440 330L460 330L460 340L420 340Z M480 280L510 280L480 305L510 330L490 330L500 305L490 280Z M530 280L570 280L550 305L570 330L530 330L550 305Z";
+
+        // Simplify to match your actual logo better
+        const SIMPLE_ISLAND_LOGO = "M150 20C180 0 220 0 250 20C280 40 320 40 350 20C380 0 420 0 450 20C480 40 470 80 440 120C410 160 370 160 340 120C310 80 270 80 240 120C210 160 170 160 140 120C110 80 120 40 150 20Z M300 120L300 200C290 210 310 210 300 200Z M240 220L360 220L360 240L240 240Z M250 260L350 260L350 280L250 280Z M260 300L340 300L340 320L260 320Z M100 380L140 380L140 440L120 440L120 400L110 400L110 420L120 420L120 430L140 430L140 450L100 450Z M160 380L200 380L200 390L170 390L170 400L190 400L190 410L170 410L170 420L200 420L200 430L160 430Z M220 380L240 380L240 430L260 430L260 440L220 440Z M280 380L310 380L310 390L290 390L290 400L305 400L305 410L290 410L290 420L310 420L310 430L280 430Z M330 380L360 380L330 405L360 430L340 430L350 405L340 380Z M380 380L410 380L395 405L410 430L380 430L395 405Z M440 380L460 380L460 430L480 430L480 440L440 440Z M500 380L530 380L500 405L530 430L510 430L520 405L510 380Z M550 380L590 380L570 405L590 430L550 430L570 405Z";
 
         function updateCanvasSize() {
             canvas.width = window.innerWidth;
@@ -131,16 +134,16 @@
             ctx.save();
             
             const logoHeight = isMobile ? 180 : 320;
-            const awsLogoWidth = logoHeight * (283 / 140);
-            const totalWidth = awsLogoWidth;
+            const islandLogoWidth = logoHeight * (590 / 450);
+            const totalWidth = islandLogoWidth;
             
             ctx.translate(canvas.width / 2 - totalWidth / 2, (canvas.height * 0.35) - logoHeight / 2);
 
-            // Draw AWS logo
+            // Draw IslandDAO logo
             ctx.save();
-            const awsScale = logoHeight / 140;
-            ctx.scale(awsScale, awsScale);
-            const path = new Path2D(AWS_LOGO_PATH);
+            const islandScale = logoHeight / 450;
+            ctx.scale(islandScale, islandScale);
+            const path = new Path2D(SIMPLE_ISLAND_LOGO);
             ctx.fill(path);
             ctx.restore();
 
@@ -149,7 +152,7 @@
             textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            return awsScale;
+            return islandScale;
         }
 
         function createParticle(scale) {
