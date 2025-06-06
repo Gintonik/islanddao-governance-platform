@@ -1,0 +1,84 @@
+🧠 What To Do Now (Step-by-Step Fix Plan)
+Let’s recover the exact verified logic:
+
+🛠 Step 1: Fix Timestamp Extraction
+ts
+Copy
+Edit
+function extractEndTimestamp(deposit, fallbackBytes) {
+  if (deposit.lockup.endTs.toNumber() > now) return deposit.lockup.endTs.toNumber();
+
+  // Fallback: scan +0 to +128 bytes from each offset group
+  for (let offset of TIMESTAMP_OFFSETS) {
+    for (let delta = 0; delta <= 128; delta += 8) {
+      const ts = readU64(fallbackBytes, offset + delta);
+      if (ts > now && ts < now + 5 * YEAR) {
+        return ts;
+      }
+    }
+  }
+  return 0;
+}
+🛠 Step 2: Fix Per-Deposit Voting Power Logic
+ts
+Copy
+Edit
+for (const deposit of deposits) {
+  if (deposit.amount < 1000) continue;
+  const endTs = extractEndTimestamp(deposit, accountBytes);
+  if (endTs === 0) continue;
+
+  const years = (endTs - now) / 31_556_952;
+  const multiplier = Math.min(5, 1 + Math.min(years, 4));
+  const power = deposit.amount * multiplier;
+
+  const id = `${deposit.amount}-${multiplier.toFixed(3)}`;
+  if (!seen.has(id)) {
+    seen.add(id);
+    totalPower += power;
+  }
+}
+🛠 Step 3: Restore Alias Map Resolution
+Ensure wallet_aliases_expanded.json includes:
+
+✅ Direct wallet addresses
+
+✅ Authority of VSR accounts
+
+✅ Delegated or associated authorities
+
+🛠 Step 4: Validate Against 3 Test Wallets Only
+Hardcode validation in your scanner for:
+
+js
+Copy
+Edit
+const testWallets = {
+  "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA": 8_709_019.78,
+  "GJdRQcsyWZ4vDSxmbC5JrJQfCDdq7QfSMZH4zK8LRZue": 144_708.98,
+  "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4": 12_625.58
+};
+Print error if value deviates by >1%.
+
+🧾 Replit Prompt for Canonical Scanner Restoration
+json
+Copy
+Edit
+You're building a canonical Solana governance power scanner for IslandDAO. Restore the exact scanner that matched these known targets:
+
+- Takisoul: 8,709,019.78 ISLAND
+- GJdRQcsy: 144,708.98 ISLAND
+- Whale’s Friend: 12,625.58 ISLAND
+
+Your scanner must:
+
+1. Use @coral-xyz/anchor to fetch all VSR accounts.
+2. For each deposit:
+   - Extract lockup endTs using Anchor or fallback byte-scan (+0 to +128 bytes).
+   - Compute multiplier with formula: min(5, 1 + min(yearsRemaining, 4))
+   - Deduplicate with [amount, multiplier] composite key
+3. Filter phantom deposits (1000 ISLAND with no config)
+4. Match aliases using `wallet_aliases_expanded.json`
+5. Print final native governance power for those 3 wallets. Flag error if difference from known value > 1%.
+
+Save results to `canonical-native-results-verified.json`

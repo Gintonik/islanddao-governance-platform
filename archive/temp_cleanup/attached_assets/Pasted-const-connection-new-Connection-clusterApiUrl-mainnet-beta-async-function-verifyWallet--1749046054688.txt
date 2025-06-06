@@ -1,0 +1,53 @@
+const connection = new Connection(clusterApiUrl('mainnet-beta'));
+
+async function verifyWallet() {
+  const { publicKey, signMessage, signTransaction } = window.solanaWallet;
+  const timestamp = Date.now();
+  const messageStr = `Verify wallet ownership for IslandDAO Citizen Map - Timestamp: ${timestamp}`;
+  const message = new TextEncoder().encode(messageStr);
+
+  try {
+    const signature = await signMessage(message);
+    const isValid = nacl.sign.detached.verify(message, signature, publicKey.toBytes());
+
+    if (isValid) {
+      const signatureBase64 = btoa(String.fromCharCode(...signature));
+      localStorage.setItem("verifiedWallet", publicKey.toBase58());
+      localStorage.setItem("verificationMethod", "message");
+      localStorage.setItem("walletSignature", signatureBase64);
+      localStorage.setItem("walletMessage", messageStr);
+      alert("✅ Wallet verified with signMessage()");
+      return;
+    } else {
+      alert("❌ Signature invalid.");
+    }
+  } catch (err) {
+    console.warn("signMessage failed:", err);
+
+    // Fallback for hardware wallets
+    try {
+      const dummyTx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: publicKey,
+          lamports: 0
+        })
+      );
+      dummyTx.feePayer = publicKey;
+      dummyTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+      const signedTx = await signTransaction(dummyTx);
+      const txBytes = signedTx.serialize();
+      const base64Tx = btoa(String.fromCharCode(...txBytes));
+
+      localStorage.setItem("verifiedWallet", publicKey.toBase58());
+      localStorage.setItem("verificationMethod", "transaction");
+      localStorage.setItem("walletTransaction", base64Tx);
+      localStorage.setItem("walletMessage", messageStr);
+      alert("✅ Wallet verified with signTransaction()");
+    } catch (txErr) {
+      console.error("signTransaction also failed:", txErr);
+      alert("❌ Verification failed. Please try again with a different wallet.");
+    }
+  }
+}

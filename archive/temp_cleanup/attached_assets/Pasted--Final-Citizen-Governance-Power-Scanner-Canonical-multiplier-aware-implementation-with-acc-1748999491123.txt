@@ -1,0 +1,138 @@
+/**
+ * Final Citizen Governance Power Scanner
+ * Canonical, multiplier-aware implementation with accurate lockup parsing
+ */
+
+import { Connection, PublicKey } from '@solana/web3.js';
+import pg from 'pg';
+import { config } from 'dotenv';
+config();
+
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const connection = new Connection(process.env.HELIUS_RPC_URL);
+
+function calculateMultiplier(lockup, now = Date.now() / 1000) {
+  const BASE = 1_000_000_000;
+  const MAX_EXTRA = 3_000_000_000;
+  const SATURATION_SECS = 31_536_000;
+
+  const { kind, startTs, endTs } = lockup;
+  if (kind === 0) return 1.0;
+
+  const duration = Math.max(endTs - startTs, 1);
+  const remaining = Math.max(endTs - now, 0);
+
+  let bonus = 0;
+
+  if (kind === 1 || kind === 4) {
+    const ratio = Math.min(1, remaining / SATURATION_SECS);
+    bonus = MAX_EXTRA * ratio;
+  } else if (kind === 2 || kind === 3) {
+    const unlockedRatio = Math.min(1, Math.max(0, (now - startTs) / duration));
+    const lockedRatio = 1 - unlockedRatio;
+    const ratio = Math.min(1, (lockedRatio * duration) / SATURATION_SECS);
+    bonus = MAX_EXTRA * ratio;
+  }
+
+  return (BASE + bonus) / 1e9;
+}
+
+function parseAllDeposits(data, currentTime) {
+  const deposits = [];
+  const scannedOffsets = new Set();
+  const processedAmounts = new Set();
+
+  const multiLockupPatterns = [184, 264, 344, 424];
+
+  for (const offset of multiLockupPatterns) {
+    if (offset + 8 <= data.length) {
+      try {
+        const rawAmount = Number(data.readBigUInt64LE(offset));
+        const amount = rawAmount / 1e6;
+        const rounded = Math.round(amount);
+        const amountKey = Math.round(amount * 1000);
+
+        if (amount >= 50 && amount <= 20_000_000 && !processedAmounts.has(amountKey)) {
+          processedAmounts.add(amountKey);
+          let foundValidLock = false;
+
+          for (let metaOffset = offset - 32; metaOffset >= offset - 64; metaOffset--) {
+            try {
+              const startTs = Number(data.readBigUInt64LE(metaOffset));
+              const endTs = Number(data.readBigUInt64LE(metaOffset + 8));
+              const kind = data[metaOffset + 24];
+
+              if (kind >= 1 && kind <= 4 && startTs > 0 && startTs < endTs) {
+                const lockup = { kind, startTs, endTs };
+                const multiplier = calculateMultiplier(lockup, currentTime);
+                const power = amount * multiplier;
+                deposits.push({ amount, multiplier, power, isLocked: true, source: 'multiLockup', offset });
+                scannedOffsets.add(offset);
+                foundValidLock = true;
+                break;
+              }
+            } catch (_) {}
+          }
+
+          if (!foundValidLock) {
+            deposits.push({ amount, multiplier: 1.0, power: amount, isLocked: false, source: 'fallback-unlocked', offset });
+          }
+        }
+      } catch (_) { continue; }
+    }
+  }
+
+  const directOffsets = [104, 112, 184, 264, 344];
+  for (const offset of directOffsets) {
+    if (offset + 8 <= data.length && !scannedOffsets.has(offset)) {
+      try {
+        const rawAmount = Number(data.readBigUInt64LE(offset));
+        const amount = rawAmount / 1e6;
+        const rounded = Math.round(amount);
+        const amountKey = Math.round(amount * 1000);
+
+        if (amount >= 1000 && amount <= 20_000_000 && rounded !== 1000 && rounded !== 11000 && !processedAmounts.has(amountKey)) {
+          processedAmounts.add(amountKey);
+          deposits.push({ amount, multiplier: 1.0, power: amount, isLocked: false, source: 'unlocked', offset });
+        }
+      } catch (_) { continue; }
+    }
+  }
+
+  return deposits;
+}
+
+async function scanCitizens() {
+  console.log('Canonical IslandDAO Native Governance Power');
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const citizensResult = await pool.query('SELECT wallet FROM citizens ORDER BY wallet');
+  const citizenWallets = citizensResult.rows.map(row => row.wallet);
+
+  const allVSR = await connection.getProgramAccounts(VSR_PROGRAM_ID, { filters: [{ dataSize: 2728 }] });
+  const currentTime = Date.now() / 1000;
+  const result = [];
+
+  for (const wallet of citizenWallets) {
+    let total = 0, locked = 0, unlocked = 0;
+    for (const acct of allVSR) {
+      const data = acct.account.data;
+      const authority = new PublicKey(data.slice(8, 40)).toBase58();
+      if (authority !== wallet) continue;
+      const deposits = parseAllDeposits(data, currentTime);
+      for (const d of deposits) {
+        total += d.power;
+        if (d.isLocked) locked += d.power; else unlocked += d.power;
+      }
+    }
+    result.push({ wallet, total, locked, unlocked });
+    console.log(`${wallet}:
+  Total: ${total.toLocaleString()} ISLAND
+  Locked: ${locked.toLocaleString()} | Unlocked: ${unlocked.toLocaleString()}\n`);
+  }
+
+  const totalPower = result.reduce((sum, r) => sum + r.total, 0);
+  console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
+  await pool.end();
+}
+
+scanCitizens().catch(console.error);

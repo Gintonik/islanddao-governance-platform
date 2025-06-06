@@ -1,0 +1,84 @@
+/ canonical-multi-lockup-fix.js
+
+/**
+ * This patch builds on the previously working canonical scanner (14 citizens matched)
+ * It ONLY fixes the multi-lockup per-deposit governance power calculation.
+ * All other logic must remain untouched (authority resolution, deduping, alias file).
+ */
+
+const { PublicKey } = require('@solana/web3.js');
+const BN = require('bn.js');
+const { deserializeUnchecked } = require('borsh');
+const { getProgramAccounts } = require('./solana');
+const idl = require('./vsr-idl.json');
+const aliasMap = require('./wallet_aliases_expanded.json');
+
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const GOVERNANCE_TOKEN_DECIMALS = 6;
+const NOW_TS = Math.floor(Date.now() / 1000);
+const ONE_YEAR = 31_536_000;
+
+function calculateMultiplier(lockupEndTs) {
+  const yearsRemaining = Math.max(0, (lockupEndTs - NOW_TS) / ONE_YEAR);
+  return Math.min(5, 1 + Math.min(yearsRemaining, 4));
+}
+
+function parseDeposits(accountData) {
+  const deposits = [];
+  const data = Buffer.from(accountData);
+
+  // Scan data for multiple possible depositEntry offsets
+  const offsets = [104, 112, 184, 192, 200, 208, 264, 272, 344, 352];
+
+  for (const offset of offsets) {
+    try {
+      const amount = data.readBigUInt64LE(offset);
+      const lockupTs = data.readUInt32LE(offset + 8);
+      const lockupEnd = new BN(lockupTs).toNumber();
+      const multiplier = calculateMultiplier(lockupEnd);
+
+      // Phantom filter and reasonable range check
+      if (amount > 0n && amount < 1_000_000_000_000n) {
+        deposits.push({
+          amount: Number(amount) / 10 ** GOVERNANCE_TOKEN_DECIMALS,
+          lockupEnd,
+          multiplier,
+          votingPower: (Number(amount) / 10 ** GOVERNANCE_TOKEN_DECIMALS) * multiplier,
+        });
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+
+  return deposits;
+}
+
+(async () => {
+  const accounts = await getProgramAccounts(VSR_PROGRAM_ID);
+
+  const results = {};
+  for (const [citizenWallet, aliases] of Object.entries(aliasMap)) {
+    results[citizenWallet] = {
+      nativeGovernancePower: 0,
+      deposits: [],
+    };
+
+    const authoritySet = new Set([citizenWallet, ...(aliases || [])]);
+
+    for (const acct of accounts) {
+      const authority = acct.account.data.slice(8, 40).toString('hex');
+
+      if (authoritySet.has(authority)) {
+        const deposits = parseDeposits(acct.account.data);
+
+        for (const d of deposits) {
+          results[citizenWallet].nativeGovernancePower += d.votingPower;
+          results[citizenWallet].deposits.push(d);
+        }
+      }
+    }
+  }
+
+  console.log("Final Corrected Results:\n", JSON.stringify(results, null, 2));
+})();

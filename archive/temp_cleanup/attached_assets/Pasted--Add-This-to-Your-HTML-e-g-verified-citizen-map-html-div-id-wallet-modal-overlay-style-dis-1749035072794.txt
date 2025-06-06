@@ -1,0 +1,110 @@
+🧾 Add This to Your HTML (e.g. verified-citizen-map.html)
+
+<div id="wallet-modal-overlay" style="display: none;">
+  <div id="wallet-modal" class="wallet-modal">
+    <div class="wallet-modal-header">
+      <h2>Connect a wallet on Solana to continue</h2>
+      <button class="wallet-modal-close" onclick="closeWalletModal()">×</button>
+    </div>
+    <div id="wallet-list" class="wallet-modal-list"></div>
+  </div>
+</div>
+
+Add This CSS (in <style> tag or CSS file)
+
+#wallet-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.wallet-modal {
+  background: #111;
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 360px;
+  max-width: 90%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  font-family: sans-serif;
+}
+
+.wallet-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wallet-modal-close {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.wallet-modal-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: #222;
+  color: white;
+  width: 100%;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wallet-modal-list img {
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+}
+✅ Step 4: Wallet Connect Logic (vanilla JS)
+🧠 Add This to wallet-ui.js (or inline in <script type="module">)
+
+import { createWalletAdapter } from './wallet-adapter/index.js';
+
+const { select, wallets, publicKey } = createWalletAdapter({
+  wallets: ['Phantom', 'Solflare', 'Backpack'],
+  autoConnect: true
+});
+
+window.showWalletModal = () => {
+  document.getElementById('wallet-modal-overlay').style.display = 'flex';
+};
+
+window.closeWalletModal = () => {
+  document.getElementById('wallet-modal-overlay').style.display = 'none';
+};
+
+const walletList = document.getElementById('wallet-list');
+
+wallets.forEach(wallet => {
+  const btn = document.createElement('button');
+
+  btn.innerHTML = `
+    <div style="display:flex; align-items:center;">
+      <img src="${wallet.adapter.icon}" alt="${wallet.adapter.name}" />
+      ${wallet.adapter.name}
+    </div>
+    <span>Detected</span>
+  `;
+
+  btn.onclick = async () => {
+    await select(wallet.adapter.name);
+    if (publicKey) {
+      document.getElementById('wallet-modal-overlay').style.display = 'none';
+      console.log("Wallet connected:", publicKey.toBase58());
+      // Add your app-specific logic here
+    }
+  };
+
+  walletList.appendChild(btn);
+});

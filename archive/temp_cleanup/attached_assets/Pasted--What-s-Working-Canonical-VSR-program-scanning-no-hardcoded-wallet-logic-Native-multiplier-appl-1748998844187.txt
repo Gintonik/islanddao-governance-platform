@@ -1,0 +1,85 @@
+✅ What’s Working
+Canonical VSR program scanning — no hardcoded wallet logic.
+
+Native multiplier application — calculateMultiplier() uses a corrected formula.
+
+Direct offset parsing is clean.
+
+Deposit deduplication via scannedOffsets is in place.
+
+Phantom 1K/11K amounts are correctly filtered.
+
+❌ What’s Failing (Complex Lockups)
+Multi-lockup deposits:
+
+For GJdRQcsy..., deposits with multipliers like 1.98x and 2.04x are not matched. Your code reads timestamps.sort((a, b) => a - b) then assigns the first as startTs and last as endTs. That’s oversimplified.
+
+These timestamps are not guaranteed to be in a linear order.
+
+Realms UI appears to extract precise [kind, startTs, endTs] triplets per deposit — not blend them.
+
+Insufficient kind and timestamp validation:
+
+You assume kind is between 1–4 based on a single offset, but Realms may store multiple deposits with different kinds side-by-side.
+
+You need to tie each [amountOffset] to its own kind/startTs/endTs set — currently you're guessing based on nearby bytes.
+
+calculateMultiplier() misalignment:
+
+Your current baseline = 3B and maxExtra = 3B caps max multiplier at 2.0x.
+
+GJdRQcsy’s confirmed multiplier is 2.04x, which means:
+
+Baseline should be 1_000_000_000
+
+Max bonus should be up to 3_000_000_000
+
+You used the old formula. We already confirmed the correct version in your previous working run:
+
+js
+Copy
+Edit
+const BASE = 1_000_000_000;
+const MAX_EXTRA = 3_000_000_000;
+✅ What You Should Do
+1. Fix multiplier logic:
+Replace this:
+
+js
+Copy
+Edit
+const baseline = 3_000_000_000;
+const maxExtra = 3_000_000_000;
+With:
+
+js
+Copy
+Edit
+const BASE = 1_000_000_000;
+const MAX_EXTRA = 3_000_000_000;
+And update your return logic accordingly.
+
+2. Fix lockup parsing logic (key point):
+Instead of trying to group timestamps blindly near offsets, treat each [amountOffset, metadataOffset] as its own pair.
+
+That means:
+
+For offset 264, the metadata is not shared with 344.
+
+You need to read from exact offsets like:
+
+startTs = data.readBigUInt64LE(metadataOffset)
+
+endTs = data.readBigUInt64LE(metadataOffset + 8)
+
+kind = data[metadataOffset + 24]
+
+Each offset has its own triplet.
+
+3. Output verification
+Verify that these match within 0.5% of Realms:
+
+Wallet (Short)	Expected Native Gov Power
+7pPJt2xo...	8,709,019.78
+GJdRQcsy...	144,708.98
+3PKhzE9...	10,353,647.01

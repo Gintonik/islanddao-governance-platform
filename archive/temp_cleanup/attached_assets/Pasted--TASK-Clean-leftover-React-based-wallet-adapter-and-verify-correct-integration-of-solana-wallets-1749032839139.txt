@@ -1,0 +1,73 @@
+💡 TASK: Clean leftover React-based wallet adapter and verify correct integration of `solana-wallets-universal`
+
+I suspect that the app still contains broken or conflicting parts from `@solana/wallet-adapter-react`. Please go through this checklist step-by-step:
+
+---
+
+✅ 1. SEARCH FOR REACT-BASED ADAPTERS
+
+Search the codebase for any lines that import:
+
+- @solana/wallet-adapter-react
+- @solana/wallet-adapter-base
+- @solana/wallet-adapter-wallets
+- WalletProvider, ConnectionProvider, WalletModalProvider
+
+🧹 Delete or comment out all lines and files that use these. They are React-only and conflict with solana-wallets-universal.
+
+---
+
+✅ 2. SEARCH FOR DUPLICATE WALLET CONNECTION LOGIC
+
+In all files (HTML and JS), search for:
+
+- window.solana.connect(...)
+- new PhantomWalletAdapter()
+- old wallet connect code
+
+🧹 Only allow one instance: `createWalletAdapter()` from `@jup-ag/solana-wallets`.
+
+---
+
+✅ 3. CHECK FOR REACT STYLING CONFLICTS
+
+Remove this line if found:
+
+```js
+import '@solana/wallet-adapter-react-ui/styles.css';
+
+Also check for legacy adapter UIs loaded via script tags or global CSS that may be breaking modal styles.
+
+✅ 4. VERIFY MODAL & DOM STATE
+
+In the browser console, check:
+
+Are there multiple modals?
+
+Are some modals blank or styled incorrectly?
+
+Are <img> tags for NFTs broken (404s or missing sources)?
+
+Inspect DOM and clean duplicate or malformed wallet modal code.
+
+✅ 5. CLEAN STALE CSS OR JSX FILES
+
+Check if files like App.jsx or WalletProvider.jsx still exist but aren’t in use. Delete them if they were only used for the old React wallet adapter.
+
+✅ 6. VERIFY THAT ONLY ONE CONNECTOR IS ACTIVE
+
+Ensure the only active wallet connection method is:
+
+import { createWalletAdapter } from '@jup-ag/solana-wallets';
+
+Confirm this is initialized correctly in a single place, and publicKey/signMessage functions work after connection.
+
+After cleanup is complete, confirm:
+
+Wallet modal opens cleanly
+
+Wallets connect without console errors
+
+NFT images load properly
+
+signMessage() works when tested from console

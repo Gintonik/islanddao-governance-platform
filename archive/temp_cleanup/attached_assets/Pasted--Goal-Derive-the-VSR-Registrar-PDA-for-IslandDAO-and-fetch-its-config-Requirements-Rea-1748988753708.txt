@@ -1,0 +1,44 @@
+// Goal: Derive the VSR Registrar PDA for IslandDAO and fetch its config
+// Requirements:
+// - Realm ID: F9V4Lwo49aUe8fFUjMbU6uhdFyDRqKY54WpzdpncUSk9
+// - Community Mint: Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a
+// - VSR Program ID: vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ
+// - Fetch registrar config and log lockup voting weights
+
+const anchor = require('@coral-xyz/anchor');
+const { Connection, PublicKey } = require('@solana/web3.js');
+
+(async () => {
+  const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+  const REALM_ID = new PublicKey('F9V4Lwo49aUe8fFUjMbU6uhdFyDRqKY54WpzdpncUSk9');
+  const GOVERNING_MINT = new PublicKey('Ds52CDgqdWbTWsua1hgT3AuSSy4FNx2Ezge1br3jQ14a');
+
+  const connection = new Connection(process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com');
+
+  // Load the VSR IDL
+  const idl = require('./vsr-idl.json');
+  const provider = new anchor.AnchorProvider(connection, {}, {});
+  const program = new anchor.Program(idl, VSR_PROGRAM_ID, provider);
+
+  // Derive the registrar PDA
+  const [registrarPDA] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from('registrar'),
+      REALM_ID.toBuffer(),
+      GOVERNING_MINT.toBuffer()
+    ],
+    VSR_PROGRAM_ID
+  );
+
+  console.log('Registrar PDA:', registrarPDA.toBase58());
+
+  // Fetch and print the registrar account config
+  const registrar = await program.account.registrar.fetch(registrarPDA);
+  console.log('\nRegistrar Config:');
+  console.log('-----------------');
+  console.log('Realm:', registrar.realm.toBase58());
+  console.log('Governing Token Mint:', registrar.governingTokenMint.toBase58());
+  console.log('Lockup Saturation Seconds:', registrar.votingMintConfigs[0].lockupSaturationSecs.toString());
+  console.log('Baseline Vote Weight:', registrar.votingMintConfigs[0].baselineVoteWeightScaledFactor.toString());
+  console.log('Max Extra Lockup Weight:', registrar.votingMintConfigs[0].maxExtraLockupVoteWeightScaledFactor.toString());
+})();

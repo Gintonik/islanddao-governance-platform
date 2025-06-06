@@ -1,0 +1,90 @@
+replace your governance calc with the attached you made mistakes. 
+
+❌ 1. Wrong Multiplier Calculation for Locked Deposits
+Takisoul's wallet (7pPJt2xo...)
+
+Expected: ~8.7M
+
+Got: 18.9M (!! over 2x)
+
+GJdRQcsy's wallet
+
+Expected: ~144.7K
+
+Got: 275.8K
+
+🔴 Root cause:
+The formula inside calculateCorrectMultiplier() overestimates the lockedRatio for constant/vesting lockups.
+It treats the entire remaining lockup as if it gets full bonus, without accounting for VSR’s time-weighted vesting curve.
+
+❌ 2. Double-counting deposits from offset and lockup patterns
+In parseAllDeposits(), they:
+
+Scan the same offsets for both multiLockupOffsets and directOffsets
+
+Try to deduplicate, but only by fuzzy amount comparison (Math.abs(d.amount - amount) < 1), which is fragile and fails on repeated patterns
+
+🔴 Fix needed: Use a strict offset blacklist to avoid reading the same bytes twice.
+
+❌ 3. No canonical VSR multiplier curve
+They hardcoded a saturation logic like this:
+
+js
+Copy
+Edit
+return (baseline + maxExtra * ratio) / 1e9;
+But this:
+
+Ignores deposit duration vs. max multiplier scaling curve
+
+Doesn’t apply the time-weighted multiplier for kind 2 and 3 (vesting and constant)
+
+🔴 Fix needed: Use your already-prepared, spec-compliant calculateMultiplier() module with proper curve handling.
+
+⚠️ 4. Phantom delegation deposits are excluded correctly (✅), but logic is fragile
+
+if (rounded === 1000 || rounded === 11000) continue;
+✅ Good that they’re skipping them.
+⚠️ But this should move outside parseAllDeposits and become a filter applied before any multiplier logic.
+
+Here’s the corrected flow we'll enforce:
+
+🧠 1. Scanner
+Skip phantom 1,000 and 11,000 deposits before parsing
+
+Use a set of canonical offsets (184, 264, 344, 424) for multi-lockup
+
+Extract:
+
+amount from offset
+
+kind from offset + 24 (or similar)
+
+startTs and endTs from neighboring offsets
+
+📦 2. Multiplier Module
+Input: { kind, startTs, endTs }
+
+Apply saturation-based scaling using:
+
+cliff: simple time-remaining ratio
+
+vesting and constant: time-weighted average multiplier curve
+
+Return precise multiplier (e.g. 1.87x)
+
+💾 3. Deduplication
+Based on offsets, not just amount
+
+Never count the same byte range twice
+
+🧹 4. Clean JSON result
+For each citizen:
+
+lockedPower
+
+unlockedPower
+
+totalPower
+
+List of deposits with source, offset, and multiplier

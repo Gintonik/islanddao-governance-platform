@@ -1,0 +1,103 @@
+✅ Replit AI Prompt: Enable Full HD Wallet Support for All Wallets
+yaml
+Copy
+Edit
+💡 TASK: Enable full hardware wallet (HD) support (e.g., Ledger) for wallet signature verification in our vanilla JS Solana app.
+
+---
+
+🧠 CONTEXT:
+All supported wallets (Phantom, Solflare, Backpack, Coinbase) can connect to both software and hardware wallets. The wallet extension handles whether it’s Ledger or not. We don’t need to detect wallet brand — only capability.
+
+---
+
+✅ IMPLEMENTATION PLAN:
+
+1. Attempt `signMessage()` using a UTF-8 encoded message string.
+2. If `signMessage()` fails (common for Ledger due to unsupportedOperation), automatically fallback to signing a 0-lamport dummy transaction using `signTransaction()`.
+3. Do NOT broadcast the transaction — use its base64 signature as proof of wallet ownership.
+4. Store or send the result to our API with wallet address, message string, method used, and base64 signature or serialized tx.
+
+---
+
+✅ IMPORTS NEEDED:
+
+```js
+import nacl from 'tweetnacl';
+import bs58 from 'bs58';
+import {
+  Connection,
+  Transaction,
+  SystemProgram,
+  clusterApiUrl,
+} from '@solana/web3.js';
+✅ FUNCTION TO IMPLEMENT:
+
+js
+Copy
+Edit
+const connection = new Connection(clusterApiUrl("mainnet-beta"));
+
+async function verifyWallet() {
+  const { publicKey, signMessage, signTransaction } = window.solanaWallet;
+  const timestamp = Date.now();
+  const messageStr = `Verify wallet ownership for IslandDAO Citizen Map - Timestamp: ${timestamp}`;
+  const message = new TextEncoder().encode(messageStr);
+
+  try {
+    const signature = await signMessage(message);
+    const isValid = nacl.sign.detached.verify(message, signature, publicKey.toBytes());
+
+    if (isValid) {
+      const base64Sig = btoa(String.fromCharCode(...signature));
+      localStorage.setItem("verifiedWallet", publicKey.toBase58());
+      localStorage.setItem("verificationMethod", "message");
+      localStorage.setItem("walletSignature", base64Sig);
+      localStorage.setItem("walletMessage", messageStr);
+      alert("✅ Verified with signMessage()");
+      return;
+    } else {
+      alert("❌ Invalid signature");
+    }
+
+  } catch (e) {
+    console.warn("signMessage failed, falling back to signTransaction()", e);
+
+    try {
+      const dummyTx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: publicKey,
+          lamports: 0,
+        })
+      );
+      dummyTx.feePayer = publicKey;
+      dummyTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+      const signedTx = await signTransaction(dummyTx);
+      const base64Tx = btoa(String.fromCharCode(...signedTx.serialize()));
+
+      localStorage.setItem("verifiedWallet", publicKey.toBase58());
+      localStorage.setItem("verificationMethod", "transaction");
+      localStorage.setItem("walletTransaction", base64Tx);
+      localStorage.setItem("walletMessage", messageStr);
+      alert("✅ Verified with signTransaction()");
+    } catch (txErr) {
+      console.error("signTransaction also failed:", txErr);
+      alert("❌ Wallet verification failed. Try again or switch wallets.");
+    }
+  }
+}
+✅ ADD THIS TO UI:
+
+html
+Copy
+Edit
+<button onclick="verifyWallet()">Verify Wallet</button>
+✅ INSTALL DEPENDENCIES (IF NEEDED):
+
+bash
+Copy
+Edit
+npm install tweetnacl bs58 @solana/web3.js
+This solution provides seamless support across all wallets and detects hardware wallets automatically by capability, not by brand. It also prevents double-verification UI or wallet-specific logic.

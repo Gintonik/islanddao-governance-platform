@@ -1,0 +1,65 @@
+// replit-ai-prompt
+Patch `canonical-unlocked-aware-scanner.js` to filter out phantom governance power deposits.
+
+Requirements:
+
+1. Phantom Deposit Filtering:
+   - Add a function `isPhantomDeposit(dep)` that returns true if:
+     - `dep.lockup.kind === 0` (unlocked)
+     - `dep.amount` is exactly 1,000 × 1e9 OR 11,000 × 1e9 (with ±1 lamport tolerance)
+
+```js
+function isPhantomDeposit(dep) {
+  const isUnlocked = dep.lockup?.kind === 0;
+  const rounded = Number(dep.amount / 1e9);
+  return isUnlocked && (rounded === 1000 || rounded === 11000);
+}
+Apply this filter to all deposit scanning logic (both:
+
+depositEntries parsing from Anchor
+
+Raw offset-based scanning of unlocked deposits)
+
+Skip deposits that match this phantom pattern:
+
+if (isPhantomDeposit(dep)) {
+  log(`Skipping phantom marker deposit for ${wallet}`);
+  continue;
+}
+Do not change or overwrite the final citizen pin output file or any user-visible governance stats unless the deposit is real. Ensure:
+
+No phantom values affect totals
+
+No previously verified citizen values (Fgv1, Whale’s Friend) are altered
+
+Preserve the current hybrid scanner logic:
+
+Formal VSR deserialization for locked entries
+
+Offset-based scanning for unlocked entries at [104, 112, 184, 264, 344]
+
+Canonical registrar config for multiplier logic:
+
+Baseline = 3.0x
+
+Max Extra = 3.0x
+
+Saturation = 31,536,000 seconds
+
+Log filtered phantom entries for audit:
+
+console.log(`[PHANTOM FILTER] Skipped ${rounded} ISLAND deposit for ${wallet}`);
+
+Keep in memory that these 1,000 and 11,000 markers will be reused in the future to reconstruct delegation relationships, so preserve their source metadata if possible (e.g., save to a separate list or JSON).
+
+Test the result on these wallets:
+
+Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1
+
+4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+
+3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt
+
+Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG
+
+These values should match exactly to verified ground-truth results with phantom values removed.

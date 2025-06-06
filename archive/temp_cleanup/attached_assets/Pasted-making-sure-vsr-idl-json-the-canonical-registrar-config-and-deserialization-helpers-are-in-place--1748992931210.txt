@@ -1,0 +1,57 @@
+making sure vsr-idl.json, the canonical registrar config, and deserialization helpers are in place):
+
+// replit-ai-prompt
+Create a new scanner script called `canonical-unlocked-aware-scanner.js` that:
+
+1. Loads all VSR program accounts using:
+   Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+
+2. Uses Anchor-compatible deserialization with the `vsr-idl.json` to parse:
+   - Voter accounts and their `depositEntries` array
+
+3. For each `depositEntry`:
+   - If `isUsed === false`, skip
+   - If `amount < 50 ISLAND`, skip
+   - If `lockup.kind === 0` (i.e., **unlocked**), use multiplier = `1.0`
+   - Otherwise:
+     - Calculate `timeLeft = max(0, lockup.endTs - now)`
+     - Use the canonical formula from the official Registrar config:
+       `multiplier = baseline + maxExtra × min(1, timeLeft / saturation)`
+     - Convert all scaled factors from the Registrar (1e9) to float multipliers
+
+4. Store two results per wallet:
+   - `nativeGovernancePower` (sum of valid deposits where `authority === wallet`)
+   - `delegatedGovernancePower` (sum where `voterAuthority === wallet && authority !== wallet`)
+
+5. Update the `citizens` database table with `governance_power = native + delegated`, and log both parts
+
+Use these known Registrar parameters:
+
+```js
+const REGISTRAR_PARAMS = {
+  baseline: 3_000_000_000,
+  maxExtra: 3_000_000_000,
+  saturationSecs: 31_536_000
+};
+
+And this helper:
+
+function calculateMultiplier(lockupKind, endTs, now = Date.now() / 1000) {
+  if (lockupKind === 0) return 1.0;
+  const timeLeft = Math.max(0, endTs - now);
+  const ratio = Math.min(1, timeLeft / REGISTRAR_PARAMS.saturationSecs);
+  return (REGISTRAR_PARAMS.baseline + REGISTRAR_PARAMS.maxExtra * ratio) / 1e9;
+}
+
+Log unlocked-only deposits separately (with kind === 0) for auditing.
+
+Test on these 6 wallets:
+
+[
+  '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
+  'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG',
+  '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+  'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
+  '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA',
+  'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh'
+]

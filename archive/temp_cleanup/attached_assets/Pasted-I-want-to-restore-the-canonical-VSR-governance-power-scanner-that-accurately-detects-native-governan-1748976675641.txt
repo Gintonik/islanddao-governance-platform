@@ -1,0 +1,65 @@
+I want to restore the canonical VSR governance power scanner that accurately detects native governance power for all pinned citizens of IslandDAO.
+
+🧠 Purpose:
+Recover ~14 citizen matches (previously verified) and eliminate current regression (only 3/20 matches). Must validate **real on-chain data** using **Anchor-compatible deserialization** and verified byte offsets.
+
+🛠️ Tasks:
+
+1. Fetch and parse **all 16,586 Voter Stake Registry (VSR)** accounts from:
+   Program ID: `vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`
+
+2. For each `voter` account:
+   - Use **manual Anchor struct deserialization** using working offsets:
+     `[104, 112, 184, 192, 200, 208, 264, 272, 344, 352]`
+   - Extract all deposits
+
+3. For each **deposit entry**:
+   - Extract lockup timestamp from offsets `+0` to `+160` bytes from start of deposit
+   - If expired, multiplier = `1.0`
+   - Else, apply:
+     ```
+     multiplier = min(5, 1 + min(yearsRemaining, 4))
+     yearsRemaining = (lockup_ts - current_ts) / 31,556,952
+     ```
+
+4. **Authority Matching**:
+   - Match Voter account to wallet using all of:
+     - `voter.authority === wallet`
+     - `voter.wallet === wallet`
+     - `wallet_aliases_expanded.json` (must include known aliases for Takisoul, GJdRQcsy, etc.)
+   - Allow **multiple authorities per wallet** (do not stop at first match)
+
+5. **Phantom Deposit Filtering**:
+   - Only skip `[1000, 1.0]` deposits **IF** config is truly empty (verify this — don’t assume)
+
+6. **Deduplication**:
+   - Use `[depositIndex, amount, multiplier]` as composite key, not just `[amount, multiplier]`
+   - This avoids dropping valid repeated deposits
+
+7. **Final Output**:
+   - Log `native governance power` per wallet
+   - Include per-deposit breakdown for each wallet
+   - Validate against this list:
+Target Wallets:
+
+3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt
+
+Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzjKqxK
+
+GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh
+
+4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4
+
+7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA
+
+kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC
+
+(Add all remaining pinned citizen wallets from citizen-wallets.json)
+
+
+- Output to `canonical-native-results-restored.json`
+
+🛑 No global multipliers
+🛑 No filtering by deposit length
+✅ Must detect at least 10/20 citizens with active native governance power
+

@@ -1,0 +1,86 @@
+💡 TASK: Finalize wallet signature verification logic for pin creation with full hardware wallet support and API compatibility
+
+Here are the key integration points I need your help with:
+
+---
+
+✅ 1. HARDWARE WALLET SUPPORT
+
+- Detect if signMessage() fails (common on Ledger)
+- If it fails, automatically fallback to signTransaction() with a 0-lamport self-transfer
+- This fallback must not send the transaction — just use it for signature proof
+
+EXAMPLE LOGIC:
+
+```js
+try {
+  const signature = await signMessage(encodedMessage);
+  // normal message verification
+} catch (e) {
+  if (e.message.includes("not supported") || e.name === "NotSupportedError") {
+    // fallback to dummy transaction
+    const dummyTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: publicKey,
+        lamports: 0
+      })
+    );
+    dummyTx.feePayer = publicKey;
+    dummyTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    const signedTx = await signTransaction(dummyTx);
+    // use serialized tx for auth proof
+  }
+}
+
+✅ 2. SIGNATURE FORMAT
+
+Encode all final signatures using base64 (not raw Uint8Array or hex)
+
+Reason: base64 is easier to verify server-side and consistent across wallet implementations
+
+Convert like this:
+
+const base64Signature = btoa(String.fromCharCode(...signature));
+
+✅ 3. MESSAGE FORMAT FOR VERIFICATION
+
+Use this format (already implemented):
+
+"Verify wallet ownership for IslandDAO Citizen Map - Timestamp: [unix timestamp]"
+
+It works across all wallets. Timestamp is important to avoid replay attacks.
+
+✅ 4. ERROR HANDLING
+
+If user cancels signature → show alert: "Signature canceled. Try again or switch wallet."
+
+If signMessage not supported → auto fallback to transaction-based signature
+
+If fallback also fails → show alert: "Verification failed. Please try again with a different wallet."
+
+✅ 5. API ENDPOINTS
+
+Confirm these two endpoints:
+
+POST /api/auth/generate-message → returns a message string
+
+POST /api/save-citizen-verified → accepts:
+
+walletAddress
+
+base64 signature
+
+message
+
+fallbackMethod: "message" or "transaction"
+
+Ask: Are these currently set up on the backend? If not, stub responses so we can proceed with frontend integration.
+
+Please help me:
+
+Wrap all of this into a clean JS module (verifyWallet.js)
+
+Make it framework-agnostic (vanilla JS)
+
+Log all state changes and errors for debugging

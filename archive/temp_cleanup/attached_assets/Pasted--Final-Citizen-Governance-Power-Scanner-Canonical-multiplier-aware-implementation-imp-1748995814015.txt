@@ -1,0 +1,118 @@
+/**
+ * Final Citizen Governance Power Scanner
+ * Canonical, multiplier-aware implementation
+ */
+
+import { Connection, PublicKey } from '@solana/web3.js';
+import { config } from 'dotenv';
+config();
+
+const VSR_PROGRAM_ID = new PublicKey('vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ');
+const connection = new Connection(process.env.HELIUS_RPC_URL);
+
+function calculateMultiplier(lockup, now = Date.now() / 1000) {
+  const baseline = 3_000_000_000;
+  const maxExtra = 3_000_000_000;
+  const saturation = 31_536_000;
+
+  const { kind, startTs, endTs } = lockup;
+  if (kind === 0) return 1.0;
+
+  const duration = Math.max(endTs - startTs, 1);
+  const timeRemaining = Math.max(endTs - now, 0);
+
+  if (kind === 1 || kind === 4) {
+    // Cliff or Monthly: straight-line decay
+    const ratio = Math.min(1, timeRemaining / saturation);
+    return (baseline + maxExtra * ratio) / 1e9;
+  }
+
+  if (kind === 2 || kind === 3) {
+    // Constant or Vesting: time-weighted locked fraction
+    const unlockedRatio = Math.min(1, Math.max(0, (now - startTs) / duration));
+    const lockedRatio = 1 - unlockedRatio;
+    const ratio = Math.min(1, (lockedRatio * duration) / saturation);
+    return (baseline + maxExtra * ratio) / 1e9;
+  }
+
+  return 1.0;
+}
+
+function parseAllDeposits(data, currentTime) {
+  const deposits = [];
+  const scannedOffsets = new Set();
+
+  // Canonical lockup offsets
+  const multiLockupOffsets = [184, 264, 344, 424];
+
+  for (const offset of multiLockupOffsets) {
+    if (offset + 8 <= data.length) {
+      const amount = Number(data.readBigUInt64LE(offset)) / 1e6;
+      if (amount >= 50 && amount <= 20_000_000) {
+        const metadataBase = offset - 32;
+        const kind = data[metadataBase + 24];
+        const startTs = Number(data.readBigUInt64LE(metadataBase));
+        const endTs = Number(data.readBigUInt64LE(metadataBase + 8));
+
+        if (kind >= 1 && kind <= 4 && endTs > currentTime) {
+          const multiplier = calculateMultiplier({ kind, startTs, endTs }, currentTime);
+          const power = amount * multiplier;
+          deposits.push({ amount, multiplier, power, isLocked: true, source: 'locked', offset });
+          scannedOffsets.add(offset);
+        }
+      }
+    }
+  }
+
+  // Unlocked scanner (skip phantom delegation markers)
+  const directOffsets = [104, 112, 184, 264, 344];
+  for (const offset of directOffsets) {
+    if (offset + 8 <= data.length && !scannedOffsets.has(offset)) {
+      const amount = Number(data.readBigUInt64LE(offset)) / 1e6;
+      const rounded = Math.round(amount);
+      if (amount >= 1000 && amount <= 20_000_000 && rounded !== 1000 && rounded !== 11000) {
+        deposits.push({ amount, multiplier: 1.0, power: amount, isLocked: false, source: 'unlocked', offset });
+      }
+    }
+  }
+
+  return deposits;
+}
+
+async function scanCitizens() {
+  console.log('Canonical IslandDAO Native Governance Power');
+  const allVSR = await connection.getProgramAccounts(VSR_PROGRAM_ID, { filters: [{ dataSize: 2728 }] });
+  const wallets = [
+    '3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt',
+    'Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG',
+    '4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4',
+    'kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC',
+    '7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA',
+    'GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh'
+  ];
+  const currentTime = Date.now() / 1000;
+  const result = [];
+
+  for (const wallet of wallets) {
+    let total = 0, locked = 0, unlocked = 0;
+    for (const acct of allVSR) {
+      const data = acct.account.data;
+      const authority = new PublicKey(data.slice(8, 40)).toBase58();
+      if (authority !== wallet) continue;
+      const deposits = parseAllDeposits(data, currentTime);
+      for (const d of deposits) {
+        total += d.power;
+        if (d.isLocked) locked += d.power; else unlocked += d.power;
+      }
+    }
+    result.push({ wallet, total, locked, unlocked });
+    console.log(`${wallet}:
+  Total: ${total.toLocaleString()} ISLAND
+  Locked: ${locked.toLocaleString()} | Unlocked: ${unlocked.toLocaleString()}\n`);
+  }
+
+  const totalPower = result.reduce((sum, r) => sum + r.total, 0);
+  console.log(`Total governance power: ${totalPower.toLocaleString()} ISLAND`);
+}
+
+scanCitizens().catch(console.error);
