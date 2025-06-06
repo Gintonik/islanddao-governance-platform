@@ -217,7 +217,7 @@ app.get('/api/wallet-nfts', async (req, res) => {
     console.log(`Fetching PERKS NFTs for wallet: ${walletAddress}`);
     
     // Fetch NFTs directly from blockchain via Helius API
-    const response = await fetch(process.env.HELIUS_API_KEY, {
+    const response = await fetch(process.env.HELIUS_RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
