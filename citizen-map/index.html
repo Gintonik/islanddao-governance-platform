@@ -138,13 +138,14 @@
         let mousePosition = { x: 0, y: 0 };
         let isTouching = false;
         let isMobile = window.innerWidth < 768;
+        let animationFrameId;
 
-        // IslandDAO logo SVG path data (converted from your PNG)
-        const ISLAND_LOGO_PATH = "M50 10 L60 20 L70 10 L80 20 L70 30 L60 20 L50 30 L40 20 L30 30 L20 20 L30 10 L40 20 Z M45 30 L55 30 L55 60 L45 60 Z M20 65 L80 65 L80 70 L20 70 Z M25 75 L75 75 L75 78 L25 78 Z M120 15 L130 15 L130 55 L120 55 Z M140 15 L160 15 L160 25 L150 25 L150 35 L160 35 L160 45 L140 45 Z M170 15 L180 15 L180 45 L195 45 L195 55 L170 55 Z M205 15 L230 15 L230 25 L215 25 L215 35 L225 35 L225 45 L215 45 L215 55 L205 55 Z M240 15 L265 15 L250 30 L265 45 L240 45 L255 30 Z M275 15 L300 15 L290 35 L300 55 L275 55 L285 35 Z M320 15 L345 15 L345 25 L330 25 L330 35 L340 35 L340 45 L330 45 L330 55 L320 55 Z M355 15 L380 15 L380 25 L365 25 L365 35 L375 35 L375 45 L365 45 L365 55 L355 55 Z M390 15 L415 15 L400 35 L415 55 L390 55 L405 35 Z";
+        // IslandDAO logo SVG path - created from your PNG logo
+        const ISLAND_LOGO_PATH = "M50 5L60 20L70 5L80 20L70 35L60 20L50 35L40 20L30 35L20 20L30 5L40 20Z M45 35L55 35L55 75L45 75Z M15 80L85 80L85 85L15 85Z M20 90L80 90L80 93L20 93Z M25 96L75 96L75 98L25 98Z M120 15L140 15L140 22L130 22L130 30L135 30L135 37L130 37L130 45L135 45L135 52L130 52L130 60L140 60L140 67L120 67Z M150 15L160 15L160 45L170 45L170 52L150 52Z M180 15L200 15L200 22L190 22L190 30L195 30L195 37L190 37L190 45L195 45L195 52L190 52L190 60L200 60L200 67L180 67Z M210 15L220 15L220 45L235 45L235 52L220 52L220 67L210 67Z M245 15L265 15L255 37L265 60L255 67L245 60L255 37Z M275 15L295 15L285 37L295 67L275 67L285 37Z M305 15L315 15L315 45L330 45L330 52L315 52L315 67L305 67Z M340 15L360 15L350 37L360 67L340 67L350 37Z M370 15L390 15L380 37L390 67L370 67L380 37Z";
 
         function updateCanvasSize() {
             canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight * 0.75; // 3/4 of screen height
+            canvas.height = window.innerHeight * 0.75;
             isMobile = window.innerWidth < 768;
         }
 
@@ -154,33 +155,33 @@
             ctx.fillStyle = 'white';
             ctx.save();
             
-            const logoHeight = isMobile ? 60 : 100;
-            const logoWidth = logoHeight * 4.5; // Aspect ratio from IslandDAO logo
+            const logoHeight = isMobile ? 60 : 120;
+            const islandLogoWidth = logoHeight * (390 / 98); // Correct aspect ratio from IslandDAO logo
+            const totalWidth = islandLogoWidth;
             
-            // Center the logo
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            ctx.translate(centerX - logoWidth / 2, centerY - logoHeight / 2);
+            ctx.translate(canvas.width / 2 - totalWidth / 2, canvas.height / 2 - logoHeight / 2);
 
-            // Draw IslandDAO logo using Path2D (like the original files)
-            const logoScale = logoHeight / 70;
-            ctx.scale(logoScale, logoScale);
-            
+            // Draw IslandDAO logo
+            ctx.save();
+            const islandScale = logoHeight / 98;
+            ctx.scale(islandScale, islandScale);
             const path = new Path2D(ISLAND_LOGO_PATH);
             ctx.fill(path);
+            ctx.restore();
 
             ctx.restore();
 
             textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            return logoScale;
+            return islandScale;
         }
 
         function createParticle(scale) {
             if (!ctx || !canvas || !textImageData) return null;
 
             const data = textImageData.data;
+            const particleGap = 2;
 
             for (let attempt = 0; attempt < 100; attempt++) {
                 const x = Math.floor(Math.random() * canvas.width);
@@ -193,8 +194,8 @@
                         baseX: x,
                         baseY: y,
                         size: Math.random() * 1 + 0.5,
-                        color: 'white',
-                        scatteredColor: `hsl(${120 + Math.random() * 60}, 70%, ${50 + Math.random() * 30}%)`, // Green gradient variations
+                        color: 'white', 
+                        scatteredColor: '#4CAF50', // IslandDAO green
                         life: Math.random() * 100 + 50
                     };
                 }
@@ -204,7 +205,7 @@
         }
 
         function createInitialParticles(scale) {
-            const baseParticleCount = 5000;
+            const baseParticleCount = 7000;
             const particleCount = Math.floor(baseParticleCount * Math.sqrt((canvas.width * canvas.height) / (1920 * 1080)));
             for (let i = 0; i < particleCount; i++) {
                 const particle = createParticle(scale);
@@ -214,16 +215,12 @@
 
         function animate(scale) {
             if (!ctx || !canvas) return;
-            
-            // Create gradient background
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#000000');
-            gradient.addColorStop(1, '#0a0a0a');
-            ctx.fillStyle = gradient;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             const { x: mouseX, y: mouseY } = mousePosition;
-            const maxDistance = 250;
+            const maxDistance = 240;
 
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
@@ -239,23 +236,14 @@
                     p.x = p.baseX - moveX;
                     p.y = p.baseY - moveY;
                     
-                    // Create dynamic gradient for scattered particles
-                    const particleGradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-                    particleGradient.addColorStop(0, p.scatteredColor);
-                    particleGradient.addColorStop(1, 'rgba(76, 175, 80, 0.3)');
-                    ctx.fillStyle = particleGradient;
+                    ctx.fillStyle = p.scatteredColor;
                 } else {
-                    p.x += (p.baseX - p.x) * 0.12;
-                    p.y += (p.baseY - p.y) * 0.12;
-                    
-                    // White particles with slight glow
-                    const whiteGradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
-                    whiteGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-                    whiteGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
-                    ctx.fillStyle = whiteGradient;
+                    p.x += (p.baseX - p.x) * 0.1;
+                    p.y += (p.baseY - p.y) * 0.1;
+                    ctx.fillStyle = 'white';
                 }
 
-                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+                ctx.fillRect(p.x, p.y, p.size, p.size);
 
                 p.life--;
                 if (p.life <= 0) {
@@ -269,14 +257,14 @@
                 }
             }
 
-            const baseParticleCount = 6000;
+            const baseParticleCount = 7000;
             const targetParticleCount = Math.floor(baseParticleCount * Math.sqrt((canvas.width * canvas.height) / (1920 * 1080)));
             while (particles.length < targetParticleCount) {
                 const newParticle = createParticle(scale);
                 if (newParticle) particles.push(newParticle);
             }
 
-            requestAnimationFrame(() => animate(scale));
+            animationFrameId = requestAnimationFrame(() => animate(scale));
         }
 
         function initialize() {
@@ -286,39 +274,49 @@
             animate(scale);
         }
 
-        // Event listeners
-        window.addEventListener('resize', () => {
+        const handleResize = () => {
             updateCanvasSize();
             const newScale = createTextImage();
             particles = [];
             createInitialParticles(newScale);
-        });
+        };
 
-        canvas.addEventListener('mousemove', (e) => {
-            mousePosition = { x: e.clientX, y: e.clientY };
-        });
+        const handleMove = (x, y) => {
+            mousePosition = { x, y };
+        };
 
-        canvas.addEventListener('touchmove', (e) => {
+        const handleMouseMove = (e) => {
+            handleMove(e.clientX, e.clientY);
+        };
+
+        const handleTouchMove = (e) => {
             if (e.touches.length > 0) {
                 e.preventDefault();
-                mousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                handleMove(e.touches[0].clientX, e.touches[0].clientY);
             }
-        }, { passive: false });
+        };
 
-        canvas.addEventListener('touchstart', () => {
+        const handleTouchStart = () => {
             isTouching = true;
-        });
+        };
 
-        canvas.addEventListener('touchend', () => {
+        const handleTouchEnd = () => {
             isTouching = false;
             mousePosition = { x: 0, y: 0 };
-        });
+        };
 
-        canvas.addEventListener('mouseleave', () => {
+        const handleMouseLeave = () => {
             if (!('ontouchstart' in window)) {
                 mousePosition = { x: 0, y: 0 };
             }
-        });
+        };
+
+        window.addEventListener('resize', handleResize);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('mouseleave', handleMouseLeave);
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchend', handleTouchEnd);
 
         // Initialize the animation
         initialize();
