@@ -30,7 +30,7 @@
         
         .content {
             position: absolute;
-            top: 60%;
+            top: 75%;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -138,12 +138,24 @@
                     ctx.fillStyle = 'white';
                     ctx.save();
                     
-                    const logoHeight = isMobile ? 280 : 450;
+                    // Make logo fill most of the screen
+                    const maxWidth = canvas.width * 0.9;
+                    const maxHeight = canvas.height * 0.7;
                     const aspectRatio = logoImage.width / logoImage.height;
-                    const logoWidth = logoHeight * aspectRatio;
+                    
+                    let logoWidth, logoHeight;
+                    
+                    // Fit to screen while maintaining aspect ratio
+                    if (maxWidth / aspectRatio <= maxHeight) {
+                        logoWidth = maxWidth;
+                        logoHeight = maxWidth / aspectRatio;
+                    } else {
+                        logoHeight = maxHeight;
+                        logoWidth = maxHeight * aspectRatio;
+                    }
                     
                     const x = (canvas.width - logoWidth) / 2;
-                    const y = (canvas.height * 0.25) - logoHeight / 2;
+                    const y = (canvas.height * 0.15) - logoHeight / 2;
                     
                     // Draw the image in white
                     ctx.globalCompositeOperation = 'source-over';
