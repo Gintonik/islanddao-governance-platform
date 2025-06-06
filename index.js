@@ -268,6 +268,77 @@ app.post('/api/auth/verify-signature', async (req, res) => {
   }
 });
 
+// Save verified citizen endpoint
+app.post('/api/save-citizen-verified', async (req, res) => {
+  try {
+    const {
+      wallet_address,
+      signature,
+      original_message,
+      fallback_method,
+      lat,
+      lng,
+      primary_nft,
+      pfp_nft,
+      nickname,
+      bio,
+      twitter_handle,
+      telegram_handle,
+      discord_handle,
+      nfts
+    } = req.body;
+
+    // Basic validation
+    if (!wallet_address || !lat || !lng || !primary_nft) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Check if citizen already exists
+    const existingResult = await pool.query(
+      'SELECT id FROM citizens WHERE wallet = $1',
+      [wallet_address]
+    );
+
+    if (existingResult.rows.length > 0) {
+      // Update existing citizen
+      await pool.query(`
+        UPDATE citizens SET
+          lat = $1, lng = $2, primary_nft = $3, pfp_nft = $4,
+          nickname = $5, bio = $6, twitter_handle = $7,
+          telegram_handle = $8, discord_handle = $9,
+          updated_at = NOW()
+        WHERE wallet = $10
+      `, [lat, lng, primary_nft, pfp_nft, nickname, bio, 
+          twitter_handle, telegram_handle, discord_handle, wallet_address]);
+    } else {
+      // Insert new citizen
+      await pool.query(`
+        INSERT INTO citizens (
+          wallet, lat, lng, primary_nft, pfp_nft, nickname,
+          bio, twitter_handle, telegram_handle, discord_handle,
+          created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+      `, [wallet_address, lat, lng, primary_nft, pfp_nft, nickname,
+          bio, twitter_handle, telegram_handle, discord_handle]);
+    }
+
+    res.json({
+      success: true,
+      message: 'Citizen pin created successfully'
+    });
+
+  } catch (error) {
+    console.error('Save citizen error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save citizen data'
+    });
+  }
+});
+
 // Governance stats endpoint
 app.get('/api/governance-stats', async (req, res) => {
   try {
