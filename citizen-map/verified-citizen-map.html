@@ -2300,7 +2300,7 @@
             walletNfts.forEach(nft => {
                 const nftElement = document.createElement('div');
                 nftElement.className = 'nft-item';
-                const imageUrl = nft.image || nft.imageUrl || '';
+                const imageUrl = nft.content?.links?.image || nft.image || nft.imageUrl || '';
                 nftElement.innerHTML = `
                     <img src="${imageUrl}" alt="${nft.name}" class="nft-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJLIGltYWdlPC90ZXh0Pgo8L3N2Zz4='">
                     <div class="nft-name">${nft.name}</div>
