@@ -268,9 +268,13 @@
         }
 
         function initialize() {
+            console.log('Initializing particle effects...');
             updateCanvasSize();
+            console.log('Canvas size:', canvas.width, 'x', canvas.height);
             const scale = createTextImage();
+            console.log('Text image created, scale:', scale);
             createInitialParticles(scale);
+            console.log('Particles created:', particles.length);
             animate(scale);
         }
 
