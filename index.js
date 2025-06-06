@@ -7,12 +7,53 @@ import express from 'express';
 import path from 'path';
 import { Pool } from 'pg';
 import { fileURLToPath } from 'url';
+import { PublicKey } from '@solana/web3.js';
+import nacl from 'tweetnacl';
+import bs58 from 'bs58';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+// Security: Cryptographic signature verification
+function verifySignature(publicKeyString, signature, message) {
+  try {
+    // Convert public key string to PublicKey object
+    const publicKey = new PublicKey(publicKeyString);
+    
+    // Decode signature from base64
+    const signatureBytes = typeof signature === 'string' 
+      ? new Uint8Array(Buffer.from(signature, 'base64'))
+      : signature;
+    
+    // Encode message to bytes
+    const messageBytes = new TextEncoder().encode(message);
+    
+    // Verify signature using nacl
+    return nacl.sign.detached.verify(
+      messageBytes,
+      signatureBytes,
+      publicKey.toBytes()
+    );
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    return false;
+  }
+}
+
+// Security: Generate time-limited verification nonce
+function generateVerificationMessage() {
+  const timestamp = Date.now();
+  const nonce = Math.random().toString(36).substring(2, 15);
+  return {
+    message: `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nNonce: ${nonce}\nSign to verify wallet ownership.`,
+    timestamp,
+    nonce,
+    expiresAt: timestamp + (5 * 60 * 1000) // 5 minutes
+  };
+}
 
 // Database connection with error handling
 let pool;
@@ -404,41 +445,72 @@ app.get('/api/check-username', async (req, res) => {
   }
 });
 
-// Authentication endpoints for wallet verification
+// Enhanced authentication endpoints with cryptographic verification
 app.get('/api/auth/generate-message', (req, res) => {
-  const timestamp = Date.now();
-  const message = `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
-  
-  res.json({
-    message,
-    timestamp,
-    success: true
-  });
+  try {
+    const verificationData = generateVerificationMessage();
+    console.log('Generated verification message for signature');
+    
+    res.json({
+      message: verificationData.message,
+      timestamp: verificationData.timestamp,
+      nonce: verificationData.nonce,
+      expiresAt: verificationData.expiresAt,
+      success: true
+    });
+  } catch (error) {
+    console.error('Message generation error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to generate verification message' 
+    });
+  }
 });
 
 app.post('/api/auth/verify-signature', async (req, res) => {
   try {
-    const { publicKey, signature, message } = req.body;
+    const { publicKey, signature, message, timestamp } = req.body;
     
-    // Basic validation - in production, you'd verify the signature cryptographically
     if (!publicKey || !signature || !message) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Missing required fields' 
+        message: 'Missing required fields for signature verification' 
       });
     }
+    
+    // Verify message timestamp (5 minute expiry)
+    if (timestamp && Date.now() - timestamp > 5 * 60 * 1000) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Verification message expired' 
+      });
+    }
+    
+    // Cryptographic signature verification
+    const isValidSignature = verifySignature(publicKey, signature, message);
+    
+    if (!isValidSignature) {
+      console.log(`Failed signature verification for wallet: ${publicKey}`);
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Invalid signature - wallet verification failed' 
+      });
+    }
+    
+    console.log(`Successfully verified signature for wallet: ${publicKey}`);
     
     res.json({
       success: true,
       publicKey,
       verified: true,
-      message: 'Wallet verified successfully'
+      message: 'Wallet verified successfully',
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Signature verification error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Verification failed' 
+      message: 'Verification failed - server error' 
     });
   }
 });
@@ -496,11 +568,73 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       }
     }
 
-    // Check if citizen already exists
+    // SECURITY: Check if citizen already exists and require signature verification for updates
     const existingResult = await pool.query(
-      'SELECT id FROM citizens WHERE wallet = $1',
+      'SELECT id, wallet FROM citizens WHERE wallet = $1',
       [walletAddress]
     );
+
+    // Critical security check: Pin movement requires signature verification
+    if (existingResult.rows.length > 0) {
+      console.log(`Existing citizen detected for wallet: ${walletAddress} - signature verification required`);
+      
+      if (!signature || !original_message) {
+        return res.status(403).json({
+          success: false,
+          message: 'Signature verification required for pin updates. Please sign the verification message.',
+          requiresSignature: true
+        });
+      }
+      
+      // Verify the signature cryptographically
+      const isValidSignature = verifySignature(walletAddress, signature, original_message);
+      
+      if (!isValidSignature) {
+        console.log(`SECURITY ALERT: Invalid signature for pin update attempt from wallet: ${walletAddress}`);
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid signature. Pin updates require valid wallet ownership proof.',
+          signatureVerification: 'failed'
+        });
+      }
+      
+      console.log(`Pin update authorized: Valid signature verified for wallet: ${walletAddress}`);
+      
+      // Security audit log for pin updates
+      try {
+        await pool.query(`
+          INSERT INTO security_logs (wallet, action, ip_address, user_agent, timestamp, verified)
+          VALUES ($1, $2, $3, $4, NOW(), $5)
+        `, [
+          walletAddress, 
+          'pin_update', 
+          req.ip || req.connection.remoteAddress,
+          req.get('User-Agent'),
+          true
+        ]);
+      } catch (logError) {
+        // Log error but don't fail the request
+        console.error('Security log insertion failed:', logError);
+      }
+    } else {
+      console.log(`New citizen pin creation for wallet: ${walletAddress}`);
+      
+      // Security audit log for new pins
+      try {
+        await pool.query(`
+          INSERT INTO security_logs (wallet, action, ip_address, user_agent, timestamp, verified)
+          VALUES ($1, $2, $3, $4, NOW(), $5)
+        `, [
+          walletAddress, 
+          'pin_creation', 
+          req.ip || req.connection.remoteAddress,
+          req.get('User-Agent'),
+          signature ? true : false
+        ]);
+      } catch (logError) {
+        console.error('Security log insertion failed:', logError);
+      }
+    }
 
     // Calculate governance power for new citizen
     let totalGovernancePower = null;
