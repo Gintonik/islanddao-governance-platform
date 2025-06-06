@@ -1335,6 +1335,56 @@ app.post("/api/sync-governance", async (req, res) => {
     console.log(`✅ Updated: ${updated} citizens`);
     console.log(`❌ Failed: ${failed} citizens`);
     
+    // Export updated data to JSON file
+    try {
+      console.log(`\n💾 Exporting updated governance data to JSON file...`);
+      
+      const exportClient = await pool.connect();
+      const exportResult = await exportClient.query(`
+        SELECT 
+          wallet, 
+          nickname,
+          native_governance_power,
+          delegated_governance_power,
+          total_governance_power,
+          updated_at
+        FROM citizens 
+        WHERE native_governance_power > 0 OR delegated_governance_power > 0
+        ORDER BY total_governance_power DESC
+      `);
+      exportClient.release();
+      
+      const fs = require('fs');
+      const path = require('path');
+      
+      const exportData = {
+        summary: {
+          totalCitizens: exportResult.rows.length,
+          totalNativeGovernancePower: exportResult.rows.reduce((sum, row) => sum + parseFloat(row.native_governance_power || 0), 0),
+          totalDelegatedGovernancePower: exportResult.rows.reduce((sum, row) => sum + parseFloat(row.delegated_governance_power || 0), 0),
+          calculatedAt: new Date().toISOString(),
+          version: "2.0.0"
+        },
+        citizens: exportResult.rows.map(row => ({
+          wallet: row.wallet,
+          nickname: row.nickname,
+          nativeGovernancePower: parseFloat(row.native_governance_power || 0),
+          delegatedGovernancePower: parseFloat(row.delegated_governance_power || 0),
+          totalGovernancePower: parseFloat(row.total_governance_power || 0),
+          updatedAt: row.updated_at
+        }))
+      };
+      
+      const filePath = path.join(__dirname, 'data', 'native-governance-power.json');
+      fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2));
+      
+      console.log(`✅ Exported ${exportResult.rows.length} citizens to ${filePath}`);
+      console.log(`📊 Total governance power: ${exportData.summary.totalNativeGovernancePower.toLocaleString()} ISLAND`);
+      
+    } catch (exportError) {
+      console.error(`❌ Failed to export to JSON: ${exportError.message}`);
+    }
+    
     res.json({
       success: true,
       updated,
