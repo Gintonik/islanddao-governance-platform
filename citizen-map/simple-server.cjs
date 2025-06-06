@@ -282,23 +282,33 @@ async function syncGovernanceData() {
       }
     }
     
-    // Refresh NFT data for all citizens
-    console.log('Refreshing NFT data...');
+    // Refresh NFT data for all citizens and remove those without PERKS NFTs
+    console.log('Refreshing NFT data and cleaning up invalid citizens...');
+    let removed = 0;
+    
     for (const citizen of citizens) {
       try {
         const nfts = await fetchWalletNFTs(citizen.wallet);
         const nftIds = nfts.map(nft => nft.mint);
         
-        await pool.query(
-          'UPDATE citizens SET nft_ids = $1, nft_metadata = $2, updated_at = NOW() WHERE wallet = $3',
-          [JSON.stringify(nftIds), JSON.stringify(nfts), citizen.wallet]
-        );
+        // If citizen has no PERKS NFTs, remove them from the map
+        if (nfts.length === 0) {
+          await pool.query('DELETE FROM citizens WHERE wallet = $1', [citizen.wallet]);
+          removed++;
+          console.log(`🗑️ Removed ${citizen.nickname} - no longer owns PERKS NFTs`);
+        } else {
+          // Update NFT data for citizens who still own PERKS
+          await pool.query(
+            'UPDATE citizens SET nft_ids = $1, nft_metadata = $2, updated_at = NOW() WHERE wallet = $3',
+            [JSON.stringify(nftIds), JSON.stringify(nfts), citizen.wallet]
+          );
+        }
       } catch (error) {
         console.error(`Error updating NFTs for ${citizen.wallet}:`, error);
       }
     }
     
-    console.log(`Daily sync completed: ${updated} updated, ${failed} failed`);
+    console.log(`Daily sync completed: ${updated} updated, ${failed} failed, ${removed} removed (no PERKS NFTs)`);
   } catch (error) {
     console.error('Error during daily sync:', error);
   }
