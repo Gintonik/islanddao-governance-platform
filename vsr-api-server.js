@@ -1310,7 +1310,7 @@ app.post("/api/sync-governance", async (req, res) => {
           UPDATE citizens 
           SET 
             native_governance_power = $1,
-            governance_power = $2,
+            delegated_governance_power = $2,
             total_governance_power = $3,
             updated_at = NOW()
           WHERE wallet = $4

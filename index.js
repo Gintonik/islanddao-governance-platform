@@ -288,8 +288,11 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       nfts
     } = req.body;
 
+    // Use wallet_address from request but store in wallet field
+    const walletAddress = wallet_address;
+
     // Basic validation
-    if (!wallet_address || !lat || !lng || !primary_nft) {
+    if (!walletAddress || !lat || !lng || !primary_nft) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -299,7 +302,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     // Check if citizen already exists
     const existingResult = await pool.query(
       'SELECT id FROM citizens WHERE wallet = $1',
-      [wallet_address]
+      [walletAddress]
     );
 
     if (existingResult.rows.length > 0) {
@@ -312,7 +315,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           updated_at = NOW()
         WHERE wallet = $10
       `, [lat, lng, primary_nft, pfp_nft, nickname, bio, 
-          twitter_handle, telegram_handle, discord_handle, wallet_address]);
+          twitter_handle, telegram_handle, discord_handle, walletAddress]);
     } else {
       // Insert new citizen
       await pool.query(`
@@ -321,7 +324,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           bio, twitter_handle, telegram_handle, discord_handle,
           created_at, updated_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-      `, [wallet_address, lat, lng, primary_nft, pfp_nft, nickname,
+      `, [walletAddress, lat, lng, primary_nft, pfp_nft, nickname,
           bio, twitter_handle, telegram_handle, discord_handle]);
     }
 
