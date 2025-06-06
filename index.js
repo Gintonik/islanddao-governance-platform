@@ -322,6 +322,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       lng,
       primary_nft,
       pfp_nft,
+      image_url,
       nickname,
       bio,
       twitter_handle,
@@ -341,11 +342,45 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       });
     }
 
+    // If image_url not provided, fetch it from the NFT API
+    let profileImageUrl = image_url;
+    if (!profileImageUrl && pfp_nft) {
+      try {
+        const nftResponse = await fetch(`${req.protocol}://${req.get('host')}/api/wallet-nfts?wallet=${walletAddress}`);
+        const nftData = await nftResponse.json();
+        const selectedNft = nftData.nfts?.find(nft => nft.mint === pfp_nft || nft.id === pfp_nft);
+        if (selectedNft) {
+          profileImageUrl = selectedNft.image || selectedNft.content?.links?.image;
+        }
+      } catch (error) {
+        console.error('Error fetching NFT image for profile:', error);
+      }
+    }
+
     // Check if citizen already exists
     const existingResult = await pool.query(
       'SELECT id FROM citizens WHERE wallet = $1',
       [walletAddress]
     );
+
+    // Calculate governance power for new citizen
+    let totalGovernancePower = null;
+    let nativeGovernancePower = null;
+    let delegatedGovernancePower = null;
+    try {
+      const govResponse = await fetch(`http://localhost:3001/governance-power/${walletAddress}`);
+      if (govResponse.ok) {
+        const govData = await govResponse.json();
+        totalGovernancePower = govData.totalGovernancePower || null;
+        nativeGovernancePower = govData.nativeGovernancePower || null;
+        delegatedGovernancePower = govData.delegatedGovernancePower || 0;
+      }
+    } catch (error) {
+      console.log('Governance power calculation skipped:', error.message);
+    }
+
+    // Store NFT metadata for citizen
+    const nftMetadata = nfts ? JSON.stringify(nfts) : null;
 
     if (existingResult.rows.length > 0) {
       // Update existing citizen
@@ -353,21 +388,26 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         UPDATE citizens SET
           lat = $1, lng = $2, primary_nft = $3, pfp_nft = $4,
           nickname = $5, bio = $6, twitter_handle = $7,
-          telegram_handle = $8, discord_handle = $9,
-          updated_at = NOW()
-        WHERE wallet = $10
+          telegram_handle = $8, discord_handle = $9, image_url = $10,
+          native_governance_power = $11, delegated_governance_power = $12, 
+          total_governance_power = $13, nft_metadata = $14,
+          governance_last_updated = NOW(), updated_at = NOW()
+        WHERE wallet = $15
       `, [lat, lng, primary_nft, pfp_nft, nickname, bio, 
-          twitter_handle, telegram_handle, discord_handle, walletAddress]);
+          twitter_handle, telegram_handle, discord_handle, profileImageUrl,
+          nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata, walletAddress]);
     } else {
       // Insert new citizen
       await pool.query(`
         INSERT INTO citizens (
           wallet, lat, lng, primary_nft, pfp_nft, nickname,
-          bio, twitter_handle, telegram_handle, discord_handle,
-          created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+          bio, twitter_handle, telegram_handle, discord_handle, image_url,
+          native_governance_power, delegated_governance_power, total_governance_power, nft_metadata,
+          governance_last_updated, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW(), NOW())
       `, [walletAddress, lat, lng, primary_nft, pfp_nft, nickname,
-          bio, twitter_handle, telegram_handle, discord_handle]);
+          bio, twitter_handle, telegram_handle, discord_handle, profileImageUrl,
+          nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata]);
     }
 
     res.json({
