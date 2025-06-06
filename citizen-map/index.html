@@ -44,6 +44,17 @@
             color: #cccccc;
         }
         
+        .island-link {
+            color: #4CAF50;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .island-link:hover {
+            color: #45a049;
+            text-decoration: underline;
+        }
+        
         .buttons {
             display: flex;
             gap: 1rem;
@@ -97,7 +108,7 @@
     <canvas id="particleCanvas"></canvas>
     
     <div class="content">
-        <p class="subtitle">Explore the IslandDAO citizen registry and NFT collection</p>
+        <p class="subtitle">Explore the <a href="https://www.islanddao.org" target="_blank" class="island-link">IslandDAO</a> citizen registry and PERKS NFT collection</p>
         
         <div class="buttons">
             <a href="/verified-citizen-map" class="btn btn-primary">View Citizen Map</a>
