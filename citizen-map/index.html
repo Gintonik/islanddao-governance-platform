@@ -62,44 +62,70 @@
             flex-wrap: wrap;
         }
         
+        /* CSS Variables for IslandDAO Theme */
+        :root {
+            --bg-primary: #0F0F0F;
+            --bg-secondary: #1D1D1D;
+            --accent-primary: #21E8A3;
+            --accent-glow: rgba(33, 232, 163, 0.3);
+            --text-primary: #FAFAFA;
+            --text-secondary: #AFAFAF;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --panel-bg: rgba(29, 29, 29, 0.95);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-hover: rgba(255, 255, 255, 0.05);
+            --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.25);
+            --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
         .btn {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            padding: 12px 24px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            background: var(--panel-bg);
+            color: var(--text-primary);
             text-decoration: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-soft);
+            cursor: pointer;
+            font-family: inherit;
         }
         
         .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--panel-hover);
+            border-color: var(--accent-primary);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            border: 1px solid #4CAF50;
+            background: var(--accent-glow);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-glow);
         }
         
         .btn-primary:hover {
-            background: linear-gradient(135deg, #45a049, #3d8b40);
-            border: 1px solid #45a049;
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
         
         .btn-secondary {
-            background: linear-gradient(135deg, #FF6B35, #F7931E);
-            border: 1px solid #FF6B35;
+            background: rgba(255, 107, 53, 0.2);
+            color: #FF6B35;
+            border: 1px solid rgba(255, 107, 53, 0.3);
         }
         
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #F7931E, #E8890B);
-            border: 1px solid #F7931E;
+            background: rgba(255, 107, 53, 0.3);
+            color: #FF6B35;
+            border-color: #FF6B35;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
         }
 
         @media (max-width: 768px) {
