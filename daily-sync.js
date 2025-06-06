@@ -263,14 +263,58 @@ async function performDailySync() {
   }
 }
 
+// Track sync attempts to prevent infinite retries
+let lastSyncDate = null;
+let syncAttempted = false;
+
+// Wrapper function with retry logic
+async function performDailySyncWithRetry() {
+  const today = new Date().toDateString();
+  
+  // Reset attempt flag for new day
+  if (lastSyncDate !== today) {
+    syncAttempted = false;
+    lastSyncDate = today;
+  }
+  
+  // Skip if already attempted today
+  if (syncAttempted) {
+    console.log('Daily sync already attempted today - skipping');
+    return;
+  }
+  
+  try {
+    await performDailySync();
+    syncAttempted = true;
+    console.log('✅ Daily sync completed successfully');
+  } catch (error) {
+    console.error('❌ Daily sync failed on primary attempt:', error.message);
+    
+    // Schedule retry in 30 minutes
+    console.log('⏳ Scheduling retry in 30 minutes...');
+    setTimeout(async () => {
+      try {
+        console.log('🔄 Attempting daily sync retry...');
+        await performDailySync();
+        syncAttempted = true;
+        console.log('✅ Daily sync retry completed successfully');
+      } catch (retryError) {
+        console.error('❌ Daily sync retry also failed:', retryError.message);
+        syncAttempted = true; // Prevent further attempts today
+        console.log('⚠️ Daily sync failed twice - will retry tomorrow');
+      }
+    }, 30 * 60 * 1000); // 30 minutes
+  }
+}
+
 // Schedule daily sync at 00:00 UTC
 export function startDailySync() {
-  // Schedule at 00:00 UTC daily
-  cron.schedule('0 0 * * *', performDailySync, {
+  // Schedule at 00:00 UTC daily with retry logic
+  cron.schedule('0 0 * * *', performDailySyncWithRetry, {
     timezone: "UTC"
   });
   
-  console.log('⏰ Daily sync scheduled for 00:00 UTC');
+  console.log('⏰ Daily sync scheduled for 00:00 UTC (with 30min retry on failure)');
 }
 
 // Manual trigger for testing
