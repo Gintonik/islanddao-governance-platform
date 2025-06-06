@@ -771,6 +771,7 @@
             
             console.log('Wallet connected:', publicKey);
             document.getElementById('connectWalletBtn').textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
+            loadUserNfts();
             alert(`Connected to ${wallet.name}`);
             
         } catch (error) {
@@ -778,6 +779,44 @@
             alert(`Failed to connect: ${error.message}`);
         }
     };
+
+    // NFT loading function from verified citizen map
+    async function loadUserNfts() {
+        const walletBtn = document.getElementById('connectWalletBtn');
+        const publicKey = walletBtn?.textContent;
+        
+        if (!publicKey || publicKey === 'Connect Wallet') {
+            console.log('No wallet connected, skipping NFT loading');
+            return;
+        }
+
+        try {
+            console.log('Loading NFTs for wallet:', publicKey);
+            
+            const response = await fetch(`/api/wallet-nfts?wallet=${publicKey}`);
+            console.log('NFT API response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('NFT API error response:', errorText);
+                throw new Error(`Failed to fetch NFTs: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('NFT API result:', result);
+            
+            const walletNfts = result.nfts || result || [];
+            console.log('Parsed NFTs:', walletNfts);
+            
+            if (walletNfts.length === 0) {
+                console.log('No IslandDAO PERKS Found');
+            } else {
+                console.log(`${walletNfts.length} IslandDAO PERKS Found`);
+            }
+        } catch (error) {
+            console.error('Error loading user NFTs:', error);
+        }
+    }
 
     function closeWalletModal() {
         const modal = document.getElementById('walletModal');

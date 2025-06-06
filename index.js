@@ -167,9 +167,9 @@ app.get('/api/nfts', async (req, res) => {
 });
 
 // Wallet NFTs endpoint
-app.get('/api/wallet-nfts/:walletAddress', async (req, res) => {
+app.get('/api/wallet-nfts', async (req, res) => {
   try {
-    const { walletAddress } = req.params;
+    const { wallet: walletAddress } = req.query;
     
     const result = await pool.query(
       'SELECT nft_metadata FROM citizens WHERE wallet = $1 AND nft_metadata IS NOT NULL',
