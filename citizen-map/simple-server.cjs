@@ -126,19 +126,26 @@ app.get('/api/citizens', async (req, res) => {
     const result = await pool.query('SELECT * FROM citizens ORDER BY native_governance_power DESC NULLS LAST');
     const citizens = result.rows;
     
-    // Add NFT data and governance power for each citizen
-    const citizensWithNfts = await Promise.all(citizens.map(async (citizen) => {
-      const nfts = await fetchWalletNFTs(citizen.wallet);
-      const nftMetadata = {};
-      const nftIds = [];
+    // Add NFT data from stored database records
+    const citizensWithNfts = citizens.map(citizen => {
+      let nftIds = [];
+      let nftMetadata = {};
       
-      nfts.forEach(nft => {
-        nftIds.push(nft.mint);
-        nftMetadata[nft.mint] = {
-          name: nft.name,
-          image: nft.image
-        };
-      });
+      // Parse stored NFT metadata from database
+      if (citizen.nft_metadata) {
+        try {
+          const storedNfts = JSON.parse(citizen.nft_metadata);
+          storedNfts.forEach(nft => {
+            nftIds.push(nft.mint);
+            nftMetadata[nft.mint] = {
+              name: nft.name,
+              image: nft.image
+            };
+          });
+        } catch (error) {
+          console.error(`Error parsing NFT metadata for ${citizen.nickname}:`, error);
+        }
+      }
       
       // Use live database governance power values
       return {
@@ -146,7 +153,7 @@ app.get('/api/citizens', async (req, res) => {
         nfts: nftIds,
         nftMetadata: nftMetadata
       };
-    }));
+    });
     
     res.json(citizensWithNfts);
   } catch (error) {
