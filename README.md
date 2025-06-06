@@ -2,9 +2,53 @@
 
 A sophisticated Solana blockchain governance platform that provides real-time VSR (Voter Stake Registry) power calculations and interactive citizen mapping for decentralized autonomous organizations.
 
+## 🔒 Security Features
+
+### Cryptographic Signature Verification
+All pin updates and state changes require cryptographic signature verification using Ed25519:
+- **Pin Hijacking Protection**: Existing citizens must provide valid wallet signatures to move pins
+- **Time-Limited Verification**: Messages expire after 5 minutes to prevent replay attacks
+- **Unique Nonces**: Each verification uses a unique nonce to prevent signature reuse
+- **Audit Logging**: All pin operations logged with IP addresses and timestamps
+
+### Authentication Flow
+```
+1. User requests pin update → Generate verification message
+2. Wallet signs message → Cryptographic verification
+3. Valid signature → Action authorized & logged
+4. Invalid/expired → Request blocked with security log
+```
+
+## 🔄 Daily Sync System
+
+### Automated Governance Maintenance
+The platform runs automated daily synchronization at 00:00 UTC with intelligent retry mechanisms:
+
+**Primary Process:**
+- Verifies all 27 citizens against live blockchain data
+- Updates governance power from VSR program accounts
+- Removes citizens with 0 PERKS NFTs (with archival)
+- Updates fallback JSON for system resilience
+
+**Retry Logic:**
+- 30-minute retry on primary failure
+- One retry per day maximum
+- Complete error logging and audit trail
+- Automatic recovery from transient issues
+
+### Data Validation Process
+```
+For Each Citizen:
+1. NFT Ownership Check → API: /api/wallet-nfts?wallet={address}
+2. Governance Power Check → API: /api/governance-power?wallet={address}
+3. Update Database → citizens table (governance power fields)
+4. Archive Removed → archived_citizens table (if 0 NFTs)
+5. Export JSON → data/native-governance-power.json (fallback)
+```
+
 ## 🏗️ Architecture Overview
 
-This platform consists of three core components working in harmony:
+This platform consists of four core components working in harmony:
 
 ### 1. VSR Governance Power Calculator (`vsr-api-server.js`)
 The heart of the system - a production-grade calculator that interfaces directly with Solana's VSR program to extract authentic governance power from blockchain state.
@@ -37,14 +81,22 @@ A full-featured mapping interface that visualizes governance participation geogr
 - NFT collection verification and display
 - Wallet signature verification for pin creation
 
-### 3. Database Synchronization System
-Automated daily sync maintaining data integrity between blockchain state and application database.
+### 3. Daily Synchronization System (`daily-sync.js`)
+Automated daily maintenance ensuring data integrity between blockchain state and application database.
 
 **Sync Process:**
-- `complete-data-sync.cjs` - Main synchronization script
-- Fetches fresh governance data for all registered citizens
-- Updates PostgreSQL database with current blockchain state
-- Maintains historical governance power tracking
+- Scheduled execution at 00:00 UTC with 30-minute retry
+- Validates NFT ownership for all citizens via Helius API
+- Updates governance power from live VSR blockchain data
+- Archives removed citizens for audit trail
+- Exports updated JSON fallback file
+
+### 4. Security Layer (`index.js`)
+Production-grade security protecting against unauthorized pin manipulation:
+- Ed25519 signature verification for all state changes
+- Time-limited authentication messages (5-minute expiry)
+- Comprehensive audit logging with IP tracking
+- Transaction rollback on security failures
 
 ## 🛠️ Technical Implementation
 
@@ -68,16 +120,29 @@ const governancePower = basePower * multiplier;
 ### Database Schema
 
 **Citizens Table:**
-- Wallet address (primary key)
-- Geographic coordinates (lat/lng)
-- Governance power metrics
-- NFT collection references
-- Profile metadata
+- `wallet` (primary key) - Solana wallet address
+- `lat`, `lng` - Geographic coordinates for map display
+- `native_governance_power` - VSR voting power from deposits
+- `delegated_governance_power` - Power delegated from others
+- `total_governance_power` - Combined governance power
+- `primary_nft`, `pfp_nft` - Selected PERKS NFT references
+- Profile metadata (nickname, bio, social handles)
 
-**NFT Integration:**
-- Collection verification against specific program IDs
-- Metadata fetching via Metaplex standards
-- Image URL validation and caching
+**Archived Citizens Table:**
+- Complete citizen data backup before removal
+- `removal_reason` - Why citizen was archived
+- `removal_date` - Timestamp of archival
+- `original_created_at` - Original join date
+
+**Security Logs Table:**
+- Audit trail for all pin operations
+- IP addresses, user agents, timestamps
+- Signature verification results
+
+**Fallback Systems:**
+- `data/native-governance-power.json` - Governance power cache
+- Timestamped backup files for recovery
+- Transaction rollback on failures
 
 ### Wallet Integration
 
@@ -121,14 +186,17 @@ PORT=3001
 ### Running the Application
 
 ```bash
-# Start the VSR API server
-npm run start:api
+# Start the production server (includes daily sync scheduler)
+node index.js
 
-# Start the citizen map interface (separate terminal)
-npm run start:map
+# Start the VSR API server (separate terminal)
+node vsr-api-server.js
 
-# Run daily sync (automated via cron)
-npm run sync
+# Manual daily sync trigger (for testing)
+curl -X POST http://localhost:5000/api/sync-governance-power
+
+# Check system health
+curl http://localhost:5000/health
 ```
 
 ## 📊 API Reference
@@ -177,17 +245,35 @@ The platform interfaces with Solana's official VSR program (`vsr2nfGVNHmSY8uxoBG
 ### Delegation Handling
 Processes SPL Governance TokenOwnerRecord accounts to calculate delegated voting power from other wallets.
 
+## 🛡️ Security & Reliability
+
+### Fallback Mechanisms
+- **JSON Backup System**: Automatic timestamped backups before any data changes
+- **Transaction Rollbacks**: Complete database rollback on any sync failure
+- **Citizen Archival**: Soft deletion with full recovery capability
+- **API Error Handling**: Citizens preserved on API failures
+
+### Security Monitoring
+- **Signature Verification**: Ed25519 cryptographic verification for all pin updates
+- **Audit Logging**: Complete trail of all operations with IP tracking
+- **Rate Limiting**: Protection against API abuse
+- **Time-based Expiry**: 5-minute message expiration prevents replay attacks
+
 ## 🗄️ Data Flow
 
 ```
 Solana Blockchain → VSR Calculator → PostgreSQL → Citizen Map
                                  ↓
-                            Daily Sync Process
+                     Daily Sync (00:00 UTC + 30min retry)
+                                 ↓
+                     JSON Backup → Archive → Update
 ```
 
 1. **Real-time Queries**: Direct blockchain queries for immediate governance power
 2. **Database Cache**: Optimized queries for map display and historical tracking
-3. **Sync Process**: Nightly updates ensuring data consistency
+3. **Daily Sync**: Automated nightly updates with intelligent retry
+4. **Security Layer**: Cryptographic verification for all state changes
+5. **Fallback Systems**: JSON cache and archived data for recovery
 
 ## 🔧 Development Notes
 
@@ -209,15 +295,17 @@ Solana Blockchain → VSR Calculator → PostgreSQL → Citizen Map
 ## 📁 Project Structure
 
 ```
-├── vsr-api-server.js          # Core governance calculator
-├── complete-data-sync.cjs     # Daily synchronization
+├── index.js                   # Production server with security layer
+├── vsr-api-server.js          # Core governance calculator (LOCKED)
+├── daily-sync.js              # Automated daily synchronization
 ├── citizen-map/               # Interactive map interface
 │   ├── verified-citizen-map.html
 │   ├── collection.html
 │   ├── simple-wallet.js       # Universal wallet adapter
-│   └── api-routes.js          # Database integration
-├── governance-sdk-local/      # Solana governance SDK
-├── data/                      # Governance datasets
+│   └── verifyWallet.js        # Cryptographic verification
+├── data/                      # Governance datasets & backups
+│   ├── native-governance-power.json
+│   └── native-governance-power-backup-*.json
 └── archive/                   # Legacy and experimental code
 ```
 
