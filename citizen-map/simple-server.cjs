@@ -17,14 +17,48 @@ app.use(express.json());
 
 
 
-// Serve the main map
+// Comprehensive route handling to prevent navigation breaks
 app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
 });
 
-// Serve the collection page
+// Primary collection route
 app.get('/collection', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'collection.html'));
+});
+
+// Alternative routes for the citizen map (prevent 404s)
+app.get('/verified-citizen-map', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
+});
+
+app.get('/verified-map', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
+});
+
+app.get('/map', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
+});
+
+app.get('/citizen-map', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
+});
+
+// Alternative routes for collection page (prevent 404s)
+app.get('/nfts', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'collection.html'));
+});
+
+app.get('/perks', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'collection.html'));
+});
+
+app.get('/collection.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'collection.html'));
+});
+
+app.get('/verified-citizen-map.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'verified-citizen-map.html'));
 });
 
 // Function to fetch single NFT metadata using Helius API
