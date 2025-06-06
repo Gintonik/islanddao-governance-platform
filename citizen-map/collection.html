@@ -568,15 +568,129 @@
   </div>
 
   <!-- Wallet Connection Modal -->
-  <div class="modal-overlay" id="wallet-modal-overlay">
-      <div class="modal">
-          <div class="modal-header">
-              <h2 class="modal-title">Connect Wallet</h2>
-              <button class="close-btn" onclick="closeWalletModal()">&times;</button>
+  <div id="wallet-modal-overlay" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      backdrop-filter: blur(8px);
+  ">
+      <div style="
+          background: #1a1a1a;
+          border-radius: 16px;
+          width: 400px;
+          max-width: 90vw;
+          padding: 24px;
+          border: 1px solid #333;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      ">
+          <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 24px;
+              border-bottom: 1px solid #333;
+              padding-bottom: 16px;
+          ">
+              <h2 style="
+                  margin: 0;
+                  color: white;
+                  font-size: 20px;
+                  font-weight: 600;
+              ">Connect Wallet</h2>
+              <button onclick="closeWalletModal()" style="
+                  background: none;
+                  border: none;
+                  color: #888;
+                  font-size: 24px;
+                  cursor: pointer;
+                  padding: 4px;
+                  border-radius: 4px;
+                  transition: all 0.2s ease;
+              " onmouseover="this.style.color='white'; this.style.background='#333'" onmouseout="this.style.color='#888'; this.style.background='none'">×</button>
           </div>
           
-          <div class="wallet-grid" id="wallet-list">
-              <!-- Wallets will be populated here -->
+          <div id="wallet-list" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Phantom -->
+              <button onclick="connectSpecificWallet('phantom')" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  width: 100%;
+                  padding: 16px;
+                  background: #2a2a2a;
+                  border: 1px solid #444;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                  font-family: inherit;
+                  color: white;
+                  font-size: 16px;
+              " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                      <img src="./phantom-icon.jpeg" alt="Phantom" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
+                      <div style="text-align: left;">
+                          <div style="font-weight: 600; margin-bottom: 4px;">Phantom</div>
+                      </div>
+                  </div>
+                  <span id="phantom-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
+              </button>
+              
+              <!-- Solflare -->
+              <button onclick="connectSpecificWallet('solflare')" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  width: 100%;
+                  padding: 16px;
+                  background: #2a2a2a;
+                  border: 1px solid #444;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                  font-family: inherit;
+                  color: white;
+                  font-size: 16px;
+              " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                      <img src="./solflare-icon.jpeg" alt="Solflare" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
+                      <div style="text-align: left;">
+                          <div style="font-weight: 600; margin-bottom: 4px;">Solflare</div>
+                      </div>
+                  </div>
+                  <span id="solflare-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
+              </button>
+              
+              <!-- Backpack -->
+              <button onclick="connectSpecificWallet('backpack')" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  width: 100%;
+                  padding: 16px;
+                  background: #2a2a2a;
+                  border: 1px solid #444;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                  font-family: inherit;
+                  color: white;
+                  font-size: 16px;
+              " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                      <img src="./backpack-icon.jpeg" alt="Backpack" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
+                      <div style="text-align: left;">
+                          <div style="font-weight: 600; margin-bottom: 4px;">Backpack</div>
+                      </div>
+                  </div>
+                  <span id="backpack-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
+              </button>
           </div>
       </div>
   </div>
@@ -624,16 +738,11 @@
     let simpleWallet = null;
     let walletVerifier = null;
     
-    // Wallet adapter functions from citizen map
+    // Wallet modal functions
     function showWalletModal() {
       const modal = document.getElementById('wallet-modal-overlay');
       if (modal) {
         modal.style.display = 'flex';
-      }
-      
-      // Initialize SimpleWallet modal
-      if (simpleWallet) {
-        simpleWallet.showModal();
       }
     }
     
@@ -642,11 +751,56 @@
       if (modal) {
         modal.style.display = 'none';
       }
-      
-      if (simpleWallet) {
-        simpleWallet.closeModal();
-      }
     }
+    
+    // Wallet connection functions from citizen map
+    window.connectSpecificWallet = async function(walletType) {
+      const walletConfigs = {
+        phantom: {
+          name: 'Phantom',
+          provider: () => window.phantom?.solana,
+          detect: () => window.phantom?.solana?.isPhantom
+        },
+        solflare: {
+          name: 'Solflare',
+          provider: () => window.solflare,
+          detect: () => window.solflare?.isSolflare
+        },
+        backpack: {
+          name: 'Backpack',
+          provider: () => window.backpack,
+          detect: () => window.backpack?.isBackpack
+        }
+      };
+
+      const config = walletConfigs[walletType];
+      if (!config) {
+        console.error('Unknown wallet type:', walletType);
+        return;
+      }
+
+      if (!config.detect()) {
+        alert(`Please install ${config.name} wallet extension`);
+        return;
+      }
+
+      try {
+        const provider = config.provider();
+        const response = await provider.connect();
+        const publicKey = response.publicKey.toString();
+        
+        currentWallet = publicKey;
+        updateWalletUI();
+        closeWalletModal();
+        loadUserNfts();
+        
+        console.log(`${config.name} connected:`, publicKey);
+        
+      } catch (error) {
+        console.error(`${config.name} connection failed:`, error);
+        alert(`Failed to connect to ${config.name}. Please try again.`);
+      }
+    };
     
     function updateWalletUI() {
       console.log('updateWalletUI called, currentWallet:', currentWallet);
