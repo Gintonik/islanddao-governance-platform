@@ -778,41 +778,63 @@
       });
     });
     
-    // Direct NFT fetching from citizens API
+    // Production-safe NFT fetching with comprehensive error handling
     async function fetchInitialNfts() {
       setLoading(true);
       
       try {
-        const response = await fetch(API_URL);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        const response = await fetch(API_URL, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch citizens: ${response.status}`);
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
         
         const citizens = await response.json();
+        
+        if (!Array.isArray(citizens)) {
+          throw new Error('Invalid API response format');
+        }
+        
         allNfts = [];
+        let processedCount = 0;
         
         citizens.forEach(citizen => {
-          if (citizen.nfts && Array.isArray(citizen.nfts) && citizen.nftMetadata) {
+          if (citizen && citizen.nfts && Array.isArray(citizen.nfts) && citizen.nftMetadata) {
             citizen.nfts.forEach(nftMint => {
-              const nftMeta = citizen.nftMetadata[nftMint];
-              if (nftMeta) {
-                allNfts.push({
-                  id: nftMint,
-                  name: nftMeta.name,
-                  content: {
-                    metadata: { name: nftMeta.name },
-                    links: { image: nftMeta.image }
-                  },
-                  owner_wallet: citizen.wallet,
-                  owner_nickname: citizen.nickname || 'Unknown Citizen'
-                });
+              if (nftMint && citizen.nftMetadata[nftMint]) {
+                const nftMeta = citizen.nftMetadata[nftMint];
+                if (nftMeta && nftMeta.name && nftMeta.image) {
+                  allNfts.push({
+                    id: nftMint,
+                    name: nftMeta.name,
+                    content: {
+                      metadata: { name: nftMeta.name },
+                      links: { image: nftMeta.image }
+                    },
+                    owner_wallet: citizen.wallet || 'Unknown',
+                    owner_nickname: citizen.nickname || 'Unknown Citizen'
+                  });
+                  processedCount++;
+                }
               }
             });
           }
         });
         
-        if (allNfts && allNfts.length > 0) {
+        console.log(`Processed ${processedCount} NFTs from ${citizens.length} citizens`);
+        
+        if (allNfts.length > 0) {
           displayedNfts = allNfts.slice(0, PER_PAGE);
           renderNfts(displayedNfts);
           
@@ -820,12 +842,20 @@
             loadAllButton.style.display = 'none';
           }
         } else {
-          nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">No NFTs found</div>';
+          nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No PERKS NFTs available</div>';
         }
         
       } catch (error) {
-        console.error('NFT fetch error:', error);
-        nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">Error loading NFTs. Please refresh.</div>';
+        console.error('Collection fetch error:', error);
+        
+        let errorMessage = 'Unable to load collection';
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timeout - please try again';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error - check connection';
+        }
+        
+        nftGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">${errorMessage}</div>`;
       } finally {
         setLoading(false);
       }

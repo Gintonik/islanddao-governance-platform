@@ -42,18 +42,44 @@ app.get('/map', (req, res) => {
   res.sendFile(path.join(__dirname, 'citizen-map', 'verified-citizen-map.html'));
 });
 
-// API Routes
+// API Routes with production error handling
 app.get('/api/citizens', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM citizens ORDER BY nickname');
-    const citizens = result.rows.map(citizen => ({
-      ...citizen,
-      nfts: citizen.nft_metadata ? JSON.parse(citizen.nft_metadata) : []
-    }));
+    const citizens = result.rows.map(citizen => {
+      let nftIds = [];
+      let nftMetadata = {};
+      
+      if (citizen.nft_metadata) {
+        try {
+          const storedNfts = JSON.parse(citizen.nft_metadata);
+          if (Array.isArray(storedNfts)) {
+            storedNfts.forEach(nft => {
+              if (nft.mint) {
+                nftIds.push(nft.mint);
+                nftMetadata[nft.mint] = {
+                  name: nft.name || 'Unknown NFT',
+                  image: nft.image || '/placeholder-nft.png'
+                };
+              }
+            });
+          }
+        } catch (parseError) {
+          console.error(`NFT metadata parse error for ${citizen.nickname}:`, parseError);
+        }
+      }
+      
+      return {
+        ...citizen,
+        nfts: nftIds,
+        nftMetadata: nftMetadata
+      };
+    });
+    
     res.json(citizens);
   } catch (error) {
     console.error('Citizens API error:', error);
-    res.status(500).json({ error: 'Failed to fetch citizens' });
+    res.status(500).json({ error: 'Database connection failed', citizens: [] });
   }
 });
 
@@ -97,13 +123,42 @@ app.get('/api/nfts', async (req, res) => {
   }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Comprehensive health check
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    await pool.query('SELECT 1');
+    res.json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      port: port
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'unhealthy', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: 'Database connection failed'
+    });
+  }
+});
+
+// Graceful error handling
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`✅ Production server running on port ${port}`);
+  console.log(`🌐 Available at: http://0.0.0.0:${port}`);
+  console.log(`📊 Health check: http://0.0.0.0:${port}/health`);
 });
 
 module.exports = app;
