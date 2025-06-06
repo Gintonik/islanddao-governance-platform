@@ -1,12 +1,8 @@
 /**
- * Deployment Entry Point
- * Direct require of the citizen map server for production deployment
+ * Deployment Entry Point - ES Module format
  */
 
-const path = require('path');
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
-console.log('Starting IslandDAO Governance Platform...');
-
-// Set working directory and require the server directly
-process.chdir(path.join(__dirname, 'citizen-map'));
-require('./simple-server.cjs');
+require('./index.cjs');
