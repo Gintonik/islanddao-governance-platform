@@ -10,50 +10,14 @@ const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '088dfd59-6d2e-4695-a42a-2e
 const PERKS_COLLECTION_ID = '5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8';
 
 /**
- * Fetch NFTs for a wallet from Helius API
+ * Fetch NFTs for a wallet using the working internal API
  */
 async function fetchWalletNFTs(walletAddress) {
     try {
-        const response = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`, {
-            jsonrpc: "2.0",
-            id: "get-assets",
-            method: "getAssetsByOwner",
-            params: {
-                ownerAddress: walletAddress,
-                page: 1,
-                limit: 1000
-            }
-        });
-
-        if (response.data && response.data.result && response.data.result.items) {
-            // Filter for PERKS collection NFTs only
-            const perksNfts = response.data.result.items.filter(nft => {
-                return nft.grouping && nft.grouping.some(group => 
-                    group.group_key === 'collection' && 
-                    group.group_value === PERKS_COLLECTION_ID
-                );
-            });
-
-            return perksNfts.map(nft => {
-                // Fix Irys gateway URLs for reliable image loading
-                let imageUrl = nft.content?.links?.image || nft.content?.files?.[0]?.uri || '';
-                if (imageUrl.includes('gateway.irys.xyz')) {
-                    imageUrl = imageUrl.replace('gateway.irys.xyz', 'uploader.irys.xyz');
-                }
-                
-                return {
-                    mint: nft.id,
-                    name: nft.content?.metadata?.name || 'PERKS NFT',
-                    image: imageUrl,
-                    metadata: {
-                        name: nft.content?.metadata?.name,
-                        symbol: nft.content?.metadata?.symbol,
-                        description: nft.content?.metadata?.description,
-                        image: imageUrl,
-                        attributes: nft.content?.metadata?.attributes || []
-                    }
-                };
-            });
+        const response = await axios.get(`http://localhost:5000/api/wallet-nfts?wallet=${walletAddress}`);
+        
+        if (response.data && response.data.nfts) {
+            return response.data.nfts;
         }
         return [];
     } catch (error) {
