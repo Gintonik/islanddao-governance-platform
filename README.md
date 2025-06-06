@@ -1,112 +1,142 @@
-# IslandDAO Governance Intelligence Platform
+# PERKS Citizen Map & Governance Platform
 
-A sophisticated Solana blockchain governance platform that provides real-time VSR (Voter Stake Registry) power calculations and interactive citizen mapping for decentralized autonomous organizations.
+An interactive Solana-based platform for PERKS NFT collection holders featuring real-time governance power tracking and geographic citizen mapping.
 
-## 🏗️ Architecture Overview
+## Overview
 
-This platform consists of three core components working in harmony:
+This platform enables PERKS NFT holders to:
+- Place themselves on an interactive world map
+- Display their PERKS NFT collection
+- Track real-time VSR governance power
+- Participate in decentralized governance
 
-### 1. VSR Governance Power Calculator (`vsr-api-server.js`)
-The heart of the system - a production-grade calculator that interfaces directly with Solana's VSR program to extract authentic governance power from blockchain state.
+## Features
 
-**Technical Deep Dive:**
-- Performs comprehensive account scanning across all VSR program accounts (dataSize: 2728 bytes)
-- Implements proper VSR multiplier calculations based on lockup duration and time decay
-- Processes deposit entries using Anchor IDL deserialization
-- Handles both native VSR deposits and SPL Governance delegations
-- Filters stale/withdrawn deposits using account state analysis
-
-**Key Features:**
-- Real-time blockchain data fetching via Helius RPC
-- Anchor-based program interaction for type safety
-- Lockup multiplier calculations with time-based decay
-- Comprehensive error handling and validation
-
-### 2. Interactive Citizen Map (`citizen-map/`)
-A full-featured mapping interface that visualizes governance participation geographically.
-
-**Components:**
-- `verified-citizen-map.html` - Main interactive map interface
-- `collection.html` - NFT collection browser with governance integration
-- `simple-wallet.js` - Universal Solana wallet connector supporting 15+ wallets
-- `api-routes.js` - Database integration layer with PostgreSQL
-
-**Map Features:**
-- Geographic pin placement with anti-collision algorithms
+### Interactive Citizen Map
+- Geographic visualization of PERKS community members
 - Real-time governance power display
-- NFT collection verification and display
-- Wallet signature verification for pin creation
+- NFT collection browsing and verification
+- Secure wallet-based authentication
 
-### 3. Database Synchronization System
-Automated daily sync maintaining data integrity between blockchain state and application database.
+### VSR Governance Integration
+- Real-time governance power calculations
+- Support for locked and vesting token deposits
+- Integration with Solana's Voter Stake Registry
+- Automated daily data synchronization
 
-**Sync Process:**
-- `complete-data-sync.cjs` - Main synchronization script
-- Fetches fresh governance data for all registered citizens
-- Updates PostgreSQL database with current blockchain state
-- Maintains historical governance power tracking
+### NFT Collection Support
+- PERKS collection verification and display
+- Dynamic image loading from blockchain metadata
+- Collection statistics and analytics
 
 ## 🛠️ Technical Implementation
+
+### Core Architecture
+
+The platform consists of three integrated components:
+
+1. **VSR Governance Calculator** (`vsr-api-server.js`)
+   - Real-time blockchain data extraction from Solana VSR program
+   - Production-grade governance power calculations
+   - Support for all lockup types (None, Constant, Vesting)
+   - Handles both native deposits and delegated governance
+
+2. **Interactive Map Interface** (`index.js`)
+   - Geographic citizen visualization with anti-collision positioning
+   - Real-time NFT collection verification
+   - Secure wallet signature verification for pin placement
+   - PostgreSQL database integration for citizen data
+
+3. **Daily Synchronization System** (`daily-sync.js`)
+   - Automated verification of NFT ownership
+   - Governance power updates from blockchain state
+   - Data integrity maintenance with archival system
+   - Runs at 00:00 UTC with retry mechanisms
 
 ### VSR Power Calculation Methodology
 
 The governance power calculation follows Solana's VSR specification:
 
-1. **Account Discovery**: Scan all VSR program accounts using `getProgramAccounts` with authority filters
-2. **Deposit Parsing**: Extract deposit entries from account data using proper offset calculations
-3. **Multiplier Application**: Apply time-based multipliers for locked deposits
-4. **Aggregation**: Sum all valid deposits accounting for different lockup types
+1. **Account Discovery**: Comprehensive scanning of VSR program accounts using targeted memcmp filters
+2. **Deposit Parsing**: Extract and deserialize deposit entries using Anchor IDL structures
+3. **Multiplier Application**: Calculate time-based bonuses for locked deposits with decay functions
+4. **Power Aggregation**: Sum all valid deposits accounting for lockup states and delegation
 
-**Multiplier Formula:**
+**Lockup Multiplier Logic:**
 ```javascript
-// VSR multiplier calculation follows Solana's specification
-const basePower = depositAmount;
-const timeBonus = calculateLockupBonus(lockupType, duration, timeRemaining);
-const governancePower = basePower * multiplier;
+function calculateVSRMultiplier(lockup, currentTime) {
+  if (lockup.kind.none) return 1.0;
+  
+  const remainingTime = lockup.endTs - currentTime;
+  if (remainingTime <= 0) return 1.0;
+  
+  const totalDuration = lockup.endTs - lockup.startTs;
+  const timeProgress = remainingTime / totalDuration;
+  
+  return 1.0 + timeProgress; // Linear decay bonus
+}
 ```
 
-### Database Schema
+### Database Architecture
 
 **Citizens Table:**
-- Wallet address (primary key)
-- Geographic coordinates (lat/lng)
-- Governance power metrics
-- NFT collection references
-- Profile metadata
+```sql
+CREATE TABLE citizens (
+  wallet VARCHAR(255) PRIMARY KEY,
+  nickname VARCHAR(255),
+  lat NUMERIC(10,8),
+  lng NUMERIC(11,8),
+  image_url TEXT,
+  nft_metadata JSONB,
+  native_governance_power NUMERIC(20,6),
+  delegated_governance_power NUMERIC(20,6),
+  total_governance_power NUMERIC(20,6),
+  bio TEXT,
+  twitter_handle VARCHAR(255),
+  telegram_handle VARCHAR(255),
+  discord_handle VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
 
 **NFT Integration:**
-- Collection verification against specific program IDs
-- Metadata fetching via Metaplex standards
-- Image URL validation and caching
+- Collection verification against PERKS collection ID: `5XSXoWkcmynUSiwoi7XByRDiV9eomTgZQywgWrpYzKZ8`
+- Metadata fetching via Helius API with proper Irys gateway handling
+- Dynamic image loading with fallback mechanisms
 
 ### Wallet Integration
 
 Universal wallet adapter supporting:
-- Phantom, Solflare, Backpack, Coinbase
-- Hardware wallets (Ledger, Trezor)
-- Browser extension wallets
-- Mobile wallet connections via WalletConnect
+- **Browser Extensions**: Phantom, Solflare, Backpack, Coinbase, Exodus, Glow
+- **Hardware Wallets**: Ledger, Trezor with transaction fallback for message signing
+- **Mobile Wallets**: Solana Mobile, Trust Wallet, Math Wallet
+- **Web Wallets**: Slope, Sollet, Solong, Clover
+
+**Security Features:**
+- Ed25519 signature verification for all pin placements
+- Nonce-based message generation to prevent replay attacks
+- Hardware wallet compatibility with transaction-based verification fallback
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+
 - PostgreSQL database
-- Solana RPC endpoint (Helius recommended)
+- Helius API access for Solana blockchain data
 
 ### Installation
 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd islanddao-governance-platform
+cd perks-citizen-map
 
 # Install dependencies
 npm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your configuration
+# Configure your database and API credentials
 ```
 
 ### Configuration
@@ -114,21 +144,51 @@ cp .env.example .env
 **Required Environment Variables:**
 ```env
 DATABASE_URL=postgresql://username:password@localhost:5432/database
+HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=your_key
 HELIUS_API_KEY=your_helius_api_key
-PORT=3001
 ```
 
 ### Running the Application
 
 ```bash
-# Start the VSR API server
-npm run start:api
+# Start the production server (port 5000)
+node index.js
 
-# Start the citizen map interface (separate terminal)
-npm run start:map
+# Start the VSR API server (port 3001) - separate terminal
+node vsr-api-server.js
 
-# Run daily sync (automated via cron)
-npm run sync
+# The daily sync runs automatically at 00:00 UTC
+```
+
+### Database Setup
+
+```sql
+-- Create citizens table
+CREATE TABLE citizens (
+  wallet VARCHAR(255) PRIMARY KEY,
+  nickname VARCHAR(255),
+  lat NUMERIC(10,8),
+  lng NUMERIC(11,8),
+  image_url TEXT,
+  nft_metadata JSONB,
+  native_governance_power NUMERIC(20,6) DEFAULT 0,
+  delegated_governance_power NUMERIC(20,6) DEFAULT 0,
+  total_governance_power NUMERIC(20,6) DEFAULT 0,
+  bio TEXT,
+  twitter_handle VARCHAR(255),
+  telegram_handle VARCHAR(255),
+  discord_handle VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create archive table for removed citizens
+CREATE TABLE archived_citizens (
+  id SERIAL PRIMARY KEY,
+  wallet VARCHAR(255) NOT NULL,
+  nickname VARCHAR(255),
+  removal_reason TEXT,
+  removal_date TIMESTAMP DEFAULT NOW()
+);
 ```
 
 ## 📊 API Reference
@@ -157,88 +217,86 @@ GET /api/governance-power?wallet={address}
       }
     }
   ],
-  "source": "vsr_sdk"
+  "source": "vsr_calculation"
 }
+```
+
+### Citizen Map Endpoints
+```
+GET /api/citizens              # Get all citizens with metadata
+POST /api/save-citizen         # Add new citizen (requires signature)
+GET /api/wallet-nfts           # Get PERKS NFTs for wallet
+GET /api/governance-stats      # Get realm governance statistics
+```
+
+### NFT Collection Endpoint
+```
+GET /api/all-citizen-nfts      # Get aggregated NFT data
 ```
 
 ## 🏛️ Governance Integration
 
 ### VSR Program Interaction
-The platform interfaces with Solana's official VSR program (`vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ`) using:
+The platform interfaces with Solana's VSR program using:
 - Anchor framework for type-safe program calls
-- Custom IDL for proper data deserialization
-- Registrar-specific configuration handling
+- Production IDL for data deserialization
+- IslandDAO registrar configuration
+- Real-time account scanning and filtering
 
 ### Lockup Types Supported
 - **None**: 1x multiplier (unlocked tokens)
 - **Constant**: Fixed-time lockups with bonus multipliers
 - **Vesting**: Linear vesting schedules with time-decay bonuses
 
-### Delegation Handling
-Processes SPL Governance TokenOwnerRecord accounts to calculate delegated voting power from other wallets.
-
-## 🗄️ Data Flow
-
-```
-Solana Blockchain → VSR Calculator → PostgreSQL → Citizen Map
-                                 ↓
-                            Daily Sync Process
-```
-
-1. **Real-time Queries**: Direct blockchain queries for immediate governance power
-2. **Database Cache**: Optimized queries for map display and historical tracking
-3. **Sync Process**: Nightly updates ensuring data consistency
-
-## 🔧 Development Notes
-
-### Adding New Features
-1. All governance calculations must use the locked production calculator
-2. Database migrations should use PostgreSQL-compatible SQL
-3. New wallet types require updates to the universal adapter
-
-### Performance Considerations
-- VSR account scanning is compute-intensive (6000+ accounts per query)
-- Implement proper caching for frequently accessed data
-- Use connection pooling for database operations
-
-### Security Best Practices
-- Wallet signatures required for all state-changing operations
-- Input validation on all user-provided data
-- Rate limiting on API endpoints
+### Data Synchronization
+- **Real-time**: Direct blockchain queries for governance power
+- **Cached**: Optimized database queries for map display
+- **Daily Sync**: Automated verification at 00:00 UTC
 
 ## 📁 Project Structure
 
 ```
-├── vsr-api-server.js          # Core governance calculator
-├── complete-data-sync.cjs     # Daily synchronization
-├── citizen-map/               # Interactive map interface
-│   ├── verified-citizen-map.html
-│   ├── collection.html
-│   ├── simple-wallet.js       # Universal wallet adapter
-│   └── api-routes.js          # Database integration
-├── governance-sdk-local/      # Solana governance SDK
-├── data/                      # Governance datasets
-└── archive/                   # Legacy and experimental code
+├── index.js                   # Production server (port 5000)
+├── vsr-api-server.js          # VSR governance calculator (port 3001)
+├── daily-sync.js              # Daily synchronization system
+├── native-governance-calculator.js  # Production calculator core
+├── citizen-map/               # Map interface files
+│   ├── verified-citizen-map.html    # Main map interface
+│   ├── collection.html              # NFT collection browser
+│   ├── simple-wallet.js             # Universal wallet adapter
+│   └── verifyWallet.js              # Signature verification
+├── data/                      # Governance power datasets
+└── vsr_idl.json              # VSR program interface definition
 ```
 
-## 🚨 Production Notes
+## 🔧 Development Guidelines
 
-The VSR calculator (`vsr-api-server.js`) is locked in production mode. Any modifications to governance calculations should be thoroughly tested against known blockchain state before deployment.
+### Core Principles
+- All governance calculations use the production calculator
+- Database operations follow PostgreSQL best practices
+- Security through wallet signature verification
+- Real-time blockchain data integration
 
-**Critical Files - Do Not Modify:**
-- `vsr-api-server.js` - Production calculator
-- `vsr_idl.json` - VSR program interface definition
+### Performance Optimization
+- Connection pooling for database operations
+- Efficient VSR account scanning with targeted filters
+- Image URL optimization with Irys gateway handling
+- Anti-collision algorithms for map pin placement
 
-## 🤝 Contributing
+### Security Implementation
+- Ed25519 signature verification for citizen registration
+- Nonce-based message generation preventing replay attacks
+- Input validation on all user-provided data
+- Hardware wallet compatibility with transaction fallbacks
 
-When contributing to this codebase:
-1. Understand the VSR specification thoroughly
-2. Test against mainnet data before proposing changes
-3. Maintain compatibility with existing database schema
-4. Follow the established error handling patterns
+## 🚀 Deployment
 
-Built for the culture, by the culture. 🏴‍☠️
+The platform runs on two processes:
+1. **Main Server** (port 5000): Citizen map interface and database operations
+2. **VSR API Server** (port 3001): Real-time governance power calculations
+
+Daily synchronization ensures data integrity between blockchain state and application database.
 
 ---
 
-*This platform demonstrates advanced Solana development techniques including VSR integration, comprehensive wallet support, and real-time blockchain data processing. Use it as a reference for building sophisticated DAO governance tools.*
+*PERKS Citizen Map - Connecting the decentralized community through interactive governance visualization.*
