@@ -597,6 +597,9 @@
     </div>
   </div>
   
+  <script src="simple-wallet.js"></script>
+  <script src="verifyWallet.js"></script>
+  
   <script>
     // Constants and variables
     const API_URL = '/api/nfts';
@@ -631,116 +634,175 @@
       themeToggle.textContent = '☀️';
     }
 
-    // Wallet connection functionality
-    const walletBtn = document.getElementById('walletBtn');
-    const disconnectBtn = document.getElementById('disconnectBtn');
-    const walletModal = document.getElementById('walletModal');
-    let connectedWallet = null;
-    let walletProvider = null;
-
-    // Wallet connection with signature verification
-    async function connectWallet(walletType) {
-      try {
-        let wallet;
-        
-        if (walletType === 'phantom' && window.solana && window.solana.isPhantom) {
-          wallet = window.solana;
-        } else if (walletType === 'solflare' && window.solflare) {
-          wallet = window.solflare;
-        } else if (walletType === 'backpack' && window.backpack) {
-          wallet = window.backpack;
-        } else {
-          alert(`Please install ${walletType} wallet`);
-          return;
-        }
-
-        // Connect to wallet
-        const response = await wallet.connect();
-        const publicKey = response.publicKey.toString();
-        
-        // Request signature for verification
-        const timestamp = Date.now();
-        const message = `IslandDAO Citizen Map Verification\nTimestamp: ${timestamp}\nPlease sign this message to verify wallet ownership.`;
-        const encodedMessage = new TextEncoder().encode(message);
-        
-        const signature = await wallet.signMessage(encodedMessage);
-        
-        // Store wallet connection in localStorage for persistence
-        localStorage.setItem('connected_wallet', publicKey);
-        localStorage.setItem('wallet_type', walletType);
-        
-        connectedWallet = publicKey;
-        walletProvider = wallet;
-        
-        updateWalletUI();
-        walletModal.style.display = 'none';
-        
-      } catch (error) {
-        console.error('Wallet connection failed:', error);
-        alert('Wallet connection failed. Please try again.');
-      }
-    }
-
-    function disconnectWallet() {
-      if (walletProvider) {
-        walletProvider.disconnect();
-      }
-      // Clear localStorage
-      localStorage.removeItem('connected_wallet');
-      localStorage.removeItem('wallet_type');
+    // Global wallet variables (matching citizen map)
+    let currentWallet = null;
+    let walletNfts = [];
+    let simpleWallet = null;
+    let walletVerifier = null;
+    
+    // Wallet adapter functions from citizen map
+    function showWalletModal() {
+      const modal = document.getElementById('walletModal');
+      modal.style.display = 'flex';
       
-      connectedWallet = null;
-      walletProvider = null;
-      updateWalletUI();
+      // Initialize SimpleWallet modal
+      if (simpleWallet) {
+        simpleWallet.showModal();
+      }
     }
-
+    
+    function closeWalletModal() {
+      const modal = document.getElementById('walletModal');
+      modal.style.display = 'none';
+      
+      if (simpleWallet) {
+        simpleWallet.closeModal();
+      }
+    }
+    
     function updateWalletUI() {
-      const walletIcon = document.getElementById('walletIcon');
-      const walletText = document.getElementById('walletText');
+      console.log('updateWalletUI called, currentWallet:', currentWallet);
+      const walletBtn = document.getElementById('walletBtn');
       
-      if (connectedWallet) {
-        walletIcon.textContent = '🔗';
-        walletText.textContent = `${connectedWallet.slice(0, 4)}...${connectedWallet.slice(-4)}`;
-        walletBtn.classList.add('wallet-connected');
-        disconnectBtn.style.display = 'block';
-      } else {
-        walletIcon.textContent = '🔗';
-        walletText.textContent = 'Connect Wallet';
-        walletBtn.classList.remove('wallet-connected');
-        disconnectBtn.style.display = 'none';
-      }
-    }
-
-    // Check for existing wallet connection on page load
-    function checkExistingConnection() {
-      const savedWallet = localStorage.getItem('connected_wallet');
-      if (savedWallet) {
-        connectedWallet = savedWallet;
-        updateWalletUI();
-      }
-    }
-
-    function openWalletModal() {
-      if (connectedWallet) {
-        // If already connected, show wallet info or disconnect
+      if (!walletBtn) {
+        console.log('Missing wallet UI elements');
         return;
       }
-      walletModal.style.display = 'block';
+      
+      // Remove existing event listeners by cloning
+      const newWalletBtn = walletBtn.cloneNode(true);
+      walletBtn.parentNode.replaceChild(newWalletBtn, walletBtn);
+      
+      if (currentWallet) {
+        // Show connected state
+        console.log('Setting connected state');
+        newWalletBtn.textContent = 'Disconnect';
+        newWalletBtn.style.background = 'rgba(33, 232, 163, 0.2)';
+        newWalletBtn.style.borderColor = 'rgba(33, 232, 163, 0.5)';
+        newWalletBtn.style.color = '#21E8A3';
+        newWalletBtn.addEventListener('click', disconnectWallet);
+      } else {
+        // Show disconnected state
+        console.log('Setting disconnected state');
+        newWalletBtn.textContent = 'Connect Wallet';
+        newWalletBtn.style.background = '';
+        newWalletBtn.style.borderColor = '';
+        newWalletBtn.style.color = '';
+        newWalletBtn.addEventListener('click', showWalletModal);
+      }
+    }
+    
+    async function disconnectWallet() {
+      try {
+        if (simpleWallet && simpleWallet.isConnected()) {
+          await simpleWallet.disconnect();
+        }
+        
+        currentWallet = null;
+        walletNfts = [];
+        updateWalletUI();
+        console.log('Wallet disconnected');
+        
+      } catch (error) {
+        console.error('Disconnect failed:', error);
+        // Force disconnect even if provider fails
+        currentWallet = null;
+        walletNfts = [];
+        updateWalletUI();
+      }
+    }
+    
+    // Initialize wallet system (matching citizen map)
+    function initializeWalletAdapter() {
+      // Initialize SimpleWallet
+      simpleWallet = new SimpleWallet();
+      console.log('SimpleWallet initialized successfully');
+      
+      // Set up wallet event listeners
+      simpleWallet.on('connect', (data) => {
+        console.log('Wallet connected:', data);
+        currentWallet = data;
+        updateWalletUI();
+        loadUserNfts();
+      });
+      
+      simpleWallet.on('disconnect', () => {
+        console.log('Wallet disconnected');
+        currentWallet = null;
+        walletNfts = [];
+        updateWalletUI();
+      });
+      
+      updateWalletUI(); // Ensure initial UI state
+      
+      // Auto-connect if wallet was previously connected
+      const autoConnect = async () => {
+        if (simpleWallet.isConnected()) {
+          const publicKey = simpleWallet.getPublicKey();
+          if (publicKey) {
+            currentWallet = publicKey.toString();
+            console.log('Auto-reconnected wallet:', currentWallet);
+            updateWalletUI();
+            await loadUserNfts();
+          }
+        }
+      };
+      
+      // Check for auto-connect after a brief delay
+      setTimeout(autoConnect, 100);
+      
+      // Initialize wallet verifier
+      walletVerifier = new WalletVerifier({
+        apiBaseUrl: window.location.origin,
+        debug: false
+      });
+    }
+    
+    async function loadUserNfts() {
+      if (!currentWallet) {
+        console.log('No wallet connected');
+        return;
+      }
+      
+      try {
+        console.log('Loading NFTs for wallet:', currentWallet);
+        
+        const response = await fetch(`/api/wallet-nfts?wallet=${currentWallet}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const nftData = await response.json();
+        console.log('Raw NFT data:', nftData);
+        
+        // Parse NFTs if they're stored in the database format
+        if (Array.isArray(nftData)) {
+          walletNfts = nftData;
+        } else {
+          walletNfts = [];
+        }
+        
+        console.log('Parsed NFTs:', walletNfts);
+        
+        if (walletNfts.length === 0) {
+          console.log('No PERKS NFTs found in this wallet');
+        } else {
+          console.log(`Found ${walletNfts.length} PERKS NFT${walletNfts.length > 1 ? 's' : ''}`);
+        }
+        
+      } catch (error) {
+        console.error('Error loading user NFTs:', error);
+        walletNfts = [];
+      }
     }
 
-    function closeWalletModal() {
-      walletModal.style.display = 'none';
-    }
-
-    // Initialize the page
+    // Initialize the page (updated to match citizen map)
     document.addEventListener('DOMContentLoaded', () => {
-      checkExistingConnection(); // Check for persisted wallet connection
+      initializeWalletAdapter(); // Initialize wallet system first
       fetchInitialNfts();
       
       // Event listeners
       document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-      walletBtn.addEventListener('click', openWalletModal);
-      disconnectBtn.addEventListener('click', disconnectWallet);
       loadAllButton.addEventListener('click', loadAllNfts);
       searchButton.addEventListener('click', searchNfts);
       searchInput.addEventListener('keypress', (e) => {
