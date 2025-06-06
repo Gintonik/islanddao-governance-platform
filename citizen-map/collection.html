@@ -342,37 +342,30 @@
     .nft-grid {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      gap: 12px;
+      gap: 15px;
       margin-bottom: 40px;
       width: 100%;
-      min-height: 200px;
     }
 
-    @media (max-width: 1600px) {
+    @media (max-width: 1400px) {
       .nft-grid {
         grid-template-columns: repeat(6, 1fr);
       }
     }
 
-    @media (max-width: 1200px) {
-      .nft-grid {
-        grid-template-columns: repeat(5, 1fr);
-      }
-    }
-
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
       .nft-grid {
         grid-template-columns: repeat(4, 1fr);
       }
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 600px) {
       .nft-grid {
         grid-template-columns: repeat(3, 1fr);
       }
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 400px) {
       .nft-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -536,7 +529,7 @@
     
     <!-- Navigation -->
     <div class="nav-container" style="display: flex; gap: 6px; align-items: center;">
-      <a href="/verified-citizen-map" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Citizen Map</a>
+      <a href="/verified-map" style="color: #AFAFAF; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.color='#21E8A3'; this.style.background='rgba(33, 232, 163, 0.1)'" onmouseout="this.style.color='#AFAFAF'; this.style.background='transparent'">Citizen Map</a>
       <button id="themeToggle" class="nav-button" style="color: #AFAFAF; background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 10px; border-radius: 4px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">🌙</button>
     </div>
     
@@ -575,275 +568,38 @@
   </div>
 
   <!-- Wallet Connection Modal -->
-  <div id="walletModal" style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(8px);
-    ">
-        <div style="
-            background: #1a1a1a;
-            border-radius: 16px;
-            width: 400px;
-            max-width: 90vw;
-            padding: 24px;
-            border: 1px solid #333;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        ">
-            <div style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 24px;
-                border-bottom: 1px solid #333;
-                padding-bottom: 16px;
-            ">
-                <h2 style="
-                    margin: 0;
-                    color: white;
-                    font-size: 20px;
-                    font-weight: 600;
-                ">Connect Wallet</h2>
-                <button onclick="closeWalletModal()" style="
-                    background: none;
-                    border: none;
-                    color: #888;
-                    font-size: 24px;
-                    cursor: pointer;
-                    padding: 4px;
-                    border-radius: 4px;
-                    transition: all 0.2s ease;
-                " onmouseover="this.style.color='white'; this.style.background='#333'" onmouseout="this.style.color='#888'; this.style.background='none'">×</button>
-            </div>
-            
-            <div id="wallet-list" style="display: flex; flex-direction: column; gap: 12px;">
-                <!-- Phantom -->
-                <button onclick="connectSpecificWallet('phantom')" style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    width: 100%;
-                    padding: 16px;
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-family: inherit;
-                    color: white;
-                    font-size: 16px;
-                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <img src="./phantom-icon.jpeg" alt="Phantom" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
-                        <div style="text-align: left;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">Phantom</div>
-                        </div>
-                    </div>
-                    <span id="phantom-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
-                </button>
-                
-                <!-- Solflare -->
-                <button onclick="connectSpecificWallet('solflare')" style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    width: 100%;
-                    padding: 16px;
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-family: inherit;
-                    color: white;
-                    font-size: 16px;
-                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <img src="./Solflare_id5j73wBTF_0.png" alt="Solflare" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
-                        <div style="text-align: left;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">Solflare</div>
-                        </div>
-                    </div>
-                    <span id="solflare-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
-                </button>
-                
-                <!-- Backpack -->
-                <button onclick="connectSpecificWallet('backpack')" style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    width: 100%;
-                    padding: 16px;
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-family: inherit;
-                    color: white;
-                    font-size: 16px;
-                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <img src="./Standalone_Icon_Red.png" alt="Backpack" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
-                        <div style="text-align: left;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">Backpack</div>
-                        </div>
-                    </div>
-                    <span id="backpack-status" style="color: #00d4aa; font-size: 14px;">Detected</span>
-                </button>
-                
-                <!-- Coinbase -->
-                <button onclick="connectSpecificWallet('coinbase')" style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    width: 100%;
-                    padding: 16px;
-                    background: #2a2a2a;
-                    border: 1px solid #444;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-family: inherit;
-                    color: white;
-                    font-size: 16px;
-                " onmouseover="this.style.background='#333'; this.style.borderColor='#555'" onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444'">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <img src="./coinbase-logo.svg" alt="Coinbase" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain;" />
-                        <div style="text-align: left;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">Coinbase Wallet</div>
-                        </div>
-                    </div>
-                    <span id="coinbase-status" style="color: #888; font-size: 14px;">Not installed</span>
-                </button>
-            </div>
+  <div id="walletModal" class="wallet-modal">
+    <div class="wallet-modal-content">
+      <h3>Connect Your Wallet</h3>
+      <div class="wallet-options">
+        <div class="wallet-option" data-wallet="phantom">
+          <img src="/citizen-map/phantom-logo.png" alt="Phantom" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Phantom</h4>
+            <p>Connect using Phantom wallet</p>
+          </div>
         </div>
+        <div class="wallet-option" data-wallet="solflare">
+          <img src="/citizen-map/solflare-logo.png" alt="Solflare" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Solflare</h4>
+            <p>Connect using Solflare wallet</p>
+          </div>
+        </div>
+        <div class="wallet-option" data-wallet="backpack">
+          <img src="/citizen-map/backpack-logo.png" alt="Backpack" class="wallet-logo">
+          <div class="wallet-info">
+            <h4>Backpack</h4>
+            <p>Connect using Backpack wallet</p>
+          </div>
+        </div>
+      </div>
     </div>
-  
-  <!-- Include the working wallet system -->
-  <script src="./simple-wallet.js"></script>
-  <script src="./verifyWallet.js"></script>
+  </div>
   
   <script>
-    // Initialize the working wallet system
-    let simpleWallet;
-    
-    // Use the working wallet system with the exact same function names
-    window.connectSpecificWallet = async function(walletType) {
-        if (!simpleWallet) {
-            simpleWallet = new SimpleWallet();
-        }
-        
-        const walletConfigs = {
-            phantom: {
-                name: 'Phantom',
-                provider: () => window.phantom?.solana,
-                detect: () => window.phantom?.solana?.isPhantom
-            },
-            solflare: {
-                name: 'Solflare',
-                provider: () => window.solflare,
-                detect: () => window.solflare?.isSolflare
-            },
-            backpack: {
-                name: 'Backpack',
-                provider: () => window.backpack,
-                detect: () => window.backpack?.isBackpack
-            },
-            coinbase: {
-                name: 'Coinbase Wallet',
-                provider: () => window.coinbaseSolana,
-                detect: () => window.coinbaseSolana
-            }
-        };
-
-        const wallet = walletConfigs[walletType];
-        if (!wallet) return;
-
-        try {
-            closeWalletModal();
-            
-            const provider = wallet.provider();
-            if (!provider) {
-                alert(`${wallet.name} not detected. Please install the extension.`);
-                return;
-            }
-
-            await provider.connect();
-            const publicKey = provider.publicKey.toString();
-            
-            // Update SimpleWallet state
-            if (simpleWallet) {
-                simpleWallet.connectedWallet = walletType;
-                simpleWallet.publicKey = publicKey;
-            }
-            
-            console.log('Wallet connected:', publicKey);
-            document.getElementById('connectWalletBtn').textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-            loadUserNfts();
-            alert(`Connected to ${wallet.name}`);
-            
-        } catch (error) {
-            console.error('Wallet connection failed:', error);
-            alert(`Failed to connect: ${error.message}`);
-        }
-    };
-
-    // Use the exact working NFT loading function
-    async function loadUserNfts() {
-        if (!simpleWallet || !simpleWallet.isConnected()) {
-            console.log('No wallet connected, skipping NFT loading');
-            return;
-        }
-
-        try {
-            const walletAddress = simpleWallet.getPublicKey();
-            console.log('Loading NFTs for wallet:', walletAddress);
-            
-            const response = await fetch(`/api/wallet-nfts?wallet=${walletAddress}`);
-            console.log('NFT API response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('NFT API error response:', errorText);
-                throw new Error(`Failed to fetch NFTs: ${response.status} - ${errorText}`);
-            }
-            
-            const result = await response.json();
-            console.log('NFT API result:', result);
-            
-            const walletNfts = result.nfts || result || [];
-            console.log('Parsed NFTs:', walletNfts);
-            
-            if (walletNfts.length === 0) {
-                console.log('No IslandDAO PERKS Found');
-            } else {
-                console.log(`${walletNfts.length} IslandDAO PERKS Found`);
-            }
-        } catch (error) {
-            console.error('Error loading user NFTs:', error);
-        }
-    }
-
-    function closeWalletModal() {
-        const modal = document.getElementById('walletModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-    
-    window.closeWalletModal = closeWalletModal;
-    
     // Constants and variables
-    const API_URL = '/api/citizens';
+    const API_URL = '/api/nfts';
     const WALLET_API_URL = '/api/wallet-nfts';
     const PER_PAGE = 16;
     
@@ -1015,84 +771,28 @@
       });
     });
     
-    // Production-safe NFT fetching with comprehensive error handling
+    // Fetch initial batch of NFTs
     async function fetchInitialNfts() {
       setLoading(true);
       
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-        
-        const response = await fetch(API_URL, {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
-        
-        clearTimeout(timeoutId);
-        
+        const response = await fetch(API_URL);
         if (!response.ok) {
-          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+          throw new Error(`Failed to fetch NFTs: ${response.status}`);
         }
         
-        const citizens = await response.json();
+        allNfts = await response.json();
         
-        if (!Array.isArray(citizens)) {
-          throw new Error('Invalid API response format');
+        // Display first batch
+        displayedNfts = allNfts.slice(0, PER_PAGE);
+        renderNfts(displayedNfts);
+        
+        if (allNfts.length <= PER_PAGE) {
+          loadAllButton.style.display = 'none';
         }
-        
-        allNfts = [];
-        let processedCount = 0;
-        
-        citizens.forEach(citizen => {
-          if (citizen && citizen.nfts && Array.isArray(citizen.nfts) && citizen.nftMetadata) {
-            citizen.nfts.forEach(nftMint => {
-              if (nftMint && citizen.nftMetadata[nftMint]) {
-                const nftMeta = citizen.nftMetadata[nftMint];
-                if (nftMeta && nftMeta.name && nftMeta.image) {
-                  allNfts.push({
-                    id: nftMint,
-                    name: nftMeta.name,
-                    content: {
-                      metadata: { name: nftMeta.name },
-                      links: { image: nftMeta.image }
-                    },
-                    owner_wallet: citizen.wallet || 'Unknown',
-                    owner_nickname: citizen.nickname || 'Unknown Citizen'
-                  });
-                  processedCount++;
-                }
-              }
-            });
-          }
-        });
-        
-        console.log(`Processed ${processedCount} NFTs from ${citizens.length} citizens`);
-        
-        if (allNfts.length > 0) {
-          displayedNfts = allNfts.slice(0, PER_PAGE);
-          renderNfts(displayedNfts);
-          
-          if (allNfts.length <= PER_PAGE) {
-            loadAllButton.style.display = 'none';
-          }
-        } else {
-          nftGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No PERKS NFTs available</div>';
-        }
-        
       } catch (error) {
-        console.error('Collection fetch error:', error);
-        
-        let errorMessage = 'Unable to load collection';
-        if (error.name === 'AbortError') {
-          errorMessage = 'Request timeout - please try again';
-        } else if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error - check connection';
-        }
-        
-        nftGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">${errorMessage}</div>`;
+        console.error('Error fetching NFTs:', error);
+        showMessage(`Error loading NFTs: ${error.message}`, true);
       } finally {
         setLoading(false);
       }
@@ -1174,28 +874,37 @@
       }
     }
     
-    // Simplified NFT rendering for production reliability
+    // Render NFTs to the grid
     function renderNfts(nfts) {
-      if (!nftGrid || !nfts) return;
-      
+      // Clear any message
       clearMessage();
-      nftGrid.innerHTML = '';
       
-      nfts.forEach((nft) => {
+      // If first render, clear the grid
+      if (nfts === displayedNfts) {
+        nftGrid.innerHTML = '';
+      }
+      
+      // Create and append NFT cards
+      nfts.forEach(nft => {
+        // Check if this NFT is already displayed
+        const existingCard = document.getElementById(`nft-${nft.id}`);
+        if (existingCard) return;
+        
         const card = document.createElement('div');
+        card.id = `nft-${nft.id}`;
         card.className = 'nft-card';
         
-        const imageUrl = nft.content?.links?.image || 'https://via.placeholder.com/300?text=NFT';
-        const nftName = nft.content?.metadata?.name || nft.name || 'Unknown NFT';
-        const ownerName = nft.owner_nickname || 'Unknown Citizen';
-        const walletAddr = formatAddress(nft.owner_wallet);
-        
         card.innerHTML = `
-          <img src="${imageUrl}" alt="${nftName}" class="nft-image" onerror="this.src='https://via.placeholder.com/300?text=NFT';">
+          <img 
+            src="${nft.content?.links?.image || nft.imageUrl || 'https://via.placeholder.com/300?text=NFT'}" 
+            alt="${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}" 
+            class="nft-image"
+            onerror="this.src='https://via.placeholder.com/300?text=NFT';"
+          >
           <div class="nft-info">
-            <div class="nft-name">${nftName}</div>
-            <div class="nft-owner">${ownerName}</div>
-            <div class="nft-wallet">${walletAddr}</div>
+            <div class="nft-name">${nft.content?.metadata?.name || nft.name || 'Unknown NFT'}</div>
+            <div class="nft-owner">${nft.owner_nickname || 'Unknown Citizen'}</div>
+            <div class="nft-wallet">${formatAddress(nft.owner_wallet)}</div>
           </div>
         `;
         
