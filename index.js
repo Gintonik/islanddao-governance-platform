@@ -637,21 +637,37 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       }
     }
 
-    // Calculate governance power for new citizen
+    // Calculate governance power ONLY for new citizens
     let totalGovernancePower = 0;
     let nativeGovernancePower = 0;
     let delegatedGovernancePower = 0;
-    try {
-      const govResponse = await fetch(`http://localhost:3001/api/governance-power?wallet=${walletAddress}`);
-      if (govResponse.ok) {
-        const govData = await govResponse.json();
-        nativeGovernancePower = govData.nativeGovernancePower || 0;
-        delegatedGovernancePower = govData.delegatedGovernancePower || 0;
-        totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
-        console.log(`Calculated governance power for ${walletAddress}: ${totalGovernancePower} ISLAND`);
+    const isNewCitizen = existingResult.rows.length === 0;
+    
+    if (isNewCitizen) {
+      try {
+        const govResponse = await fetch(`http://localhost:3001/api/governance-power?wallet=${walletAddress}`);
+        if (govResponse.ok) {
+          const govData = await govResponse.json();
+          nativeGovernancePower = govData.nativeGovernancePower || 0;
+          delegatedGovernancePower = govData.delegatedGovernancePower || 0;
+          totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+          console.log(`NEW CITIZEN: Calculated governance power for ${walletAddress}: ${totalGovernancePower} ISLAND`);
+        }
+      } catch (error) {
+        console.error('Governance power calculation failed for new citizen:', error.message);
       }
-    } catch (error) {
-      console.error('Governance power calculation failed:', error.message);
+    } else {
+      // For existing citizens, preserve current governance values
+      const currentCitizen = await pool.query(
+        'SELECT native_governance_power, delegated_governance_power, total_governance_power FROM citizens WHERE wallet = $1',
+        [walletAddress]
+      );
+      if (currentCitizen.rows.length > 0) {
+        nativeGovernancePower = currentCitizen.rows[0].native_governance_power || 0;
+        delegatedGovernancePower = currentCitizen.rows[0].delegated_governance_power || 0;
+        totalGovernancePower = currentCitizen.rows[0].total_governance_power || 0;
+        console.log(`PIN UPDATE: Preserving existing governance power for ${walletAddress}: ${totalGovernancePower} ISLAND`);
+      }
     }
 
     // Fetch complete NFT collection for citizen
