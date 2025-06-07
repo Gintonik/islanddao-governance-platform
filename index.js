@@ -645,16 +645,25 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     
     if (isNewCitizen) {
       try {
+        console.log(`NEW CITIZEN: Starting governance power calculation for ${walletAddress}`);
         const govResponse = await fetch(`http://localhost:3001/api/governance-power?wallet=${walletAddress}`);
+        console.log(`NEW CITIZEN: Governance API response status: ${govResponse.status}`);
+        
         if (govResponse.ok) {
           const govData = await govResponse.json();
-          nativeGovernancePower = govData.nativeGovernancePower || 0;
-          delegatedGovernancePower = govData.delegatedGovernancePower || 0;
+          console.log(`NEW CITIZEN: Raw governance data:`, JSON.stringify(govData));
+          
+          nativeGovernancePower = parseFloat(govData.nativeGovernancePower) || 0;
+          delegatedGovernancePower = parseFloat(govData.delegatedGovernancePower) || 0;
           totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
-          console.log(`NEW CITIZEN: Calculated governance power for ${walletAddress}: ${totalGovernancePower} ISLAND`);
+          
+          console.log(`NEW CITIZEN: Parsed values - Native: ${nativeGovernancePower}, Delegated: ${delegatedGovernancePower}, Total: ${totalGovernancePower}`);
+        } else {
+          console.error(`NEW CITIZEN: Governance API returned error status: ${govResponse.status}`);
         }
       } catch (error) {
         console.error('Governance power calculation failed for new citizen:', error.message);
+        console.error('Error stack:', error.stack);
       }
     } else {
       // For existing citizens, preserve current governance values
