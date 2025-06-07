@@ -643,6 +643,8 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     let delegatedGovernancePower = 0;
     const isNewCitizen = existingResult.rows.length === 0;
     
+    console.log(`GOVERNANCE DEBUG: Wallet ${walletAddress}, isNewCitizen: ${isNewCitizen}, existingRows: ${existingResult.rows.length}`);
+    
     if (isNewCitizen) {
       try {
         console.log(`NEW CITIZEN: Starting governance power calculation for ${walletAddress}`);
@@ -745,6 +747,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata, walletAddress]);
     } else {
       // Insert new citizen
+      console.log(`NEW CITIZEN DATABASE INSERT: Wallet ${walletAddress}, Native: ${nativeGovernancePower}, Delegated: ${delegatedGovernancePower}, Total: ${totalGovernancePower}`);
       await pool.query(`
         INSERT INTO citizens (
           wallet, lat, lng, primary_nft, pfp_nft, nickname,
