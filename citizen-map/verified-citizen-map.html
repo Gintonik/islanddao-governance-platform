@@ -2720,16 +2720,9 @@
                     processedCitizens.forEach(item => {
                         const { citizen, displayLat, displayLng } = item;
                         
-                        const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-                        let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0ZmFjZmUiLz48L3N2Zz4K';
-                        
-                        if (pfpNft && citizen.nftMetadata && citizen.nftMetadata[pfpNft]) {
-                            imageUrl = citizen.nftMetadata[pfpNft].image;
-                        } else if (citizen.pfpImageUrl) {
-                            imageUrl = citizen.pfpImageUrl;
-                        } else if (citizen.image_url) {
-                            imageUrl = citizen.image_url;
-                        }
+                        // Use consistent image loading logic
+                        const clusterId = `cluster-${citizen.wallet}`;
+                        let imageUrl = loadCitizenImage(citizen, clusterId);
 
                         const icon = L.divIcon({
                             html: `<img src="${imageUrl}" 
@@ -3018,13 +3011,11 @@
             
             const isVerified = citizen.wallet === currentWallet;
             const pfpNft = citizen.pfp_nft || citizen.primaryNft || citizen.primary_nft;
-            let imageUrl = citizen.image_url || 'https://via.placeholder.com/120';
             let perkName = 'PERK NFT';
             
-            // Use the actual image URL from database if available
-            if (citizen.image_url) {
-                imageUrl = citizen.image_url;
-            }
+            // Use the same image loading logic as pins for consistency
+            const panelImageId = `panel-${citizen.wallet}`;
+            let imageUrl = loadCitizenImage(citizen, panelImageId);
 
             const citizenName = citizen.nickname || 
                                (citizen.nftMetadata && citizen.nftMetadata[pfpNft] ? citizen.nftMetadata[pfpNft].name : null) || 
