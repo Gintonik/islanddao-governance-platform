@@ -670,7 +670,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       }
     }
 
-    // Fetch complete NFT collection for citizen
+    // Fetch complete NFT collection for citizen (REQUIRED for security validation)
     let nftMetadata = null;
     let actualPrimaryNft = primary_nft;
     let actualPfpNft = pfp_nft;
@@ -687,7 +687,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           image: nft.image
         }));
         nftMetadata = JSON.stringify(formattedNfts);
-        console.log(`Stored ${formattedNfts.length} NFTs for citizen ${walletAddress}`);
+        console.log(`Verified ${formattedNfts.length} PERKS NFTs for ${walletAddress}`);
         
         // Auto-select primary NFT if none provided (mobile wallet fallback)
         if (!actualPrimaryNft && formattedNfts.length > 0) {
