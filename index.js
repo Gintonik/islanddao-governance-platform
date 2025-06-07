@@ -655,8 +655,8 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           const govData = await govResponse.json();
           console.log(`NEW CITIZEN: Raw governance data:`, JSON.stringify(govData));
           
-          nativeGovernancePower = parseFloat(govData.nativeGovernancePower) || 0;
-          delegatedGovernancePower = parseFloat(govData.delegatedGovernancePower) || 0;
+          nativeGovernancePower = Number(govData.nativeGovernancePower) || 0;
+          delegatedGovernancePower = Number(govData.delegatedGovernancePower) || 0;
           totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
           
           console.log(`NEW CITIZEN: Parsed values - Native: ${nativeGovernancePower}, Delegated: ${delegatedGovernancePower}, Total: ${totalGovernancePower}`);
@@ -680,6 +680,8 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         console.log(`PIN UPDATE: Preserving existing governance power for ${walletAddress}: ${totalGovernancePower} ISLAND`);
       }
     }
+
+    console.log(`GOVERNANCE VALUES AFTER CALCULATION: Native: ${nativeGovernancePower}, Delegated: ${delegatedGovernancePower}, Total: ${totalGovernancePower}`);
 
     // Fetch complete NFT collection for citizen (REQUIRED for security validation)
     let nftMetadata = null;
