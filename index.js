@@ -11,6 +11,7 @@ import { PublicKey } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import bs58 from 'bs58';
 import { startDailySync } from './daily-sync.js';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,6 +55,44 @@ function generateVerificationMessage() {
     nonce,
     expiresAt: timestamp + (5 * 60 * 1000) // 5 minutes
   };
+}
+
+// Update JSON fallback file for immediate citizen map availability
+async function updateGovernanceJSONFallback() {
+  try {
+    // Get all current citizens with governance power
+    const citizensResult = await pool.query(`
+      SELECT wallet, nickname, native_governance_power, delegated_governance_power, total_governance_power
+      FROM citizens 
+      ORDER BY wallet
+    `);
+    
+    const citizens = citizensResult.rows;
+    
+    const jsonData = {
+      summary: {
+        totalCitizens: citizens.length,
+        totalNativeGovernancePower: citizens.reduce((sum, c) => sum + (Number(c.native_governance_power) || 0), 0),
+        totalDelegatedGovernancePower: citizens.reduce((sum, c) => sum + (Number(c.delegated_governance_power) || 0), 0),
+        calculatedAt: new Date().toISOString(),
+        version: "2.0.0"
+      },
+      citizens: citizens.map(citizen => ({
+        wallet: citizen.wallet,
+        nickname: citizen.nickname,
+        nativeGovernancePower: Number(citizen.native_governance_power) || 0,
+        delegatedGovernancePower: Number(citizen.delegated_governance_power) || 0,
+        totalGovernancePower: Number(citizen.total_governance_power) || 0,
+        updatedAt: new Date().toISOString()
+      }))
+    };
+
+    fs.writeFileSync('data/native-governance-power.json', JSON.stringify(jsonData, null, 2));
+    console.log(`JSON FALLBACK: Updated with ${citizens.length} citizens`);
+    
+  } catch (error) {
+    console.error('JSON fallback update error:', error.message);
+  }
 }
 
 // Database connection with error handling
@@ -751,7 +790,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         WHERE wallet = $15
       `, [lat, lng, actualPrimaryNft, actualPfpNft, nickname, bio, 
           twitter_handle, telegram_handle, discord_handle, actualImageUrl,
-          nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata, walletAddress]);
+          finalNativeGovernancePower, finalDelegatedGovernancePower, finalTotalGovernancePower, nftMetadata, walletAddress]);
     } else {
       // Insert new citizen
       console.log(`NEW CITIZEN DATABASE INSERT: Wallet ${walletAddress}, Native: ${finalNativeGovernancePower}, Delegated: ${finalDelegatedGovernancePower}, Total: ${finalTotalGovernancePower}`);
@@ -769,6 +808,10 @@ app.post('/api/save-citizen-verified', async (req, res) => {
       `, [walletAddress, lat, lng, actualPrimaryNft, actualPfpNft, nickname,
           bio, twitter_handle, telegram_handle, discord_handle, actualImageUrl,
           finalNativeGovernancePower, finalDelegatedGovernancePower, finalTotalGovernancePower, nftMetadata]);
+      
+      // CRITICAL: Update JSON fallback file immediately for new citizens
+      console.log(`NEW CITIZEN: Updating JSON fallback file for immediate availability`);
+      await updateGovernanceJSONFallback();
     }
 
     res.json({
