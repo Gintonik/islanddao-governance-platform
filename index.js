@@ -28,8 +28,8 @@ async function updateGovernanceJSONFallback() {
     const jsonData = {
       summary: {
         totalCitizens: validCitizens.length,
-        totalNativeGovernancePower: validCitizens.reduce((sum, c) => sum + (c.native_governance_power || 0), 0),
-        totalDelegatedGovernancePower: validCitizens.reduce((sum, c) => sum + (c.delegated_governance_power || 0), 0),
+        totalNativeGovernancePower: validCitizens.reduce((sum, c) => sum + Number(c.native_governance_power || 0), 0),
+        totalDelegatedGovernancePower: validCitizens.reduce((sum, c) => sum + Number(c.delegated_governance_power || 0), 0),
         calculatedAt: new Date().toISOString(),
         version: "2.0.0"
       },
