@@ -683,6 +683,11 @@ app.post('/api/save-citizen-verified', async (req, res) => {
 
     console.log(`GOVERNANCE VALUES AFTER CALCULATION: Native: ${nativeGovernancePower}, Delegated: ${delegatedGovernancePower}, Total: ${totalGovernancePower}`);
 
+    // Store governance values before NFT processing to prevent variable overwriting
+    const finalNativeGovernancePower = nativeGovernancePower;
+    const finalDelegatedGovernancePower = delegatedGovernancePower;
+    const finalTotalGovernancePower = totalGovernancePower;
+
     // Fetch complete NFT collection for citizen (REQUIRED for security validation)
     let nftMetadata = null;
     let actualPrimaryNft = primary_nft;
@@ -749,7 +754,11 @@ app.post('/api/save-citizen-verified', async (req, res) => {
           nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata, walletAddress]);
     } else {
       // Insert new citizen
-      console.log(`NEW CITIZEN DATABASE INSERT: Wallet ${walletAddress}, Native: ${nativeGovernancePower}, Delegated: ${delegatedGovernancePower}, Total: ${totalGovernancePower}`);
+      console.log(`NEW CITIZEN DATABASE INSERT: Wallet ${walletAddress}, Native: ${finalNativeGovernancePower}, Delegated: ${finalDelegatedGovernancePower}, Total: ${finalTotalGovernancePower}`);
+      console.log(`DATABASE PARAMS: `, [walletAddress, lat, lng, actualPrimaryNft, actualPfpNft, nickname,
+          bio, twitter_handle, telegram_handle, discord_handle, actualImageUrl,
+          finalNativeGovernancePower, finalDelegatedGovernancePower, finalTotalGovernancePower, nftMetadata]);
+      
       await pool.query(`
         INSERT INTO citizens (
           wallet, lat, lng, primary_nft, pfp_nft, nickname,
@@ -759,7 +768,7 @@ app.post('/api/save-citizen-verified', async (req, res) => {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
       `, [walletAddress, lat, lng, actualPrimaryNft, actualPfpNft, nickname,
           bio, twitter_handle, telegram_handle, discord_handle, actualImageUrl,
-          nativeGovernancePower, delegatedGovernancePower, totalGovernancePower, nftMetadata]);
+          finalNativeGovernancePower, finalDelegatedGovernancePower, finalTotalGovernancePower, nftMetadata]);
     }
 
     res.json({
