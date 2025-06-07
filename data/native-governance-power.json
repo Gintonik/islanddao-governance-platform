@@ -1,227 +1,259 @@
 {
   "summary": {
-    "totalCitizens": 27,
-    "totalNativeGovernancePower": 27891681.792633396,
-    "totalDelegatedGovernancePower": 0,
-    "calculatedAt": "2025-06-07T00:01:07.476Z",
+    "totalCitizens": 31,
+    "totalNativeGovernancePower": "0109876.3196750.000000377734.987399536529.25754910354147.0130000.00000012625.5809310.000000397233.4328040.0000008904464.32919817426.2243580.000000744147.180336124693.8451354879.0000000.0000000.00000029484.4646830.0000001000398.4063740.0000004239442.1102282189.6178410.0000000.000000307692.0000000.0000000.000000142872.7243581349608.321299",
+    "totalDelegatedGovernancePower": "00.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.0000000.000000",
+    "calculatedAt": "2025-06-07T22:39:43.792Z",
     "version": "2.0.0"
   },
   "citizens": [
     {
       "wallet": "14rghAS2vY4w4BGvm89SRdhwqVGvTZRd6QDmDgsag4Es",
       "nickname": "TonyBoyle",
-      "nativeGovernancePower": 109876.319675,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 109876.319675,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "109876.319675",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "109876.319675",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "2NZ9hwrGNitbGTjt4p4py2m6iwAjJ9Bzs8vXeWs1QpHT",
       "nickname": null,
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "2qYMBZwJhu8zpyEK29Dy5Hf9WrWWe1LkDzrUDiuVzBnk",
       "nickname": "Yamparala Rahul",
-      "nativeGovernancePower": 377734.98739922,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 377734.98739922,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "377734.987399",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "377734.987399",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "37TGrYNu56AxaeojgtAok8tQAsBSxGhvFKXqCYFAbBrA",
       "nickname": "Moxie",
-      "nativeGovernancePower": 536529.257549,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 536529.257549,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "536529.257549",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "536529.257549",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "3PKhzE9wuEkGPHHu2sNCvG86xNtDJduAcyBPXpE6cSNt",
       "nickname": "DeanMachine",
-      "nativeGovernancePower": 10354147.013,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 10354147.013,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "10354147.013000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "10354147.013000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "3s6VUe21HFVEC6j12bPXLcrBHMkTZ66847853pXWXspr",
       "nickname": "Funcracker",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "4pT6ESaMQTgpMs2ZZ81pFF8BieGtY9x4CCK2z6aoYoe4",
       "nickname": "Weirdo",
-      "nativeGovernancePower": 12625.580931,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 12625.580931,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "12625.580931",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "12625.580931",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
+    },
+    {
+      "wallet": "5VxfZEa552PsGF9AcgZiDmq8ty9jWxTv4rcTuxoqrBoD",
+      "nickname": "MisterMatt2U",
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "6aJo6zRiC5CFnuE7cqw4sTtHHknrr69NE7LKxPAfFY9U",
       "nickname": "nurtan",
-      "nativeGovernancePower": 397233.432803956,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 397233.432803956,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "397233.432804",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "397233.432804",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "6vJrtBwoDTWnNGmMsGQyptwagB9oEVntfpK7yTctZ3Sy",
       "nickname": "Kegomaz",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "7pPJt2xoEoPy8x8Hf2D6U6oLfNa5uKmHHRwkENVoaxmA",
       "nickname": "Takisoul",
-      "nativeGovernancePower": 8904464.329198081,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 8904464.329198081,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "8904464.329198",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "8904464.329198",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
+    },
+    {
+      "wallet": "84pL2GAuv8XGVPyZre2xcgUNSGz9csYHBt5AW4PUcEe9",
+      "nickname": "Thomukas1",
+      "nativeGovernancePower": "17426.224358",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "17426.224358",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "9RSpFWGntExNNa6puTVtynmrNAJZRso6w4gFWuMr1o3n",
       "nickname": "Portor",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
+    },
+    {
+      "wallet": "9V9xnugDuEiHjcGjR3U1D2DhCHhJ8xMJorPXu7s7WqQj",
+      "nickname": "Bhagya Mudgal",
+      "nativeGovernancePower": "744147.180336",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "744147.180336",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "9WW4oiMyW6A9oP4R8jvxJLMZ3RUss18qsM4yBBHJPj94",
       "nickname": "Alex Perts",
-      "nativeGovernancePower": 124693.845135,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 124693.845135,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "124693.845135",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "124693.845135",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "ADjG92YTwGUxTB3r9SY6Gip4q4xoUQdKq3DA1actaDUd",
       "nickname": "Reijo",
-      "nativeGovernancePower": 4879,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 4879,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "4879.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "4879.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "Arm6pG2ev83MbokXZQEFD7qCKDvVWtYpEkqmCfbxcpRh",
       "nickname": "Nuelsol",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "B93csAjDr4sbgLvYmY1iNcHQ1wLe9abEiodJDcn8K7ST",
       "nickname": "Mila",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "BPmVp1b4vbT2YUHfcFrtErA67nNsJ5LGAJ2BLg5ds9kz",
       "nickname": "SoCal",
-      "nativeGovernancePower": 29484.464683,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 29484.464683,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "29484.464683",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "29484.464683",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "CJk9wS2Q64YXQg7HNq3VzzTzmwTftFLsXPCnZmdAScvd",
       "nickname": "xhugosantos",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "CLcXVZpCwF9QH2aNjFhPSzyeUVifkP9W88WHwfe6sMww",
       "nickname": "scientistjoe",
-      "nativeGovernancePower": 1000398.406374,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 1000398.406374,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "1000398.406374",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "1000398.406374",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "CdCAQnq13hTUiBxganRXYKw418uUTfZdmosqef2vu1bM",
       "nickname": "Canfly",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "CinHb6Xt2PnqKUkmhRo9hwUkixCcsH1uviuQqaTxwT9i",
       "nickname": "Whale's Friend",
-      "nativeGovernancePower": 4239442.110228,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 4239442.110228,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "4239442.110228",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "4239442.110228",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
+    },
+    {
+      "wallet": "Cq282g6GfA4oEF95NgqM7tE6EBWw13NTNrfiyetxEUt7",
+      "nickname": "popo",
+      "nativeGovernancePower": "2189.617841",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "2189.617841",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "DraTvYwqwySZ4kvzxsiYtKF2K6mp4FE3VbjTdPsJzpXt",
       "nickname": "Kornel",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "EViz4YGrY6GZtfu35Y1Q3PoFWAhoXY6YMHFrcneMbdCF",
       "nickname": "Moviendome",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "EXRBCP2MX6hRAt4oh61k5mhL6WhmUXPemfzNssUpM4S6",
       "nickname": "Icoder",
-      "nativeGovernancePower": 307692,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 307692,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "307692.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "307692.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "Fgv1zrwB6VF3jc45PaNT5t9AnSsJrwb8r7aMNip5fRY1",
       "nickname": "Titanmaker",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "Fywb7YDCXxtD7pNKThJ36CAtVe23dEeEPf7HqKzJs1VG",
       "nickname": "legend",
-      "nativeGovernancePower": 0,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 0,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "0.000000",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "0.000000",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "GJdRQcsyz49FMM4LvPqpaM2QA3yWFr8WamJ95hkwCBAh",
       "nickname": null,
-      "nativeGovernancePower": 142872.7243579,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 142872.7243579,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "142872.724358",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "142872.724358",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     },
     {
       "wallet": "kruHL3zJ1Mcbdibsna5xM6yMp7PZZ4BsNTpj2UMgvZC",
       "nickname": "KO3",
-      "nativeGovernancePower": 1349608.32129924,
-      "delegatedGovernancePower": 0,
-      "totalGovernancePower": 1349608.32129924,
-      "updatedAt": "2025-06-07T00:01:07.477Z"
+      "nativeGovernancePower": "1349608.321299",
+      "delegatedGovernancePower": "0.000000",
+      "totalGovernancePower": "1349608.321299",
+      "updatedAt": "2025-06-07T22:39:43.792Z"
     }
   ]
 }

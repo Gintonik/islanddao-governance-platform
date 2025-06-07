@@ -12,7 +12,7 @@ import nacl from 'tweetnacl';
 import bs58 from 'bs58';
 import { startDailySync } from './daily-sync.js';
 
-// Import the existing JSON export function
+// Direct JSON export to avoid module import issues
 async function updateGovernanceJSONFallback() {
   try {
     const citizensResult = await pool.query(`
@@ -24,9 +24,27 @@ async function updateGovernanceJSONFallback() {
       ORDER BY wallet
     `);
     
-    // Use the same export logic as daily-sync.js
-    const { exportGovernanceJSON } = await import('./daily-sync.js');
-    await exportGovernanceJSON(citizensResult.rows);
+    const validCitizens = citizensResult.rows;
+    const jsonData = {
+      summary: {
+        totalCitizens: validCitizens.length,
+        totalNativeGovernancePower: validCitizens.reduce((sum, c) => sum + (c.native_governance_power || 0), 0),
+        totalDelegatedGovernancePower: validCitizens.reduce((sum, c) => sum + (c.delegated_governance_power || 0), 0),
+        calculatedAt: new Date().toISOString(),
+        version: "2.0.0"
+      },
+      citizens: validCitizens.map(citizen => ({
+        wallet: citizen.wallet,
+        nickname: citizen.nickname,
+        nativeGovernancePower: citizen.native_governance_power || 0,
+        delegatedGovernancePower: citizen.delegated_governance_power || 0,
+        totalGovernancePower: citizen.total_governance_power || 0,
+        updatedAt: new Date().toISOString()
+      }))
+    };
+
+    fs.writeFileSync('data/native-governance-power.json', JSON.stringify(jsonData, null, 2));
+    console.log(`📄 Updated governance JSON with ${validCitizens.length} citizens`);
     
   } catch (error) {
     console.error('JSON fallback update error:', error.message);
