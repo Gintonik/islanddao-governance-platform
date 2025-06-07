@@ -638,19 +638,20 @@ app.post('/api/save-citizen-verified', async (req, res) => {
     }
 
     // Calculate governance power for new citizen
-    let totalGovernancePower = null;
-    let nativeGovernancePower = null;
-    let delegatedGovernancePower = null;
+    let totalGovernancePower = 0;
+    let nativeGovernancePower = 0;
+    let delegatedGovernancePower = 0;
     try {
-      const govResponse = await fetch(`http://localhost:3001/governance-power/${walletAddress}`);
+      const govResponse = await fetch(`http://localhost:3001/api/governance-power?wallet=${walletAddress}`);
       if (govResponse.ok) {
         const govData = await govResponse.json();
-        totalGovernancePower = govData.totalGovernancePower || null;
-        nativeGovernancePower = govData.nativeGovernancePower || null;
+        nativeGovernancePower = govData.nativeGovernancePower || 0;
         delegatedGovernancePower = govData.delegatedGovernancePower || 0;
+        totalGovernancePower = nativeGovernancePower + delegatedGovernancePower;
+        console.log(`Calculated governance power for ${walletAddress}: ${totalGovernancePower} ISLAND`);
       }
     } catch (error) {
-      console.log('Governance power calculation skipped:', error.message);
+      console.error('Governance power calculation failed:', error.message);
     }
 
     // Fetch complete NFT collection for citizen
