@@ -307,6 +307,9 @@ async function performDailySyncWithRetry() {
   }
 }
 
+// Export functions for use by other modules
+export { exportGovernanceJSON, performDailySync };
+
 // Schedule daily sync at 00:00 UTC
 export function startDailySync() {
   // Schedule at 00:00 UTC daily with retry logic
@@ -318,7 +321,6 @@ export function startDailySync() {
 }
 
 // Manual trigger for testing
-export { performDailySync };
 
 // Auto-start if this file is run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
