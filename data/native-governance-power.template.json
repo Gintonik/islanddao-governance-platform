@@ -1,0 +1,10 @@
+{
+  "summary": {
+    "totalCitizens": 0,
+    "totalNativeGovernancePower": 0,
+    "totalDelegatedGovernancePower": 0,
+    "calculatedAt": "2025-01-01T00:00:00.000Z",
+    "version": "2.0.0"
+  },
+  "citizens": []
+}

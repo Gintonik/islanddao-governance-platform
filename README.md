@@ -202,21 +202,10 @@ GET /api/governance-power?wallet={address}
 ```json
 {
   "wallet": "wallet_address",
-  "nativeGovernancePower": 1000000.123,
-  "delegatedGovernancePower": 500000.456,
-  "totalGovernancePower": 1500000.579,
-  "deposits": [
-    {
-      "amount": 1000000,
-      "multiplier": 1.5,
-      "power": 1500000,
-      "isLocked": true,
-      "lockupDetails": {
-        "type": "Vesting",
-        "endDate": "2025-12-31"
-      }
-    }
-  ],
+  "nativeGovernancePower": 0,
+  "delegatedGovernancePower": 0,
+  "totalGovernancePower": 0,
+  "deposits": [],
   "source": "vsr_calculation"
 }
 ```
